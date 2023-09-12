@@ -1,0 +1,33 @@
+{
+  "name": "defisaver-positions-sdk",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./umd/index.js",
+  "module": "./esm/src/index.js",
+  "types": "./esm/src/index.d.ts",
+  "scripts": {
+    "build:esm": "rm -rf esm && tsc -b",
+    "build:umd": "rm -rf umd && tsc -p tsconfig.umd.json",
+    "build": "npm run build:umd && npm run build:esm",
+    "lint": "eslint . --ext .ts",
+    "generate-contracts": "node scripts/generateContracts.js",
+    "test": "mocha tests/*"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "decimal.js": "^10.4.3"
+  },
+  "devDependencies": {
+    "@defisaver/eslint-config": "^1.0.1",
+    "chai": "^4.3.8",
+    "dotenv": "^16.3.1",
+    "eslint": "^8.49.0",
+    "mocha": "^10.2.0",
+    "typechain": "^8.3.1",
+    "typechain-target-web3-v1-3mihai3": "^6.0.1",
+    "typescript": "^5.2.2",
+    "web3": "^1.10.2"
+  }
+}
