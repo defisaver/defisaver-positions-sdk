@@ -3,7 +3,6 @@ import {
 } from './common';
 
 export enum AaveVersions {
-  AaveV1 = 'v1',
   AaveV2 = 'v2default',
   AaveV3 = 'v3default',
   MorphoAaveV2 = 'morphoAaveV2',
@@ -26,25 +25,25 @@ export type AaveMarketInfo = {
   protocolName: string,
   disabled?: boolean,
 };
-export type AaveV3AssetData = MMAssetData & {
+export interface AaveV3AssetData extends MMAssetData {
   isIsolated: string,
   isSiloed: string,
   // ...
-};
+}
 export type AaveV3AssetsData = AaveV3AssetData[];
 export type AaveV3MarketData = {
   assetsData: AaveV3AssetsData,
   // TODO figure out if eModeCategories should be here
-};
-export type AaveV3UsedAsset = MMUsedAsset & {
+}
+export interface AaveV3UsedAsset extends MMUsedAsset {
   discountedBorrowRate: string,
   eModeCategory: string,
   // ...
-};
-export type AaveV3PositionData = MMPositionData & {
+}
+export interface AaveV3PositionData extends MMPositionData {
   usedAssets: AaveV3UsedAsset[],
   eModeCategory: string,
   isInIsolationMode: string,
   isInSiloedMode: string,
   // ...
-};
+}

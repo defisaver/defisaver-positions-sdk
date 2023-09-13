@@ -8,16 +8,36 @@ describe('Aave v3', () => {
   let web3;
   before(async () => {
     web3 = new Web3(process.env.RPC);
+    await web3.eth.getChainId();
   });
 
-  it('sdk test', async () => {
+  it('has market data', async () => {
+    const { AaveMarkets } = sdk.aaveV3;
+    assert.containsAllKeys(AaveMarkets(1), [sdk.aaveV3.AaveVersions.AaveV3]);
+    for (const market of Object.values(AaveMarkets(1))) {
+      const keys = ['chainIds', 'label', 'shortLabel', 'url', 'value', 'assets', 'provider', 'providerAddress', 'lendingPool', 'lendingPoolAddress', 'protocolData', 'protocolDataAddress', 'protocolName'];
+      assert.containsAllKeys(market, keys);
+      for (const key of keys) assert.isNotEmpty(market[key], `${key} is empty for ${market.label}`);
+    }
+  });
+
+  it('has working contract', async () => {
     const res = await sdk.aaveV3.test(web3, 1);
     // console.log(res);
     assert.equal(res, '64');
   });
 
-  // it('Fetches position data', async () => {
-    // const marketData = await sdk.aaveV3.getMarketData(web3, 1, sdk.aaveV3.markets.v3);
-    // assert.containsAllKeys(marketData, ['assetsData']);
-  // });
+  it('can fetch market data', async () => {
+    const marketData = await sdk.aaveV3.getMarketData(web3, 1, sdk.aaveV3.AaveMarkets(1)[sdk.aaveV3.AaveVersions.AaveV3]);
+    console.log(marketData);
+    assert.containsAllKeys(marketData, ['assetsData']);
+    for (const tokenData of Object.values(marketData.assetsData)) {
+      const keys = [
+        'symbol', 'supplyRate', 'borrowRate', 'price', //...
+        'isSiloed', //...
+      ];
+      assert.containsAllKeys(tokenData, keys);
+      for (const key of keys) assert.isDefined(tokenData[key], `${key} is undefined for ${tokenData.symbol}`);
+    }
+  });
 });

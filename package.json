@@ -6,9 +6,10 @@
   "module": "./esm/src/index.js",
   "types": "./esm/src/index.d.ts",
   "scripts": {
-    "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
+    "build:esm": "rm -rf esm && tsc -p tsconfig.json",
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
     "build": "npm run build:cjs && npm run build:esm",
+    "dev": "tsc -p tsconfig.cjs.json --watch",
     "lint": "eslint . --ext .ts",
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*"
@@ -17,6 +18,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@defisaver/tokens": "^1.4.55",
     "decimal.js": "^10.4.3"
   },
   "devDependencies": {

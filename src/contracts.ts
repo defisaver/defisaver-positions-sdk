@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import {AbiItem} from 'web3-utils';
-import configRaw from './config/contracts.json'
+import configRaw from './config/contracts'
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
 import {NetworkNumber} from "./types/common";
