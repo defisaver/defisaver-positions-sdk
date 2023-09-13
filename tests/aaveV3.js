@@ -2,7 +2,7 @@ require('dotenv').config();
 const { assert } = require('chai');
 const Web3 = require('web3');
 
-const sdk = require('../umd');
+const sdk = require('../cjs');
 
 describe('Aave v3', () => {
   let web3;

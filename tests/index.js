@@ -1,5 +1,5 @@
 const { assert } = require('chai');
-const sdk = require('../umd');
+const sdk = require('../cjs');
 
 describe('SDK', () => {
   it('Exports all protocols', () => {

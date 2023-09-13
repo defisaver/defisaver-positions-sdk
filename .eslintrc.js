@@ -13,7 +13,7 @@ module.exports = {
     browser: true,
     mocha: true,
   },
-  ignorePatterns: ['esm/', 'umd/'],
+  ignorePatterns: ['esm/', 'cjs/'],
   overrides: [{
     // these are overrides for .ts files, meaning these are only applied to .ts files
     files: ['*.ts', '*.tsx'],
