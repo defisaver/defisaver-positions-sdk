@@ -15,7 +15,7 @@ export const test = (web3: Web3, network: NetworkNumber) => {
 };
 
 export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
 

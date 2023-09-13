@@ -4,6 +4,7 @@ export enum NetworkNumber {
   Eth = 1,
   Opt = 10,
   Arb = 42161,
+  Base = 8453,
 }
 export type Networkish = string | NetworkNumber;
 

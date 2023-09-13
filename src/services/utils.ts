@@ -1,6 +1,6 @@
-import {NetworkNumber} from "../types/common";
+import { NetworkNumber } from '../types/common';
 
-export const isLayer2Network = (networkId: NetworkNumber) => [10, 42161].includes(+networkId);
+export const isLayer2Network = (networkId: NetworkNumber) => [10, 42161, 8453].includes(+networkId);
 
 export const addToObjectIf = (condition: any, item: any) => (condition ? item : {});
 

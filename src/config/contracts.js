@@ -12,6 +12,9 @@ export default {
       },
       "42161": {
         "address": "0x2596e41933136E87C04b56f632CEcA2cdCCC2Cc6"
+      },
+      "8453": {
+        "address": "0x125b8b832BD7F2EBD77Eef148A6319AdE751C44b"
       }
     }
   },
@@ -26,6 +29,9 @@ export default {
       },
       "42161": {
         "address": "0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb"
+      },
+      "8453": {
+        "address": "0xe20fCBdBfFC4Dd138cE8b2E6FBb6CB49777ad64D"
       }
     }
   },
@@ -40,6 +46,9 @@ export default {
       },
       "42161": {
         "address": "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
+      },
+      "8453": {
+        "address": "0xA238Dd80C259a72e81d7e4664a9801593F98d1c5"
       }
     }
   },
@@ -54,6 +63,9 @@ export default {
       },
       "42161": {
         "address": "0x69FA688f1Dc47d4B5d8029D5a35FB7a548310654"
+      },
+      "8453": {
+        "address": "0x2d8A3C5677189723C4cB8873CfC9C8976FDF38Ac"
       }
     }
   },
