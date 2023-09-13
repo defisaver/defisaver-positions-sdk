@@ -1,8 +1,8 @@
 
-import {getConfigContractAddress} from "../contracts";
-import {NetworkNumber} from "../types/common";
-import {AaveMarketInfo, AaveVersions} from '../types/aave';
-import {aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket} from "./marketAssets";
+import { getConfigContractAddress } from '../contracts';
+import { NetworkNumber } from '../types/common';
+import { AaveMarketInfo, AaveVersions } from '../types/aave';
+import { aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket } from './marketAssets';
 
 // export const AAVE_V2: AaveMarketInfo = {
 //   chainIds: [1],

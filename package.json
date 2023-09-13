@@ -10,7 +10,7 @@
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
     "build": "npm run build:cjs && npm run build:esm",
     "dev": "tsc -p tsconfig.cjs.json --watch",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint src/ --fix",
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*"
   },
@@ -29,7 +29,9 @@
     "mocha": "^10.2.0",
     "typechain": "^8.3.1",
     "typechain-target-web3-v1-3mihai3": "^6.0.2",
-    "typescript": "^5.2.2",
+    "typescript": "^5.2.2"
+  },
+  "peerDependencies": {
     "web3": "^1.10.2"
   }
 }

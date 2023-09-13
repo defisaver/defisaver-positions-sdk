@@ -1,18 +1,18 @@
-import Web3 from "web3";
-import {AaveV3ViewContract} from "../contracts";
-import {addToObjectIf, ethToWeth, isLayer2Network} from "../services/utils";
-import {AaveMarketInfo, AaveV3MarketData} from "../types/aave";
-import {NetworkNumber} from "../types/common";
+import Web3 from 'web3';
 import Dec from 'decimal.js';
-import {assetAmountInEth, assetAmountInWei, getAssetInfo} from '@defisaver/tokens';
+import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
+import { AaveV3ViewContract } from '../contracts';
+import { addToObjectIf, ethToWeth, isLayer2Network } from '../services/utils';
+import { AaveMarketInfo, AaveV3MarketData } from '../types/aave';
+import { NetworkNumber } from '../types/common';
 
-export {AaveMarkets} from "./markets";
-export * from "../types/aave";
+export { AaveMarkets } from './markets';
+export * from '../types/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
   const contract = AaveV3ViewContract(web3, 1);
-  return contract.methods.AAVE_REFERRAL_CODE().call()
-}
+  return contract.methods.AAVE_REFERRAL_CODE().call();
+};
 
 export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
@@ -85,8 +85,8 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO';
 
-      let borrowCap = tokenMarket.borrowCap;
-      let discountRateOnBorrow = '0';
+      const borrowCap = tokenMarket.borrowCap;
+      const discountRateOnBorrow = '0';
 
       // if (nativeAsset) {
       //   borrowCap = assetAmountInEth((await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call())[0], 'GHO');
@@ -111,7 +111,7 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
             minGhoBalanceForDiscount,
           },
         }),
-        symbol: symbol,
+        symbol,
         isIsolated: new Dec(tokenMarket.debtCeilingForIsolationMode).gt(0),
         debtCeilingForIsolationMode: new Dec(tokenMarket.debtCeilingForIsolationMode).div(100).toString(),
         isSiloed: tokenMarket.isSiloedForBorrowing,
@@ -216,5 +216,5 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
   //   /* eslint-enable no-param-reassign */
   // }));
 
-  return {assetsData};
+  return { assetsData };
 }

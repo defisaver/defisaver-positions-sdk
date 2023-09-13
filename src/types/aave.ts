@@ -34,7 +34,7 @@ export type AaveV3AssetsData = AaveV3AssetData[];
 export type AaveV3MarketData = {
   assetsData: AaveV3AssetsData,
   // TODO figure out if eModeCategories should be here
-}
+};
 export interface AaveV3UsedAsset extends MMUsedAsset {
   discountedBorrowRate: string,
   eModeCategory: string,

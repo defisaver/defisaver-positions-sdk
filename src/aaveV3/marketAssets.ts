@@ -1,6 +1,6 @@
 // TODO generate this file automatically
 
-import {NetworkNumber} from "../types/common";
+import { NetworkNumber } from '../types/common';
 
 export const aaveV2AssetsDefaultMarket = [
   'AAVE', 'BAL', 'BAT', 'BUSD', 'CRV', 'DAI', 'ENJ', 'ETH', 'GUSD', 'LINK', 'MANA', 'MKR',
