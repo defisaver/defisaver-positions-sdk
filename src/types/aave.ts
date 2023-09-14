@@ -2,6 +2,8 @@ import {
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
+import { IUiIncentiveDataProviderV3 } from './contracts/generated/AaveUiIncentiveDataProviderV3';
+
 export enum AaveVersions {
   AaveV2 = 'v2default',
   AaveV3 = 'v3default',
@@ -25,10 +27,32 @@ export type AaveMarketInfo = {
   protocolName: string,
   disabled?: boolean,
 };
+
+export interface DiscountData {
+  ghoDiscountedPerDiscountToken: string,
+  discountRate: string,
+  minDiscountTokenBalance: string,
+  minGhoBalanceForDiscount: string,
+}
+
+export interface EModeCategoryData {
+  label: string,
+  liquidationBonus: string,
+  liquidationRatio: string,
+  collateralFactor: string,
+  priceSource: string,
+}
 export interface AaveV3AssetData extends MMAssetData {
   isIsolated: string,
   isSiloed: string,
-  // ...
+  nativeAsset: boolean,
+  discountData: DiscountData,
+  debtCeilingForIsolationMode: string,
+  eModeCategory: string,
+  isolationModeTotalDebt: string,
+  borrowRateDiscounted: string,
+  isolationModeBorrowingEnabled: boolean,
+  eModeCategoryData: EModeCategoryData,
 }
 export type AaveV3AssetsData = AaveV3AssetData[];
 export type AaveV3MarketData = {
@@ -46,4 +70,11 @@ export interface AaveV3PositionData extends MMPositionData {
   isInIsolationMode: string,
   isInSiloedMode: string,
   // ...
+}
+
+export interface AaveV3IncentiveData {
+  underlyingAsset: string,
+  aIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
+  vIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
+  sIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput
 }

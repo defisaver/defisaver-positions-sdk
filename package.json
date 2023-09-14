@@ -12,7 +12,8 @@
     "dev": "tsc -p tsconfig.cjs.json --watch",
     "lint": "eslint src/ --fix",
     "generate-contracts": "node scripts/generateContracts.js",
-    "test": "mocha tests/*"
+    "test": "mocha tests/*",
+    "build-test": "npm run build && mocha tests/*"
   },
   "keywords": [],
   "author": "",

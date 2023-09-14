@@ -1,10 +1,19 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import { AaveV3ViewContract } from '../contracts';
-import { addToObjectIf, ethToWeth, isLayer2Network } from '../services/utils';
-import { AaveMarketInfo, AaveV3MarketData } from '../types/aave';
+import {
+  AaveIncentiveDataProviderV3Contract, AaveV3ViewContract, GhoTokenContract, getConfigContractAbi, getConfigContractAddress,
+} from '../contracts';
+import {
+  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
+} from '../services/utils';
+import {
+  AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData,
+} from '../types/aave';
 import { NetworkNumber } from '../types/common';
+import { getStakingApy } from '../staking';
+import { multicall } from '../multicall';
+import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 
 export { AaveMarkets } from './markets';
 export * from '../types/aave';
@@ -14,50 +23,80 @@ export const test = (web3: Web3, network: NetworkNumber) => {
   return contract.methods.AAVE_REFERRAL_CODE().call();
 };
 
+export const aaveV3CalculateDiscountRate = (
+  debtBalance: string,
+  discountTokenBalance: string,
+  discountRate: string,
+  minDiscountTokenBalance: string,
+  minGhoBalanceForDiscount: string,
+  ghoDiscountedPerDiscountToken: string,
+) => {
+  if (new Dec(discountTokenBalance).lt(minDiscountTokenBalance) || new Dec(debtBalance).lt(minGhoBalanceForDiscount)) {
+    return '0';
+  }
+  const discountedBalance = new Dec( // wadMul
+    new Dec(discountTokenBalance).mul(ghoDiscountedPerDiscountToken).add(new Dec(1e18).div(2)),
+  ).div(1e18).toDP(0);
+
+  if (new Dec(discountedBalance).gte(debtBalance)) {
+    return new Dec(discountRate).div(10000).toDP(4).toString();
+  }
+  return new Dec(discountedBalance)
+    .mul(discountRate)
+    .div(debtBalance)
+    .div(10000)
+    .toDP(4)
+    .toString();
+};
+
 export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
 
   const loanInfoContract = AaveV3ViewContract(web3, network);
-  // const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract();
+  const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract(web3, network);
   const marketAddress = market.providerAddress;
 
-  // const multicallCallsObject = [
-  //   {
-  //     target: GhoDiscountRateStrategyAddress,
-  //     abiItem: getAbiItem(config.GhoDiscountRateStrategy.abi, 'GHO_DISCOUNTED_PER_DISCOUNT_TOKEN'),
-  //     params: [],
-  //   },
-  //   {
-  //     target: GhoDiscountRateStrategyAddress,
-  //     abiItem: getAbiItem(config.GhoDiscountRateStrategy.abi, 'DISCOUNT_RATE'),
-  //     params: [],
-  //   },
-  //   {
-  //     target: GhoDiscountRateStrategyAddress,
-  //     abiItem: getAbiItem(config.GhoDiscountRateStrategy.abi, 'MIN_DISCOUNT_TOKEN_BALANCE'),
-  //     params: [],
-  //   },
-  //   {
-  //     target: GhoDiscountRateStrategyAddress,
-  //     abiItem: getAbiItem(config.GhoDiscountRateStrategy.abi, 'MIN_DEBT_TOKEN_BALANCE'),
-  //     params: [],
-  //   },
-  //   {
-  //     target: getAssetInfo('GHO').address,
-  //     abiItem: getAbiItem(config.GHO.abi, 'getFacilitatorsList'),
-  //     params: [],
-  //   },
-  // ];
+  const GhoDiscountRateStrategyAddress = getConfigContractAddress('GhoDiscountRateStrategy', NetworkNumber.Eth);
+  const GhoDiscountRateStrategyAbi = getConfigContractAbi('GhoDiscountRateStrategy');
+  const GhoTokenAbi = getConfigContractAbi('GHO');
 
-  // const ghoContract = GhoTokenContract();
+  const multicallCallsObject = [
+    {
+      target: GhoDiscountRateStrategyAddress,
+      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'GHO_DISCOUNTED_PER_DISCOUNT_TOKEN'),
+      params: [],
+    },
+    {
+      target: GhoDiscountRateStrategyAddress,
+      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'DISCOUNT_RATE'),
+      params: [],
+    },
+    {
+      target: GhoDiscountRateStrategyAddress,
+      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'MIN_DISCOUNT_TOKEN_BALANCE'),
+      params: [],
+    },
+    {
+      target: GhoDiscountRateStrategyAddress,
+      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'MIN_DEBT_TOKEN_BALANCE'),
+      params: [],
+    },
+    {
+      target: getAssetInfo('GHO').address,
+      abiItem: getAbiItem(GhoTokenAbi, 'getFacilitatorsList'),
+      params: [],
+    },
+  ];
+
+  const ghoContract = GhoTokenContract(web3, network);
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-    [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }], // isL2 ? [{}, {}, {}, {}, {}] : multicall(multicallCallsObject),
+    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, network),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -69,37 +108,36 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
     { 0: facilitatorsList },
   ] = multiRes;
 
-  // let rewardInfo = null;
-  // if (network === 10) {
-  //   rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
-  //   rewardInfo = rewardInfo.reduce((all, market) => {
-  //     // eslint-disable-next-line no-param-reassign
-  //     all[market.underlyingAsset] = market;
-  //     // all[market.underlyingAsset] = market.aIncentiveData.rewardsTokenInformation[0].emissionPerSecond;
-  //     return all;
-  //   }, {});
-  // }
+  let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
+  if (network === 10) {
+    rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
+    rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
+      // eslint-disable-next-line no-param-reassign
+      all[_market.underlyingAsset] = _market;
+      return all;
+    }, {});
+  }
 
-  const assetsData = await Promise.all(loanInfo
+  const assetsData: AaveV3AssetsData = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO';
 
-      const borrowCap = tokenMarket.borrowCap;
-      const discountRateOnBorrow = '0';
+      let borrowCap = tokenMarket.borrowCap;
+      let discountRateOnBorrow = '0';
 
-      // if (nativeAsset) {
-      //   borrowCap = assetAmountInEth((await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call())[0], 'GHO');
-      //
-      //   discountRateOnBorrow = aaveV3CalculateDiscountRate(
-      //     tokenMarket.totalBorrow.toString(),
-      //     '3160881469228662060510133', // stkAAVE total supply
-      //     discountRate,
-      //     minDiscountTokenBalance,
-      //     minGhoBalanceForDiscount,
-      //     ghoDiscountedPerDiscountToken,
-      //   );
-      // }
+      if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {
+        borrowCap = assetAmountInEth((await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call())[0], 'GHO');
+
+        discountRateOnBorrow = aaveV3CalculateDiscountRate(
+          tokenMarket.totalBorrow.toString(),
+          '3160881469228662060510133', // stkAAVE total supply
+          discountRate,
+          minDiscountTokenBalance,
+          minGhoBalanceForDiscount,
+          ghoDiscountedPerDiscountToken,
+        );
+      }
 
       return ({
         nativeAsset,
@@ -163,58 +201,49 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
       });
     }));
 
-  // await Promise.all(loanInfo.map(async (market) => {
-  //   /* eslint-disable no-param-reassign */
-  //   const rewardForMarket = rewardInfo?.[market.underlyingTokenAddress];
-  //   if (market.symbol === 'wstETH') {
-  //     market.incentiveSupplyApy = await getStETHApr();
-  //     market.incentiveSupplyToken = 'wstETH';
-  //   }
-  //
-  //   if (market.symbol === 'cbETH' && !isLayer2Network(network)) {
-  //     market.incentiveSupplyApy = await getCbETHApr();
-  //     market.incentiveSupplyToken = 'cbETH';
-  //   }
-  //
-  //   if (market.symbol === 'rETH') {
-  //     market.incentiveSupplyApy = await getREthApr();
-  //     market.incentiveSupplyToken = 'rETH';
-  //   }
-  //
-  //   if (market.canBeBorrowed && market.incentiveSupplyApy) {
-  //     market.incentiveBorrowApy = `-${market.incentiveSupplyApy}`;
-  //     market.incentiveBorrowToken = market.incentiveSupplyToken;
-  //   }
-  //
-  //   if (!rewardForMarket) return;
-  //   const supplyRewardData = rewardForMarket.aIncentiveData.rewardsTokenInformation[0];
-  //   if (supplyRewardData) {
-  //     if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-  //     market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
-  //     const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
-  //     const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals).toString();
-  //     market.incentiveSupplyApy = new Dec(supplyEmissionPerSecond).div((10 ** supplyRewardData.rewardTokenDecimals) / 100)
-  //       .mul(365 * 24 * 3600)
-  //       .mul(supplyRewardPrice)
-  //       .div(market.price)
-  //       .div(market.totalSupply)
-  //       .toString();
-  //   }
-  //   const borrowRewardData = rewardForMarket.vIncentiveData.rewardsTokenInformation[0];
-  //   if (borrowRewardData) {
-  //     if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-  //     market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
-  //     const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
-  //     const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals).toString();
-  //     market.incentiveBorrowApy = new Dec(supplyEmissionPerSecond).div((10 ** borrowRewardData.rewardTokenDecimals) / 100)
-  //       .mul(365 * 24 * 3600)
-  //       .mul(supplyRewardPrice)
-  //       .div(market.price)
-  //       .div(market.totalBorrowVar)
-  //       .toString();
-  //   }
-  //   /* eslint-enable no-param-reassign */
-  // }));
+  await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
+    /* eslint-disable no-param-reassign */
+    const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
+    if (['wstETH', 'cbETH', 'rETH'].includes(_market.symbol)) {
+      if (!isLayer2Network(network) && _market.symbol === 'cbETH') return;
+      _market.incentiveSupplyApy = await getStakingApy(_market.symbol);
+      _market.incentiveSupplyToken = _market.symbol;
+    }
+
+    if (_market.canBeBorrowed && _market.incentiveSupplyApy) {
+      _market.incentiveBorrowApy = `-${_market.incentiveSupplyApy}`;
+      _market.incentiveBorrowToken = _market.incentiveSupplyToken;
+    }
+
+    if (!rewardForMarket) return;
+    const supplyRewardData = rewardForMarket.aIncentiveData.rewardsTokenInformation[0];
+    if (supplyRewardData) {
+      if (+supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+      _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
+      const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
+      const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** +supplyRewardData.priceFeedDecimals).toString();
+      _market.incentiveSupplyApy = new Dec(supplyEmissionPerSecond).div((10 ** +supplyRewardData.rewardTokenDecimals) / 100)
+        .mul(365 * 24 * 3600)
+        .mul(supplyRewardPrice)
+        .div(_market.price)
+        .div(_market.totalSupply)
+        .toString();
+    }
+    const borrowRewardData = rewardForMarket.vIncentiveData.rewardsTokenInformation[0];
+    if (borrowRewardData) {
+      if (+borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+      _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
+      const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
+      const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** +borrowRewardData.priceFeedDecimals).toString();
+      _market.incentiveBorrowApy = new Dec(supplyEmissionPerSecond).div((10 ** +borrowRewardData.rewardTokenDecimals) / 100)
+        .mul(365 * 24 * 3600)
+        .mul(supplyRewardPrice)
+        .div(_market.price)
+        .div(_market.totalBorrowVar)
+        .toString();
+    }
+    /* eslint-enable no-param-reassign */
+  }));
 
   return { assetsData };
 }

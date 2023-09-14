@@ -7,8 +7,10 @@ const sdk = require('../cjs');
 describe('Aave v3', () => {
   let web3;
   let web3Base;
+  let web3Opt;
   before(async () => {
     web3 = new Web3(process.env.RPC);
+    web3Opt = new Web3(process.env.RPCOPT);
     web3Base = new Web3(process.env.RPCBASE);
   });
 
@@ -28,7 +30,7 @@ describe('Aave v3', () => {
     assert.equal(res, '64');
   });
 
-  const fetchMarketData = async (network) => {
+  const fetchMarketData = async (network, web3) => {
     const marketData = await sdk.aaveV3.getMarketData(web3, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3]);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
@@ -46,13 +48,20 @@ describe('Aave v3', () => {
     this.timeout(10000);
     const network = 1;
 
-    await fetchMarketData(network);
+    await fetchMarketData(network, web3);
+  });
+
+  it('can fetch market data for Optimism', async function () {
+    this.timeout(10000);
+    const network = 10;
+
+    await fetchMarketData(network, web3Opt);
   });
 
   it('can fetch market data for Base', async function () {
     this.timeout(10000);
     const network = 8453;
 
-    await fetchMarketData(network);
+    await fetchMarketData(network, web3Base);
   });
 });

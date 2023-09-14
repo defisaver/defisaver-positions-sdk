@@ -11,3 +11,5 @@ export const wethToEth = (maybeWeth: any) => maybeWeth?.replace(/^WETH$/, 'ETH')
 export const stEthToWstEth = (maybeStEth: any) => maybeStEth?.replace(/^stETH$/, 'wstETH');
 
 export const wstEthToStEth = (maybeStEth: any) => maybeStEth?.replace(/^wstETH$/, 'stETH');
+
+export const getAbiItem = (abi: any, methodName: string) => abi.find((i: any) => i.name === methodName);
