@@ -28,10 +28,9 @@ describe('Aave v3', () => {
     assert.equal(res, '64');
   });
 
-  it('can fetch market data for Ethereum', async () => {
-    const network = 1;
+  const fetchMarketData = async (network) => {
     const marketData = await sdk.aaveV3.getMarketData(web3, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3]);
-    console.log(marketData);
+    // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys = [
@@ -41,20 +40,19 @@ describe('Aave v3', () => {
       assert.containsAllKeys(tokenData, keys);
       for (const key of keys) assert.isDefined(tokenData[key], `${key} is undefined for ${tokenData.symbol}`);
     }
+  };
+
+  it('can fetch market data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = 1;
+
+    await fetchMarketData(network);
   });
 
-  it('can fetch market data for Base', async () => {
+  it('can fetch market data for Base', async function () {
+    this.timeout(10000);
     const network = 8453;
-    const marketData = await sdk.aaveV3.getMarketData(web3Base, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3]);
-    console.log(marketData);
-    assert.containsAllKeys(marketData, ['assetsData']);
-    for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
-        'symbol', 'supplyRate', 'borrowRate', 'price', // ...
-        'isSiloed', // ...
-      ];
-      assert.containsAllKeys(tokenData, keys);
-      for (const key of keys) assert.isDefined(tokenData[key], `${key} is undefined for ${tokenData.symbol}`);
-    }
+
+    await fetchMarketData(network);
   });
 });
