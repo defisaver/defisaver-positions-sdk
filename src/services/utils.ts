@@ -13,3 +13,8 @@ export const stEthToWstEth = (maybeStEth: any) => maybeStEth?.replace(/^stETH$/,
 export const wstEthToStEth = (maybeStEth: any) => maybeStEth?.replace(/^wstETH$/, 'stETH');
 
 export const getAbiItem = (abi: any, methodName: string) => abi.find((i: any) => i.name === methodName);
+
+export const ADDRESS_REGEX = /0x[0-9a-fA-F]{40}/;
+export const isAddress = (address: string) => typeof address === 'string' && (new RegExp(ADDRESS_REGEX).test(address));
+
+export const compareAddresses = (addr1 = '', addr2 = '') => addr1.toLowerCase() === addr2.toLowerCase();

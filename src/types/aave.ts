@@ -42,33 +42,69 @@ export interface EModeCategoryData {
   collateralFactor: string,
   priceSource: string,
 }
+export interface EModeCategoryDataMapping {
+  enteringTerms: boolean[],
+  canEnterCategory: boolean,
+  id: number,
+  data: EModeCategoryData,
+  assets: string[],
+  enabledData: {
+    ratio: string,
+    liqRatio: string,
+    liqPercent: string,
+    collRatio: string,
+  }
+}
 export interface AaveV3AssetData extends MMAssetData {
-  isIsolated: string,
-  isSiloed: string,
+  isIsolated: boolean,
+  isSiloed: boolean,
   nativeAsset: boolean,
   discountData: DiscountData,
   debtCeilingForIsolationMode: string,
-  eModeCategory: string,
+  eModeCategory: number,
   isolationModeTotalDebt: string,
   borrowRateDiscounted: string,
   isolationModeBorrowingEnabled: boolean,
   eModeCategoryData: EModeCategoryData,
+  sortIndex: number,
+  supplyRateP2P?: string,
+  borrowRateP2P?: string,
 }
-export type AaveV3AssetsData = AaveV3AssetData[];
-export type AaveV3MarketData = {
-  assetsData: AaveV3AssetsData,
-  // TODO figure out if eModeCategories should be here
-};
+export type AaveV3AssetsData = { [key: string]: AaveV3AssetData };
+export type AaveV3MarketData = { assetsData: AaveV3AssetsData };
 export interface AaveV3UsedAsset extends MMUsedAsset {
   discountedBorrowRate: string,
-  eModeCategory: string,
+  eModeCategory: number,
+  supplyRate: string,
+  borrowRate: string,
+  interestMode: string,
+  stableBorrowRate: string,
+  stableLimit: string,
+  variableLimit: string,
+  limit: string,
+  borrowedUsdStable: string,
+  borrowedUsdVariable: string,
   // ...
 }
+export interface AaveV3UsedAssets {
+  [key: string]: AaveV3UsedAsset,
+}
 export interface AaveV3PositionData extends MMPositionData {
-  usedAssets: AaveV3UsedAsset[],
-  eModeCategory: string,
-  isInIsolationMode: string,
-  isInSiloedMode: string,
+  usedAssets: AaveV3UsedAssets,
+  eModeCategory: number,
+  isInIsolationMode: boolean,
+  isInSiloedMode: boolean,
+  eModeCategories: { [key: number]: EModeCategoryDataMapping },
+  ratio: string,
+  minRatio: string,
+  collRatio: string,
+  borrowedUsd: string,
+  borrowLimitUsd: string,
+  suppliedCollateralUsd: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
+  isSubscribedToAutomation?: boolean,
+  automationResubscribeRequired?: boolean,
   // ...
 }
 
@@ -77,4 +113,33 @@ export interface AaveV3IncentiveData {
   aIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
   vIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
   sIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput
+}
+
+export interface AaveV3AggregatedPositionData {
+  suppliedUsd: string,
+  suppliedCollateralUsd: string,
+  borrowedUsd: string,
+  borrowLimitUsd: string,
+  liquidationLimitUsd: string,
+  leftToBorrowUsd: string,
+  ratio: string,
+  collRatio: string,
+  netApy: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
+  liqRatio: string,
+  liqPercent: string,
+  leveragedType: string,
+  leveragedAsset?: string,
+  leveragedLsdAssetRatio?: string,
+  liquidationPrice?: string,
+}
+
+export interface AaveHelperCommon {
+  usedAssets: AaveV3UsedAssets,
+  eModeCategory: number,
+  eModeCategories: number[],
+  assetsData: AaveV3AssetsData,
+  selectedMarket: AaveMarketInfo,
+  network: NetworkNumber,
 }

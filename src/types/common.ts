@@ -48,11 +48,12 @@ export interface MMUsedAsset {
   symbol: string,
   supplied: string,
   suppliedUsd: string,
-  isSupplied: string,
+  isSupplied: boolean,
   collateral: string,
   borrowed: string,
   borrowedUsd: string,
-  isBorrowed: string,
+  isBorrowed: boolean,
+  debt: string,
 }
 export interface MMUsedAssetWStableB extends MMUsedAsset {
   stableBorrowRate: string,
@@ -63,8 +64,9 @@ export interface MMUsedAssetWStableB extends MMUsedAsset {
   interestMode: string,
 }
 export interface MMPositionData {
-  usedAssets: any[],
+  usedAssets: any,
   netApy: string,
   totalSupplied: string,
+  lastUpdated: number,
   // ...
 }

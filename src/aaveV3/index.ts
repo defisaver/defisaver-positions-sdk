@@ -8,14 +8,18 @@ import {
   addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
 } from '../services/utils';
 import {
-  AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData,
+  AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
 } from '../types/aave';
-import { NetworkNumber } from '../types/common';
-import { getStakingApy } from '../staking';
+import { EthAddress, NetworkNumber } from '../types/common';
+import { calculateNetApy, getStakingApy } from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
+import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from './helpers';
+import { getAssetsBalances } from '../assets';
+import { calculateBorrowingAssetLimit } from '../moneymarket';
 
 export { AaveMarkets } from './markets';
+export * from './helpers';
 export * from '../types/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
@@ -47,6 +51,38 @@ export const aaveV3CalculateDiscountRate = (
     .div(10000)
     .toDP(4)
     .toString();
+};
+
+export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
+  const { assetsData }: { assetsData: AaveV3AssetsData } = extractedState;
+  const usedAssetsValues = Object.values(usedAssets);
+
+  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
+  Object.values(assetsData).forEach((a: AaveV3AssetData) => {
+    const borrowingOnlyFromCategory = a.eModeCategory === 0
+      ? true
+      : !usedAssetsValues.filter(u => u.isBorrowed && u.eModeCategory !== a.eModeCategory).length;
+    const afterEnteringCategory = aaveAnyGetAggregatedPositionData({
+      ...extractedState, usedAssets, eModeCategory: a.eModeCategory,
+    });
+    const willStayOverCollateralized = new Dec(afterEnteringCategory.ratio).eq(0) || new Dec(afterEnteringCategory.ratio).gt(afterEnteringCategory.liqPercent);
+    const enteringTerms = [borrowingOnlyFromCategory, willStayOverCollateralized];
+
+    categoriesMapping[a.eModeCategory] = {
+      enteringTerms,
+      canEnterCategory: !enteringTerms.includes(false),
+      id: a.eModeCategory,
+      data: a.eModeCategoryData,
+      assets: a.eModeCategory === 0 ? [] : [...(categoriesMapping[a.eModeCategory]?.assets || []), a.symbol],
+      enabledData: {
+        ratio: afterEnteringCategory.ratio,
+        liqRatio: afterEnteringCategory.liqRatio,
+        liqPercent: afterEnteringCategory.liqPercent,
+        collRatio: afterEnteringCategory.collRatio,
+      },
+    };
+  });
+  return categoriesMapping;
 };
 
 export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
@@ -118,7 +154,7 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
     }, {});
   }
 
-  const assetsData: AaveV3AssetsData = await Promise.all(loanInfo
+  const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO';
@@ -201,6 +237,7 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
       });
     }));
 
+
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
@@ -245,5 +282,194 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
     /* eslint-enable no-param-reassign */
   }));
 
-  return { assetsData };
+  const payload: AaveV3AssetsData = {};
+  // Sort by market size
+  assetsData
+    .sort((a, b) => {
+      const aMarket = new Dec(a.price).times(a.totalSupply).toString();
+      const bMarket = new Dec(b.price).times(b.totalSupply).toString();
+
+      return new Dec(bMarket).minus(aMarket).toNumber();
+    })
+    .forEach((assetData: AaveV3AssetData, i) => {
+      payload[assetData.symbol] = { ...assetData, sortIndex: i };
+    });
+
+  return { assetsData: payload };
 }
+
+export const EMPTY_AAVE_DATA = {
+  usedAssets: {},
+  suppliedUsd: '0',
+  borrowedUsd: '0',
+  borrowLimitUsd: '0',
+  leftToBorrowUsd: '0',
+  ratio: '0',
+  minRatio: '0',
+  netApy: '0',
+  incentiveUsd: '0',
+  totalInterestUsd: '0',
+  isSubscribedToAutomation: false,
+  automationResubscribeRequired: false,
+  eModeCategory: 0,
+  isInIsolationMode: false,
+  isInSiloedMode: false,
+  totalSupplied: '0',
+  eModeCategories: [],
+  collRatio: '0',
+  suppliedCollateralUsd: '0',
+};
+
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any) => {
+  const {
+    selectedMarket: market, assetsData,
+  } = extractedState;
+  let payload: AaveV3PositionData = {
+    ...EMPTY_AAVE_DATA,
+    lastUpdated: Date.now(),
+  };
+  if (!address) {
+    // structure that this function returns is complex and dynamic so i didnt want to hardcode it in EMPTY_AAVE_DATA
+    // This case only triggers if user doesnt have proxy and data is refetched once proxy is created
+    // TODO when refactoring aave figure out if this is the best solution.
+    payload.eModeCategories = aaveV3EmodeCategoriesMapping(extractedState, {});
+
+    return payload;
+  }
+
+  const isL2 = isLayer2Network(network);
+
+  const loanInfoContract = AaveV3ViewContract(web3, network);
+  const marketAddress = market.providerAddress;
+  const _addresses = market.assets.map((a: string[]) => getAssetInfo(ethToWeth(a), network).address);
+
+  const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
+
+  const LendingPoolAbi = getConfigContractAbi(market.lendingPool);
+
+  const multicallData = [
+    {
+      target: market.lendingPoolAddress,
+      abiItem: LendingPoolAbi.find(({ name }) => name === 'getUserEMode'),
+      params: [address],
+    },
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
+    },
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
+    },
+  ];
+
+  const [multicallRes, { 0: stkAaveBalance }] = await Promise.all([
+    multicall(multicallData, network),
+    isL2 ? { 0: '0' } : getAssetsBalances(['stkAAVE'], address, network, web3),
+    { 0: '0' },
+  ]);
+
+  const loanInfo = [...multicallRes[1][0], ...multicallRes[2][0]];
+
+  const usedAssets: { [key: string]: any } = {};
+  loanInfo.map(async (tokenInfo, i) => {
+    const asset = market.assets[i];
+    const isSupplied = tokenInfo.balance.toString() !== '0';
+    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
+    if (!isSupplied && !isBorrowed) return;
+
+    const supplied = assetAmountInEth(tokenInfo.balance.toString(), asset);
+    const borrowedStable = assetAmountInEth(tokenInfo.borrowsStable.toString(), asset);
+    const borrowedVariable = assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset);
+    const enabledAsCollateral = assetsData[asset].usageAsCollateralEnabled ? tokenInfo.enabledAsCollateral : false;
+
+    let interestMode;
+    if (borrowedVariable === '0' && borrowedStable !== '0') {
+      interestMode = '1';
+    } else if (borrowedVariable !== '0' && borrowedStable === '0') {
+      interestMode = '2';
+    } else {
+      interestMode = 'both';
+    }
+    if (!usedAssets[asset]) usedAssets[asset] = {};
+    const nativeAsset = asset === 'GHO';
+
+    let discountRateOnBorrow = '0';
+    const borrowed = new Dec(borrowedStable).add(borrowedVariable).toString();
+
+    if (nativeAsset && new Dec(borrowed).gt(0) && new Dec(stkAaveBalance).gt(0)) {
+      discountRateOnBorrow = aaveV3CalculateDiscountRate(
+        assetAmountInWei(borrowed, 'GHO'),
+        assetAmountInWei(stkAaveBalance, 'stkAAVE'),
+        assetsData[asset].discountData.discountRate,
+        assetsData[asset].discountData.minDiscountTokenBalance,
+        assetsData[asset].discountData.minGhoBalanceForDiscount,
+        assetsData[asset].discountData.ghoDiscountedPerDiscountToken,
+      );
+    }
+
+    usedAssets[asset] = {
+      ...usedAssets[asset],
+      symbol: asset,
+      supplied,
+      suppliedUsd: new Dec(supplied).mul(assetsData[asset].price).toString(),
+      isSupplied,
+      collateral: enabledAsCollateral,
+      stableBorrowRate: new Dec(tokenInfo.stableBorrowRate).div(1e25).toString(),
+      discountedBorrowRate: new Dec(assetsData[asset].borrowRate).mul(1 - parseFloat(discountRateOnBorrow)).toString(),
+      borrowedStable,
+      borrowedVariable,
+      borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),
+      borrowedUsdVariable: new Dec(borrowedVariable).mul(assetsData[asset].price).toString(),
+      borrowed,
+      borrowedUsd: new Dec(new Dec(borrowedVariable).add(borrowedStable)).mul(assetsData[asset].price).toString(),
+      isBorrowed,
+      eModeCategory: assetsData[asset].eModeCategory,
+      interestMode,
+    };
+  });
+
+  payload.eModeCategory = +multicallRes[0][0];
+  payload = {
+    ...payload,
+    usedAssets,
+    ...aaveAnyGetAggregatedPositionData({
+      ...extractedState, usedAssets, eModeCategory: payload.eModeCategory,
+    }),
+  };
+  payload.eModeCategories = aaveV3EmodeCategoriesMapping(extractedState, usedAssets);
+  payload.isInIsolationMode = aaveV3IsInIsolationMode({ usedAssets, assetsData });
+  payload.isInSiloedMode = aaveV3IsInSiloedMode({ usedAssets, assetsData });
+
+  payload.ratio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+  payload.minRatio = '100';
+  payload.collRatio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+
+  // Calculate borrow limits per asset
+  Object.values(payload.usedAssets).forEach((item) => {
+    if (item.isBorrowed) {
+      // eslint-disable-next-line no-param-reassign
+      item.stableLimit = calculateBorrowingAssetLimit(item.borrowedUsdStable, payload.borrowLimitUsd);
+      // eslint-disable-next-line no-param-reassign
+      item.variableLimit = calculateBorrowingAssetLimit(item.borrowedUsdVariable, payload.borrowLimitUsd);
+      // eslint-disable-next-line no-param-reassign
+      item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
+    }
+  });
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
+
+  payload.isSubscribedToAutomation = false;
+  payload.automationResubscribeRequired = false;
+
+  return payload;
+};

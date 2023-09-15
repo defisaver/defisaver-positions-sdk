@@ -22,7 +22,7 @@ import { aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket } from './marketAs
 // };
 
 export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
-  chainIds: [1, 10, 42161],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base],
   label: 'Aave v3',
   shortLabel: 'v3',
   value: AaveVersions.AaveV3,

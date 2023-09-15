@@ -23,6 +23,10 @@ const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _
   return new web3.eth.Contract(contractConfig[name].abi, address) as any as T;
 };
 
+export const getErc20Contract = (address: string, web3: Web3) => (
+  new web3.eth.Contract(getConfigContractAbi('Erc20'), address)
+);
+
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
 export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
@@ -33,3 +37,5 @@ export const GhoTokenContract = createContractFromConfigFunc<ContractTypes.GHO>(
 export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
 export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');
 export const REthContract = createContractFromConfigFunc<ContractTypes.REth>('REth');
+
+export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
