@@ -4,7 +4,6 @@ import * as staking from './staking';
 import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
 import * as assets from './assets';
-import * as web3 from './web3';
 
 export {
   aaveV3,
@@ -12,5 +11,4 @@ export {
   staking,
   multicall,
   moneymarket,
-  web3,
 };

@@ -16,7 +16,7 @@ export { CompoundMarkets } from './markets';
 export * from '../types/compound';
 export * from './helpers';
 
-export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string): Promise<CompoundV3MarketData> => {
+export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketData> => {
   const contract = CompV3ViewContract(web3, network);
   const CompV3ViewAddress = contract.options.address;
   const calls = [
@@ -41,20 +41,20 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
           getStETHByWstETHMultiple([
             assetAmountInWei(coll.totalSupply, 'wstETH'),
             assetAmountInWei(coll.supplyCap, 'wstETH'),
-          ]),
-          getWstETHByStETH(assetAmountInWei(1, 'stETH')),
+          ], defaultWeb3),
+          getWstETHByStETH(assetAmountInWei(1, 'stETH'), defaultWeb3),
         ]);
         coll.totalSupplyAlternative = assetAmountInEth(totalSupplyAlternative, 'stETH');
         coll.supplyCapAlternative = assetAmountInEth(supplyCapAlternative, 'stETH');
         coll.priceAlternative = assetAmountInEth(priceAlternative, 'wstETH');
         // const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
         // eslint-disable-next-line no-await-in-loop
-        coll.incentiveSupplyApy = await getStETHApr();
+        coll.incentiveSupplyApy = await getStETHApr(defaultWeb3);
         coll.incentiveSupplyToken = 'wstETH';
       }
       if (coll.symbol === 'cbETH') {
         // eslint-disable-next-line no-await-in-loop
-        coll.incentiveSupplyApy = await getCbETHApr();
+        coll.incentiveSupplyApy = await getCbETHApr(defaultWeb3);
         coll.incentiveSupplyToken = 'cbETH';
       }
     }

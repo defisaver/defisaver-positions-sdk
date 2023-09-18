@@ -11,9 +11,9 @@ describe('Compound v3', () => {
     web3 = new Web3(process.env.RPC);
   });
 
-  const fetchMarketData = async (network, web3, selectedMarket) => {
-    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(web3, network, selectedMarket, '2');
-    console.log(marketData);
+  const fetchMarketData = async (network, _web3, selectedMarket) => {
+    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, '2', web3);
+    // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys = [

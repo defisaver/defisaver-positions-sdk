@@ -85,7 +85,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
+export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
@@ -243,7 +243,7 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
     if (['wstETH', 'cbETH', 'rETH'].includes(_market.symbol)) {
       if (!isLayer2Network(network) && _market.symbol === 'cbETH') return;
-      _market.incentiveSupplyApy = await getStakingApy(_market.symbol);
+      _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
       _market.incentiveSupplyToken = _market.symbol;
     }
 

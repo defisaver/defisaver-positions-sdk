@@ -33,8 +33,8 @@ describe('Aave v3', () => {
     assert.equal(res, '64');
   });
 
-  const fetchMarketData = async (network, web3) => {
-    const marketData = await sdk.aaveV3.getMarketData(web3, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3]);
+  const fetchMarketData = async (network, _web3) => {
+    const marketData = await sdk.aaveV3.getMarketData(_web3, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
