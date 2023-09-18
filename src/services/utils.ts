@@ -1,3 +1,4 @@
+import Dec from 'decimal.js';
 import { NetworkNumber } from '../types/common';
 
 export const isLayer2Network = (networkId: NetworkNumber) => [10, 42161, 8453].includes(+networkId);
@@ -18,3 +19,5 @@ export const ADDRESS_REGEX = /0x[0-9a-fA-F]{40}/;
 export const isAddress = (address: string) => typeof address === 'string' && (new RegExp(ADDRESS_REGEX).test(address));
 
 export const compareAddresses = (addr1 = '', addr2 = '') => addr1.toLowerCase() === addr2.toLowerCase();
+
+export const getEthAmountForDecimals = (amount: string | number, decimals: string | number) => new Dec(amount).div(10 ** +decimals).toString();

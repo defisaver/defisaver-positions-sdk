@@ -39,3 +39,7 @@ export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('
 export const REthContract = createContractFromConfigFunc<ContractTypes.REth>('REth');
 
 export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
+
+export const CompV3ViewContract = createContractFromConfigFunc<ContractTypes.CompV3View>('CompV3View');
+
+export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');

@@ -132,7 +132,7 @@ export async function getMarketData(web3: Web3, network: NetworkNumber, market: 
   let [loanInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, network),
+    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -366,7 +366,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   ];
 
   const [multicallRes, { 0: stkAaveBalance }] = await Promise.all([
-    multicall(multicallData, network),
+    multicall(multicallData, web3, network),
     isL2 ? { 0: '0' } : getAssetsBalances(['stkAAVE'], address, network, web3),
     { 0: '0' },
   ]);

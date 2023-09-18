@@ -1,14 +1,14 @@
 import Dec from 'decimal.js';
-import { getWeb3 } from '../web3';
-import { CbEthContract, LidoContract, REthContract } from '../contracts';
+import Web3 from 'web3';
+import {
+  CbEthContract, LidoContract, REthContract, wstETHContract,
+} from '../contracts';
 import { NetworkNumber } from '../types/common';
-import { TokenRebased } from '../types/contracts/generated/Lido';
 import { ContractEventLog } from '../types/contracts/generated/types';
-import { AaveV3AssetsData, AaveV3MarketData, AaveV3UsedAssets } from '../aaveV3';
-
-const SECONDS_PER_YEAR = 365 * 24 * 60 * 60;
-const AVG_BLOCK_TIME = 12;
-const BLOCKS_IN_A_YEAR = SECONDS_PER_YEAR / AVG_BLOCK_TIME;
+import { AaveV3AssetsData, AaveV3UsedAssets } from '../aaveV3';
+import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants';
+import { multicall } from '../multicall';
+import { getWeb3 } from '../web3';
 
 export const getStETHApr = async (fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
   try {
@@ -55,7 +55,7 @@ export const getCbETHApr = async (blockNumber: 'latest' | number = 'latest') => 
 export const getREthApr = async (blockNumber: 'latest' | number = 'latest') => {
   let currentBlock = blockNumber;
   const web3 = getWeb3(NetworkNumber.Eth);
-  if (blockNumber === 'latest') currentBlock = await getWeb3(NetworkNumber.Eth).eth.getBlockNumber();
+  if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
   const blockDiff = 8 * 24 * 60 * 60 / AVG_BLOCK_TIME;
   const pastBlock = (currentBlock as number) - blockDiff;
   const contract = REthContract(web3, NetworkNumber.Eth);
@@ -144,4 +144,20 @@ export const calculateNetApy = (usedAssets: AaveV3UsedAssets, assetsData: AaveV3
   const netApy = new Dec(totalInterestUsd).div(balance).times(100).toString();
 
   return { netApy, totalInterestUsd, incentiveUsd };
+};
+
+export const getWstETHByStETH = async (stETHAmount: string | number) => wstETHContract(getWeb3(NetworkNumber.Eth), NetworkNumber.Eth).methods.getWstETHByStETH(stETHAmount).call();
+
+export const getStETHByWstETH = async (wstETHAmount: string | number) => wstETHContract(getWeb3(NetworkNumber.Eth), NetworkNumber.Eth).methods.getStETHByWstETH(wstETHAmount).call();
+
+export const getStETHByWstETHMultiple = async (wstEthAmounts: string[] | number[]) => {
+  const web3 = getWeb3(NetworkNumber.Eth);
+  const contract = wstETHContract(web3, NetworkNumber.Eth);
+  const calls = wstEthAmounts.map((amount) => ({
+    target: contract.options.address,
+    abiItem: contract.options.jsonInterface.find((i) => i.name === 'getStETHByWstETH'),
+    params: [amount],
+  }));
+  const stEthAmounts = await multicall(calls, web3);
+  return stEthAmounts.map((arr) => arr[0]);
 };

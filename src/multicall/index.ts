@@ -1,9 +1,8 @@
+import Web3 from 'web3';
 import { UniMulticallContract } from '../contracts';
 import { NetworkNumber } from '../types/common';
-import { getWeb3 } from '../web3';
 
-export const multicall = async (calls: any[], network: NetworkNumber, blockNumber: 'latest' | number = 'latest') => {
-  const web3 = getWeb3(network);
+export const multicall = async (calls: any[], web3: Web3, network: NetworkNumber = NetworkNumber.Eth, blockNumber: 'latest' | number = 'latest') => {
   const multicallContract = UniMulticallContract(web3, network);
   const formattedCalls = calls.map((call) => {
     const callData = web3.eth.abi.encodeFunctionCall(call.abiItem, call.params);

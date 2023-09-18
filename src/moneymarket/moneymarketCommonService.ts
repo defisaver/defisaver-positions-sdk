@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import { AaveV3UsedAssets } from '../aaveV3';
+import { BLOCKS_IN_A_YEAR } from '../constants';
 
 export const getAssetsTotal = (assets: object, filter: any, transform: any) => (Object.values(assets) as any)
   .filter(filter)
@@ -71,3 +72,5 @@ export const isLeveragedPos = (usedAssets: AaveV3UsedAssets, dustLimit = 5) => {
     leveragedAsset: '',
   };
 };
+
+export const aprToApy = (interest: string | number, frequency = BLOCKS_IN_A_YEAR) => ((1 + (+interest / 100) / frequency) ** frequency - 1) * 100; // eslint-disable-line

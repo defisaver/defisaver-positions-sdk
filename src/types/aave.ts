@@ -84,6 +84,7 @@ export interface AaveV3UsedAsset extends MMUsedAsset {
   limit: string,
   borrowedUsdStable: string,
   borrowedUsdVariable: string,
+  collateral: string,
   // ...
 }
 export interface AaveV3UsedAssets {
