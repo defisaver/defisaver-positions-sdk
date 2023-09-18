@@ -55,7 +55,17 @@ export interface EModeCategoryDataMapping {
     collRatio: string,
   }
 }
-export interface AaveV3AssetData extends MMAssetData {
+
+export interface AaveAssetData extends MMAssetData {
+  sortIndex?: number,
+}
+
+
+export interface AaveV2AssetData extends AaveAssetData {
+  priceInEth: string,
+}
+
+export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
   nativeAsset: boolean,
@@ -66,11 +76,22 @@ export interface AaveV3AssetData extends MMAssetData {
   borrowRateDiscounted: string,
   isolationModeBorrowingEnabled: boolean,
   eModeCategoryData: EModeCategoryData,
-  sortIndex: number,
   supplyRateP2P?: string,
   borrowRateP2P?: string,
+  isFrozen: boolean,
+  isPaused: boolean,
+  isFlashLoanEnabled: boolean,
+  assetId: string,
 }
-export type AaveV3AssetsData = { [key: string]: AaveV3AssetData };
+
+export type AaveAssetsData<T> = { [key: string]: T };
+
+export type AaveV2AssetsData = AaveAssetsData<AaveV2AssetData>;
+
+export type AaveV2MarketData = { assetsData: AaveV2AssetsData };
+
+export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
+
 export type AaveV3MarketData = { assetsData: AaveV3AssetsData };
 export interface AaveV3UsedAsset extends MMUsedAsset {
   discountedBorrowRate: string,

@@ -43,3 +43,5 @@ export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes
 export const CompV3ViewContract = createContractFromConfigFunc<ContractTypes.CompV3View>('CompV3View');
 
 export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');
+
+export const AaveLoanInfoV2Contract = createContractFromConfigFunc<ContractTypes.AaveLoanInfoV2>('AaveLoanInfoV2');
