@@ -126,7 +126,7 @@ module.exports = {
         "address": "0x1F98415757620B543A52E61c46B32eB19261F984"
       },
       "8453": {
-        "address": "0xB206027a9E0E13F05eBEFa5D2402Bab3eA716439"
+        "address": "0x091e99cb1C49331a94dD62755D168E941AbD0693"
       }
     }
   },
