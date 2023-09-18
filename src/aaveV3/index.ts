@@ -18,7 +18,6 @@ import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSi
 import { getAssetsBalances } from '../assets';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 
-export { AaveMarkets } from './markets';
 export * from './helpers';
 export * from '../types/aave';
 

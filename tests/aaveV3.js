@@ -18,7 +18,7 @@ describe('Aave v3', () => {
   });
 
   it('has market data', async () => {
-    const { AaveMarkets } = sdk.aaveV3;
+    const { AaveMarkets } = sdk.markets;
     assert.containsAllKeys(AaveMarkets(1), [sdk.aaveV3.AaveVersions.AaveV3]);
     for (const market of Object.values(AaveMarkets(1))) {
       const keys = ['chainIds', 'label', 'shortLabel', 'url', 'value', 'assets', 'provider', 'providerAddress', 'lendingPool', 'lendingPoolAddress', 'protocolData', 'protocolDataAddress', 'protocolName'];
@@ -34,7 +34,7 @@ describe('Aave v3', () => {
   });
 
   const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.aaveV3.getMarketData(_web3, network, sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3], web3);
+    const marketData = await sdk.aaveV3.getMarketData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -49,7 +49,7 @@ describe('Aave v3', () => {
   };
 
   const fetchAccountData = async (network, web3, marketData) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { selectedMarket: sdk.aaveV3.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3], assetsData: marketData.assetsData });
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { selectedMarket: sdk.markets.AaveMarkets(network)[sdk.aaveV3.AaveVersions.AaveV3], assetsData: marketData.assetsData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...

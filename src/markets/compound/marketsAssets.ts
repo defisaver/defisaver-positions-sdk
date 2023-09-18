@@ -1,6 +1,5 @@
-
 import { getAssetInfo } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import { NetworkNumber } from '../../types/common';
 
 export const compoundV2CollateralAssets = [
   'cETH', 'cDAI', 'cBAT', 'cZRX', 'cUSDC', 'cWBTC Legacy', 'cWBTC', 'cUSDT',

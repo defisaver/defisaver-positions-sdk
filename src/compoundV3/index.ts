@@ -19,7 +19,6 @@ import { wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 
-export { CompoundMarkets } from './markets';
 export * from '../types/compound';
 export * from './helpers';
 
