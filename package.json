@@ -8,8 +8,8 @@
   "scripts": {
     "build:esm": "rm -rf esm && tsc -p tsconfig.json",
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
-    "build": "npm run build:cjs && npm run build:esm",
-    "dev": "tsc -p tsconfig.cjs.json --watch",
+    "build": "npm run generate-contracts && npm run build:cjs && npm run build:esm",
+    "dev": "npm run generate-contracts && tsc -p tsconfig.cjs.json --watch",
     "lint": "eslint src/ --fix",
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*",
