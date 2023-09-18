@@ -40,6 +40,12 @@ export interface MMAssetData {
   incentiveBorrowToken: string,
   incentiveSupplyApy: string,
   incentiveSupplyToken: string,
+  borrowRateP2P?: string,
+  supplyRateP2P?: string,
+}
+
+export interface MMAssetsData {
+  [token: string]: MMAssetData,
 }
 export interface MMMarketData {
   assetsData: MMAssetData[],
@@ -53,6 +59,15 @@ export interface MMUsedAsset {
   borrowedUsd: string,
   isBorrowed: boolean,
   debt: string,
+  supplyRate?: string,
+  borrowRate?: string,
+  discountedBorrowRate?: string,
+  stableBorrowRate?: string,
+  interestMode?: string,
+  collateral?: boolean,
+}
+export interface MMUsedAssets {
+  [token: string]: MMUsedAsset,
 }
 export interface MMUsedAssetWStableB extends MMUsedAsset {
   stableBorrowRate: string,

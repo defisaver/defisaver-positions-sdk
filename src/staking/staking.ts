@@ -3,9 +3,8 @@ import Web3 from 'web3';
 import {
   CbEthContract, LidoContract, REthContract, wstETHContract,
 } from '../contracts';
-import { NetworkNumber } from '../types/common';
+import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../types/common';
 import { ContractEventLog } from '../types/contracts/generated/types';
-import { AaveV3AssetsData, AaveV3UsedAssets } from '../aaveV3';
 import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants';
 import { multicall } from '../multicall';
 
@@ -89,7 +88,7 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
     return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const calculateNetApy = (usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData, isMorpho = false) => {
+export const calculateNetApy = (usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho = false) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
     const assetData = assetsData[usedAsset.symbol];

@@ -1,6 +1,7 @@
 import Dec from 'decimal.js';
 import { AaveV3UsedAssets } from '../aaveV3';
 import { BLOCKS_IN_A_YEAR } from '../constants';
+import { MMUsedAssets } from '../types/common';
 
 export const getAssetsTotal = (assets: object, filter: any, transform: any) => (Object.values(assets) as any)
   .filter(filter)
@@ -22,7 +23,7 @@ export const calculateBorrowingAssetLimit = (assetBorrowedUsd: string, borrowLim
 
 export const STABLE_ASSETS = ['DAI', 'USDC', 'USDT', 'TUSD', 'USDP', 'GUSD', 'BUSD', 'SUSD', 'FRAX', 'LUSD', 'USDC.e', 'GHO', 'sDAI'];
 
-export const isLeveragedPos = (usedAssets: AaveV3UsedAssets, dustLimit = 5) => {
+export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
   let borrowUnstable = 0;
   let supplyStable = 0;
   let borrowStable = 0;

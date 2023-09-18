@@ -16,7 +16,7 @@ export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);
 
 export const aaveAnyGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: AaveV3UsedAssets }) => Object.values(usedAssets)
-  .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral);
+  .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral);
 
 export const aaveAnyGetSuppliableAssets = ({
   usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
