@@ -28,6 +28,6 @@ export const aaveV3AssetsDefaultMarket = {
     'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB',
   ],
   [NetworkNumber.Base]: [
-    'ETH', 'USDC', 'cbETH',
+    'ETH', 'USDbC', 'cbETH',
   ],
 } as const;
