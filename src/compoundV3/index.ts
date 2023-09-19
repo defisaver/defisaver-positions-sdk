@@ -6,14 +6,14 @@ import {
 import { CompV3ViewContract } from '../contracts';
 import { multicall } from '../multicall';
 import {
-  CompoundV3AssetData, CompoundMarketData, CompoundVersions, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData,
+  CompoundV3AssetData, CompoundMarketData, CompoundVersions, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
 } from '../types/compound';
 import { NetworkNumber } from '../types/common';
 import {
   getCbETHApr, getStETHApr, getStETHByWstETHMultiple, getWstETHByStETH,
 } from '../staking';
 import {
-  formatBaseData, formatMarketData, getIncentiveApys, getCompoundAggregatedData,
+  formatBaseData, formatMarketData, getIncentiveApys, getCompoundV3AggregatedData,
 } from './helpers';
 import { wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
@@ -123,8 +123,8 @@ export const getCompoundV3AccountData = async (
   extractedState: ({
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
-  })): Promise<any> => {
-  if (!address) return null;
+  })): Promise<CompoundV3PositionData> => {
+  if (!address) throw new Error('No address provided');
   const {
     selectedMarket, assetsData,
   } = extractedState;
@@ -192,7 +192,7 @@ export const getCompoundV3AccountData = async (
   payload = {
     ...payload,
     usedAssets,
-    ...getCompoundAggregatedData({
+    ...getCompoundV3AggregatedData({
       usedAssets, assetsData, network, selectedMarket,
     }),
     isAllowed: data[1][0],

@@ -144,6 +144,7 @@ export interface AavePositionData extends MMPositionData {
   totalInterestUsd: string,
   isSubscribedToAutomation?: boolean,
   automationResubscribeRequired?: boolean,
+  totalSupplied: string,
 }
 
 export interface AaveV2PositionData extends AavePositionData {

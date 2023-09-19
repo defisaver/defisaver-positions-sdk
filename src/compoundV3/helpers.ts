@@ -1,12 +1,12 @@
 import Dec from 'decimal.js';
 import { getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  CompoundV3AssetData, BaseAdditionalAssetData, CompoundVersions, CompoundV3UsedAssets, CompoundV3AssetsData, CompoundMarketData, CompoundV3AggregatedPositionData,
+  CompoundV3AssetData, BaseAdditionalAssetData, CompoundVersions, CompoundV3UsedAssets, CompoundV3AssetsData, CompoundMarketData, CompoundV2UsedAssets, CompoundV2AssetsData, CompoundAggregatedPositionData,
 } from '../types/compound';
-import { getEthAmountForDecimals, wethToEth } from '../services/utils';
+import { getEthAmountForDecimals, handleWbtcLegacy, wethToEth } from '../services/utils';
 import { SECONDS_PER_YEAR } from '../constants';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
 } from '../moneymarket';
 import { calculateNetApy } from '../staking';
 import { NetworkNumber } from '../types/common';
@@ -77,10 +77,57 @@ export const getIncentiveApys = (
   };
 };
 
-export const getCompoundAggregatedData = ({
+export const getCompoundV2AggregatedData = ({
+  usedAssets, assetsData, ...rest
+}: { usedAssets: CompoundV2UsedAssets, assetsData: CompoundV2AssetsData }) => {
+  const payload = {} as CompoundAggregatedPositionData;
+  payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
+  payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
+  payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
+  payload.borrowLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[symbol].collateralFactor));
+
+  const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd).toString();
+
+  payload.leftToBorrowUsd = leftToBorrowUsd;
+  payload.borrowLimitUsd = new Dec(leftToBorrowUsd).add(payload.borrowedUsd).toString();
+
+  payload.liquidationLimitUsd = payload.borrowLimitUsd;
+  payload.ratio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+  payload.minRatio = '100';
+  payload.collRatio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+
+  // Calculate borrow limits per asset
+  Object.values(usedAssets).forEach((item) => {
+    if (item.isBorrowed) {
+      // eslint-disable-next-line no-param-reassign
+      item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
+    }
+  });
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
+
+  const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
+  payload.leveragedType = leveragedType;
+  if (leveragedType !== '') {
+    payload.leveragedAsset = leveragedAsset;
+    const assetPrice = assetsData[handleWbtcLegacy(leveragedAsset)].price;
+    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+  }
+
+  return payload;
+};
+
+export const getCompoundV3AggregatedData = ({
   usedAssets, assetsData, network, selectedMarket, ...rest
 }: { usedAssets: CompoundV3UsedAssets, assetsData: CompoundV3AssetsData, network: NetworkNumber, selectedMarket: CompoundMarketData }) => {
-  const payload = {} as CompoundV3AggregatedPositionData;
+  const payload = {} as CompoundAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);

@@ -47,3 +47,5 @@ export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>
 export const AaveLoanInfoV2Contract = createContractFromConfigFunc<ContractTypes.AaveLoanInfoV2>('AaveLoanInfoV2');
 
 export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTypes.CompoundLoanInfo>('CompoundLoanInfo');
+
+export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Comptroller>('Comptroller');

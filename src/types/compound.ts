@@ -24,14 +24,22 @@ export interface CompoundMarketData {
   // icon: Function,
 }
 
-export interface CompoundV3UsedAsset extends MMUsedAsset {
+export interface CompoundUsedAsset extends MMUsedAsset {
   collateral: boolean,
   limit?: string,
 }
 
-export interface CompoundV3UsedAssets {
-  [token: string]: CompoundV3UsedAsset,
+export interface CompoundV2UsedAsset extends CompoundUsedAsset {
 }
+export interface CompoundV3UsedAsset extends CompoundUsedAsset {
+}
+
+export interface CompoundUsedAssets<T> {
+  [token: string]: T,
+}
+
+export type CompoundV2UsedAssets = CompoundUsedAssets<CompoundV2UsedAsset>;
+export type CompoundV3UsedAssets = CompoundUsedAssets<CompoundV3UsedAsset>;
 
 export interface CompoundAssetData extends MMAssetData {
   supplyCapAlternative?: string,
@@ -70,7 +78,7 @@ export interface BaseAdditionalAssetData {
   isBase: boolean,
 }
 
-export interface CompoundV3AggregatedPositionData {
+export interface CompoundAggregatedPositionData {
   suppliedUsd: string,
   suppliedCollateralUsd: string,
   borrowedUsd: string,
@@ -91,4 +99,23 @@ export interface CompoundV3AggregatedPositionData {
   minRatio: string,
   debtTooLow: boolean,
   minDebt: string,
+}
+
+export interface CompoundPositionData extends MMPositionData {
+  ratio: string,
+  minRatio: string,
+  borrowedUsd: string,
+  borrowLimitUsd: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
+  isSubscribedToAutomation?: boolean,
+  automationResubscribeRequired?: boolean,
+}
+
+export interface CompoundV2PositionData extends CompoundPositionData {
+  usedAssets: CompoundV2UsedAssets,
+}
+
+export interface CompoundV3PositionData extends CompoundPositionData {
+  usedAssets: CompoundV3UsedAssets,
 }

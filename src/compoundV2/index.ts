@@ -5,9 +5,12 @@ import { BLOCKS_IN_A_YEAR } from '../constants';
 import { aprToApy } from '../moneymarket';
 import { compareAddresses, handleWbtcLegacy } from '../services/utils';
 import { NetworkNumber } from '../types/common';
-import { CompoundLoanInfoContract } from '../contracts';
+import { CompoundLoanInfoContract, ComptrollerContract } from '../contracts';
 import { compoundV2CollateralAssets } from '../markets/compound/marketsAssets';
-import { CompoundV2AssetsData, CompoundV2MarketsData } from '../compoundV3';
+import {
+  CompoundV2AssetsData, CompoundV2MarketsData, CompoundV2PositionData, CompoundV2UsedAsset, CompoundV2UsedAssets,
+} from '../compoundV3';
+import { getCompoundV2AggregatedData } from '../compoundV3/helpers';
 
 const compAddress = '0xc00e94cb662c3520282e6f5717214004a7f26888';
 
@@ -74,4 +77,82 @@ export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumbe
     .forEach((market, i) => { payload[market.symbol] = { ...market, sortIndex: i }; });
 
   return { assetsData: payload };
+};
+
+export const EMPTY_COMPOUND_DATA = {
+  usedAssets: {},
+  suppliedUsd: '0',
+  borrowedUsd: '0',
+  borrowLimitUsd: '0',
+  leftToBorrowUsd: '0',
+  ratio: '0',
+  minRatio: '0',
+  netApy: '0',
+  incentiveUsd: '0',
+  totalInterestUsd: '0',
+  borrowStableSupplyUnstable: false,
+  lastUpdated: Date.now(),
+};
+
+export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkNumber, account: string) => {
+  const contract = ComptrollerContract(web3, network);
+
+  return contract.methods.getAssetsIn(account).call();
+};
+
+export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: CompoundV2AssetsData): Promise<CompoundV2PositionData> => {
+  if (!address) throw new Error('No address provided');
+
+  let payload = { ...EMPTY_COMPOUND_DATA, lastUpdated: Date.now() };
+
+  const loanInfoContract = CompoundLoanInfoContract(web3, network);
+  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call();
+  const collateralAssetsAddresses = await getCollateralAssetsAddresses(web3, network, address);
+
+  const usedAssets = {} as CompoundV2UsedAssets;
+
+  loanInfo.balances.forEach((weiAmount: string, i: number) => {
+    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
+      : compoundV2CollateralAssets[i].underlyingAsset;
+    const amount = assetAmountInEth(weiAmount.toString(), asset);
+    const collateral = !!collateralAssetsAddresses.find(a => compareAddresses(a, compoundV2CollateralAssets[i].address));
+    if (weiAmount.toString() === '0' && !collateral) return;
+    if (!usedAssets[asset]) usedAssets[asset] = {} as CompoundV2UsedAsset;
+    usedAssets[asset] = {
+      ...usedAssets[asset],
+      symbol: asset,
+      supplied: amount,
+      suppliedUsd: new Dec(amount).mul(assetsData[handleWbtcLegacy(asset)].price).toString(),
+      isSupplied: +amount > 0,
+      collateral,
+    };
+  });
+
+  loanInfo.borrows.forEach((weiAmount, i) => {
+    if (weiAmount.toString() === '0') return;
+    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
+      : compoundV2CollateralAssets[i].underlyingAsset;
+    const amount = assetAmountInEth(weiAmount.toString(), asset);
+    if (!usedAssets[asset]) usedAssets[asset] = {} as CompoundV2UsedAsset;
+    usedAssets[asset] = {
+      ...usedAssets[asset],
+      symbol: asset,
+      borrowed: amount,
+      borrowedUsd: new Dec(amount).mul(assetsData[handleWbtcLegacy(asset)].price).toString(),
+      isBorrowed: true,
+      collateral: !!usedAssets[asset].collateral,
+    };
+  });
+
+  payload = {
+    ...payload,
+    usedAssets,
+    ...getCompoundV2AggregatedData({
+      usedAssets, assetsData,
+    }),
+  };
+
+  return payload;
 };

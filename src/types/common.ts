@@ -67,7 +67,6 @@ export interface MMUsedAssetWStableB extends MMUsedAsset {
 export interface MMPositionData {
   usedAssets: any,
   netApy: string,
-  totalSupplied: string,
   lastUpdated: number,
   // ...
 }
