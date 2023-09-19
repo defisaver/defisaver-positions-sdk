@@ -8,18 +8,15 @@ import {
   addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
 } from '../services/utils';
 import {
-  AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
+  AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
 } from '../types/aave';
 import { EthAddress, NetworkNumber } from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
-import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from './helpers';
 import { getAssetsBalances } from '../assets';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
-
-export * from './helpers';
-export * from '../types/aave';
+import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
   const contract = AaveV3ViewContract(web3, 1);

@@ -5,11 +5,12 @@ import { NetworkNumber } from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
-import {
-  AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets, AaveVersions, EMPTY_AAVE_DATA,
-} from '../aaveV3';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
-import { aaveAnyGetAggregatedPositionData } from '../aaveV3/helpers';
+import {
+  AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
+} from '../types';
+import { EMPTY_AAVE_DATA } from '../aaveV3';
+import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3) => {
   const _addresses = selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address);

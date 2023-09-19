@@ -1,5 +1,5 @@
-import { AaveMarketInfo, AaveVersions } from '../../aaveV3';
 import { getConfigContractAddress } from '../../contracts';
+import { AaveMarketInfo, AaveVersions } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import { aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket } from './marketAssets';
 

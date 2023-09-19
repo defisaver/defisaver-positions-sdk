@@ -6,6 +6,9 @@ import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
 import * as assets from './assets';
 import * as markets from './markets';
+import * as helpers from './helpers';
+
+export * from './types';
 
 export {
   aaveV2,
@@ -15,4 +18,5 @@ export {
   multicall,
   moneymarket,
   markets,
+  helpers,
 };

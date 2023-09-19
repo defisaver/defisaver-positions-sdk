@@ -1,5 +1,4 @@
 import Dec from 'decimal.js';
-import { AaveV3UsedAssets } from '../aaveV3';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { MMUsedAssets } from '../types/common';
 
