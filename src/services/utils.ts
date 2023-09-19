@@ -1,4 +1,5 @@
 import Dec from 'decimal.js';
+import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { NetworkNumber } from '../types/common';
 
 export const isLayer2Network = (networkId: NetworkNumber) => [10, 42161, 8453].includes(+networkId);
@@ -23,3 +24,5 @@ export const compareAddresses = (addr1 = '', addr2 = '') => addr1.toLowerCase() 
 export const getEthAmountForDecimals = (amount: string | number, decimals: string | number) => new Dec(amount).div(10 ** +decimals).toString();
 
 export const handleWbtcLegacy = (asset: string) => (asset === 'WBTC Legacy' ? 'WBTC' : asset);
+
+export const wethToEthByAddress = (maybeWethAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(wethToEth(getAssetInfoByAddress(maybeWethAddr, chainId).symbol), chainId).address;

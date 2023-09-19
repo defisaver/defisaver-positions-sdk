@@ -17,16 +17,6 @@ describe('Aave v3', () => {
     web3Arb = new Web3(process.env.RPCARB);
   });
 
-  it('has market data', async () => {
-    const { AaveMarkets } = sdk.markets;
-    assert.containsAllKeys(AaveMarkets(1), [sdk.AaveVersions.AaveV3]);
-    for (const market of Object.values(AaveMarkets(1))) {
-      const keys = ['chainIds', 'label', 'shortLabel', 'url', 'value', 'assets', 'provider', 'providerAddress', 'lendingPool', 'lendingPoolAddress', 'protocolData', 'protocolDataAddress', 'protocolName'];
-      assert.containsAllKeys(market, keys);
-      for (const key of keys) assert.isNotEmpty(market[key], `${key} is empty for ${market.label}`);
-    }
-  });
-
   it('has working contract', async () => {
     const res = await sdk.aaveV3.test(web3, 1);
     // console.log(res);

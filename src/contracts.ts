@@ -27,6 +27,10 @@ export const getErc20Contract = (address: string, web3: Web3) => (
   new web3.eth.Contract(getConfigContractAbi('Erc20'), address)
 );
 
+export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: ConfigKey, _address?: string) => (
+  createContractFromConfigFunc(name, _address)(web3, network)
+);
+
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
 export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
@@ -49,3 +53,5 @@ export const AaveLoanInfoV2Contract = createContractFromConfigFunc<ContractTypes
 export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTypes.CompoundLoanInfo>('CompoundLoanInfo');
 
 export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Comptroller>('Comptroller');
+
+export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot');

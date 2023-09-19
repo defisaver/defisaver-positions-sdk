@@ -1,7 +1,11 @@
 import { getConfigContractAddress } from '../../contracts';
-import { AaveMarketInfo, AaveVersions } from '../../types';
+import {
+  AaveMarketInfo, AaveVersions, MorphoAaveV2MarketInfo, MorphoAaveV3MarketInfo,
+} from '../../types';
 import { NetworkNumber } from '../../types/common';
-import { aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket } from './marketAssets';
+import {
+  aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
+} from './marketAssets';
 
 export const AAVE_V2: AaveMarketInfo = {
   chainIds: [1],
@@ -37,8 +41,40 @@ export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
   protocolName: 'aave',
 });
 
+export const MORPHO_AAVE_V2: MorphoAaveV2MarketInfo = {
+  chainIds: [1],
+  label: 'Morpho-Aave V2',
+  shortLabel: 'morpho-aave-v2',
+  value: AaveVersions.MorphoAaveV2,
+  url: '',
+  assets: morphoAaveV2AssetDefaultMarket,
+  providerAddress: getConfigContractAddress('LendingPoolAddressesProvider', 1),
+  lendingPoolAddress: getConfigContractAddress('MorphoAaveV2Proxy', 1),
+  // icon: SvgAdapter(protocolIcons.morpho),
+  protocolName: 'morpho',
+};
+
+export const MORPHO_AAVE_V3_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoAaveV3MarketInfo => ({
+  chainIds: [1],
+  label: 'Morpho-Aave V3',
+  shortLabel: 'morpho-aave-v3',
+  subVersionLabel: 'ETH Optimizer',
+  value: AaveVersions.MorphoAaveV3Eth,
+  url: 'eth-optimizer',
+  assets: morphoAaveV3AssetEthMarket,
+  providerAddress: getConfigContractAddress('AaveV3PoolAddressesProvider', networkId), // TODO - check if used and if value is good?
+  protocolData: 'AaveV3ProtocolDataProvider',
+  protocolDataAddress: getConfigContractAddress('AaveV3ProtocolDataProvider', networkId),
+  lendingPool: 'MorphoAaveV3ProxyEthMarket',
+  lendingPoolAddress: getConfigContractAddress('MorphoAaveV3ProxyEthMarket', 1),
+  // icon: SvgAdapter(protocolIcons.morpho),
+  protocolName: 'morpho',
+});
+
 
 export const AaveMarkets = (networkId: NetworkNumber) => ({
   [AaveVersions.AaveV2]: AAVE_V2,
   [AaveVersions.AaveV3]: AAVE_V3(networkId),
+  [AaveVersions.MorphoAaveV3Eth]: MORPHO_AAVE_V3_ETH(networkId),
+  [AaveVersions.MorphoAaveV2]: MORPHO_AAVE_V2,
 }) as const;

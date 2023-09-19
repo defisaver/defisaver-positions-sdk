@@ -91,7 +91,10 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFrozen: boolean,
   isPaused: boolean,
   isFlashLoanEnabled: boolean,
-  assetId: string,
+  assetId: string | null,
+}
+
+export interface MorphoAaveV3AssetData extends Omit<AaveV3AssetData, 'nativeAsset' | 'discountData' | 'borrowRateDiscounted'> {
 }
 
 export type AaveAssetsData<T> = { [key: string]: T };
@@ -103,6 +106,10 @@ export type AaveV2MarketData = { assetsData: AaveV2AssetsData };
 export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
 
 export type AaveV3MarketData = { assetsData: AaveV3AssetsData };
+
+export type MorphoAaveV3AssetsData = AaveAssetsData<MorphoAaveV3AssetData>;
+
+export type MorphoAaveV3MarketData = { assetsData: MorphoAaveV3AssetsData };
 
 export interface AaveUsedAsset extends MMUsedAsset {
   stableBorrowRate: string,
@@ -195,3 +202,9 @@ export interface AaveHelperCommon {
   selectedMarket: AaveMarketInfo,
   network?: NetworkNumber,
 }
+
+export type MorphoAaveV2MarketInfo = Omit<AaveMarketInfo, 'provider' | 'lendingPool' | 'protocolData' | 'protocolDataAddress'>;
+
+export type MorphoAaveV3MarketInfo = Omit<AaveMarketInfo, 'provider'>;
+
+export type MorphoAaveMarketInfo = MorphoAaveV2MarketInfo | MorphoAaveV3MarketInfo;
