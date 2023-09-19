@@ -59,6 +59,15 @@ export interface EModeCategoryDataMapping {
 export interface AaveAssetData extends MMAssetData {
   sortIndex?: number,
   isIsolated?: boolean,
+  usageAsCollateralEnabled: boolean,
+  isInactive: boolean,
+  canBeWithdrawn: boolean,
+  canBePayBacked: boolean,
+  liquidationRatio: string,
+  supplyCap: string,
+  disabledStableBorrowing: boolean,
+  borrowRateStable: string,
+  totalBorrowVar: string,
 }
 
 

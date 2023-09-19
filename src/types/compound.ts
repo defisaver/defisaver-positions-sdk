@@ -33,20 +33,32 @@ export interface CompoundV3UsedAssets {
   [token: string]: CompoundV3UsedAsset,
 }
 
-export interface CompoundV3AssetData extends MMAssetData {
-  borrowCollateralFactor: string,
-  liquidateCollateralFactor: string,
+export interface CompoundAssetData extends MMAssetData {
   supplyCapAlternative?: string,
   totalSupplyAlternative?: string,
   priceAlternative?: string,
   sortIndex?: number,
-  minDebt: string,
 }
 
-export interface CompoundV3AssetsData {
-  [token: string]: CompoundV3AssetData
+export interface CompoundV2AssetData extends CompoundAssetData {
 }
-export type CompoundV3MarketData = { assetsData: CompoundV3AssetsData };
+export interface CompoundV3AssetData extends CompoundAssetData {
+  borrowCollateralFactor: string,
+  liquidateCollateralFactor: string,
+  minDebt: string,
+  liquidationRatio: string,
+  supplyCap: string,
+}
+
+export interface CompoundAssetsData<T> {
+  [token: string]: T
+}
+export type CompoundV2AssetsData = CompoundAssetsData<CompoundV2AssetData>;
+export type CompoundV3AssetsData = CompoundAssetsData<CompoundV3AssetData>;
+
+export type CompoundMarketsData<T> = { assetsData: T };
+export type CompoundV2MarketsData = CompoundMarketsData<CompoundV2AssetsData>;
+export type CompoundV3MarketsData = CompoundMarketsData<CompoundV3AssetsData>;
 
 export interface BaseAdditionalAssetData {
   totalBorrow: string,

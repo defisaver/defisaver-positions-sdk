@@ -232,4 +232,13 @@ module.exports = {
       },
     }
   },
+  "CompoundLoanInfo": {
+    "abi": [{"inputs":[{"internalType":"address[]","name":"_cTokenAddresses","type":"address[]"}],"name":"getFullTokensInfo","outputs":[{"components":[{"internalType":"address","name":"underlyingTokenAddress","type":"address"},{"internalType":"uint256","name":"supplyRate","type":"uint256"},{"internalType":"uint256","name":"borrowRate","type":"uint256"},{"internalType":"uint256","name":"exchangeRate","type":"uint256"},{"internalType":"uint256","name":"marketLiquidity","type":"uint256"},{"internalType":"uint256","name":"totalSupply","type":"uint256"},{"internalType":"uint256","name":"totalBorrow","type":"uint256"},{"internalType":"uint256","name":"collateralFactor","type":"uint256"},{"internalType":"uint256","name":"price","type":"uint256"},{"internalType":"uint256","name":"compBorrowSpeeds","type":"uint256"},{"internalType":"uint256","name":"compSupplySpeeds","type":"uint256"},{"internalType":"uint256","name":"borrowCap","type":"uint256"},{"internalType":"bool","name":"canMint","type":"bool"},{"internalType":"bool","name":"canBorrow","type":"bool"}],"internalType":"struct CompView.TokenInfoFull[]","name":"tokens","type":"tuple[]"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"}],"name":"getLoanData","outputs":[{"components":[{"internalType":"address","name":"user","type":"address"},{"internalType":"uint128","name":"ratio","type":"uint128"},{"internalType":"address[]","name":"collAddr","type":"address[]"},{"internalType":"address[]","name":"borrowAddr","type":"address[]"},{"internalType":"uint256[]","name":"collAmounts","type":"uint256[]"},{"internalType":"uint256[]","name":"borrowAmounts","type":"uint256[]"}],"internalType":"struct CompView.LoanData","name":"data","type":"tuple"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getPrices","outputs":[{"internalType":"uint256[]","name":"prices","type":"uint256[]"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+    "networks": {
+      "1": {
+        "address": "0xb25b98d3ca2dde635829870f852472bdd0b01b7e",
+        "createdBlock": 0
+      }
+    }
+  },
 }

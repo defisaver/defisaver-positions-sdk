@@ -6,7 +6,7 @@ import {
 import { CompV3ViewContract } from '../contracts';
 import { multicall } from '../multicall';
 import {
-  CompoundV3AssetData, CompoundMarketData, CompoundVersions, CompoundV3AssetsData, CompoundV3MarketData, CompoundV3UsedAssets,
+  CompoundV3AssetData, CompoundMarketData, CompoundVersions, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData,
 } from '../types/compound';
 import { NetworkNumber } from '../types/common';
 import {
@@ -22,7 +22,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 export * from '../types/compound';
 export * from './helpers';
 
-export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketData> => {
+export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContract(web3, network);
   const CompV3ViewAddress = contract.options.address;
   const calls = [
