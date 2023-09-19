@@ -75,6 +75,9 @@ export interface AaveV2AssetData extends AaveAssetData {
   priceInEth: string,
 }
 
+export interface MorphoAaveV2AssetData extends AaveV2AssetData {
+}
+
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
@@ -102,6 +105,10 @@ export type AaveAssetsData<T> = { [key: string]: T };
 export type AaveV2AssetsData = AaveAssetsData<AaveV2AssetData>;
 
 export type AaveV2MarketData = { assetsData: AaveV2AssetsData };
+
+export type MorphoAaveV2AssetsData = AaveAssetsData<MorphoAaveV2AssetData>;
+
+export type MorphoAaveV2MarketData = { assetsData: MorphoAaveV2AssetsData };
 
 export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
 

@@ -55,3 +55,5 @@ export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTyp
 export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Comptroller>('Comptroller');
 
 export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot');
+
+export const MorphoAaveV2ViewContract = createContractFromConfigFunc<ContractTypes.MorphoAaveV2View>('MorphoAaveV2View');
