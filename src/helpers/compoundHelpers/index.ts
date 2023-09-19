@@ -1,15 +1,15 @@
 import Dec from 'decimal.js';
 import { getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  CompoundV3AssetData, BaseAdditionalAssetData, CompoundVersions, CompoundV3UsedAssets, CompoundV3AssetsData, CompoundMarketData, CompoundV2UsedAssets, CompoundV2AssetsData, CompoundAggregatedPositionData,
-} from '../types/compound';
-import { getEthAmountForDecimals, handleWbtcLegacy, wethToEth } from '../services/utils';
-import { SECONDS_PER_YEAR } from '../constants';
+  BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundVersions,
+} from '../../types';
+import { getEthAmountForDecimals, handleWbtcLegacy, wethToEth } from '../../services/utils';
+import { SECONDS_PER_YEAR } from '../../constants';
 import {
   aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
-} from '../moneymarket';
-import { calculateNetApy } from '../staking';
-import { NetworkNumber } from '../types/common';
+} from '../../moneymarket';
+import { calculateNetApy } from '../../staking';
+import { NetworkNumber } from '../../types/common';
 
 export const formatMarketData = (data: any): CompoundV3AssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr);

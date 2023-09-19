@@ -9,8 +9,8 @@ import { CompoundLoanInfoContract, ComptrollerContract } from '../contracts';
 import { compoundV2CollateralAssets } from '../markets/compound/marketsAssets';
 import {
   CompoundV2AssetsData, CompoundV2MarketsData, CompoundV2PositionData, CompoundV2UsedAsset, CompoundV2UsedAssets,
-} from '../compoundV3';
-import { getCompoundV2AggregatedData } from '../compoundV3/helpers';
+} from '../types';
+import { getCompoundV2AggregatedData } from '../helpers/compoundHelpers';
 
 const compAddress = '0xc00e94cb662c3520282e6f5717214004a7f26888';
 
@@ -91,7 +91,6 @@ export const EMPTY_COMPOUND_DATA = {
   incentiveUsd: '0',
   totalInterestUsd: '0',
   borrowStableSupplyUnstable: false,
-  lastUpdated: Date.now(),
 };
 
 export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkNumber, account: string) => {

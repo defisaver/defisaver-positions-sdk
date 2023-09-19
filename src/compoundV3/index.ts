@@ -6,21 +6,18 @@ import {
 import { CompV3ViewContract } from '../contracts';
 import { multicall } from '../multicall';
 import {
-  CompoundV3AssetData, CompoundMarketData, CompoundVersions, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
+  CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData, CompoundVersions,
 } from '../types/compound';
 import { NetworkNumber } from '../types/common';
 import {
   getCbETHApr, getStETHApr, getStETHByWstETHMultiple, getWstETHByStETH,
 } from '../staking';
-import {
-  formatBaseData, formatMarketData, getIncentiveApys, getCompoundV3AggregatedData,
-} from './helpers';
 import { wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
-
-export * from '../types/compound';
-export * from './helpers';
+import {
+  formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
+} from '../helpers/compoundHelpers';
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContract(web3, network);

@@ -37,7 +37,7 @@ describe('Compound v3', () => {
   it('can fetch market and account data for ETH Market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.compoundV3.CompoundVersions.CompoundV3ETH];
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
@@ -46,7 +46,7 @@ describe('Compound v3', () => {
   it('can fetch market and account data for USDC Market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.compoundV3.CompoundVersions.CompoundV3USDC];
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDC];
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
