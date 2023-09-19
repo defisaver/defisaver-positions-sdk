@@ -26,3 +26,5 @@ export const getEthAmountForDecimals = (amount: string | number, decimals: strin
 export const handleWbtcLegacy = (asset: string) => (asset === 'WBTC Legacy' ? 'WBTC' : asset);
 
 export const wethToEthByAddress = (maybeWethAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(wethToEth(getAssetInfoByAddress(maybeWethAddr, chainId).symbol), chainId).address;
+
+export const ethToWethByAddress = (maybeEthAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(ethToWeth(getAssetInfoByAddress(maybeEthAddr, chainId).symbol), chainId).address;

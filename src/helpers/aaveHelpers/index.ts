@@ -6,10 +6,10 @@ import { wethToEth } from '../../services/utils';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 
-export const isAaveV3 = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => selectedMarket.value === AaveVersions.AaveV3;
-export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
-export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
-export const isMorphoAave = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
+export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3;
+export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
+export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
+export const isMorphoAave = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
 
 export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, collateral }) => collateral && assetsData[symbol].isIsolated);
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);

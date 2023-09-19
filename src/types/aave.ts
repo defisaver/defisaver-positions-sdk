@@ -131,7 +131,19 @@ export interface AaveV3UsedAsset extends AaveUsedAsset {
   borrowRate: string,
   interestMode: string,
   collateral: boolean,
-  // ...
+}
+
+export interface MorphoAaveV3UsedAsset extends Omit<AaveV3UsedAsset, 'discountedBorrowRate' | 'debt'> {
+  suppliedP2P: string,
+  suppliedPool: string,
+  suppliedMatched: string,
+  borrowedP2P: string,
+  borrowedPool: string,
+  borrowedMatched: string,
+  suppliedP2PUsd: string,
+  suppliedPoolUsd: string,
+  borrowedP2PUsd: string,
+  borrowedPoolUsd: string,
 }
 
 export type AaveUsedAssets<T> = { [key: string]: T };
@@ -139,6 +151,8 @@ export type AaveUsedAssets<T> = { [key: string]: T };
 export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
 
 export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
+
+export type MorphoAaveV3UsedAssets = AaveUsedAssets<MorphoAaveV3UsedAsset>;
 
 export interface AavePositionData extends MMPositionData {
   ratio: string,
@@ -164,7 +178,12 @@ export interface AaveV3PositionData extends AavePositionData {
   isInIsolationMode: boolean,
   isInSiloedMode: boolean,
   eModeCategories: { [key: number]: EModeCategoryDataMapping },
-  // ...
+}
+
+export interface MorphoAaveV3PositionData extends AavePositionData {
+  usedAssets: MorphoAaveV3UsedAssets,
+  approvedManager?: string,
+  eModeCategory: number,
 }
 
 export interface AaveV3IncentiveData {
@@ -199,7 +218,7 @@ export interface AaveHelperCommon {
   eModeCategory: number,
   eModeCategories?: number[],
   assetsData: any,
-  selectedMarket: AaveMarketInfo,
+  selectedMarket: Partial<AaveMarketInfo>,
   network?: NetworkNumber,
 }
 

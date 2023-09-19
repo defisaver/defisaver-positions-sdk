@@ -1,4 +1,6 @@
-import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import {
+  assetAmountInEth, assetAmountInWei, getAssetInfo, getAssetInfoByAddress,
+} from '@defisaver/tokens';
 import { MorphoAaveMath } from '@morpho-org/morpho-aave-v3-sdk/lib/maths/AaveV3.maths';
 import PoolInterestRates from '@morpho-org/morpho-aave-v3-sdk/lib/maths/PoolInterestRates';
 import P2PInterestRates from '@morpho-org/morpho-aave-v3-sdk/lib/maths/P2PInterestRates';
@@ -7,13 +9,18 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { NetworkNumber } from '../types/common';
 import {
-  ethToWeth, getAbiItem, isLayer2Network, wethToEthByAddress,
+  ethToWeth, ethToWethByAddress, getAbiItem, isLayer2Network, wethToEthByAddress,
 } from '../services/utils';
 import { createContractWrapper, getConfigContractAbi, getConfigContractAddress } from '../contracts';
 import { multicall } from '../multicall';
 import { getCbETHApr, getREthApr, getStETHApr } from '../staking';
-import { MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketInfo } from '../types';
+import {
+  AaveVersions, MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
+} from '../types';
 import { getDsrApy } from '../services/dsrService';
+import { calculateBorrowingAssetLimit } from '../moneymarket';
+import { EMPTY_AAVE_DATA } from '../aaveV3';
+import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 
 const morphoAaveMath = new MorphoAaveMath();
 const poolInterestRates = new PoolInterestRates();
@@ -324,4 +331,172 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     });
 
   return { assetsData: payload };
+};
+
+export const getMorphoAaveV3AccountData = async (
+  web3: Web3,
+  network: NetworkNumber,
+  address: string,
+  assetsData: MorphoAaveV3AssetsData,
+  delegator: string,
+  selectedMarket: MorphoAaveV3MarketInfo,
+): Promise<MorphoAaveV3PositionData> => {
+  if (!address) {
+    throw new Error('No address provided.');
+  }
+  const eModeCategory = 1; // TODO: morpho v3 pass as arg
+
+  let payload: MorphoAaveV3PositionData = {
+    ...EMPTY_AAVE_DATA,
+    usedAssets: {}, // Typescript is bugging out due to JSDocs version of AavePositionData.UsedAssets
+    eModeCategory,
+    minRatio: '100',
+    lastUpdated: Date.now(),
+  };
+
+  // @ts-ignore
+  const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+
+  const isManagedBy = delegator && lendingPoolContract?.methods?.isManagedBy
+    ? await lendingPoolContract.methods.isManagedBy(address, delegator).call()
+    : null;
+  payload.approvedManager = isManagedBy ? delegator : '';
+
+  const markets = Object.values(assetsData);
+  // @ts-ignore
+  const marketAddresses = markets.map(m => ethToWethByAddress(m.underlyingTokenAddress));
+
+  const multicallArray = [
+    ...(marketAddresses.map((marketAddr) => [
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledP2PSupplyBalance'),
+        params: [marketAddr, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledPoolSupplyBalance'),
+        params: [marketAddr, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledCollateralBalance'),
+        params: [marketAddr, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledP2PBorrowBalance'),
+        params: [marketAddr, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledPoolBorrowBalance'),
+        params: [marketAddr, address],
+      },
+    ]).flat()),
+  ];
+
+  const multicallResponse = await multicall(multicallArray, web3, network);
+
+  markets.forEach((market: any, i: number) => {
+    const { symbol } = getAssetInfoByAddress(wethToEthByAddress(market.underlyingTokenAddress));
+    const assetAavePrice = assetsData[symbol].price;
+
+    const suppliedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[i * 5][0],
+      market.morphoMarketData.indexes.supply.p2pIndex,
+    ), symbol);
+    const suppliedPool = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[(i * 5) + 1][0],
+      market.morphoMarketData.indexes.supply.poolIndex,
+    ), symbol);
+    const suppliedTotal = new Dec(suppliedP2P).add(suppliedPool).toString();
+    const suppliedCollateral = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[(i * 5) + 2][0],
+      market.morphoMarketData.indexes.supply.poolIndex,
+    ), symbol);
+    const supplied = new Dec(suppliedTotal).add(suppliedCollateral).toString();
+    const suppliedMatched = new Dec(suppliedTotal).eq(0)
+      ? '0'
+      : morphoAaveMath.percentDiv(
+        assetAmountInWei(suppliedP2P, symbol),
+        assetAmountInWei(suppliedTotal, symbol),
+      ).div(100).toString();
+
+    const borrowedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[(i * 5) + 3][0],
+      market.morphoMarketData.indexes.borrow.p2pIndex,
+    ), symbol);
+    const borrowedPool = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[(i * 5) + 4][0],
+      market.morphoMarketData.indexes.borrow.poolIndex,
+    ), symbol);
+    const borrowed = new Dec(borrowedP2P).add(borrowedPool).toString();
+    const borrowedMatched = new Dec(borrowed).eq(0)
+      ? '0'
+      : morphoAaveMath.percentDiv(
+        assetAmountInWei(borrowedP2P, symbol),
+        assetAmountInWei(borrowed, symbol),
+      ).div(100).toString();
+
+    const supplyRate = new Dec(new Dec(market.supplyRateP2P).mul(suppliedMatched))
+      .add(new Dec(market.supplyRate).mul(100 - +suppliedMatched)).div(100).toString();
+    const borrowRate = new Dec(new Dec(market.borrowRateP2P).mul(borrowedMatched))
+      .add(new Dec(market.borrowRate).mul(100 - +borrowedMatched)).div(100).toString();
+
+    if (new Dec(supplied).gt(0) || new Dec(borrowed).gt(0)) {
+      payload.usedAssets[symbol] = {
+        symbol,
+        eModeCategory: market.eModeCategory,
+        supplied,
+        suppliedP2P,
+        suppliedPool,
+        suppliedMatched,
+        borrowed,
+        borrowedP2P,
+        borrowedPool,
+        borrowedMatched,
+        supplyRate,
+        borrowRate,
+        suppliedUsd: new Dec(supplied).mul(assetAavePrice).toString(),
+        suppliedP2PUsd: new Dec(suppliedP2P).mul(assetAavePrice).toString(),
+        suppliedPoolUsd: new Dec(suppliedPool).mul(assetAavePrice).toString(),
+        borrowedUsd: new Dec(borrowed).mul(assetAavePrice).toString(),
+        borrowedP2PUsd: new Dec(borrowedP2P).mul(assetAavePrice).toString(),
+        borrowedPoolUsd: new Dec(borrowedPool).mul(assetAavePrice).toString(),
+        borrowedVariable: borrowed,
+        borrowedUsdVariable: new Dec(borrowed).mul(assetAavePrice).toString(),
+        collateral: new Dec(suppliedCollateral).gt(0),
+        isSupplied: new Dec(supplied).gt(0),
+        isBorrowed: new Dec(borrowed).gt(0),
+        // supplyRate: new Dec(market.experiencedSupplyAPY._hex).div(100).toString(),
+        // borrowRate: new Dec(market.experiencedBorrowAPY._hex).div(100).toString(),
+        limit: '0',
+
+        interestMode: '', // Morpho doesn't have all these, keeping it for compatability
+        stableBorrowRate: '0',
+        borrowedStable: '0',
+        borrowedUsdStable: '0',
+        stableLimit: '0',
+        variableLimit: '0',
+      };
+    }
+  });
+
+  payload = {
+    ...payload,
+    ...aaveAnyGetAggregatedPositionData({
+      usedAssets: payload.usedAssets, assetsData, eModeCategory, selectedMarket,
+    }),
+  };
+
+  // Calculate borrow limits per asset
+  Object.values(payload.usedAssets).forEach((item) => {
+    if (item.isBorrowed) {
+      // eslint-disable-next-line no-param-reassign
+      item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
+    }
+  });
+
+  return payload;
 };
