@@ -15,7 +15,7 @@ import { createContractWrapper, getConfigContractAbi, getConfigContractAddress }
 import { multicall } from '../multicall';
 import { getCbETHApr, getREthApr, getStETHApr } from '../staking';
 import {
-  AaveVersions, MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
+  AaveVersions, MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
 import { getDsrApy } from '../services/dsrService';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
@@ -129,7 +129,7 @@ const computeMorphoMarketData = (
   };
 };
 
-export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: MorphoAaveV3MarketInfo, mainnetWeb3: Web3) => {
+export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3MarketData> => {
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
 

@@ -131,6 +131,20 @@ export interface AaveUsedAsset extends MMUsedAsset {
 
 export interface AaveV2UsedAsset extends AaveUsedAsset {
 }
+
+export interface MorphoAaveV2UsedAsset extends Omit<AaveV2UsedAsset, 'debt'> {
+  suppliedP2P: string,
+  suppliedPool: string,
+  suppliedMatched: string,
+  borrowedP2P: string,
+  borrowedPool: string,
+  borrowedMatched: string,
+  suppliedP2PUsd: string,
+  suppliedPoolUsd: string,
+  borrowedP2PUsd: string,
+  borrowedPoolUsd: string,
+  eModeCategory: number,
+}
 export interface AaveV3UsedAsset extends AaveUsedAsset {
   discountedBorrowRate: string,
   eModeCategory: number,
@@ -156,6 +170,8 @@ export interface MorphoAaveV3UsedAsset extends Omit<AaveV3UsedAsset, 'discounted
 export type AaveUsedAssets<T> = { [key: string]: T };
 
 export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
+
+export type MorphoAaveV2UsedAssets = AaveUsedAssets<MorphoAaveV2UsedAsset>;
 
 export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
 
@@ -191,6 +207,10 @@ export interface MorphoAaveV3PositionData extends AavePositionData {
   usedAssets: MorphoAaveV3UsedAssets,
   approvedManager?: string,
   eModeCategory: number,
+}
+
+export interface MorphoAaveV2PositionData extends AavePositionData {
+  usedAssets: MorphoAaveV2UsedAssets,
 }
 
 export interface AaveV3IncentiveData {
