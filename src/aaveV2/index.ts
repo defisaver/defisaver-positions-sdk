@@ -2,10 +2,14 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { NetworkNumber } from '../types/common';
-import { getStETHApr } from '../staking';
+import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
-import { AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData } from '../aaveV3';
+import {
+  AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets, AaveVersions, EMPTY_AAVE_DATA,
+} from '../aaveV3';
+import { calculateBorrowingAssetLimit } from '../moneymarket';
+import { aaveAnyGetAggregatedPositionData } from '../aaveV3/helpers';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3) => {
   const _addresses = selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address);
@@ -68,4 +72,95 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
     });
 
   return { assetsData: payload };
+};
+
+export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: AaveV2AssetsData, market: AaveMarketInfo) => {
+  if (!address) return null;
+
+  let payload: AaveV2PositionData = {
+    ...EMPTY_AAVE_DATA,
+    lastUpdated: Date.now(),
+  };
+
+  const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+  const marketAddress = market.providerAddress;
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call();
+  const usedAssets = {} as AaveV2UsedAssets;
+  loanInfo.forEach((_tokenInfo, i) => {
+    const asset = market.assets[i];
+    const tokenInfo = { ..._tokenInfo };
+
+    // known bug: stETH leaves 1 wei on every transfer
+    if (asset === 'stETH' && tokenInfo.balance.toString() === '1') tokenInfo.balance = '0';
+
+    const isSupplied = tokenInfo.balance.toString() !== '0';
+    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
+    if (!isSupplied && !isBorrowed) return;
+
+    const supplied = assetAmountInEth(tokenInfo.balance.toString(), asset);
+    const borrowedStable = assetAmountInEth(tokenInfo.borrowsStable.toString(), asset);
+    const borrowedVariable = assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset);
+    const enabledAsCollateral = assetsData[asset].usageAsCollateralEnabled ? tokenInfo.enabledAsCollateral : false;
+    let interestMode;
+    if (borrowedVariable === '0' && borrowedStable !== '0') {
+      interestMode = '1';
+    } else if (borrowedVariable !== '0' && borrowedStable === '0') {
+      interestMode = '2';
+    } else {
+      interestMode = 'both';
+    }
+    if (!usedAssets[asset]) usedAssets[asset] = {} as AaveV2UsedAsset;
+    usedAssets[asset] = {
+      ...usedAssets[asset],
+      symbol: asset,
+      supplied,
+      suppliedUsd: new Dec(supplied).mul(assetsData[asset].price).toString(),
+      isSupplied,
+      collateral: enabledAsCollateral,
+      stableBorrowRate: new Dec(tokenInfo.stableBorrowRate).div(1e25).toString(),
+      borrowedStable,
+      borrowedVariable,
+      borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),
+      borrowedUsdVariable: new Dec(borrowedVariable).mul(assetsData[asset].price).toString(),
+      borrowed: new Dec(borrowedStable).add(borrowedVariable).toString(),
+      borrowedUsd: new Dec(new Dec(borrowedVariable).add(borrowedStable)).mul(assetsData[asset].price).toString(),
+      isBorrowed,
+      interestMode,
+    };
+  });
+  payload = {
+    ...payload,
+    usedAssets,
+    ...aaveAnyGetAggregatedPositionData({
+      usedAssets, assetsData, eModeCategory: 0, selectedMarket: market,
+    }),
+  };
+
+  payload.ratio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+  payload.minRatio = '100';
+  payload.collRatio = payload.borrowedUsd && payload.borrowedUsd !== '0'
+    ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString()
+    : '0';
+
+  // Calculate borrow limits per asset
+  Object.values(payload.usedAssets).forEach((item) => {
+    if (item.isBorrowed) {
+      // eslint-disable-next-line no-param-reassign
+      item.stableLimit = calculateBorrowingAssetLimit(item.borrowedUsdStable, payload.borrowLimitUsd);
+      // eslint-disable-next-line no-param-reassign
+      item.variableLimit = calculateBorrowingAssetLimit(item.borrowedUsdVariable, payload.borrowLimitUsd);
+      // eslint-disable-next-line no-param-reassign
+      item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
+    }
+  });
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
+
+  return payload;
 };

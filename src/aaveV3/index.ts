@@ -8,7 +8,7 @@ import {
   addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
 } from '../services/utils';
 import {
-  AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
+  AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
 } from '../types/aave';
 import { EthAddress, NetworkNumber } from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
@@ -372,7 +372,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
 
   const loanInfo = [...multicallRes[1][0], ...multicallRes[2][0]];
 
-  const usedAssets: { [key: string]: any } = {};
+  const usedAssets = {} as AaveV3UsedAssets;
   loanInfo.map(async (tokenInfo, i) => {
     const asset = market.assets[i];
     const isSupplied = tokenInfo.balance.toString() !== '0';
@@ -392,7 +392,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
     } else {
       interestMode = 'both';
     }
-    if (!usedAssets[asset]) usedAssets[asset] = {};
+    if (!usedAssets[asset]) usedAssets[asset] = {} as AaveV3UsedAsset;
     const nativeAsset = asset === 'GHO';
 
     let discountRateOnBorrow = '0';

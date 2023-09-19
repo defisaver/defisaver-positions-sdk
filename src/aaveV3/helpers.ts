@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import {
+  AaveAssetData,
   AaveHelperCommon,
   AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3MarketData, AaveV3UsedAssets, AaveVersions,
 } from '../types/aave';
@@ -26,7 +27,7 @@ export const aaveAnyGetSuppliableAssets = ({
   };
 
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
-  const marketAssets = Object.values(assetsData);
+  const marketAssets = Object.values(assetsData) as AaveAssetData[];
 
   if (isMorphoAave({ selectedMarket })) {
     return marketAssets.filter(({ canBeSupplied }) => canBeSupplied,

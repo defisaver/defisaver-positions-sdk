@@ -58,6 +58,7 @@ export interface EModeCategoryDataMapping {
 
 export interface AaveAssetData extends MMAssetData {
   sortIndex?: number,
+  isIsolated?: boolean,
 }
 
 
@@ -93,30 +94,37 @@ export type AaveV2MarketData = { assetsData: AaveV2AssetsData };
 export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
 
 export type AaveV3MarketData = { assetsData: AaveV3AssetsData };
-export interface AaveV3UsedAsset extends MMUsedAsset {
+
+export interface AaveUsedAsset extends MMUsedAsset {
+  stableBorrowRate: string,
+  borrowedStable: string,
+  borrowedVariable: string,
+  borrowedUsdStable: string,
+  borrowedUsdVariable: string,
+  stableLimit: string,
+  variableLimit: string,
+  limit: string,
+}
+
+export interface AaveV2UsedAsset extends AaveUsedAsset {
+}
+export interface AaveV3UsedAsset extends AaveUsedAsset {
   discountedBorrowRate: string,
   eModeCategory: number,
   supplyRate: string,
   borrowRate: string,
   interestMode: string,
-  stableBorrowRate: string,
-  stableLimit: string,
-  variableLimit: string,
-  limit: string,
-  borrowedUsdStable: string,
-  borrowedUsdVariable: string,
   collateral: boolean,
   // ...
 }
-export interface AaveV3UsedAssets {
-  [key: string]: AaveV3UsedAsset,
-}
-export interface AaveV3PositionData extends MMPositionData {
-  usedAssets: AaveV3UsedAssets,
-  eModeCategory: number,
-  isInIsolationMode: boolean,
-  isInSiloedMode: boolean,
-  eModeCategories: { [key: number]: EModeCategoryDataMapping },
+
+export type AaveUsedAssets<T> = { [key: string]: T };
+
+export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
+
+export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
+
+export interface AavePositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
   collRatio: string,
@@ -127,6 +135,18 @@ export interface AaveV3PositionData extends MMPositionData {
   totalInterestUsd: string,
   isSubscribedToAutomation?: boolean,
   automationResubscribeRequired?: boolean,
+}
+
+export interface AaveV2PositionData extends AavePositionData {
+  usedAssets: AaveV2UsedAssets,
+}
+
+export interface AaveV3PositionData extends AavePositionData {
+  usedAssets: AaveV3UsedAssets,
+  eModeCategory: number,
+  isInIsolationMode: boolean,
+  isInSiloedMode: boolean,
+  eModeCategories: { [key: number]: EModeCategoryDataMapping },
   // ...
 }
 
@@ -158,10 +178,10 @@ export interface AaveV3AggregatedPositionData {
 }
 
 export interface AaveHelperCommon {
-  usedAssets: AaveV3UsedAssets,
+  usedAssets: any,
   eModeCategory: number,
-  eModeCategories: number[],
-  assetsData: AaveV3AssetsData,
+  eModeCategories?: number[],
+  assetsData: any,
   selectedMarket: AaveMarketInfo,
-  network: NetworkNumber,
+  network?: NetworkNumber,
 }
