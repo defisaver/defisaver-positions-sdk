@@ -1,14 +1,14 @@
 import { getConfigContractAddress } from '../../contracts';
 import { CompoundMarketData, CompoundVersions } from '../../types';
 import { NetworkNumber } from '../../types/common';
-import { compoundV2CollateralAssets, v3ETHCollAssets, v3USDCCollAssets } from './marketsAssets';
+import {compoundV2CollateralAssets, v3ETHCollAssets, v3USDbCCollAssets, v3USDCCollAssets} from './marketsAssets';
 
 const USDC_BULKER_OPTIONS = {
   supply: 2,
   withdraw: 5,
 };
 
-const ETH_BULKER_OPTIONS = {
+const STANDARD_BULKER_OPTIONS = {
   supply: '0x414354494f4e5f535550504c595f4e41544956455f544f4b454e000000000000',
   withdraw: '0x414354494f4e5f57495448445241575f4e41544956455f544f4b454e00000000',
 };
@@ -45,7 +45,7 @@ export const COMPOUND_V3_USDC = (networkId: NetworkNumber): CompoundMarketData =
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });
 export const COMPOUND_V3_ETH = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Eth],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Base],
   label: 'Compound V3 - ETH',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3ETH,
@@ -56,7 +56,23 @@ export const COMPOUND_V3_ETH = (networkId: NetworkNumber): CompoundMarketData =>
   secondLabel: 'Market',
   bulkerName: 'CompV3ETHBulker',
   bulkerAddress: getConfigContractAddress('CompV3ETHBulker', networkId),
-  bulkerOptions: ETH_BULKER_OPTIONS,
+  bulkerOptions: STANDARD_BULKER_OPTIONS,
+  // icon: SvgAdapter(protocolIcons.compoundv3),
+});
+
+export const COMPOUND_V3_USDBC = (networkId: NetworkNumber): CompoundMarketData => ({
+  chainIds: [NetworkNumber.Base],
+  label: 'Compound V3 - USDbC',
+  shortLabel: 'v3',
+  value: CompoundVersions.CompoundV3USDbC,
+  baseAsset: 'USDbC',
+  collAssets: networkId ? v3USDbCCollAssets[networkId] : [],
+  baseMarket: 'cUSDbCv3',
+  baseMarketAddress: getConfigContractAddress('cUSDbCv3', networkId),
+  secondLabel: 'Market',
+  bulkerName: 'CompV3USDbCBulker',
+  bulkerAddress: getConfigContractAddress('CompV3USDbCBulker', networkId),
+  bulkerOptions: STANDARD_BULKER_OPTIONS,
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });
 
@@ -64,4 +80,5 @@ export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV2]: COMPOUND_V2,
   [CompoundVersions.CompoundV3ETH]: COMPOUND_V3_ETH(networkId),
   [CompoundVersions.CompoundV3USDC]: COMPOUND_V3_USDC(networkId),
+  [CompoundVersions.CompoundV3USDbC]: COMPOUND_V3_USDBC(networkId),
 }) as const;

@@ -21,5 +21,16 @@ export const v3ETHCollAssets = {
   ],
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
-  [NetworkNumber.Base]: [],
+  [NetworkNumber.Base]: [
+      'cbETH',
+  ],
 } as const;
+
+export const v3USDbCCollAssets = {
+  [NetworkNumber.Eth]: [],
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [
+      'ETH', 'cbETH'
+  ],
+}

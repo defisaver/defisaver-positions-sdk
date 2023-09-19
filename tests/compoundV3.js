@@ -7,13 +7,14 @@ const { NetworkNumber } = require('../cjs/types/common');
 
 describe('Compound v3', () => {
   let web3;
+  let web3Base;
   before(async () => {
     web3 = new Web3(process.env.RPC);
+    web3Base = new Web3(process.env.RPCBASE);
   });
 
   const fetchMarketData = async (network, _web3, selectedMarket) => {
     const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, '2', web3);
-    // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys = [
@@ -50,5 +51,23 @@ describe('Compound v3', () => {
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  it('can fetch market and account data for ETH Market on Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+
+  it('can fetch market and account data for USDbC Market on Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDbC];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
   });
 });

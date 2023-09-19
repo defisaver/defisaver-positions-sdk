@@ -6,6 +6,7 @@ export enum CompoundVersions {
   'CompoundV2' = 'v2',
   'CompoundV3USDC' = 'v3-USDC',
   'CompoundV3ETH' = 'v3-ETH',
+  'CompoundV3USDbC' = 'v3-USDbC',
 }
 
 export interface CompoundMarketData {

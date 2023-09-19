@@ -35,7 +35,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
     },
   ];
   const data = await multicall(calls, web3, network);
-  const colls = data[1].colls.map(formatMarketData) as CompoundV3AssetData[];
+  const colls = data[1].colls.map((coll: any) => formatMarketData(coll, network)) as CompoundV3AssetData[];
   if (selectedMarket.value === CompoundVersions.CompoundV3ETH) {
     for (const coll of colls) {
       if (coll.symbol === 'wstETH') {
@@ -62,7 +62,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       }
     }
   }
-  const base = formatBaseData(data[0].baseToken);
+  const base = formatBaseData(data[0].baseToken, network);
 
   const payload: CompoundV3AssetsData = {};
 
@@ -167,7 +167,7 @@ export const getCompoundV3AccountData = async (
     usedAssets[baseAssetSymbol].borrowedUsd = assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol);
   }
   loanData.collAddr.forEach((coll: string, i: number): void => {
-    const assetInfo = getAssetInfoByAddress(coll);
+    const assetInfo = getAssetInfoByAddress(coll, network);
     const symbol = wethToEth(assetInfo.symbol);
     const supplied = assetAmountInEth(loanData.collAmounts[i].toString(), symbol);
     const isSupplied = supplied !== '0';
