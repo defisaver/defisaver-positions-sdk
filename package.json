@@ -19,7 +19,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.4.56",
+    "@defisaver/tokens": "^1.4.57",
     "decimal.js": "^10.4.3"
   },
   "devDependencies": {
