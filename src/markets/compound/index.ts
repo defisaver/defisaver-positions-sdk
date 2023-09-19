@@ -1,8 +1,7 @@
-import { NetworkNumber } from '../types/common';
-import { getConfigContractAddress } from '../contracts';
-import { CompoundMarketData, CompoundVersions } from '../types/compound';
-import { compoundV2CollateralAssets, v3ETHCollAssets, v3USDCCollAssets } from './marketAssets';
-
+import { CompoundMarketData, CompoundVersions } from '../../compoundV3';
+import { getConfigContractAddress } from '../../contracts';
+import { NetworkNumber } from '../../types/common';
+import { v3ETHCollAssets, v3USDCCollAssets } from './marketsAssets';
 
 const USDC_BULKER_OPTIONS = {
   supply: 2,

@@ -40,6 +40,7 @@ export interface CompoundV3AssetData extends MMAssetData {
   totalSupplyAlternative?: string,
   priceAlternative?: string,
   sortIndex?: number,
+  minDebt: string,
 }
 
 export interface CompoundV3AssetsData {
@@ -55,4 +56,27 @@ export interface BaseAdditionalAssetData {
   rewardBorrowSpeed: string,
   minDebt: string,
   isBase: boolean,
+}
+
+export interface CompoundV3AggregatedPositionData {
+  suppliedUsd: string,
+  suppliedCollateralUsd: string,
+  borrowedUsd: string,
+  borrowLimitUsd: string,
+  liquidationLimitUsd: string,
+  leftToBorrowUsd: string,
+  ratio: string,
+  collRatio: string,
+  netApy: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
+  liqRatio: string,
+  liqPercent: string,
+  leveragedType: string,
+  leveragedAsset?: string,
+  leveragedLsdAssetRatio?: string,
+  liquidationPrice?: string,
+  minRatio: string,
+  debtTooLow: boolean,
+  minDebt: string,
 }

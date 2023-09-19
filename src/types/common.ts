@@ -16,18 +16,15 @@ export interface MMAssetData {
   price: string,
   collateralFactor: string,
   underlyingTokenAddress: string,
-  assetId: string,
   borrowRateStable: string,
   liquidationRatio: string,
   marketLiquidity: string,
   utilization: string,
-  usageAsCollateralEnabled: string,
+  usageAsCollateralEnabled: boolean,
   supplyCap: string,
   borrowCap: string,
   totalSupply: string,
   isInactive: boolean,
-  isFrozen: boolean,
-  isPaused: boolean,
   canBeBorrowed: boolean,
   canBeSupplied: boolean,
   canBeWithdrawn: boolean,
@@ -35,11 +32,16 @@ export interface MMAssetData {
   disabledStableBorrowing: boolean,
   totalBorrow: string,
   totalBorrowVar: string,
-  isFlashLoanEnabled: boolean,
-  incentiveBorrowApy: string,
-  incentiveBorrowToken: string,
-  incentiveSupplyApy: string,
-  incentiveSupplyToken: string,
+  incentiveBorrowApy?: string,
+  incentiveBorrowToken?: string,
+  incentiveSupplyApy?: string,
+  incentiveSupplyToken?: string,
+  borrowRateP2P?: string,
+  supplyRateP2P?: string,
+}
+
+export interface MMAssetsData {
+  [token: string]: MMAssetData,
 }
 export interface MMMarketData {
   assetsData: MMAssetData[],
@@ -53,6 +55,15 @@ export interface MMUsedAsset {
   borrowedUsd: string,
   isBorrowed: boolean,
   debt: string,
+  supplyRate?: string,
+  borrowRate?: string,
+  discountedBorrowRate?: string,
+  stableBorrowRate?: string,
+  interestMode?: string,
+  collateral?: boolean,
+}
+export interface MMUsedAssets {
+  [token: string]: MMUsedAsset,
 }
 export interface MMUsedAssetWStableB extends MMUsedAsset {
   stableBorrowRate: string,

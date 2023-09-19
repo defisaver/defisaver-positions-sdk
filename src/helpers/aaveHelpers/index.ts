@@ -1,11 +1,10 @@
 import Dec from 'decimal.js';
 import {
-  AaveHelperCommon,
-  AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3MarketData, AaveV3UsedAssets, AaveVersions,
-} from '../types/aave';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../moneymarket';
-import { wethToEth } from '../services/utils';
-import { calculateNetApy } from '../staking';
+  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
+} from '../../types';
+import { wethToEth } from '../../services/utils';
+import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import { calculateNetApy } from '../../staking';
 
 export const isAaveV3 = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => selectedMarket.value === AaveVersions.AaveV3;
 export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: AaveMarketInfo }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
@@ -16,7 +15,7 @@ export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);
 
 export const aaveAnyGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: AaveV3UsedAssets }) => Object.values(usedAssets)
-  .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral);
+  .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral);
 
 export const aaveAnyGetSuppliableAssets = ({
   usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
@@ -26,7 +25,7 @@ export const aaveAnyGetSuppliableAssets = ({
   };
 
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
-  const marketAssets = Object.values(assetsData);
+  const marketAssets = Object.values(assetsData) as AaveAssetData[];
 
   if (isMorphoAave({ selectedMarket })) {
     return marketAssets.filter(({ canBeSupplied }) => canBeSupplied,
