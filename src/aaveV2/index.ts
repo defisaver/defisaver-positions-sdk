@@ -1,7 +1,9 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import { Blockish, EthAddress, NetworkNumber, PositionBalances } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
@@ -90,7 +92,7 @@ export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, 
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
   const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
 
-  loanInfo.forEach((_tokenInfo, i) => {
+  loanInfo.forEach((_tokenInfo: any, i: number) => {
     const asset = market.assets[i];
     const tokenInfo = { ..._tokenInfo };
 

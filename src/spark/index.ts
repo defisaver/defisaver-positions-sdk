@@ -1,16 +1,27 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import {Blockish, EthAddress, NetworkNumber, PositionBalances} from '../types/common';
 import { ethToWeth, getAbiItem, isLayer2Network } from '../services/utils';
 import {
   calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
 } from '../staking';
 import { getDsrApy } from '../services/dsrService';
-import { SparkIncentiveDataProviderContract, SparkViewContract, getConfigContractAbi } from '../contracts';
 import {
+  SparkIncentiveDataProviderContract,
+  SparkViewContract,
+  getConfigContractAbi,
+} from '../contracts';
+import {
+  AaveMarketInfo,
   EModeCategoryDataMapping,
-  SparkAssetData, SparkAssetsData, SparkMarketData, SparkMarketsData, SparkPositionData, SparkUsedAsset, SparkUsedAssets,
+  SparkAssetData,
+  SparkAssetsData,
+  SparkMarketData,
+  SparkMarketsData,
+  SparkPositionData,
+  SparkUsedAsset,
+  SparkUsedAssets,
 } from '../types';
 import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
@@ -209,6 +220,65 @@ export const EMPTY_SPARK_DATA = {
   suppliedCollateralUsd: '0',
   totalSupplied: '0',
   eModeCategories: [],
+};
+
+export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const loanInfoContract = SparkViewContract(web3, network);
+  const marketAddress = market.providerAddress;
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+
+  // split addresses in half to avoid gas limit by multicall
+  const middleAddressIndex = Math.floor(_addresses.length / 2);
+
+  const multicallData = [
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
+    },
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
+    },
+  ];
+
+  const multicallRes = await multicall(multicallData, web3, network, block);
+
+  const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
+
+  loanInfo.forEach((tokenInfo: any, i: number) => {
+    const asset = market.assets[i];
+
+    const isSupplied = tokenInfo.balance.toString() !== '0';
+    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [asset]: isSupplied
+          ? assetAmountInEth(tokenInfo.balance.toString(), asset)
+          : '0',
+      },
+      debt: {
+        ...balances.debt,
+        [asset]: isBorrowed
+          ? new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
+          : '0',
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getSparkAccountData = async (web3: Web3, network: NetworkNumber, address: string, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {

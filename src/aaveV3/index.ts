@@ -2,7 +2,11 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import {
-  AaveIncentiveDataProviderV3Contract, AaveV3ViewContract, GhoTokenContract, getConfigContractAbi, getConfigContractAddress,
+  AaveIncentiveDataProviderV3Contract,
+  AaveV3ViewContract,
+  GhoTokenContract,
+  getConfigContractAbi,
+  getConfigContractAddress,
 } from '../contracts';
 import {
   addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
@@ -10,7 +14,9 @@ import {
 import {
   AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
 } from '../types/aave';
-import { EthAddress, NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
@@ -314,6 +320,65 @@ export const EMPTY_AAVE_DATA = {
   eModeCategories: [],
   collRatio: '0',
   suppliedCollateralUsd: '0',
+};
+
+export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const loanInfoContract = AaveV3ViewContract(web3, network);
+  const marketAddress = market.providerAddress;
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+
+  // split addresses in half to avoid gas limit by multicall
+  const middleAddressIndex = Math.floor(_addresses.length / 2);
+
+  const multicallData = [
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
+    },
+    {
+      target: loanInfoContract.options.address,
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
+    },
+  ];
+
+  const multicallRes = await multicall(multicallData, web3, network, block);
+
+  const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
+
+  loanInfo.forEach((tokenInfo: any, i: number) => {
+    const asset = market.assets[i];
+
+    const isSupplied = tokenInfo.balance.toString() !== '0';
+    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [asset]: isSupplied
+          ? assetAmountInEth(tokenInfo.balance.toString(), asset)
+          : '0',
+      },
+      debt: {
+        ...balances.debt,
+        [asset]: isBorrowed
+          ? new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
+          : '0',
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any) => {

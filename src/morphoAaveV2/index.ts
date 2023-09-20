@@ -2,10 +2,13 @@ import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import Dec from 'decimal.js';
 import Web3 from 'web3';
 import { wethToEthByAddress } from '../services/utils';
-import { NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { getStETHApr } from '../staking';
 import { MorphoAaveV2ViewContract } from '../contracts';
 import {
+  AaveMarketInfo,
   AaveVersions, MorphoAaveV2AssetData, MorphoAaveV2AssetsData, MorphoAaveV2MarketData, MorphoAaveV2PositionData,
 } from '../types';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
@@ -116,6 +119,48 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
     });
 
   return { assetsData: payload };
+};
+
+export const getMorphoAaveV2AccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const morphoAaveV2ViewContract = MorphoAaveV2ViewContract(web3, network);
+
+  const { userBalances } = await morphoAaveV2ViewContract.methods.getUserInfo(address).call({}, block);
+
+  if (userBalances.length === 0) {
+    return balances;
+  }
+
+  userBalances.forEach((balance: any) => {
+    const { symbol } = getAssetInfoByAddress(wethToEthByAddress(balance.underlying));
+
+    const supplied = new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString();
+    const borrowed = new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString();
+
+    const isSupplied = new Dec(supplied).gt(0);
+    const isBorrowed = new Dec(borrowed).gt(0);
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [symbol]: isSupplied ? supplied : '0',
+      },
+      debt: {
+        ...balances.debt,
+        [symbol]: isBorrowed ? borrowed : '0',
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: MorphoAaveV2AssetsData) => {
