@@ -75,7 +75,7 @@ export interface MMPositionData {
   // ...
 }
 
-export type Balances = Partial<Record<AssetSymbol, Amount>>;
+export type Balances = Record<AssetSymbol, Amount>;
 export interface PositionBalances {
   collateral?: Balances,
   debt?: Balances,

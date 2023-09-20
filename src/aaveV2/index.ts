@@ -1,7 +1,9 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
@@ -10,6 +12,7 @@ import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
 } from '../types';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
+import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3) => {
@@ -73,6 +76,55 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
     });
 
   return { assetsData: payload };
+};
+
+export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const market = AAVE_V2;
+
+  const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+
+  const marketAddress = market.providerAddress;
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
+
+  loanInfo.forEach((_tokenInfo: any, i: number) => {
+    const asset = market.assets[i];
+    const tokenInfo = { ..._tokenInfo };
+
+    // known bug: stETH leaves 1 wei on every transfer
+    if (asset === 'stETH' && tokenInfo.balance.toString() === '1') {
+      tokenInfo.balance = '0';
+    }
+
+    const isSupplied = tokenInfo.balance.toString() !== '0';
+    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [asset]: isSupplied
+          ? assetAmountInEth(tokenInfo.balance.toString(), asset)
+          : '0',
+      },
+      debt: {
+        ...balances.debt,
+        [asset]: isBorrowed
+          ? new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
+          : '0',
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: AaveV2AssetsData, market: AaveMarketInfo) => {
