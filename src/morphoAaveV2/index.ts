@@ -141,20 +141,14 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, address: EthAdd
   userBalances.forEach((balance: any) => {
     const { symbol } = getAssetInfoByAddress(wethToEthByAddress(balance.underlying));
 
-    const supplied = new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString();
-    const borrowed = new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString();
-
-    const isSupplied = new Dec(supplied).gt(0);
-    const isBorrowed = new Dec(borrowed).gt(0);
-
     balances = {
       collateral: {
         ...balances.collateral,
-        [symbol]: isSupplied ? supplied : '0',
+        [symbol]: new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString(),
       },
       debt: {
         ...balances.debt,
-        [symbol]: isBorrowed ? borrowed : '0',
+        [symbol]: new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString(),
       },
     };
   });

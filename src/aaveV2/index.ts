@@ -105,21 +105,14 @@ export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, 
       tokenInfo.balance = '0';
     }
 
-    const isSupplied = tokenInfo.balance.toString() !== '0';
-    const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
-
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: isSupplied
-          ? assetAmountInEth(tokenInfo.balance.toString(), asset)
-          : '0',
+        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset)
       },
       debt: {
         ...balances.debt,
-        [asset]: isBorrowed
-          ? new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
-          : '0',
+        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
       },
     };
   });
