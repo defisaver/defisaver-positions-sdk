@@ -1,7 +1,9 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import {Blockish, EthAddress, NetworkNumber, PositionBalances} from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { ethToWeth, getAbiItem, isLayer2Network } from '../services/utils';
 import {
   calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
@@ -223,7 +225,6 @@ export const EMPTY_SPARK_DATA = {
 };
 
 export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
-
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -245,12 +246,12 @@ export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, n
   const multicallData = [
     {
       target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
       params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
     },
     {
       target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
       params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
     },
   ];
@@ -265,7 +266,7 @@ export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, n
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset)
+        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
       },
       debt: {
         ...balances.debt,

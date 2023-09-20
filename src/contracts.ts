@@ -63,3 +63,9 @@ export const SparkViewContract = createContractFromConfigFunc<ContractTypes.Spar
 
 export const CrvUSDViewContract = createContractFromConfigFunc<ContractTypes.CrvUSDView>('crvUSDView');
 export const CrvUSDFactoryContract = createContractFromConfigFunc<ContractTypes.CrvUSDFactory>('crvUSDFactory');
+
+export const LiquityViewContract = createContractFromConfigFunc<ContractTypes.LiquityView>('LiquityView');
+export const LiquityCollSurplusPoolContract = createContractFromConfigFunc<ContractTypes.CollSurplusPool>('CollSurplusPool');
+export const LiquityTroveManagerContract = createContractFromConfigFunc<ContractTypes.TroveManager>('TroveManager');
+export const LiquityPriceFeedContract = createContractFromConfigFunc<ContractTypes.PriceFeed>('PriceFeed');
+export const LiquityActivePoolContract = createContractFromConfigFunc<ContractTypes.LiquityActivePool>('LiquityActivePool');

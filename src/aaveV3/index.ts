@@ -345,12 +345,12 @@ export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, 
   const multicallData = [
     {
       target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
       params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
     },
     {
       target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }: { name: string }) => name === 'getTokenBalances'),
+      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
       params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
     },
   ];
