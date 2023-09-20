@@ -57,3 +57,6 @@ export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Co
 export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot');
 
 export const MorphoAaveV2ViewContract = createContractFromConfigFunc<ContractTypes.MorphoAaveV2View>('MorphoAaveV2View');
+
+export const SparkIncentiveDataProviderContract = createContractFromConfigFunc<ContractTypes.SparkIncentiveDataProvider>('SparkIncentiveDataProvider');
+export const SparkViewContract = createContractFromConfigFunc<ContractTypes.SparkView>('SparkView');
