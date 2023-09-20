@@ -8,7 +8,9 @@ import { multicall } from '../multicall';
 import {
   CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData, CompoundVersions,
 } from '../types/compound';
-import { NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import {
   getCbETHApr, getStETHApr, getStETHByWstETHMultiple, getWstETHByStETH,
 } from '../staking';
@@ -18,6 +20,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
+import { COMPOUND_V3_ETH, COMPOUND_V3_USDC } from '../markets/compound';
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContract(web3, network);
@@ -110,6 +113,50 @@ export const EMPTY_USED_ASSET = {
   symbol: '',
   collateral: true,
   debt: '0',
+};
+
+export const getCompoundV3AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish, marketSymbol: 'ETH'): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const market = ({
+    ETH: COMPOUND_V3_ETH(network),
+    USDC: COMPOUND_V3_USDC(network),
+  })[marketSymbol];
+
+  const loanInfoContract = CompV3ViewContract(web3, network);
+  const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
+  const baseAssetInfo = getAssetInfo(market.baseAsset);
+
+  balances = {
+    collateral: {
+      ...balances.collateral,
+      [baseAssetInfo.symbol]: assetAmountInEth(loanInfo.depositAmount, baseAssetInfo.symbol),
+    },
+    debt: {
+      ...balances.debt,
+      [baseAssetInfo.symbol]: assetAmountInEth(loanInfo.borrowAmount, baseAssetInfo.symbol),
+    },
+  };
+
+  loanInfo.collAddr.forEach((coll: string, i: number): void => {
+    const symbol = wethToEth(getAssetInfoByAddress(coll, network).symbol);
+    balances = {
+      ...balances,
+      collateral: {
+        ...balances.collateral,
+        [symbol]: assetAmountInEth(loanInfo.collAmounts[i].toString(), symbol),
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getCompoundV3AccountData = async (
