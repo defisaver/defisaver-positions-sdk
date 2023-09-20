@@ -2,12 +2,13 @@ import Dec from 'decimal.js';
 import { assetAmountInEth } from '@defisaver/tokens';
 import Web3 from 'web3';
 import {
-  BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData,
+  BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData, CrvUSDVersions,
 } from '../types';
 import { multicall } from '../multicall';
-import { NetworkNumber } from '../types/common';
+import { Blockish, EthAddress, NetworkNumber, PositionBalances } from '../types/common';
 import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
+import { CrvUsdMarkets } from '../markets';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContract(web3, network);
@@ -118,6 +119,33 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   if (new Dec(bandRange[0]).lte(activeBand) && new Dec(bandRange[1]).gte(activeBand)) return CrvUSDStatus.SoftLiquidating; // user has crvUSD as coll so he is in soft liquidation
   if (new Dec(collSupplied).lte(0) || new Dec(bandRange[1]).lte(activeBand)) return CrvUSDStatus.SoftLiquidated; // or is fully soft liquidated
   return CrvUSDStatus.Nonexistant;
+};
+
+export const getCrvUsdAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const contract = CrvUSDViewContract(web3, network);
+  const selectedMarket = CrvUsdMarkets(network)[crvUsdVersion];
+
+  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
+
+  balances = {
+    collateral: {
+      [selectedMarket.collAsset]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
+    },
+    debt: {
+      [selectedMarket.baseAsset]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
+    },
+  };
+
+  return balances;
 };
 
 export const getCrvUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
