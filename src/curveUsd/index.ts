@@ -1,10 +1,13 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth } from '@defisaver/tokens';
 import Web3 from 'web3';
-import { BandData, CrvUSDGlobalMarketData, CrvUSDMarketData } from '../types';
+import {
+  BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData,
+} from '../types';
 import { multicall } from '../multicall';
 import { NetworkNumber } from '../types/common';
 import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
+import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContract(web3, network);
@@ -101,5 +104,89 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
     futureBorrowRate,
     bands: bandsData,
     leftToBorrow,
+  };
+};
+
+const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplied: string, collSupplied: string) => {
+  // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
+  if (new Dec(bandRange[0]).eq(bandRange[1])) return CrvUSDStatus.Nonexistant;
+  // if user doesn't have crvUSD as collateral, then his position is not in soft liquidation
+  if (new Dec(crvUSDSupplied).lte(0)) {
+    if (new Dec(bandRange[0]).minus(activeBand).lte(3)) return CrvUSDStatus.Risk; // if user band is less than 3 bands away from active band, his position is at risk
+    return CrvUSDStatus.Safe;
+  }
+  if (new Dec(bandRange[0]).lte(activeBand) && new Dec(bandRange[1]).gte(activeBand)) return CrvUSDStatus.SoftLiquidating; // user has crvUSD as coll so he is in soft liquidation
+  if (new Dec(collSupplied).lte(0) || new Dec(bandRange[1]).lte(activeBand)) return CrvUSDStatus.SoftLiquidated; // or is fully soft liquidated
+  return CrvUSDStatus.Nonexistant;
+};
+
+export const getCrvUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+  const contract = CrvUSDViewContract(web3, network);
+
+  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call();
+  const collAsset = selectedMarket.collAsset;
+  const debtAsset = selectedMarket.baseAsset;
+
+  const health = assetAmountInEth(data.health);
+  const healthPercent = new Dec(health).mul(100).toString();
+  const collPrice = assetAmountInEth(data.collateralPrice, debtAsset);
+  const collSupplied = assetAmountInEth(data.marketCollateralAmount, collAsset);
+  const collSuppliedUsd = new Dec(collSupplied).mul(collPrice).toString();
+  const crvUSDSupplied = assetAmountInEth(data.curveUsdCollateralAmount, debtAsset);
+  const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const usedAssets: CrvUSDUsedAssets = data.loanExists ? {
+    [collAsset]: {
+      isSupplied: true,
+      supplied: collSupplied,
+      suppliedUsd: collSuppliedUsd, // need oracle price, or amm price
+      borrowed: '0',
+      borrowedUsd: '0',
+      isBorrowed: false,
+      symbol: collAsset,
+      collateral: true,
+      price: collPrice, // price_amm
+    },
+    [debtAsset]: {
+      isSupplied: new Dec(crvUSDSupplied).gt('0'),
+      collateral: new Dec(crvUSDSupplied).gt('0'),
+      supplied: crvUSDSupplied,
+      suppliedUsd: crvUSDSupplied,
+      borrowed: debtBorrowed,
+      borrowedUsd: debtBorrowed,
+      isBorrowed: new Dec(debtBorrowed).gt('0'),
+      symbol: 'crvUSD',
+      price: '1',
+      interestRate: '0',
+    },
+  } : {};
+
+  const priceHigh = assetAmountInEth(data.priceHigh);
+  const priceLow = assetAmountInEth(data.priceLow);
+
+  const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
+
+  const status = data.loanExists ? getStatusForUser(data.bandRange, activeBand, crvUSDSupplied, collSupplied) : CrvUSDStatus.Nonexistant;
+
+  const userBands = _userBands.map((band, index) => ({
+    ...band,
+    userDebtAmount: assetAmountInEth(data.usersBands[0][index], debtAsset),
+    userCollAmount: assetAmountInEth(data.usersBands[1][index], collAsset),
+  })).sort((a, b) => parseInt(b.id, 10) - parseInt(a.id, 10));
+
+  return {
+    ...data,
+    debtAmount: assetAmountInEth(data.debtAmount, debtAsset),
+    health,
+    healthPercent,
+    priceHigh,
+    priceLow,
+    liquidationDiscount: assetAmountInEth(data.liquidationDiscount),
+    numOfBands: data.N,
+    usedAssets,
+    status,
+    ...getCrvUsdAggregatedData({
+      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket,
+    }),
+    userBands,
   };
 };
