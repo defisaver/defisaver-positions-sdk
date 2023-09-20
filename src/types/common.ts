@@ -1,5 +1,9 @@
 // General
 export type EthAddress = string;
+export type Blockish = number | 'latest';
+export type AssetSymbol = string;
+export type Amount = string | number;
+
 export enum NetworkNumber {
   Eth = 1,
   Opt = 10,
@@ -69,4 +73,11 @@ export interface MMPositionData {
   netApy: string,
   lastUpdated: number,
   // ...
+}
+
+export type Balances = Partial<Record<AssetSymbol, Amount>>;
+export interface PositionBalances {
+  collateral?: Balances,
+  debt?: Balances,
+  selling?: Balances,
 }
