@@ -23,6 +23,7 @@ import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiI
 import { getAssetsBalances } from '../assets';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
+import { AAVE_V3 } from '../markets/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
   const contract = AaveV3ViewContract(web3, 1);
@@ -322,7 +323,7 @@ export const EMPTY_AAVE_DATA = {
   suppliedCollateralUsd: '0',
 };
 
-export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -333,6 +334,8 @@ export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, 
   }
 
   const loanInfoContract = AaveV3ViewContract(web3, network);
+
+  const market = AAVE_V3(network);
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
 

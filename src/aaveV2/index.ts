@@ -12,6 +12,7 @@ import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
 } from '../types';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
+import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3) => {
@@ -77,7 +78,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
   return { assetsData: payload };
 };
 
-export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -87,7 +88,10 @@ export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, 
     return balances;
   }
 
+  const market = AAVE_V2;
+
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
   const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);

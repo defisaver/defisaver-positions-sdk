@@ -8,7 +8,6 @@ import {
 import { getStETHApr } from '../staking';
 import { MorphoAaveV2ViewContract } from '../contracts';
 import {
-  AaveMarketInfo,
   AaveVersions, MorphoAaveV2AssetData, MorphoAaveV2AssetsData, MorphoAaveV2MarketData, MorphoAaveV2PositionData,
 } from '../types';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
@@ -121,7 +120,7 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
   return { assetsData: payload };
 };
 
-export const getMorphoAaveV2AccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getMorphoAaveV2AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

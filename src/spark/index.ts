@@ -13,7 +13,6 @@ import {
   getConfigContractAbi,
 } from '../contracts';
 import {
-  AaveMarketInfo,
   EModeCategoryDataMapping,
   SparkAssetData,
   SparkAssetsData,
@@ -26,6 +25,7 @@ import {
 import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
+import { SPARK_V1 } from '../markets/spark';
 
 export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkAssetsData }, usedAssets: SparkUsedAssets) => {
   const { assetsData } = extractedState;
@@ -222,7 +222,8 @@ export const EMPTY_SPARK_DATA = {
   eModeCategories: [],
 };
 
-export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, market: AaveMarketInfo, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -233,6 +234,8 @@ export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, m
   }
 
   const loanInfoContract = SparkViewContract(web3, network);
+
+  const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
 
