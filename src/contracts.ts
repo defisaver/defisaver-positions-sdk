@@ -60,3 +60,6 @@ export const MorphoAaveV2ViewContract = createContractFromConfigFunc<ContractTyp
 
 export const SparkIncentiveDataProviderContract = createContractFromConfigFunc<ContractTypes.SparkIncentiveDataProvider>('SparkIncentiveDataProvider');
 export const SparkViewContract = createContractFromConfigFunc<ContractTypes.SparkView>('SparkView');
+
+export const CrvUSDViewContract = createContractFromConfigFunc<ContractTypes.CrvUSDView>('crvUSDView');
+export const CrvUSDFactoryContract = createContractFromConfigFunc<ContractTypes.CrvUSDFactory>('crvUSDFactory');

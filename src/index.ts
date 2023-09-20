@@ -5,6 +5,7 @@ import * as morphoAaveV2 from './morphoAaveV2';
 import * as compoundV3 from './compoundV3';
 import * as compoundV2 from './compoundV2';
 import * as spark from './spark';
+import * as curveUsd from './curveUsd';
 import * as staking from './staking';
 import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
@@ -22,6 +23,7 @@ export {
   compoundV2,
   compoundV3,
   spark,
+  curveUsd,
   staking,
   multicall,
   moneymarket,
