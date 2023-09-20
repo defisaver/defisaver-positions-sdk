@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import { Blockish, EthAddress, NetworkNumber, PositionBalances } from '../types/common';
 import {
   LiquityActivePoolContract, LiquityCollSurplusPoolContract, LiquityPriceFeedContract, LiquityTroveManagerContract, LiquityViewContract,
 } from '../contracts';
@@ -10,6 +10,31 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
+
+export const getLiquityAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const viewContract = LiquityViewContract(web3, network);
+  const troveInfo = await viewContract.methods.getTroveInfo(address).call({}, block);
+
+  balances = {
+    collateral: {
+      ETH: assetAmountInEth(troveInfo[1], 'ETH'),
+    },
+    debt: {
+      LUSD: assetAmountInEth(troveInfo[2], 'LUSD'),
+    },
+  };
+
+  return balances;
+};
 
 export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, address: string): Promise<LiquityTroveInfo> => {
   const viewContract = LiquityViewContract(web3, network);
