@@ -25,10 +25,19 @@ describe('Spark', () => {
     return marketData;
   };
 
+  const fetchAccountData = async (network, web3, marketData) => {
+    const accountData = await sdk.spark.getSparkAccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { assetsData: marketData.assetsData, selectedMarket: sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1] });
+    // console.log(accountData);
+    assert.containsAllKeys(accountData, [
+      'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
+    ]);
+  };
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchMarketData(network, web3);
+    await fetchAccountData(network, web3, marketData);
   });
 });
