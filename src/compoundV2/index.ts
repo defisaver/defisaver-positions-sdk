@@ -4,7 +4,9 @@ import Web3 from 'web3';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { aprToApy } from '../moneymarket';
 import { compareAddresses, handleWbtcLegacy } from '../services/utils';
-import { NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { CompoundLoanInfoContract, ComptrollerContract } from '../contracts';
 import { compoundV2CollateralAssets } from '../markets/compound/marketsAssets';
 import {
@@ -97,6 +99,48 @@ export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkN
   const contract = ComptrollerContract(web3, network);
 
   return contract.methods.getAssetsIn(account).call();
+};
+
+export const getCompoundV2AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const loanInfoContract = CompoundLoanInfoContract(web3, network);
+  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call({}, block);
+
+  loanInfo.balances.forEach((weiAmount: any, i: number) => {
+    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
+      : compoundV2CollateralAssets[i].underlyingAsset;
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [asset]: assetAmountInEth(weiAmount.toString(), asset),
+      },
+    };
+  });
+  loanInfo.borrows.forEach((weiAmount: any, i: number) => {
+    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
+      : compoundV2CollateralAssets[i].underlyingAsset;
+
+    balances = {
+      ...balances,
+      debt: {
+        ...balances.debt,
+        [asset]:  assetAmountInEth(weiAmount.toString(), asset),
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: CompoundV2AssetsData): Promise<CompoundV2PositionData> => {
