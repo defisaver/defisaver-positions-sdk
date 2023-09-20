@@ -7,20 +7,27 @@ import P2PInterestRates from '@morpho-org/morpho-aave-v3-sdk/lib/maths/P2PIntere
 import { BigNumber } from '@ethersproject/bignumber';
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import {
   ethToWeth, ethToWethByAddress, getAbiItem, isLayer2Network, wethToEthByAddress,
 } from '../services/utils';
-import { createContractWrapper, getConfigContractAbi, getConfigContractAddress } from '../contracts';
+import {
+  createContractWrapper,
+  getConfigContractAbi,
+  getConfigContractAddress,
+} from '../contracts';
 import { multicall } from '../multicall';
 import { getCbETHApr, getREthApr, getStETHApr } from '../staking';
 import {
-  AaveVersions, MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
+  MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
 import { getDsrApy } from '../services/dsrService';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
+import { MORPHO_AAVE_V3_ETH } from '../markets/aave';
 
 const morphoAaveMath = new MorphoAaveMath();
 const poolInterestRates = new PoolInterestRates();
@@ -331,6 +338,106 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     });
 
   return { assetsData: payload };
+};
+
+export const getMorphoAaveV3AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const selectedMarket = MORPHO_AAVE_V3_ETH(network);
+  // @ts-ignore
+  const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+
+  const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a)).address);
+
+  const multicallArray = [
+    ...(_addresses.map((underlyingAddress: string) => ([
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'market'),
+        params: [underlyingAddress],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledP2PSupplyBalance'),
+        params: [underlyingAddress, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledPoolSupplyBalance'),
+        params: [underlyingAddress, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledCollateralBalance'),
+        params: [underlyingAddress, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledP2PBorrowBalance'),
+        params: [underlyingAddress, address],
+      },
+      {
+        target: lendingPoolContract.options.address,
+        abiItem: getAbiItem(lendingPoolContract.options.jsonInterface, 'scaledPoolBorrowBalance'),
+        params: [underlyingAddress, address],
+      },
+    ]))).flat(),
+  ];
+
+  const multicallResponse = await multicall(multicallArray, web3, network, block);
+
+  const numberOfMultiCalls = 6;
+
+  _addresses.forEach((underlyingAddr: string, i: number) => {
+    const currentMulticallIndex = numberOfMultiCalls * i;
+    const morphoMarketData = multicallResponse[currentMulticallIndex][0];
+    const { symbol } = getAssetInfoByAddress(wethToEthByAddress(underlyingAddr));
+
+    const suppliedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[currentMulticallIndex + 1][0],
+      morphoMarketData.indexes.supply.p2pIndex,
+    ), symbol);
+    const suppliedPool = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[currentMulticallIndex + 2][0],
+      morphoMarketData.indexes.supply.poolIndex,
+    ), symbol);
+    const suppliedTotal = new Dec(suppliedP2P).add(suppliedPool).toString();
+    const suppliedCollateral = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[currentMulticallIndex + 3][0],
+      morphoMarketData.indexes.supply.poolIndex,
+    ), symbol);
+    const supplied = new Dec(suppliedTotal).add(suppliedCollateral).toString();
+
+    const borrowedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[currentMulticallIndex + 4][0],
+      morphoMarketData.indexes.borrow.p2pIndex,
+    ), symbol);
+    const borrowedPool = assetAmountInEth(morphoAaveMath.indexMul(
+      multicallResponse[currentMulticallIndex + 5][0],
+      morphoMarketData.indexes.borrow.poolIndex,
+    ), symbol);
+    const borrowed = new Dec(borrowedP2P).add(borrowedPool).toString();
+
+    balances = {
+      collateral: {
+        ...balances.collateral,
+        [symbol]: supplied, // TODO supplied or supplied collateral, probably collateral (fix other methods)
+      },
+      debt: {
+        ...balances.debt,
+        [symbol]: borrowed,
+      },
+    };
+  });
+
+  return balances;
 };
 
 export const getMorphoAaveV3AccountData = async (
