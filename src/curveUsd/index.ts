@@ -5,7 +5,9 @@ import {
   BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData, CrvUSDVersions,
 } from '../types';
 import { multicall } from '../multicall';
-import { Blockish, EthAddress, NetworkNumber, PositionBalances } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
@@ -148,7 +150,7 @@ export const getCrvUsdAccountBalances = async (web3: Web3, address: EthAddress, 
   return balances;
 };
 
-export const getCrvUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
   const contract = CrvUSDViewContract(web3, network);
 
   const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call();
@@ -217,4 +219,10 @@ export const getCrvUsdUserData = async (web3: Web3, network: NetworkNumber, addr
     }),
     userBands,
   };
+};
+
+export const getCurveUsdFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
+  const marketData = await getCurveUsdGlobalData(web3, network, selectedMarket);
+  const positionData = await getCurveUsdUserData(web3, network, address, selectedMarket, marketData.activeBand);
+  return positionData;
 };
