@@ -69,3 +69,9 @@ export const LiquityCollSurplusPoolContract = createContractFromConfigFunc<Contr
 export const LiquityTroveManagerContract = createContractFromConfigFunc<ContractTypes.TroveManager>('TroveManager');
 export const LiquityPriceFeedContract = createContractFromConfigFunc<ContractTypes.PriceFeed>('PriceFeed');
 export const LiquityActivePoolContract = createContractFromConfigFunc<ContractTypes.LiquityActivePool>('LiquityActivePool');
+
+export const McdViewContract = createContractFromConfigFunc<ContractTypes.McdView>('McdView');
+export const McdSpotterContract = createContractFromConfigFunc<ContractTypes.McdSpotter>('McdSpotter');
+export const McdDogContract = createContractFromConfigFunc<ContractTypes.McdDog>('McdDog');
+export const McdJugContract = createContractFromConfigFunc<ContractTypes.McdJug>('McdJug');
+export const McdVatContract = createContractFromConfigFunc<ContractTypes.McdVat>('McdVat');

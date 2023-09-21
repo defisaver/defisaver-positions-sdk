@@ -7,6 +7,7 @@ import * as compoundV2 from './compoundV2';
 import * as spark from './spark';
 import * as curveUsd from './curveUsd';
 import * as liquity from './liquity';
+import * as maker from './maker';
 import * as staking from './staking';
 import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
@@ -26,6 +27,7 @@ export {
   spark,
   curveUsd,
   liquity,
+  maker,
   staking,
   multicall,
   moneymarket,

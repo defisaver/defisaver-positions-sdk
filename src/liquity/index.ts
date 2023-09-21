@@ -1,7 +1,9 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth } from '@defisaver/tokens';
-import { Blockish, EthAddress, NetworkNumber, PositionBalances } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import {
   LiquityActivePoolContract, LiquityCollSurplusPoolContract, LiquityPriceFeedContract, LiquityTroveManagerContract, LiquityViewContract,
 } from '../contracts';

@@ -28,3 +28,8 @@ export const handleWbtcLegacy = (asset: string) => (asset === 'WBTC Legacy' ? 'W
 export const wethToEthByAddress = (maybeWethAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(wethToEth(getAssetInfoByAddress(maybeWethAddr, chainId).symbol), chainId).address;
 
 export const ethToWethByAddress = (maybeEthAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(ethToWeth(getAssetInfoByAddress(maybeEthAddr, chainId).symbol), chainId).address;
+
+export const bytesToString = (hex: string) => Buffer.from(hex.replace(/^0x/, ''), 'hex')
+  .toString()
+  // eslint-disable-next-line no-control-regex
+  .replace(/\x00/g, '');
