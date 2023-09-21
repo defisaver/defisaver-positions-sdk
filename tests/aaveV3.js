@@ -24,7 +24,7 @@ describe('Aave v3', () => {
   });
 
   const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.aaveV3.getMarketData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
+    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -46,12 +46,27 @@ describe('Aave v3', () => {
     ]);
   };
 
+  const fetchFullPositionData = async (network, _web3) => {
+    const positionData = await sdk.aaveV3.getAaveV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
+    // console.log(positionData);
+    assert.containsAllKeys(positionData, [
+      'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
+    ]);
+  };
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchMarketData(network, web3);
     await fetchAccountData(network, web3, marketData);
+  });
+
+  it('can fetch full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchFullPositionData(network, web3);
   });
 
   it('can fetch market and account data for Optimism', async function () {
@@ -62,6 +77,13 @@ describe('Aave v3', () => {
     await fetchAccountData(network, web3Opt, marketData);
   });
 
+  it('can fetch full position data for Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+
+    await fetchFullPositionData(network, web3Opt);
+  });
+
   it('can fetch market and account data for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
@@ -70,11 +92,25 @@ describe('Aave v3', () => {
     await fetchAccountData(network, web3Arb, marketData);
   });
 
+  it('can fetch full position data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+
+    await fetchFullPositionData(network, web3Arb);
+  });
+
   it('can fetch market and account data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
     const marketData = await fetchMarketData(network, web3Base);
     await fetchAccountData(network, web3Base, marketData);
+  });
+
+  it('can fetch full position data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+
+    await fetchFullPositionData(network, web3Base);
   });
 });
