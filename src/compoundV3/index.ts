@@ -20,7 +20,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
-import { COMPOUND_V3_ETH, COMPOUND_V3_USDC } from '../markets/compound';
+import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContract(web3, network);
@@ -115,7 +115,7 @@ export const EMPTY_USED_ASSET = {
   debt: '0',
 };
 
-export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, marketSymbol: 'ETH'): Promise<PositionBalances> => {
+export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -126,9 +126,10 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
   }
 
   const market = ({
-    ETH: COMPOUND_V3_ETH(network),
-    USDC: COMPOUND_V3_USDC(network),
-  })[marketSymbol];
+    [COMPOUND_V3_ETH(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_ETH(network),
+    [COMPOUND_V3_USDC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDC(network),
+    [COMPOUND_V3_USDBC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDBC(network),
+  })[marketAddress];
 
   const loanInfoContract = CompV3ViewContract(web3, network);
   const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
