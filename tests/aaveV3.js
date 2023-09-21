@@ -54,6 +54,16 @@ describe('Aave v3', () => {
     ]);
   };
 
+  const fetchAccountBalances = async (network, web3, blockNumber) => {
+    const balances = await sdk.aaveV3.getAaveV3AccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+    // console.log(balances);
+    assert.containsAllKeys(balances, [
+      'collateral', 'debt',
+    ]);
+  };
+
+  // Ethereum
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
@@ -68,6 +78,22 @@ describe('Aave v3', () => {
 
     await fetchFullPositionData(network, web3);
   });
+
+  it('can fetch latest account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 'latest');
+  });
+
+  it('can fetch past account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 18184392);
+  });
+
+  // Optimism
 
   it('can fetch market and account data for Optimism', async function () {
     this.timeout(10000);
@@ -84,6 +110,22 @@ describe('Aave v3', () => {
     await fetchFullPositionData(network, web3Opt);
   });
 
+  it('can fetch latest account balances for Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+
+    await fetchAccountBalances(network, web3Opt, 'latest');
+  });
+
+  it('can fetch past account balances for Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+
+    await fetchAccountBalances(network, web3Opt, 109851575);
+  });
+
+  // Arbitrum
+
   it('can fetch market and account data for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
@@ -99,6 +141,22 @@ describe('Aave v3', () => {
     await fetchFullPositionData(network, web3Arb);
   });
 
+  it('can fetch latest account balances for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+
+    await fetchAccountBalances(network, web3Arb, 'latest');
+  });
+
+  it('can fetch past account balances for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+
+    await fetchAccountBalances(network, web3Arb, 130191171);
+  });
+
+  // Base
+
   it('can fetch market and account data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
@@ -112,5 +170,19 @@ describe('Aave v3', () => {
     const network = NetworkNumber.Base;
 
     await fetchFullPositionData(network, web3Base);
+  });
+
+  it('can fetch latest account balances for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+
+    await fetchAccountBalances(network, web3Base, 'latest');
+  });
+
+  it('can fetch past account balances for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+
+    await fetchAccountBalances(network, web3Base, 4256022);
   });
 });

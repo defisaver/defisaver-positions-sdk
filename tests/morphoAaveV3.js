@@ -41,6 +41,14 @@ describe('Morpho Aave v3', () => {
     ]);
   };
 
+  const fetchAccountBalances = async (network, web3, blockNumber) => {
+    const balances = await sdk.morphoAaveV3.getMorphoAaveV3AccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+    // console.log(balances);
+    assert.containsAllKeys(balances, [
+      'collateral', 'debt',
+    ]);
+  };
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
@@ -54,5 +62,19 @@ describe('Morpho Aave v3', () => {
     const network = NetworkNumber.Eth;
 
     await fetchFullPositionData(network, web3);
+  });
+
+  it('can fetch latest account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 'latest');
+  });
+
+  it('can fetch past account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 18184392);
   });
 });
