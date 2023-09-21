@@ -337,7 +337,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
 
   const market = AAVE_V3(network);
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   // split addresses in half to avoid gas limit by multicall
   const middleAddressIndex = Math.floor(_addresses.length / 2);
