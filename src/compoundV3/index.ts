@@ -115,7 +115,7 @@ export const EMPTY_USED_ASSET = {
   debt: '0',
 };
 
-export const getCompoundV3AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish, marketSymbol: 'ETH'): Promise<PositionBalances> => {
+export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, marketSymbol: 'ETH'): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

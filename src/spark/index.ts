@@ -224,7 +224,7 @@ export const EMPTY_SPARK_DATA = {
   eModeCategories: [],
 };
 
-export const getSparkAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

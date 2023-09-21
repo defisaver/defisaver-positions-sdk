@@ -323,7 +323,7 @@ export const EMPTY_AAVE_DATA = {
   suppliedCollateralUsd: '0',
 };
 
-export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

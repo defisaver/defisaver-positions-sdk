@@ -78,7 +78,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
   return { assetsData: payload };
 };
 
-export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

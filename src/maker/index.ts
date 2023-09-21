@@ -6,7 +6,7 @@ import { McdViewContract } from '../contracts';
 import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
 
-export const getMakerAccountBalances = async (web3: Web3, cdpId: string, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, cdpId: string): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -18,8 +18,8 @@ export const getMakerAccountBalances = async (web3: Web3, cdpId: string, network
 
   const viewContract = McdViewContract(web3, network);
   // @ts-ignore
-  const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call();
-  const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network);
+  const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call({}, block);
+  const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network, block);
 
   const asset = ilkToAsset(cdpInfo.ilk);
 

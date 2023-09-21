@@ -123,7 +123,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   return CrvUSDStatus.Nonexistant;
 };
 
-export const getCrvUsdAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
+export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},

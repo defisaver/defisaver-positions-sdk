@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { NetworkNumber } from '../../types/common';
+import { Blockish, NetworkNumber } from '../../types/common';
 import {
   McdDogContract, McdJugContract, McdSpotterContract, McdVatContract,
 } from '../../contracts';
@@ -15,7 +15,7 @@ export const getUnclaimedCollateral = async (web3: Web3, network: NetworkNumber,
   return coll;
 };
 
-export const getCollateralInfo = async (ilk: string, web3: Web3, network: NetworkNumber): Promise<IlkInfo> => {
+export const getCollateralInfo = async (ilk: string, web3: Web3, network: NetworkNumber, block: Blockish = 'latest'): Promise<IlkInfo> => {
   const spotterContract = McdSpotterContract(web3, network);
   const vatContract = McdVatContract(web3, network);
   const dogContract = McdDogContract(web3, network);
@@ -54,7 +54,7 @@ export const getCollateralInfo = async (ilk: string, web3: Web3, network: Networ
     },
   ];
 
-  const multiRes = await multicall(multicallData, web3, network);
+  const multiRes = await multicall(multicallData, web3, network, block);
 
   const par = new Dec(multiRes[0][0].toString()).div(1e27).toString();
   const mat = new Dec(multiRes[1][1].toString()).div(1e27).toString();

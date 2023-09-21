@@ -13,7 +13,7 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
 
-export const getLiquityAccountBalances = async (web3: Web3, address: EthAddress, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
