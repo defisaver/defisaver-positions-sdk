@@ -1,10 +1,38 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, ilkToAsset } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import { Blockish, NetworkNumber, PositionBalances } from '../types/common';
 import { McdViewContract } from '../contracts';
 import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
+
+export const getMakerAccountBalances = async (web3: Web3, cdpId: string, network: NetworkNumber, block: Blockish): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!cdpId) {
+    return balances;
+  }
+
+  const viewContract = McdViewContract(web3, network);
+  const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call();
+  const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network);
+
+  const asset = ilkToAsset(cdpInfo.ilk);
+
+  balances = {
+    collateral: {
+      [asset]: assetAmountInEth(cdpInfo.collateral, `MCD-${asset}`),
+    },
+    debt: {
+      DAI: assetAmountInEth(new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor().toString(), 'DAI'),
+    },
+  };
+
+  return balances;
+};
 
 export const getMakerCdpData = async (web3: Web3, network: NetworkNumber, cdpId: string): Promise<CdpData> => {
   const viewContract = McdViewContract(web3, network);
