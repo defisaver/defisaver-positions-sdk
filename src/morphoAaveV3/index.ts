@@ -607,3 +607,9 @@ export const getMorphoAaveV3AccountData = async (
 
   return payload;
 };
+
+export const getMorphoAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, delegator: string, market: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3PositionData> => {
+  const marketData = await getMorphoAaveV3MarketsData(web3, network, market, mainnetWeb3);
+  const positionData = await getMorphoAaveV3AccountData(web3, network, address, marketData.assetsData, delegator, market);
+  return positionData;
+};
