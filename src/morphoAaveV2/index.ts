@@ -8,6 +8,7 @@ import {
 import { getStETHApr } from '../staking';
 import { MorphoAaveV2ViewContract } from '../contracts';
 import {
+  AavePositionData,
   AaveVersions, MorphoAaveV2AssetData, MorphoAaveV2AssetsData, MorphoAaveV2MarketData, MorphoAaveV2PositionData,
 } from '../types';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
@@ -156,9 +157,9 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, address: EthAdd
   return balances;
 };
 
-export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: MorphoAaveV2AssetsData) => {
+export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: MorphoAaveV2AssetsData): Promise<MorphoAaveV2PositionData> => {
   if (!address) {
-    return null;
+    throw new Error('Address is required.');
   }
 
   let payload: MorphoAaveV2PositionData = {
@@ -243,4 +244,10 @@ export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNum
   });
 
   return payload;
+};
+
+export const getMorphoAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, ethPrice: string, mainnetWeb3: Web3): Promise<MorphoAaveV2PositionData> => {
+  const marketData = await getMorphoAaveV2MarketsData(web3, network, ethPrice, mainnetWeb3);
+  const positionData = await getMorphoAaveV2AccountData(web3, network, address, marketData.assetsData);
+  return positionData;
 };

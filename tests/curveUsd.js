@@ -19,9 +19,17 @@ describe('CurveUsd', () => {
   };
 
   const fetchAccountData = async (network, web3, marketData, selectedMarket) => {
-    const accountData = await sdk.curveUsd.getCrvUsdUserData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand);
+    const accountData = await sdk.curveUsd.getCurveUsdUserData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
+      'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
+    ]);
+  };
+
+  const fetchFullPositionData = async (network, web3, selectedMarket) => {
+    const positionData = await sdk.curveUsd.getCurveUsdFullPositionData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
+    // console.log(positionData);
+    assert.containsAllKeys(positionData, [
       'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
     ]);
   };
@@ -37,6 +45,15 @@ describe('CurveUsd', () => {
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 
+  it('can fetch ETH full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const selectedMarket = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.ETH];
+
+    await fetchFullPositionData(network, web3, selectedMarket);
+  });
+
   it('can fetch wstETH market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
@@ -47,6 +64,15 @@ describe('CurveUsd', () => {
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 
+  it('can fetch wstETH full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const selectedMarket = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.wstETH];
+
+    await fetchFullPositionData(network, web3, selectedMarket);
+  });
+
   it('can fetch WBTC market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
@@ -55,5 +81,14 @@ describe('CurveUsd', () => {
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  it('can fetch WBTC full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const selectedMarket = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.WBTC];
+
+    await fetchFullPositionData(network, web3, selectedMarket);
   });
 });

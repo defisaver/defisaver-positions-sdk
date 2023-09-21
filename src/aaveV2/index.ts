@@ -108,11 +108,11 @@ export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, 
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset)
+        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
       },
       debt: {
         ...balances.debt,
-        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString()
+        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
       },
     };
   });
@@ -120,8 +120,8 @@ export const getAaveV2AccountBalances = async (web3: Web3, address: EthAddress, 
   return balances;
 };
 
-export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: AaveV2AssetsData, market: AaveMarketInfo) => {
-  if (!address) return null;
+export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: AaveV2AssetsData, market: AaveMarketInfo): Promise<AaveV2PositionData> => {
+  if (!address) throw new Error('Address is required');
 
   let payload: AaveV2PositionData = {
     ...EMPTY_AAVE_DATA,
@@ -209,4 +209,10 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
   payload.totalInterestUsd = totalInterestUsd;
 
   return payload;
+};
+
+export const getAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3): Promise<AaveV2PositionData> => {
+  const marketData = await getAaveV2MarketsData(web3, network, market, ethPrice, mainnetWeb3);
+  const positionData = await getAaveV2AccountData(web3, network, address, marketData.assetsData, market);
+  return positionData;
 };

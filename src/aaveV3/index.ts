@@ -88,7 +88,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-export async function getMarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
+export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
@@ -377,7 +377,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, address: EthAddress, 
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any) => {
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -529,4 +529,10 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   payload.automationResubscribeRequired = false;
 
   return payload;
+};
+
+export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV3PositionData> => {
+  const marketData = await getAaveV3MarketData(web3, network, market, mainnetWeb3);
+  const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+  return positionData;
 };

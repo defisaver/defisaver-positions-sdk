@@ -135,7 +135,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, address: EthAddre
       ...balances,
       debt: {
         ...balances.debt,
-        [asset]:  assetAmountInEth(weiAmount.toString(), asset),
+        [asset]: assetAmountInEth(weiAmount.toString(), asset),
       },
     };
   });
@@ -198,4 +198,10 @@ export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumbe
   };
 
   return payload;
+};
+
+export const getCompoundV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string): Promise<CompoundV2PositionData> => {
+  const marketData = await getCompoundV2MarketsData(web3, network);
+  const positionData = await getCompoundV2AccountData(web3, network, address, marketData.assetsData);
+  return positionData;
 };
