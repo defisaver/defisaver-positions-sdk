@@ -34,10 +34,18 @@ describe('Spark', () => {
   };
 
   const fetchFullPositionData = async (network, _web3) => {
-    const positionData = await sdk.aaveV3.getAaveV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1], web3);
+    const positionData = await sdk.spark.getSparkFullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1], web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
+    ]);
+  };
+
+  const fetchAccountBalances = async (network, web3, blockNumber) => {
+    const balances = await sdk.spark.getSparkAccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+    // console.log(balances);
+    assert.containsAllKeys(balances, [
+      'collateral', 'debt',
     ]);
   };
 
@@ -54,5 +62,19 @@ describe('Spark', () => {
     const network = NetworkNumber.Eth;
 
     await fetchFullPositionData(network, web3);
+  });
+
+  it('can fetch latest account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 'latest');
+  });
+
+  it('can fetch past account balances for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 18000000);
   });
 });
