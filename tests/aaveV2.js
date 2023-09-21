@@ -33,11 +33,26 @@ describe('Aave v2', () => {
     ]);
   };
 
+  const fetchFullPositionData = async (network, _web3) => {
+    const positionData = await sdk.aaveV2.getAaveV2FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV2], '1650', web3);
+    // console.log(positionData);
+    assert.containsAllKeys(positionData, [
+      'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
+    ]);
+  };
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchMarketData(network, web3);
     await fetchAccountData(network, web3, marketData);
+  });
+
+  it('can fetch full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchFullPositionData(network, web3);
   });
 });
