@@ -252,3 +252,9 @@ export const getCompoundV3AccountData = async (
 
   return payload;
 };
+
+export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, proxyAddress: string, selectedMarket: CompoundMarketData, compPrice: string, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
+  const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, compPrice, mainnetWeb3);
+  const positionData = await getCompoundV3AccountData(web3, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
+  return positionData;
+};
