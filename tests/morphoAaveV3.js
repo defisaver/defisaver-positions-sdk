@@ -33,11 +33,26 @@ describe('Morpho Aave v3', () => {
     ]);
   };
 
+  const fetchFullPositionData = async (network, _web3) => {
+    const positionData = await sdk.morphoAaveV3.getMorphoAaveV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.MorphoAaveV3Eth], web3);
+    // console.log(positionData);
+    assert.containsAllKeys(positionData, [
+      'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
+    ]);
+  };
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchMarketData(network, web3);
     await fetchAccountData(network, web3, marketData);
+  });
+
+  it('can fetch full position data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchFullPositionData(network, web3);
   });
 });

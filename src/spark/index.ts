@@ -404,3 +404,9 @@ export const getSparkAccountData = async (web3: Web3, network: NetworkNumber, ad
 
   return payload;
 };
+
+export const getSparkFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: SparkMarketData, mainnetWeb3: Web3): Promise<SparkPositionData> => {
+  const marketData = await getSparkMarketsData(web3, network, market, mainnetWeb3);
+  const positionData = await getSparkAccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+  return positionData;
+};

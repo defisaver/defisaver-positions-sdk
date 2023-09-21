@@ -18,5 +18,39 @@ describe('Maker', () => {
 
     const cdpInfo = await sdk.maker.getMakerCdpData(web3, network, '30126');
     // console.log(cdpInfo);
+    assert.containsAllKeys(cdpInfo, [
+      'owner',
+      'userAddress',
+      'id',
+      'urn',
+      'type',
+      'ilk',
+      'ilkLabel',
+      'asset',
+      'collateral',
+      'collateralUsd',
+      'futureDebt',
+      'debtDai',
+      'debtUsd',
+      'debtInAsset',
+      'debtAssetPrice',
+      'debtAssetMarketPrice',
+      'liquidationPrice',
+      'ratio',
+      'liqRatio',
+      'liqPercent',
+      'assetPrice',
+      'daiLabel',
+      'debtAsset',
+      'unclaimedCollateral',
+      'debtTooLow',
+      'minDebt',
+      'stabilityFee',
+      'creatableDebt',
+      'globalDebtCeiling',
+      'globalDebtCurrent',
+      'liquidationFee',
+      'lastUpdated',
+    ]);
   });
 });
