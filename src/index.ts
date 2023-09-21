@@ -14,6 +14,7 @@ import * as moneymarket from './moneymarket';
 import * as assets from './assets';
 import * as markets from './markets';
 import * as helpers from './helpers';
+import * as chickenBonds from './chickenBonds';
 
 export * from './types';
 
@@ -29,7 +30,6 @@ export {
   liquity,
   maker,
   chickenBonds,
-  exchange,
   staking,
   multicall,
   moneymarket,
