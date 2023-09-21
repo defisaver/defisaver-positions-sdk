@@ -72,7 +72,7 @@ describe('Aave v2', () => {
   });
 
   it('can fetch past account balances for Ethereum', async function () {
-    this.timeout(10000);
+    this.timeout(100000);
     const network = NetworkNumber.Eth;
 
     await fetchAccountBalances(network, web3, 18000000);

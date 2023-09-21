@@ -20,7 +20,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
-import { COMPOUND_V3_ETH, COMPOUND_V3_USDC } from '../markets/compound';
+import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContract(web3, network);
@@ -128,6 +128,7 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
   const market = ({
     ETH: COMPOUND_V3_ETH(network),
     USDC: COMPOUND_V3_USDC(network),
+    USDbC: COMPOUND_V3_USDBC(network),
   })[marketSymbol];
 
   const loanInfoContract = CompV3ViewContract(web3, network);

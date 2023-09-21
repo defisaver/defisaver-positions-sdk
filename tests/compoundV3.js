@@ -42,6 +42,15 @@ describe('Compound v3', () => {
     ]);
   };
 
+  const fetchAccountBalances = async (network, web3, blockNumber, marketSymbol) => {
+    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketSymbol);
+    // console.log(balances);
+    assert.containsAllKeys(balances, [
+      'collateral', 'debt',
+    ]);
+  };
+
+  // Ethereum
 
   it('can fetch market and account data for ETH Market on Ethereum', async function () {
     this.timeout(10000);
@@ -77,6 +86,22 @@ describe('Compound v3', () => {
     await fetchFullPositionData(network, web3, selectedMarket);
   });
 
+  it('can fetch latest account balances for ETH Market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 'latest', 'ETH');
+  });
+
+  it('can fetch past account balances for USDC Market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, web3, 18000000, 'USDC');
+  });
+
+  // Base
+
   it('can fetch market and account data for ETH Market on Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
@@ -109,5 +134,19 @@ describe('Compound v3', () => {
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDbC];
 
     await fetchFullPositionData(network, web3Base, selectedMarket);
+  });
+
+  it('can fetch latest account balances for ETH Market on Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+
+    await fetchAccountBalances(network, web3Base, 'latest', 'ETH');
+  });
+
+  it('can fetch past account balances for USDC Market on Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+
+    await fetchAccountBalances(network, web3Base, 4256022, 'USDbC');
   });
 });
