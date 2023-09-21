@@ -28,6 +28,8 @@ export {
   curveUsd,
   liquity,
   maker,
+  chickenBonds,
+  exchange,
   staking,
   multicall,
   moneymarket,

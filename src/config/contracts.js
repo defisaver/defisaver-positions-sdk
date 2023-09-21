@@ -508,4 +508,12 @@ module.exports = {
       }
     }
   },
+  "ChickenBondsView": {
+    "abi": [{"inputs":[{"internalType":"uint256","name":"_bondID","type":"uint256"}],"name":"getBondFullInfo","outputs":[{"components":[{"internalType":"uint256","name":"bondID","type":"uint256"},{"internalType":"uint256","name":"lusdAmount","type":"uint256"},{"internalType":"uint64","name":"claimedBLUSD","type":"uint64"},{"internalType":"uint256","name":"accruedBLUSD","type":"uint256"},{"internalType":"uint256","name":"maxAmountBLUSD","type":"uint256"},{"internalType":"uint64","name":"startTime","type":"uint64"},{"internalType":"uint64","name":"endTime","type":"uint64"},{"internalType":"enum IChickenBondManager.BondStatus","name":"status","type":"uint8"},{"internalType":"string","name":"tokenURI","type":"string"}],"internalType":"struct ChickenBondsView.BondDataFull","name":"bond","type":"tuple"}],"stateMutability":"view","type":"function"}],
+    "networks": {
+      "1": {
+        "address": "0x809a93fd4a0d7d7906Ef6176f0b5518b418Da08f"
+      }
+    }
+  }
 }

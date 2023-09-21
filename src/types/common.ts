@@ -80,4 +80,5 @@ export interface PositionBalances {
   collateral?: Balances,
   debt?: Balances,
   selling?: Balances,
+  deposited?: Balances,
 }
