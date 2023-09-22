@@ -11,7 +11,7 @@ export const getExchangeAccountBalances = async (web3: Web3, network: NetworkNum
 
   return {
     selling: {
-      [addressMapping ? fromToken.address.toLowerCase() : fromToken.symbol]: subData.amount,
+      [addressMapping ? fromToken.address.toLowerCase() : fromToken.symbol]: assetAmountInWei(subData.amount, fromToken.symbol),
     },
   };
 };
