@@ -11,6 +11,7 @@ import {
 import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
+import { wethToEth } from '../services/utils';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContract(web3, network);
@@ -140,10 +141,10 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(selectedMarket.collAsset, network).address.toLowerCase() : selectedMarket.collAsset]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
     },
     debt: {
-      [addressMapping ? getAssetInfo(selectedMarket.baseAsset, network).address.toLowerCase() : selectedMarket.baseAsset]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
     },
   };
 

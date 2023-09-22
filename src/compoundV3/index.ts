@@ -133,7 +133,7 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
 
   const loanInfoContract = CompV3ViewContract(web3, network);
   const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
-  const baseAssetInfo = getAssetInfo(market.baseAsset, network);
+  const baseAssetInfo = getAssetInfo(wethToEth(market.baseAsset), network);
 
   balances = {
     collateral: {

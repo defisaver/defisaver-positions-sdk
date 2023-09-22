@@ -9,7 +9,7 @@ import {
   getConfigContractAddress,
 } from '../contracts';
 import {
-  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network,
+  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network, wethToEth,
 } from '../services/utils';
 import {
   AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
@@ -360,7 +360,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
-    const asset = market.assets[i];
+    const asset = wethToEth(market.assets[i]);
 
     balances = {
       collateral: {

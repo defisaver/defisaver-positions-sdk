@@ -4,7 +4,9 @@ import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { ethToWeth, getAbiItem, isLayer2Network } from '../services/utils';
+import {
+  ethToWeth, getAbiItem, isLayer2Network, wethToEth,
+} from '../services/utils';
 import {
   calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
 } from '../staking';
@@ -261,7 +263,7 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
   const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
-    const asset = market.assets[i];
+    const asset = wethToEth(market.assets[i]);
 
     balances = {
       collateral: {

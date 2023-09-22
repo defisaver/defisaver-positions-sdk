@@ -5,6 +5,7 @@ import { Blockish, NetworkNumber, PositionBalances } from '../types/common';
 import { McdViewContract } from '../contracts';
 import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
+import { wethToEth } from '../services/utils';
 
 export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string): Promise<PositionBalances> => {
   let balances: PositionBalances = {
@@ -21,7 +22,7 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
   const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call({}, block);
   const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network, block);
 
-  const asset = ilkToAsset(cdpInfo.ilk);
+  const asset = wethToEth(ilkToAsset(cdpInfo.ilk));
 
   balances = {
     collateral: {

@@ -6,7 +6,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
-import { ethToWeth } from '../services/utils';
+import { ethToWeth, wethToEth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
@@ -98,7 +98,7 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
   const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
 
   loanInfo.forEach((_tokenInfo: any, i: number) => {
-    const asset = market.assets[i];
+    const asset = wethToEth(market.assets[i]);
     const tokenInfo = { ..._tokenInfo };
 
     // known bug: stETH leaves 1 wei on every transfer

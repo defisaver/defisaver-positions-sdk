@@ -3,7 +3,7 @@ import Dec from 'decimal.js';
 import Web3 from 'web3';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { aprToApy } from '../moneymarket';
-import { compareAddresses, handleWbtcLegacy } from '../services/utils';
+import { compareAddresses, handleWbtcLegacy, wethToEth } from '../services/utils';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -115,9 +115,9 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
   const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call({}, block);
 
   loanInfo.balances.forEach((weiAmount: any, i: number) => {
-    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+    const asset = wethToEth(compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
       ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
-      : compoundV2CollateralAssets[i].underlyingAsset;
+      : compoundV2CollateralAssets[i].underlyingAsset);
 
     balances = {
       collateral: {
@@ -127,9 +127,9 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     };
   });
   loanInfo.borrows.forEach((weiAmount: any, i: number) => {
-    const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
+    const asset = wethToEth(compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
       ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
-      : compoundV2CollateralAssets[i].underlyingAsset;
+      : compoundV2CollateralAssets[i].underlyingAsset);
 
     balances = {
       ...balances,
