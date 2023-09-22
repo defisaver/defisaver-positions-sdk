@@ -26,11 +26,11 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(cdpInfo.collateral, `MCD-${asset}`),
+      [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: cdpInfo.collateral,
     },
     debt: {
-      [addressMapping ? getAssetInfo('DAI', network).address.toLowerCase() : 'DAI']: assetAmountInEth(new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor()
-        .toString(), 'DAI'),
+      [addressMapping ? getAssetInfo('DAI', network).address.toLowerCase() : 'DAI']: new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor()
+        .toString(),
     },
   };
 

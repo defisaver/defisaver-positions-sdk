@@ -145,11 +145,11 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: Networ
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString(),
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(balance.supplyBalanceInP2P).add(balance.supplyBalanceOnPool).toString(),
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString(),
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(balance.borrowBalanceInP2P).add(balance.borrowBalanceOnPool).toString(),
       },
     };
   });

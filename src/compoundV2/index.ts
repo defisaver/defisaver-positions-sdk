@@ -122,7 +122,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(weiAmount.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: weiAmount.toString(),
       },
     };
   });
@@ -135,7 +135,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
       ...balances,
       debt: {
         ...balances.debt,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(weiAmount.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: weiAmount.toString(),
       },
     };
   });

@@ -109,11 +109,11 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: tokenInfo.balance.toString(),
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
       },
     };
   });

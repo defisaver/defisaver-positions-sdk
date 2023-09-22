@@ -141,10 +141,10 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount,
     },
     debt: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount,
     },
   };
 

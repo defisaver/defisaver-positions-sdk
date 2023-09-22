@@ -400,29 +400,29 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
     const morphoMarketData = multicallResponse[currentMulticallIndex][0];
     const { symbol, address: assetAddr } = getAssetInfoByAddress(wethToEthByAddress(underlyingAddr, network), network);
 
-    const suppliedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+    const suppliedP2P = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 1][0],
       morphoMarketData.indexes.supply.p2pIndex,
-    ), symbol);
-    const suppliedPool = assetAmountInEth(morphoAaveMath.indexMul(
+    ).toString();
+    const suppliedPool = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 2][0],
       morphoMarketData.indexes.supply.poolIndex,
-    ), symbol);
+    ).toString();
     const suppliedTotal = new Dec(suppliedP2P).add(suppliedPool).toString();
-    const suppliedCollateral = assetAmountInEth(morphoAaveMath.indexMul(
+    const suppliedCollateral = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 3][0],
       morphoMarketData.indexes.supply.poolIndex,
-    ), symbol);
+    ).toString();
     const supplied = new Dec(suppliedTotal).add(suppliedCollateral).toString();
 
-    const borrowedP2P = assetAmountInEth(morphoAaveMath.indexMul(
+    const borrowedP2P = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 4][0],
       morphoMarketData.indexes.borrow.p2pIndex,
-    ), symbol);
-    const borrowedPool = assetAmountInEth(morphoAaveMath.indexMul(
+    ).toString();
+    const borrowedPool = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 5][0],
       morphoMarketData.indexes.borrow.poolIndex,
-    ), symbol);
+    ).toString();
     const borrowed = new Dec(borrowedP2P).add(borrowedPool).toString();
 
     balances = {

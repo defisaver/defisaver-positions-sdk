@@ -28,10 +28,10 @@ export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumb
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo('ETH', network).address.toLowerCase() : 'ETH']: assetAmountInEth(troveInfo[1], 'ETH'),
+      [addressMapping ? getAssetInfo('ETH', network).address.toLowerCase() : 'ETH']: troveInfo[1],
     },
     debt: {
-      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: assetAmountInEth(troveInfo[2], 'LUSD'),
+      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: troveInfo[2],
     },
   };
 

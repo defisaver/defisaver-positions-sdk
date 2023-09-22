@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 
-import { getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
   Blockish, NetworkNumber, PositionBalances,
 } from '../types/common';

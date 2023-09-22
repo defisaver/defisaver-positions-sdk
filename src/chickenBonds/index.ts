@@ -14,7 +14,7 @@ export const getChickenBondsAccountBalances = async (web3: Web3, network: Networ
 
   return {
     deposited: {
-      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: assetAmountInEth(fullBondInfo.lusdAmount, 'LUSD'),
+      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: fullBondInfo.lusdAmount,
     },
   };
 };

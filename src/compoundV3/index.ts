@@ -137,10 +137,10 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
 
   balances = {
     collateral: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: assetAmountInEth(loanInfo.depositAmount, baseAssetInfo.symbol),
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.depositAmount,
     },
     debt: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: assetAmountInEth(loanInfo.borrowAmount, baseAssetInfo.symbol),
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.borrowAmount,
     },
   };
 
@@ -150,7 +150,7 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
       ...balances,
       collateral: {
         ...balances.collateral,
-        [addressMapping ? getAssetInfo(symbol, network).address.toLowerCase() : symbol]: assetAmountInEth(loanInfo.collAmounts[i].toString(), symbol),
+        [addressMapping ? getAssetInfo(symbol, network).address.toLowerCase() : symbol]: loanInfo.collAmounts[i].toString(),
       },
     };
   });
