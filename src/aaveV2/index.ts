@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
+import * as net from 'net';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -78,7 +79,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
   return { assetsData: payload };
 };
 
-export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -93,7 +94,7 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
 
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
   const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
 
   loanInfo.forEach((_tokenInfo: any, i: number) => {
@@ -108,11 +109,11 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
       },
       debt: {
         ...balances.debt,
-        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
       },
     };
   });

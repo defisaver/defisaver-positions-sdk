@@ -323,7 +323,7 @@ export const EMPTY_AAVE_DATA = {
   suppliedCollateralUsd: '0',
 };
 
-export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -365,11 +365,11 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
       },
       debt: {
         ...balances.debt,
-        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
       },
     };
   });

@@ -101,7 +101,7 @@ export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkN
   return contract.methods.getAssetsIn(account).call();
 };
 
-export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -122,7 +122,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(weiAmount.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(weiAmount.toString(), asset),
       },
     };
   });
@@ -135,7 +135,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
       ...balances,
       debt: {
         ...balances.debt,
-        [asset]: assetAmountInEth(weiAmount.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(weiAmount.toString(), asset),
       },
     };
   });

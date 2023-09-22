@@ -1,5 +1,5 @@
 import Dec from 'decimal.js';
-import { assetAmountInEth } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import Web3 from 'web3';
 import {
   BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData, CrvUSDVersions,
@@ -123,7 +123,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   return CrvUSDStatus.Nonexistant;
 };
 
-export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
+export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -140,10 +140,10 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
 
   balances = {
     collateral: {
-      [selectedMarket.collAsset]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
+      [addressMapping ? getAssetInfo(selectedMarket.collAsset, network).address.toLowerCase() : selectedMarket.collAsset]: assetAmountInEth(data.marketCollateralAmount, selectedMarket.collAsset),
     },
     debt: {
-      [selectedMarket.baseAsset]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
+      [addressMapping ? getAssetInfo(selectedMarket.baseAsset, network).address.toLowerCase() : selectedMarket.baseAsset]: assetAmountInEth(data.debtAmount, selectedMarket.baseAsset),
     },
   };
 

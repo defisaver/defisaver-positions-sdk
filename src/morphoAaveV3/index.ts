@@ -340,7 +340,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
   return { assetsData: payload };
 };
 
-export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -354,7 +354,7 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
 
-  const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a)).address);
+  const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a), network).address);
 
   const multicallArray = [
     ...(_addresses.map((underlyingAddress: string) => ([
@@ -398,7 +398,7 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   _addresses.forEach((underlyingAddr: string, i: number) => {
     const currentMulticallIndex = numberOfMultiCalls * i;
     const morphoMarketData = multicallResponse[currentMulticallIndex][0];
-    const { symbol } = getAssetInfoByAddress(wethToEthByAddress(underlyingAddr));
+    const { symbol, address: assetAddr } = getAssetInfoByAddress(wethToEthByAddress(underlyingAddr, network), network);
 
     const suppliedP2P = assetAmountInEth(morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 1][0],
@@ -428,11 +428,11 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
     balances = {
       collateral: {
         ...balances.collateral,
-        [symbol]: supplied, // TODO supplied or supplied collateral, probably collateral (fix other methods)
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: supplied,
       },
       debt: {
         ...balances.debt,
-        [symbol]: borrowed,
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: borrowed,
       },
     };
   });

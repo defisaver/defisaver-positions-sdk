@@ -43,7 +43,7 @@ describe('Compound v3', () => {
   };
 
   const fetchAccountBalances = async (network, web3, blockNumber, marketAddr) => {
-    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
+    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

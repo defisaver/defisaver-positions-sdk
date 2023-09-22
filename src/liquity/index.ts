@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { assetAmountInEth } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -13,7 +13,7 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
 
-export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -28,10 +28,10 @@ export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumb
 
   balances = {
     collateral: {
-      ETH: assetAmountInEth(troveInfo[1], 'ETH'),
+      [addressMapping ? getAssetInfo('ETH', network).address.toLowerCase() : 'ETH']: assetAmountInEth(troveInfo[1], 'ETH'),
     },
     debt: {
-      LUSD: assetAmountInEth(troveInfo[2], 'LUSD'),
+      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: assetAmountInEth(troveInfo[2], 'LUSD'),
     },
   };
 

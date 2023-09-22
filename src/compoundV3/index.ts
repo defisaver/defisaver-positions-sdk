@@ -115,7 +115,7 @@ export const EMPTY_USED_ASSET = {
   debt: '0',
 };
 
-export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
+export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -133,16 +133,14 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
 
   const loanInfoContract = CompV3ViewContract(web3, network);
   const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
-  const baseAssetInfo = getAssetInfo(market.baseAsset);
+  const baseAssetInfo = getAssetInfo(market.baseAsset, network);
 
   balances = {
     collateral: {
-      ...balances.collateral,
-      [baseAssetInfo.symbol]: assetAmountInEth(loanInfo.depositAmount, baseAssetInfo.symbol),
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: assetAmountInEth(loanInfo.depositAmount, baseAssetInfo.symbol),
     },
     debt: {
-      ...balances.debt,
-      [baseAssetInfo.symbol]: assetAmountInEth(loanInfo.borrowAmount, baseAssetInfo.symbol),
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: assetAmountInEth(loanInfo.borrowAmount, baseAssetInfo.symbol),
     },
   };
 
@@ -152,7 +150,7 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
       ...balances,
       collateral: {
         ...balances.collateral,
-        [symbol]: assetAmountInEth(loanInfo.collAmounts[i].toString(), symbol),
+        [addressMapping ? getAssetInfo(symbol, network).address.toLowerCase() : symbol]: assetAmountInEth(loanInfo.collAmounts[i].toString(), symbol),
       },
     };
   });

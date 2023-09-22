@@ -121,7 +121,7 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
   return { assetsData: payload };
 };
 
-export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -140,16 +140,16 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: Networ
   }
 
   userBalances.forEach((balance: any) => {
-    const { symbol } = getAssetInfoByAddress(wethToEthByAddress(balance.underlying));
+    const { symbol, address: assetAddr } = getAssetInfoByAddress(wethToEthByAddress(balance.underlying, network), network);
 
     balances = {
       collateral: {
         ...balances.collateral,
-        [symbol]: new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString(),
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(assetAmountInEth(balance.supplyBalanceInP2P, symbol)).add(assetAmountInEth(balance.supplyBalanceOnPool, symbol)).toString(),
       },
       debt: {
         ...balances.debt,
-        [symbol]: new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString(),
+        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(assetAmountInEth(balance.borrowBalanceInP2P, symbol)).add(assetAmountInEth(balance.borrowBalanceOnPool, symbol)).toString(),
       },
     };
   });

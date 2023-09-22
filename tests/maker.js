@@ -12,7 +12,7 @@ describe('Maker', () => {
   });
 
   const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.maker.getMakerAccountBalances(web3, network, blockNumber, '30126');
+    const balances = await sdk.maker.getMakerAccountBalances(web3, network, blockNumber, false, '30126');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

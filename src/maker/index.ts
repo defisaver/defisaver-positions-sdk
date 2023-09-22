@@ -1,12 +1,12 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { assetAmountInEth, ilkToAsset } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo, ilkToAsset } from '@defisaver/tokens';
 import { Blockish, NetworkNumber, PositionBalances } from '../types/common';
 import { McdViewContract } from '../contracts';
 import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
 
-export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, cdpId: string): Promise<PositionBalances> => {
+export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -25,10 +25,11 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
 
   balances = {
     collateral: {
-      [asset]: assetAmountInEth(cdpInfo.collateral, `MCD-${asset}`),
+      [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(cdpInfo.collateral, `MCD-${asset}`),
     },
     debt: {
-      DAI: assetAmountInEth(new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor().toString(), 'DAI'),
+      [addressMapping ? getAssetInfo('DAI', network).address.toLowerCase() : 'DAI']: assetAmountInEth(new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor()
+        .toString(), 'DAI'),
     },
   };
 

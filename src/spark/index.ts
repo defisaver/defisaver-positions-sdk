@@ -224,7 +224,7 @@ export const EMPTY_SPARK_DATA = {
   eModeCategories: [],
 };
 
-export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, address: EthAddress): Promise<PositionBalances> => {
+export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -238,7 +238,7 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
 
   const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   // split addresses in half to avoid gas limit by multicall
   const middleAddressIndex = Math.floor(_addresses.length / 2);
@@ -266,11 +266,11 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
     balances = {
       collateral: {
         ...balances.collateral,
-        [asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: assetAmountInEth(tokenInfo.balance.toString(), asset),
       },
       debt: {
         ...balances.debt,
-        [asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
+        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(assetAmountInEth(tokenInfo.borrowsStable.toString(), asset)).add(assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset)).toString(),
       },
     };
   });

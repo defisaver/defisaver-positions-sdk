@@ -42,7 +42,7 @@ describe('Spark', () => {
   };
 
   const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.spark.getSparkAccountBalances(web3, network, blockNumber, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+    const balances = await sdk.spark.getSparkAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

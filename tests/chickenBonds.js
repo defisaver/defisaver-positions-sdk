@@ -12,7 +12,7 @@ describe('ChickenBonds', () => {
   });
 
   const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.chickenBonds.getChickenBondsAccountBalances(web3, network, blockNumber, '639');
+    const balances = await sdk.chickenBonds.getChickenBondsAccountBalances(web3, network, blockNumber, false, '639');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'deposited',
