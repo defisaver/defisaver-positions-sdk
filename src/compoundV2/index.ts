@@ -111,7 +111,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
-  const loanInfoContract = CompoundLoanInfoContract(web3, network);
+  const loanInfoContract = CompoundLoanInfoContract(web3, network, block);
   const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call({}, block);
 
   loanInfo.balances.forEach((weiAmount: any, i: number) => {

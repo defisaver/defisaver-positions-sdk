@@ -131,7 +131,7 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: Networ
     return balances;
   }
 
-  const morphoAaveV2ViewContract = MorphoAaveV2ViewContract(web3, network);
+  const morphoAaveV2ViewContract = MorphoAaveV2ViewContract(web3, network, block);
 
   const { userBalances } = await morphoAaveV2ViewContract.methods.getUserInfo(address).call({}, block);
 

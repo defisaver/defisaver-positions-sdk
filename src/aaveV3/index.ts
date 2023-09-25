@@ -333,7 +333,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
     return balances;
   }
 
-  const loanInfoContract = AaveV3ViewContract(web3, network);
+  const loanInfoContract = AaveV3ViewContract(web3, network, block);
 
   const market = AAVE_V3(network);
   const marketAddress = market.providerAddress;

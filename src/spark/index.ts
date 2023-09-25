@@ -236,7 +236,7 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
     return balances;
   }
 
-  const loanInfoContract = SparkViewContract(web3, network);
+  const loanInfoContract = SparkViewContract(web3, network, block);
 
   const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;

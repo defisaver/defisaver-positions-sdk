@@ -134,7 +134,7 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
     return balances;
   }
 
-  const contract = CrvUSDViewContract(web3, network);
+  const contract = CrvUSDViewContract(web3, network, block);
   const selectedMarket = CrvUsdMarkets(network)[crvUsdVersion];
 
   const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);

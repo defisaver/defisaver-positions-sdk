@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import configRaw from './config/contracts';
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
-import { NetworkNumber } from './types/common';
+import { Blockish, EthAddress, NetworkNumber } from './types/common';
 
 export type ConfigKey = keyof typeof configRaw;
 
@@ -11,15 +11,32 @@ declare type ContractConfig = {
   networks: Partial<Record<NetworkNumber, Network>>,
 };
 declare type Network = {
-  createdBlock?:number,
-  address:string
+  createdBlock?: number,
+  address: string,
+  oldVersions?: Record<string, EthAddress>,
 };
 const contractConfig:Record<ConfigKey, ContractConfig> = configRaw;
-export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber): string => contractConfig[name].networks[network]?.address || '';
+export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): string => {
+  const networkData = contractConfig[name].networks[network];
+  const latestAddress = networkData?.address || '';
+  if (block && block !== 'latest') {
+    if (block >= (networkData?.createdBlock || 0)) {
+      return latestAddress;
+    }
+
+    const oldVersions = networkData?.oldVersions || {};
+    for (const [createdBlock, address] of Object.entries(oldVersions).reverse()) {
+      if (block >= Number(createdBlock)) {
+        return address;
+      }
+    }
+  }
+  return latestAddress;
+};
 export const getConfigContractAbi = (name: ConfigKey): any[] => contractConfig[name].abi;
 
-const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber) => {
-  const address = _address || getConfigContractAddress(name, network);
+const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
+  const address = _address || getConfigContractAddress(name, network, block);
   return new web3.eth.Contract(contractConfig[name].abi, address) as any as T;
 };
 
@@ -27,8 +44,8 @@ export const getErc20Contract = (address: string, web3: Web3) => (
   new web3.eth.Contract(getConfigContractAbi('Erc20'), address)
 );
 
-export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: ConfigKey, _address?: string) => (
-  createContractFromConfigFunc(name, _address)(web3, network)
+export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: ConfigKey, _address?: string, block?: Blockish) => (
+  createContractFromConfigFunc(name, _address)(web3, network, block)
 );
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');

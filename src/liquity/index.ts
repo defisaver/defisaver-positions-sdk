@@ -23,7 +23,7 @@ export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumb
     return balances;
   }
 
-  const viewContract = LiquityViewContract(web3, network);
+  const viewContract = LiquityViewContract(web3, network, block);
   const troveInfo = await viewContract.methods.getTroveInfo(address).call({}, block);
 
   balances = {

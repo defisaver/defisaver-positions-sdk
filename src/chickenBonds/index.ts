@@ -8,7 +8,7 @@ import {
 import { ChickenBondsViewContract } from '../contracts';
 
 export const getChickenBondsAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, bondId: string): Promise<PositionBalances> => {
-  const viewContract = ChickenBondsViewContract(web3, network);
+  const viewContract = ChickenBondsViewContract(web3, network, block);
 
   const fullBondInfo = await viewContract.methods.getBondFullInfo(bondId).call({}, block);
 

@@ -17,7 +17,7 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
     return balances;
   }
 
-  const viewContract = McdViewContract(web3, network);
+  const viewContract = McdViewContract(web3, network, block);
   // @ts-ignore
   const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call({}, block);
   const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network, block);

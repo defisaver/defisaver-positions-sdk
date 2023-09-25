@@ -91,7 +91,7 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
 
   const market = AAVE_V2;
 
-  const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+  const loanInfoContract = AaveLoanInfoV2Contract(web3, network, block);
 
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
