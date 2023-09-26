@@ -1,0 +1,9 @@
+.idea/
+.github/
+
+tests/
+scripts/
+
+.env*
+.eslint*
+tsconfig*
