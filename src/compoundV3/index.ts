@@ -129,7 +129,7 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
     [COMPOUND_V3_ETH(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_ETH(network),
     [COMPOUND_V3_USDC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDC(network),
     [COMPOUND_V3_USDBC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDBC(network),
-  })[marketAddress];
+  })[marketAddress.toLowerCase()];
 
   const loanInfoContract = CompV3ViewContract(web3, network, block);
   const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
