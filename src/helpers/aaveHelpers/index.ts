@@ -50,34 +50,17 @@ export const aaveAnyGetSuppliableAsCollAssets = ({
 
 export const aaveAnyGetEmodeMutableProps = (
   {
-    usedAssets,
     eModeCategory,
-    eModeCategories,
     assetsData,
-    selectedMarket,
-    network,
-    ...rest
   }: AaveHelperCommon, _asset: string) => {
-  const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
-  };
   const asset = wethToEth(_asset);
-  const canSupplyAsColl = aaveAnyGetSuppliableAsCollAssets(data).some(({ symbol }: { symbol: string }) => symbol === asset);
 
-  // TODO remove dirty fix for Morpho V2
-  if (isMorphoAaveV2({ selectedMarket }) && !canSupplyAsColl) {
-    const { liquidationRatio, collateralFactor } = assetsData[asset];
-    return ({ liquidationRatio, collateralFactor });
-  }
-
-  if (!canSupplyAsColl) {
-    return ({ liquidationRatio: '0', collateralFactor: '0' });
-  }
   const assetData = assetsData[asset];
+
   if (
     eModeCategory === 0
-      || assetData.eModeCategory !== eModeCategory
-      || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
+    || assetData.eModeCategory !== eModeCategory
+    || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });

@@ -36,29 +36,17 @@ export const sparkGetSuppliableAsCollAssets = ({
 }).filter(({ canBeCollateral }) => canBeCollateral);
 
 export const sparkGetEmodeMutableProps = ({
-  usedAssets,
   eModeCategory,
-  eModeCategories,
   assetsData,
-  selectedMarket,
-  network,
-  ...rest
 }: SparkHelperCommon,
 _asset: string) => {
-  const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
-  };
   const asset = wethToEth(_asset);
-  const canSupplyAsColl = sparkGetSuppliableAsCollAssets(data).some(({ symbol }) => symbol === asset);
 
-  if (!canSupplyAsColl) {
-    return ({ liquidationRatio: '0', collateralFactor: '0' });
-  }
   const assetData = assetsData[asset];
   if (
     eModeCategory === 0
-      || assetData.eModeCategory !== eModeCategory
-      || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
+    || assetData.eModeCategory !== eModeCategory
+    || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
