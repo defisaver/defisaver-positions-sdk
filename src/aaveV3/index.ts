@@ -244,7 +244,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
-    if (['wstETH', 'cbETH', 'rETH'].includes(_market.symbol)) {
+    if (['wstETH', 'cbETH', 'rETH', 'sDAI'].includes(_market.symbol)) {
       if (!isLayer2Network(network) && _market.symbol === 'cbETH') return;
       _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
       _market.incentiveSupplyToken = _market.symbol;
