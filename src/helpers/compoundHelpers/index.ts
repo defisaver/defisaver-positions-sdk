@@ -11,12 +11,14 @@ import {
 import { calculateNetApy } from '../../staking';
 import { NetworkNumber } from '../../types/common';
 
-export const formatMarketData = (data: any, network: NetworkNumber): CompoundV3AssetData => {
+export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
   const isWETH = assetInfo.symbol === 'WETH';
+  const price = getEthAmountForDecimals(data.price, 8);
   return ({
     ...data,
     price: getEthAmountForDecimals(data.price, 8),
+    priceUSD: new Dec(price).mul(baseAssetPrice).toString(),
     collateralFactor: getEthAmountForDecimals(data.borrowCollateralFactor, 18),
     liquidationRatio: getEthAmountForDecimals(data.liquidateCollateralFactor, 18),
     supplyCap: getEthAmountForDecimals(data.supplyCap, assetInfo.decimals),
@@ -30,7 +32,7 @@ export const formatMarketData = (data: any, network: NetworkNumber): CompoundV3A
 };
 
 // TODO: maybe not hardcode decimals
-export const formatBaseData = (data: any, network: NetworkNumber): CompoundV3AssetData & BaseAdditionalAssetData => {
+export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData & BaseAdditionalAssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
   const totalSupply = getEthAmountForDecimals(new Dec(data.totalSupply).mul(data.supplyIndex).toString(), 15 + assetInfo.decimals);
   const totalBorrow = getEthAmountForDecimals(new Dec(data.totalBorrow).mul(data.borrowIndex).toString(), 15 + assetInfo.decimals);
@@ -46,6 +48,7 @@ export const formatBaseData = (data: any, network: NetworkNumber): CompoundV3Ass
     marketLiquidity: new Dec(totalSupply).minus(totalBorrow).toString(),
     symbol: wethToEth(assetInfo.symbol),
     price: getEthAmountForDecimals(data.price, 8),
+    priceUSD: baseAssetPrice,
     collateralFactor: '0',
     liquidationRatio: '0',
     canBeBorrowed: true,

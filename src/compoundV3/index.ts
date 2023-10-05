@@ -21,8 +21,11 @@ import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
 import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
+import { getEthPrice, getCompPrice, getUSDCPrice } from '../services/priceService';
 
-export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, compPrice: string, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
+export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
+  const baseAssetPrice = selectedMarket.baseAsset === 'ETH' ? await getEthPrice(defaultWeb3) : await getUSDCPrice(defaultWeb3);
+  const compPrice = await getCompPrice(defaultWeb3);
   const contract = CompV3ViewContract(web3, network);
   const CompV3ViewAddress = contract.options.address;
   const calls = [
@@ -38,7 +41,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
     },
   ];
   const data = await multicall(calls, web3, network);
-  const colls = data[1].colls.map((coll: any) => formatMarketData(coll, network)) as CompoundV3AssetData[];
+  const colls = data[1].colls.map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
   if (selectedMarket.value === CompoundVersions.CompoundV3ETH) {
     for (const coll of colls) {
       if (coll.symbol === 'wstETH') {
@@ -65,7 +68,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       }
     }
   }
-  const base = formatBaseData(data[0].baseToken, network);
+  const base = formatBaseData(data[0].baseToken, network, baseAssetPrice);
 
   const payload: CompoundV3AssetsData = {};
 
@@ -252,8 +255,8 @@ export const getCompoundV3AccountData = async (
   return payload;
 };
 
-export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, proxyAddress: string, selectedMarket: CompoundMarketData, compPrice: string, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
-  const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, compPrice, mainnetWeb3);
+export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, proxyAddress: string, selectedMarket: CompoundMarketData, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
+  const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, mainnetWeb3);
   const positionData = await getCompoundV3AccountData(web3, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
   return positionData;
 };

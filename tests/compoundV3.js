@@ -14,7 +14,7 @@ describe('Compound v3', () => {
   });
 
   const fetchMarketData = async (network, _web3, selectedMarket) => {
-    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, '2', web3);
+    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, web3);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys = [
@@ -35,7 +35,7 @@ describe('Compound v3', () => {
   };
 
   const fetchFullPositionData = async (network, _web3, selectedMarket) => {
-    const positionData = await sdk.compoundV3.getCompoundV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '', selectedMarket, '2', web3);
+    const positionData = await sdk.compoundV3.getCompoundV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '', selectedMarket, web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
