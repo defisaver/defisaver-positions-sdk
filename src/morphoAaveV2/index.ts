@@ -14,8 +14,10 @@ import {
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
+import { getEthPrice } from '../services/priceService';
 
-export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, ethPrice: string, mainnetWeb3: Web3): Promise<MorphoAaveV2MarketData> => {
+export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, mainnetWeb3: Web3): Promise<MorphoAaveV2MarketData> => {
+  const ethPrice = await getEthPrice(mainnetWeb3);
   const morphoAaveV2ViewContract = MorphoAaveV2ViewContract(web3, network);
 
   const [contractData, morphoRewardsRes] = await Promise.allSettled([
@@ -246,8 +248,8 @@ export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNum
   return payload;
 };
 
-export const getMorphoAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, ethPrice: string, mainnetWeb3: Web3): Promise<MorphoAaveV2PositionData> => {
-  const marketData = await getMorphoAaveV2MarketsData(web3, network, ethPrice, mainnetWeb3);
+export const getMorphoAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, mainnetWeb3: Web3): Promise<MorphoAaveV2PositionData> => {
+  const marketData = await getMorphoAaveV2MarketsData(web3, network, mainnetWeb3);
   const positionData = await getMorphoAaveV2AccountData(web3, network, address, marketData.assetsData);
   return positionData;
 };
