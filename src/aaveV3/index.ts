@@ -237,6 +237,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
           collateralFactor: new Dec(tokenMarket.ltv).div(10000).toString(),
           priceSource: tokenMarket.priceSource,
         },
+        aTokenAddress: tokenMarket.aTokenAddress,
       });
     }));
 
