@@ -17,8 +17,8 @@ export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPri
   const price = getEthAmountForDecimals(data.price, 8);
   return ({
     ...data,
-    price: getEthAmountForDecimals(data.price, 8),
-    priceUSD: new Dec(price).mul(baseAssetPrice).toString(),
+    priceInBaseAsset: getEthAmountForDecimals(data.price, 8),
+    price: new Dec(price).mul(baseAssetPrice).toString(),
     collateralFactor: getEthAmountForDecimals(data.borrowCollateralFactor, 18),
     liquidationRatio: getEthAmountForDecimals(data.liquidateCollateralFactor, 18),
     supplyCap: getEthAmountForDecimals(data.supplyCap, assetInfo.decimals),
@@ -47,8 +47,8 @@ export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice
     totalBorrow,
     marketLiquidity: new Dec(totalSupply).minus(totalBorrow).toString(),
     symbol: wethToEth(assetInfo.symbol),
-    price: getEthAmountForDecimals(data.price, 8),
-    priceUSD: baseAssetPrice,
+    priceInBaseAsset: getEthAmountForDecimals(data.price, 8),
+    price: baseAssetPrice,
     collateralFactor: '0',
     liquidationRatio: '0',
     canBeBorrowed: true,
