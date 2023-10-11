@@ -87,12 +87,26 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.borrowLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(aaveAnyGetEmodeMutableProps(data, symbol).collateralFactor),
+    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
+      const suppliedUsdAmount = isMorphoAaveV3(data)
+        // Morpho has a slightly different method for calculating health ratio than underlying pool (To account for potential errors in rounding)
+        ? new Dec(suppliedUsd).minus(new Dec(suppliedUsd).div(100).times(0.1)).toString()
+        : suppliedUsd;
+
+      return new Dec(suppliedUsdAmount).mul(aaveAnyGetEmodeMutableProps(data, symbol).collateralFactor);
+    },
   );
   payload.liquidationLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(aaveAnyGetEmodeMutableProps(data, symbol).liquidationRatio),
+    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
+      const suppliedUsdAmount = isMorphoAaveV3(data)
+        // Morpho has a slightly different method for calculating health ratio than underlying pool (To account for potential errors in rounding)
+        ? new Dec(suppliedUsd).minus(new Dec(suppliedUsd).div(100).times(0.1)).toString()
+        : suppliedUsd;
+
+      return new Dec(suppliedUsdAmount).mul(aaveAnyGetEmodeMutableProps(data, symbol).liquidationRatio);
+    },
   );
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
