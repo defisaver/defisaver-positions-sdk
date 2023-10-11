@@ -15,8 +15,10 @@ import {
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
+import { getEthPrice } from '../services/priceService';
 
-export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3) => {
+export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, mainnetWeb3: Web3) => {
+  const ethPrice = await getEthPrice(mainnetWeb3);
   const _addresses = selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address);
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
   const marketAddress = selectedMarket.providerAddress;
@@ -212,8 +214,8 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
   return payload;
 };
 
-export const getAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, ethPrice: string, mainnetWeb3: Web3): Promise<AaveV2PositionData> => {
-  const marketData = await getAaveV2MarketsData(web3, network, market, ethPrice, mainnetWeb3);
+export const getAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV2PositionData> => {
+  const marketData = await getAaveV2MarketsData(web3, network, market, mainnetWeb3);
   const positionData = await getAaveV2AccountData(web3, network, address, marketData.assetsData, market);
   return positionData;
 };

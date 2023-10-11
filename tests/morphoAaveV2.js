@@ -12,7 +12,7 @@ describe('Morpho Aave v2', () => {
   });
 
   const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.morphoAaveV2.getMorphoAaveV2MarketsData(_web3, network, '1650', web3);
+    const marketData = await sdk.morphoAaveV2.getMorphoAaveV2MarketsData(_web3, network, web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -34,7 +34,7 @@ describe('Morpho Aave v2', () => {
   };
 
   const fetchFullPositionData = async (network, _web3) => {
-    const positionData = await sdk.morphoAaveV2.getMorphoAaveV2FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '1650', web3);
+    const positionData = await sdk.morphoAaveV2.getMorphoAaveV2FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...

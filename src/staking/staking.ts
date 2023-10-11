@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import Web3 from 'web3';
 import {
-  CbEthContract, LidoContract, REthContract, wstETHContract,
+  CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
 } from '../contracts';
 import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../types/common';
 import { ContractEventLog } from '../types/contracts/generated/types';
@@ -66,10 +66,21 @@ export const getREthApr = async (web3: Web3, blockNumber: 'latest' | number = 'l
   return apr;
 };
 
+export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+  const potContract = PotContract(web3, NetworkNumber.Eth);
+  return new Dec(await potContract.methods.dsr().call())
+      .div(new Dec(1e27))
+      .pow(SECONDS_PER_YEAR)
+      .sub(1)
+      .mul(100)
+      .toString();
+};
+
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   if (asset === 'stETH' || asset === 'wstETH') return getStETHApr(web3, fromBlock, blockNumber);
   if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);
   if (asset === 'rETH') return getREthApr(web3, blockNumber);
+  if (asset === 'sDAI') return getDsrApy(web3);
 };
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {

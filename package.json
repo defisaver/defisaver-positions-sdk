@@ -1,10 +1,10 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "0.0.2",
+  "version": "0.0.6",
   "description": "",
   "main": "./cjs/index.js",
-  "module": "./esm/src/index.js",
-  "types": "./esm/src/index.d.ts",
+  "module": "./esm/index.js",
+  "types": "./esm/index.d.ts",
   "scripts": {
     "build:esm": "rm -rf esm && tsc -p tsconfig.json",
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
