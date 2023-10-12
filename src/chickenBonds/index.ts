@@ -9,7 +9,7 @@ import {
 import { ChickenBondsManagerContract, ChickenBondsViewContract } from '../contracts';
 import { BondInfoBasic, ChickenBondsSystemInfoBasic } from '../types';
 import { multicall } from '../multicall';
-import { calcAverageBondAgeMs, calcCBondsBLUSDFloorPrice } from '../helpers/chickenBondsHelpers';
+import { calcAverageBondAgeMs, calcCBondsBLUSDFloorPrice, decodeTokenURIToSvg } from '../helpers/chickenBondsHelpers';
 
 export const getChickenBondsAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, bondId: string): Promise<PositionBalances> => {
   const viewContract = ChickenBondsViewContract(web3, network, block);
@@ -94,7 +94,7 @@ export const fetchCBondsForUser = async (web3: Web3, network: NetworkNumber, add
   }) => ({
     bondId: bondID,
     status,
-    // tokenURI: decodeTokenURIToSvg(tokenURI),
+    tokenURI: decodeTokenURIToSvg(tokenURI),
     startTime: new Date(+startTime * 1000),
     endTime: new Date(+endTime * 1000),
     accruedBLUSD: assetAmountInEth(accruedBLUSD, 'bLUSD'),
@@ -118,5 +118,6 @@ export const fetchCBondForId = async (web3: Web3, network: NetworkNumber, bondId
     claimedBLUSD: assetAmountInEth(bond.claimedBLUSD, 'bLUSD'),
     lusdAmount: assetAmountInEth(bond.lusdAmount, 'LUSD'),
     maxAmountBLUSD: assetAmountInEth(bond.maxAmountBLUSD, 'bLUSD'),
+    tokenURI: decodeTokenURIToSvg(bond.tokenURI),
   };
 };

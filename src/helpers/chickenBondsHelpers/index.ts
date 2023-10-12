@@ -11,3 +11,14 @@ export const calcAverageBondAgeMs = (totalWeightedStartTimes: string, totalPendi
 
   return Date.now() - averageStartTimeMs;
 };
+
+export const decodeTokenURIToSvg = (tokenURI: string): string => {
+  try {
+    const dataStartIndex = tokenURI.indexOf('base64,') + 'base64,'.length;
+    const json = atob(tokenURI.slice(dataStartIndex));
+    return JSON.parse(json)?.image;
+  } catch (e) {
+    console.error(e);
+    return 'Error parsing NFT image';
+  }
+};

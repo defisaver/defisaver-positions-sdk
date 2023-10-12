@@ -32,6 +32,7 @@ export interface BondInfoBasic {
   claimedBLUSD: string,
   lusdAmount: string,
   maxAmountBLUSD: string,
+  tokenURI: string,
 }
 
 export enum BondStatus {
