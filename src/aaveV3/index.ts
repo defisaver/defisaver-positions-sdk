@@ -4,15 +4,23 @@ import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tok
 import {
   AaveIncentiveDataProviderV3Contract,
   AaveV3ViewContract,
-  GhoTokenContract,
   getConfigContractAbi,
   getConfigContractAddress,
+  GhoTokenContract,
 } from '../contracts';
 import {
   addToObjectIf, ethToWeth, getAbiItem, isLayer2Network, wethToEth,
 } from '../services/utils';
 import {
-  AaveMarketInfo, AaveV3AssetData, AaveV3AssetsData, AaveV3IncentiveData, AaveV3MarketData, AaveV3PositionData, AaveV3UsedAsset, AaveV3UsedAssets, EModeCategoryData, EModeCategoryDataMapping,
+  AaveMarketInfo,
+  AaveV3AssetData,
+  AaveV3AssetsData,
+  AaveV3IncentiveData,
+  AaveV3MarketData,
+  AaveV3PositionData,
+  AaveV3UsedAsset,
+  AaveV3UsedAssets,
+  EModeCategoryDataMapping,
 } from '../types/aave';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
@@ -22,7 +30,11 @@ import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 import { getAssetsBalances } from '../assets';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
-import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
+import {
+  aaveAnyGetAggregatedPositionData,
+  aaveV3IsInIsolationMode,
+  aaveV3IsInSiloedMode,
+} from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
@@ -246,7 +258,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
     if (['wstETH', 'cbETH', 'rETH', 'sDAI'].includes(_market.symbol)) {
-      if (!isLayer2Network(network) && _market.symbol === 'cbETH') return;
       _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
       _market.incentiveSupplyToken = _market.symbol;
     }
