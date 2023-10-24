@@ -153,9 +153,10 @@ export const getCompoundV3AggregatedData = ({
   payload.leveragedType = leveragedType;
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
-    const assetPrice = assetsData[leveragedAsset].price;
+    let assetPrice = assetsData[leveragedAsset].price;
     if (leveragedType === 'lsd-leverage') {
       payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toString();
+      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
     }
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
