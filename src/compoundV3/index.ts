@@ -213,7 +213,7 @@ export const getCompoundV3AccountData = async (
   if (loanData.borrowAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isBorrowed = true;
     usedAssets[baseAssetSymbol].borrowed = assetAmountInEth(loanData.borrowAmount, baseAssetInfo.symbol);
-    if (selectedMarket === COMPOUND_V3_ETH(network)) {
+    if (selectedMarket.value === COMPOUND_V3_ETH(network).value) {
       usedAssets[baseAssetSymbol].borrowedUsd = new Dec(
         assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol),
       )
