@@ -213,7 +213,15 @@ export const getCompoundV3AccountData = async (
   if (loanData.borrowAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isBorrowed = true;
     usedAssets[baseAssetSymbol].borrowed = assetAmountInEth(loanData.borrowAmount, baseAssetInfo.symbol);
-    usedAssets[baseAssetSymbol].borrowedUsd = assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol);
+    if (selectedMarket === COMPOUND_V3_ETH(network)) {
+      usedAssets[baseAssetSymbol].borrowedUsd = new Dec(
+        assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol),
+      )
+        .mul(assetsData[baseAssetSymbol].price)
+        .toString();
+    } else {
+      usedAssets[baseAssetSymbol].borrowedUsd = assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol);
+    }
   }
   loanData.collAddr.forEach((coll: string, i: number): void => {
     const assetInfo = getAssetInfoByAddress(coll, network);
