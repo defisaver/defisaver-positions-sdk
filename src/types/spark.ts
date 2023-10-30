@@ -61,7 +61,7 @@ export interface SparkUsedAssets {
 export interface SparkHelperCommon {
   usedAssets: SparkUsedAssets,
   eModeCategory: number,
-  eModeCategories?: { [key: number]: EModeCategoryDataMapping },
+  eModeCategories?: object,
   assetsData: SparkAssetsData,
   selectedMarket?: SparkMarketData,
   network?: NetworkNumber,

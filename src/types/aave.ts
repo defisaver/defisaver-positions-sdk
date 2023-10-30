@@ -243,7 +243,7 @@ export interface AaveV3AggregatedPositionData {
 export interface AaveHelperCommon {
   usedAssets: any,
   eModeCategory: number,
-  eModeCategories?: number[],
+  eModeCategories?: object,
   assetsData: any,
   selectedMarket: Partial<AaveMarketInfo>,
   network?: NetworkNumber,
