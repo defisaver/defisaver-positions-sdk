@@ -36,8 +36,22 @@ export const CRVUSD_WBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData =
   createCollAssets: ['WBTC'],
 });
 
+export const CRVUSD_TBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
+  chainIds: [1],
+  label: 'tBTC',
+  shortLabel: 'tBTC',
+  value: CrvUSDVersions.tBTC,
+  collAsset: 'tBTC',
+  baseAsset: 'crvUSD',
+  controllerAddress: getConfigContractAddress('crvUSDtBTCController', networkId),
+  ammAddress: getConfigContractAddress('crvUSDtBTCAmm', networkId),
+  createCollAssets: ['tBTC'],
+});
+
+
 export const CrvUsdMarkets = (networkId: NetworkNumber) => ({
   [CrvUSDVersions.wstETH]: CRVUSD_WSTETH_MARKET(networkId),
   [CrvUSDVersions.ETH]: CRVUSD_ETH_MARKET(networkId),
   [CrvUSDVersions.WBTC]: CRVUSD_WBTC_MARKET(networkId),
+  [CrvUSDVersions.tBTC]: CRVUSD_TBTC_MARKET(networkId),
 }) as const;

@@ -4,6 +4,7 @@ export enum CrvUSDVersions {
   'wstETH' = 'wstETH',
   'WBTC' = 'WBTC',
   'ETH' = 'ETH',
+  'tBTC' = 'tBTC',
 }
 
 export enum CrvUSDStatus {
