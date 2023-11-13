@@ -398,7 +398,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any, customGetAggregatedDataFunction?: Function): Promise<any> => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -509,11 +509,13 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
     };
   });
 
+  const aggregateFunction = customGetAggregatedDataFunction || aaveAnyGetAggregatedPositionData;
+
   payload.eModeCategory = +multicallRes[0][0];
   payload = {
     ...payload,
     usedAssets,
-    ...aaveAnyGetAggregatedPositionData({
+    ...aggregateFunction({
       ...extractedState, usedAssets, eModeCategory: payload.eModeCategory,
     }),
   };
@@ -540,11 +542,6 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });
-
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
-  payload.netApy = netApy;
-  payload.incentiveUsd = incentiveUsd;
-  payload.totalInterestUsd = totalInterestUsd;
 
   payload.isSubscribedToAutomation = false;
   payload.automationResubscribeRequired = false;
