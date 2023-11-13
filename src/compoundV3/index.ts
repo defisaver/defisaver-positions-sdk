@@ -169,7 +169,9 @@ export const getCompoundV3AccountData = async (
   extractedState: ({
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
-  })): Promise<CompoundV3PositionData> => {
+  }),
+  customGetAggregatedDataFunction?: Function,
+): Promise<CompoundV3PositionData> => {
   if (!address) throw new Error('No address provided');
   const {
     selectedMarket, assetsData,
@@ -243,10 +245,12 @@ export const getCompoundV3AccountData = async (
     };
   });
 
+  const aggregateFunction = customGetAggregatedDataFunction || getCompoundV3AggregatedData;
+
   payload = {
     ...payload,
     usedAssets,
-    ...getCompoundV3AggregatedData({
+    ...aggregateFunction({
       usedAssets, assetsData, network, selectedMarket,
     }),
     isAllowed: data[1][0],

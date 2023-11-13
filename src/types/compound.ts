@@ -57,6 +57,7 @@ export interface CompoundV3AssetData extends CompoundAssetData {
   minDebt: string,
   liquidationRatio: string,
   supplyCap: string,
+  priceInBaseAsset: string,
 }
 
 export interface CompoundAssetsData<T> {

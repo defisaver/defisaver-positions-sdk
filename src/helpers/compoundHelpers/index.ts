@@ -70,8 +70,8 @@ export const getIncentiveApys = (
   incentiveSupplyToken: string,
   incentiveBorrowToken: string,
 } => {
-  const incentiveSupplyApy = aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardSupplySpeed * +compPrice) / +baseData.price / +baseData.totalSupply).toString();
-  const incentiveBorrowApy = aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardBorrowSpeed * +compPrice) / +baseData.price / +baseData.totalBorrow).toString();
+  const incentiveSupplyApy = aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardSupplySpeed * +compPrice) / +baseData.priceInBaseAsset / +baseData.totalSupply).toString();
+  const incentiveBorrowApy = aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardBorrowSpeed * +compPrice) / +baseData.priceInBaseAsset / +baseData.totalBorrow).toString();
   return {
     incentiveSupplyApy,
     incentiveBorrowApy,
