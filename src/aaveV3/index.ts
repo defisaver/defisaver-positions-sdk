@@ -398,7 +398,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any, customGetAggregatedDataFunction?: Function): Promise<AaveV3PositionData> => {
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -509,13 +509,11 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
     };
   });
 
-  const aggregateFunction = customGetAggregatedDataFunction || aaveAnyGetAggregatedPositionData;
-
   payload.eModeCategory = +multicallRes[0][0];
   payload = {
     ...payload,
     usedAssets,
-    ...aggregateFunction({
+    ...aaveAnyGetAggregatedPositionData({
       ...extractedState, usedAssets, eModeCategory: payload.eModeCategory,
     }),
   };
