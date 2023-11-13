@@ -178,7 +178,10 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       let discountRateOnBorrow = '0';
 
       if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {
-        borrowCap = assetAmountInEth((await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call())[0], 'GHO');
+        const facilitatorBucket = await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call();
+        const availableFacilitatorCap = assetAmountInEth(new Dec(facilitatorBucket[0]).sub(facilitatorBucket[1]).toString(), 'GHO');
+
+        borrowCap = Dec.min(borrowCap, availableFacilitatorCap).toString();
 
         discountRateOnBorrow = aaveV3CalculateDiscountRate(
           tokenMarket.totalBorrow.toString(),
@@ -188,6 +191,18 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
           minGhoBalanceForDiscount,
           ghoDiscountedPerDiscountToken,
         );
+      }
+
+      let marketLiquidity = nativeAsset
+        ? assetAmountInEth(new Dec(assetAmountInWei(borrowCap.toString(), 'GHO'))
+          .sub(tokenMarket.totalBorrow.toString())
+          .toString(), symbol)
+        : assetAmountInEth(new Dec(tokenMarket.totalSupply.toString())
+          .sub(tokenMarket.totalBorrow.toString())
+          .toString(), symbol);
+
+      if (new Dec(marketLiquidity).lt(0)) {
+        marketLiquidity = '0';
       }
 
       return ({
@@ -214,13 +229,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         borrowRateStable: new Dec(tokenMarket.borrowRateStable.toString()).div(1e25).toString(),
         collateralFactor: new Dec(tokenMarket.collateralFactor.toString()).div(10000).toString(),
         liquidationRatio: new Dec(tokenMarket.liquidationRatio.toString()).div(10000).toString(),
-        marketLiquidity: nativeAsset
-          ? assetAmountInEth(new Dec(assetAmountInWei(borrowCap.toString(), 'GHO'))
-            .sub(tokenMarket.totalBorrow.toString())
-            .toString(), symbol)
-          : assetAmountInEth(new Dec(tokenMarket.totalSupply.toString())
-            .sub(tokenMarket.totalBorrow.toString())
-            .toString(), symbol),
+        marketLiquidity,
         utilization: new Dec(tokenMarket.totalBorrow.toString())
           .div(new Dec(tokenMarket.totalSupply.toString()))
           .times(100)
