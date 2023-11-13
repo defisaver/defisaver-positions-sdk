@@ -447,6 +447,7 @@ export const getMorphoAaveV3AccountData = async (
   assetsData: MorphoAaveV3AssetsData,
   delegator: string,
   selectedMarket: MorphoAaveV3MarketInfo,
+  customGetAggregatedDataFunction?: Function,
 ): Promise<MorphoAaveV3PositionData> => {
   if (!address) {
     throw new Error('No address provided.');
@@ -590,9 +591,11 @@ export const getMorphoAaveV3AccountData = async (
     }
   });
 
+  const aggregateFunction = customGetAggregatedDataFunction || aaveAnyGetAggregatedPositionData;
+
   payload = {
     ...payload,
-    ...aaveAnyGetAggregatedPositionData({
+    ...aggregateFunction({
       usedAssets: payload.usedAssets, assetsData, eModeCategory, selectedMarket,
     }),
   };
