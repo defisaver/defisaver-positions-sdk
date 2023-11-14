@@ -222,11 +222,16 @@ export interface AaveV3IncentiveData {
 
 export interface AaveV3AggregatedPositionData {
   suppliedUsd: string,
+  suppliedEth: string,
   suppliedCollateralUsd: string,
   borrowedUsd: string,
+  borrowedEth: string,
   borrowLimitUsd: string,
+  borrowLimitEth: string,
   liquidationLimitUsd: string,
+  liquidationLimitEth: string,
   leftToBorrowUsd: string,
+  leftToBorrowEth: string,
   ratio: string,
   collRatio: string,
   netApy: string,

@@ -131,5 +131,12 @@ export const aaveAnyGetAggregatedPositionData = ({
     }
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
+
+  payload.suppliedEth = new Dec(payload.suppliedUsd).div(assetsData.ETH.price).toString();
+  payload.borrowedEth = new Dec(payload.borrowedUsd).div(assetsData.ETH.price).toString();
+  payload.leftToBorrowEth = new Dec(payload.leftToBorrowUsd).div(assetsData.ETH.price).toString();
+  payload.borrowLimitEth = new Dec(payload.borrowLimitUsd).div(assetsData.ETH.price).toString();
+  payload.liquidationLimitEth = new Dec(payload.liquidationLimitUsd).div(assetsData.ETH.price).toString();
+
   return payload;
 };
