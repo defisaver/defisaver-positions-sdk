@@ -1,4 +1,4 @@
-import {morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket} from "../aaveV3/marketAssets";
+import {morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket} from "../markets/aave/marketAssets";
 import {getConfigContractAddress} from "../contracts";
 import {AaveMarketInfo, AaveVersions} from "../types/aave";
 import {NetworkNumber} from "../types/common";
@@ -11,11 +11,11 @@ export const MORPHO_AAVE_V2: AaveMarketInfo = {
   url: '',
   assets: morphoAaveV2AssetDefaultMarket,
   provider: 'LendingPoolAddressesProvider',
-  providerAddress: getConfigContractAddress('LendingPoolAddressesProvider'), // rename
-  protocolData: 'AaveProtocolDataProvider', // not used
-  protocolDataAddress: getConfigContractAddress('AaveProtocolDataProvider', 1), // not used
+  providerAddress: getConfigContractAddress('LendingPoolAddressesProvider', 1), // rename
+  protocolData: 'AaveProtocolDataProvider',
+  protocolDataAddress: getConfigContractAddress('AaveProtocolDataProvider', 1),
   lendingPool: 'AaveLendingPoolV2',
-  lendingPoolAddress: getConfigContractAddress('MorphoAaveV2Proxy'),
+  lendingPoolAddress: getConfigContractAddress('MorphoAaveV2Proxy', 1),
   // icon: SvgAdapter(protocolIcons.morpho),
   protocolName: 'morpho',
 };
