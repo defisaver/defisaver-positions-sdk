@@ -271,16 +271,6 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
 
   const multicallRes = await multicall(multicallData, web3, network, block);
 
-  console.log(
-    JSON.stringify({
-      multicallRes,
-      block,
-      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      target: loanInfoContract.options.address,
-    }, null, 2),
-  );
-
   const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
