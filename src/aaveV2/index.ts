@@ -6,7 +6,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
-import { ethToWeth, wethToEth } from '../services/utils';
+import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
@@ -16,6 +16,7 @@ import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
+import configRaw from '../config/contracts';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, mainnetWeb3: Web3) => {
   const ethPrice = await getEthPrice(mainnetWeb3);
@@ -96,11 +97,21 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network, block);
 
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+  const protocolDataProviderContract = new web3.eth.Contract(
+    // @ts-ignore
+    configRaw[market.protocolData].abi,
+    market.protocolDataAddress,
+  );
+
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
+  const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
+
   const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
 
   loanInfo.forEach((_tokenInfo: any, i: number) => {
-    const asset = wethToEth(market.assets[i]);
+    const asset = wethToEth(symbols[i]);
+    const assetAddr = wethToEthByAddress(_addresses[i], network).toLowerCase();
     const tokenInfo = { ..._tokenInfo };
 
     // known bug: stETH leaves 1 wei on every transfer
@@ -111,11 +122,11 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: tokenInfo.balance.toString(),
+        [addressMapping ? assetAddr : asset]: tokenInfo.balance.toString(),
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
+        [addressMapping ? assetAddr : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
       },
     };
   });

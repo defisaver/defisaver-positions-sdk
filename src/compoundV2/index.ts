@@ -101,6 +101,13 @@ export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkN
   return contract.methods.getAssetsIn(account).call();
 };
 
+export const getAllMarketAddresses = async (web3: Web3, network: NetworkNumber, block: Blockish) => {
+  const contract = ComptrollerContract(web3, network);
+
+  return contract.methods.getAllMarkets().call({}, block);
+};
+
+
 export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
@@ -111,13 +118,18 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
+  const assets = await getAllMarketAddresses(web3, network, block);
+  const assetInfo = assets.map(a => getAssetInfo(a));
+
   const loanInfoContract = CompoundLoanInfoContract(web3, network, block);
-  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call({}, block);
+  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, assets).call({}, block);
 
   loanInfo.balances.forEach((weiAmount: any, i: number) => {
-    const asset = wethToEth(compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
-      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
-      : compoundV2CollateralAssets[i].underlyingAsset);
+    const asset = wethToEth(
+      assetInfo[i].symbol === 'cWBTC Legacy'
+        ? `${assetInfo[i].underlyingAsset} Legacy`
+        : assetInfo[i].underlyingAsset,
+    );
 
     balances = {
       collateral: {
@@ -127,9 +139,11 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     };
   });
   loanInfo.borrows.forEach((weiAmount: any, i: number) => {
-    const asset = wethToEth(compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
-      ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
-      : compoundV2CollateralAssets[i].underlyingAsset);
+    const asset = wethToEth(
+      assetInfo[i].symbol === 'cWBTC Legacy'
+        ? `${assetInfo[i].underlyingAsset} Legacy`
+        : assetInfo[i].underlyingAsset,
+    );
 
     balances = {
       ...balances,

@@ -142,16 +142,17 @@ export const getMorphoAaveV2AccountBalances = async (web3: Web3, network: Networ
   }
 
   userBalances.forEach((balance: any) => {
-    const { symbol, address: assetAddr } = getAssetInfoByAddress(wethToEthByAddress(balance.underlying, network), network);
+    const assetAddr = wethToEthByAddress(balance.underlying, network).toLowerCase();
+    const { symbol } = getAssetInfoByAddress(assetAddr, network);
 
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(balance.supplyBalanceInP2P).add(balance.supplyBalanceOnPool).toString(),
+        [addressMapping ? assetAddr : symbol]: new Dec(balance.supplyBalanceInP2P).add(balance.supplyBalanceOnPool).toString(),
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: new Dec(balance.borrowBalanceInP2P).add(balance.borrowBalanceOnPool).toString(),
+        [addressMapping ? assetAddr : symbol]: new Dec(balance.borrowBalanceInP2P).add(balance.borrowBalanceOnPool).toString(),
       },
     };
   });
