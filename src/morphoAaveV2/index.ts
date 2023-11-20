@@ -5,7 +5,6 @@ import { wethToEthByAddress } from '../services/utils';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { getStETHApr } from '../staking';
 import { MorphoAaveV2ViewContract } from '../contracts';
 import {
   AavePositionData,
@@ -15,6 +14,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
+import { getStakingApy } from '../staking';
 
 export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, mainnetWeb3: Web3): Promise<MorphoAaveV2MarketData> => {
   const ethPrice = await getEthPrice(mainnetWeb3);
@@ -103,7 +103,7 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
 
   const stEthMarket = assetsData.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStETHApr(mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 

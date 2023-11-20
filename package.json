@@ -20,12 +20,14 @@
   "license": "ISC",
   "dependencies": {
     "@defisaver/tokens": "^1.5.3",
-    "decimal.js": "^10.4.3",
+    "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
-    "@ethersproject/bignumber": "^5.7.0"
+    "decimal.js": "^10.4.3",
+    "memoizee": "^0.4.15"
   },
   "devDependencies": {
     "@defisaver/eslint-config": "^1.0.1",
+    "@types/memoizee": "^0.4.11",
     "chai": "^4.3.8",
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",

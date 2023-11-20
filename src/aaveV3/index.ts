@@ -267,7 +267,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
     if (['wstETH', 'cbETH', 'rETH', 'sDAI'].includes(_market.symbol)) {
-      _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
+      _market.incentiveSupplyApy = await getStakingApy(_market.symbol, _market.symbol === 'sDAI' ? web3 : defaultWeb3, network);
       _market.incentiveSupplyToken = _market.symbol;
     }
 

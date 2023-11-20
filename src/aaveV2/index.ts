@@ -5,7 +5,7 @@ import * as net from 'net';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { calculateNetApy, getStETHApr } from '../staking';
+import { calculateNetApy, getStakingApy } from '../staking';
 import { ethToWeth, wethToEth } from '../services/utils';
 import { AaveLoanInfoV2Contract } from '../contracts';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
@@ -61,7 +61,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
 
   const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStETHApr(mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 

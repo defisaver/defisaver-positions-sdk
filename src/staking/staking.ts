@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import Web3 from 'web3';
+import memoize from 'memoizee';
 import {
   CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
 } from '../contracts';
@@ -66,22 +67,23 @@ export const getREthApr = async (web3: Web3, blockNumber: 'latest' | number = 'l
   return apr;
 };
 
-export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  const potContract = PotContract(web3, NetworkNumber.Eth);
+export const getDsrApy = async (web3: Web3, network: NetworkNumber, blockNumber: 'latest' | number = 'latest') => {
+  const potContract = PotContract(web3, network);
   return new Dec(await potContract.methods.dsr().call())
-      .div(new Dec(1e27))
-      .pow(SECONDS_PER_YEAR)
-      .sub(1)
-      .mul(100)
-      .toString();
+    .div(new Dec(1e27))
+    .pow(SECONDS_PER_YEAR)
+    .sub(1)
+    .mul(100)
+    .toString();
 };
 
-export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = memoize(async (asset: string, web3: Web3, network = NetworkNumber.Eth, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined): Promise<any> => {
   if (asset === 'stETH' || asset === 'wstETH') return getStETHApr(web3, fromBlock, blockNumber);
   if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);
   if (asset === 'rETH') return getREthApr(web3, blockNumber);
-  if (asset === 'sDAI') return getDsrApy(web3);
-};
+  if (asset === 'sDAI') return getDsrApy(web3, network);
+  return 0;
+}, { promise: true, maxAge: 1000 * 60 * 60 });
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {
   let interval = 1;

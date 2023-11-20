@@ -8,9 +8,8 @@ import {
   ethToWeth, getAbiItem, isLayer2Network, wethToEth,
 } from '../services/utils';
 import {
-  calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
+  calculateNetApy, getStakingApy,
 } from '../staking';
-import { getDsrApy } from '../services/dsrService';
 import {
   SparkIncentiveDataProviderContract,
   SparkViewContract,
@@ -135,24 +134,11 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
   await Promise.all(assetsData.map(async (market) => {
     /* eslint-disable no-param-reassign */
     const rewardForMarket = (rewardInfo as any)[market.underlyingTokenAddress];
-    if (market.symbol === 'wstETH') {
-      market.incentiveSupplyApy = await getStETHApr(mainnetWeb3);
-      market.incentiveSupplyToken = 'wstETH';
-    }
 
-    if (market.symbol === 'cbETH' && !isLayer2Network(network)) {
-      market.incentiveSupplyApy = await getCbETHApr(mainnetWeb3);
-      market.incentiveSupplyToken = 'cbETH';
-    }
-
-    if (market.symbol === 'rETH') {
-      market.incentiveSupplyApy = await getREthApr(mainnetWeb3);
-      market.incentiveSupplyToken = 'rETH';
-    }
-
-    if (market.symbol === 'sDAI') {
-      market.incentiveSupplyApy = await getDsrApy(web3, network);
-      market.incentiveSupplyToken = 'sDAI';
+    const incentiveSupplyApy = await getStakingApy(market.symbol, market.symbol === 'sDAI' ? web3 : mainnetWeb3, network);
+    if (incentiveSupplyApy) {
+      market.incentiveSupplyApy = incentiveSupplyApy;
+      market.incentiveSupplyToken = market.symbol;
     }
 
     if (market.canBeBorrowed && market.incentiveSupplyApy) {
