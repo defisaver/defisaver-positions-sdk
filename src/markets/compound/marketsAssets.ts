@@ -17,7 +17,7 @@ export const v3USDCCollAssets = {
 
 export const v3ETHCollAssets = {
   [NetworkNumber.Eth]: [
-    'cbETH', 'wstETH',
+    'cbETH', 'wstETH', 'rETH',
   ],
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
