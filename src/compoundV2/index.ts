@@ -119,8 +119,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
   }
 
   const assets = await getAllMarketAddresses(web3, network, block);
-  const assetInfo = assets.map(a => getAssetInfo(a));
-
+  const assetInfo = assets.map(a => getAssetInfoByAddress(a, network));
   const loanInfoContract = CompoundLoanInfoContract(web3, network, block);
   const loanInfo = await loanInfoContract.methods.getTokenBalances(address, assets).call({}, block);
 
