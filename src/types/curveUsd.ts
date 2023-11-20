@@ -1,11 +1,11 @@
 import { NetworkNumber } from './common';
 
 export enum CrvUSDVersions {
-  'wstETH' = 'wstETH',
-  'WBTC' = 'WBTC',
-  'ETH' = 'ETH',
-  'tBTC' = 'tBTC',
-  'sfrxETH' = 'sfrxETH',
+  'crvUSDwstETH' = 'wstETH',
+  'crvUSDWBTC' = 'WBTC',
+  'crvUSDETH' = 'ETH',
+  'crvUSDtBTC' = 'tBTC',
+  'crvUSDsfrxETH' = 'sfrxETH',
 }
 
 export enum CrvUSDStatus {
