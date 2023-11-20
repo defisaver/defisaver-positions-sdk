@@ -9,6 +9,7 @@ import {
 } from '../contracts';
 import { multicall } from '../multicall';
 import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
+import { ZERO_ADDRESS } from '../constants';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
@@ -36,6 +37,14 @@ export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumb
   };
 
   return balances;
+};
+
+const _getDebtInFront = async (viewContract: any, address: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(address, accumulatedSum, iterations).call();
+
+export const getDebtInFront = async (viewContract: any, address: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
+  const { debt, next } = await _getDebtInFront(viewContract, address, accumulatedSum, iterations);
+  if (next === ZERO_ADDRESS) return assetAmountInEth(debt, 'LUSD');
+  return getDebtInFront(viewContract, next, debt, iterations);
 };
 
 export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, address: string): Promise<LiquityTroveInfo> => {
@@ -78,7 +87,10 @@ export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, ad
     },
   ];
 
-  const multiRes = await multicall(multicallData, web3, network);
+  const [multiRes, debtInFront] = await Promise.all([
+    multicall(multicallData, web3, network),
+    getDebtInFront(viewContract, address),
+  ]);
 
   const recoveryMode = multiRes[0][6];
   const totalETH = multiRes[4][0];
@@ -95,6 +107,7 @@ export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, ad
     assetPrice: assetAmountInEth(multiRes[3][0]),
     totalETH,
     totalLUSD,
+    debtInFront,
     minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
