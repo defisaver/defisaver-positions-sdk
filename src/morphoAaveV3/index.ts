@@ -11,7 +11,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  ethToWeth, ethToWethByAddress, getAbiItem, isLayer2Network, wethToEthByAddress,
+  ethToWethByAddress, getAbiItem, isLayer2Network, returnOnlyExistingTokens, wethToEthByAddress,
 } from '../services/utils';
 import {
   createContractWrapper,
@@ -139,9 +139,13 @@ const computeMorphoMarketData = (
 
 export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3MarketData> => {
   // @ts-ignore
-  const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+  const protocolDataProviderContract = createContractWrapper(web3, network, selectedMarket.protocolData, selectedMarket.protocolDataAddress);
 
-  const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a)).address);
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+  const _addresses = returnOnlyExistingTokens(reserveTokens.map((a: any) => a.tokenAddress), network);
+
+  // @ts-ignore
+  const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
 
   const splitStart = Math.floor(_addresses.length / 2);
   const loanInfoCallsToSkip = 2; // skipping getFullTokensInfo calls at the start of multicallArray
@@ -362,7 +366,6 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   );
 
   const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
-  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
   const multicallArray = [

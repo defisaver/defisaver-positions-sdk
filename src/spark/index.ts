@@ -5,7 +5,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  ethToWeth, getAbiItem, isLayer2Network, wethToEth, wethToEthByAddress,
+  ethToWeth, getAbiItem, isLayer2Network, returnOnlyExistingTokens, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import {
   calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
@@ -15,6 +15,7 @@ import {
   SparkIncentiveDataProviderContract,
   SparkViewContract,
   getConfigContractAbi,
+  createContractWrapper,
 } from '../contracts';
 import {
   EModeCategoryDataMapping,
@@ -80,14 +81,17 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
 
   const loanInfoContract = SparkViewContract(web3, network);
 
-  const loanInfo = await loanInfoContract.methods.getFullTokensInfo(
-    marketAddress,
-    selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address),
-  ).call();
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, selectedMarket.protocolData, selectedMarket.protocolDataAddress);
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+  const _addresses = returnOnlyExistingTokens(reserveTokens, network, (a: any) => a.tokenAddress);
+  const symbols = _addresses.map(s => wethToEth(getAssetInfo(s).symbol));
+
+  const loanInfo = await loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call();
 
   const assetsData: SparkAssetData[] = loanInfo
     .map((market, i) => ({
-      symbol: selectedMarket.assets[i],
+      symbol: symbols[i],
       isIsolated: new Dec(market.debtCeilingForIsolationMode).gt(0),
       debtCeilingForIsolationMode: new Dec(market.debtCeilingForIsolationMode).div(100).toString(),
       isSiloed: market.isSiloedForBorrowing,
@@ -102,7 +106,7 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
       marketLiquidity: assetAmountInEth(new Dec(market.totalSupply.toString())
         .sub(market.totalBorrow.toString())
-        .toString(), selectedMarket.assets[i]),
+        .toString(), symbols[i]),
       utilization: new Dec(market.totalBorrow.toString())
         .div(new Dec(market.totalSupply.toString()))
         .times(100)
@@ -110,7 +114,7 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       usageAsCollateralEnabled: market.usageAsCollateralEnabled,
       supplyCap: market.supplyCap,
       borrowCap: market.borrowCap,
-      totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
+      totalSupply: assetAmountInEth(market.totalSupply.toString(), symbols[i]),
       isInactive: !market.isActive,
       isFrozen: market.isFrozen,
       isPaused: market.isPaused,
@@ -119,8 +123,8 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       canBeWithdrawn: market.isActive && !market.isPaused,
       canBePayBacked: market.isActive && !market.isPaused,
       disabledStableBorrowing: !market.stableBorrowRateEnabled,
-      totalBorrow: assetAmountInEth(market.totalBorrow.toString(), selectedMarket.assets[i]),
-      totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), selectedMarket.assets[i]),
+      totalBorrow: assetAmountInEth(market.totalBorrow.toString(), symbols[i]),
+      totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), symbols[i]),
       price: new Dec(market.price.toString()).div(1e8).toString(), // is actually price in USD
       isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
       isFlashLoanEnabled: market.isFlashLoanEnabled,

@@ -3,7 +3,9 @@ import Dec from 'decimal.js';
 import Web3 from 'web3';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { aprToApy } from '../moneymarket';
-import { compareAddresses, handleWbtcLegacy, wethToEth } from '../services/utils';
+import {
+  compareAddresses, handleWbtcLegacy, returnOnlyExistingTokens, wethToEth,
+} from '../services/utils';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -16,9 +18,20 @@ import { getCompoundV2AggregatedData } from '../helpers/compoundHelpers';
 
 const compAddress = '0xc00e94cb662c3520282e6f5717214004a7f26888';
 
-export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumber): Promise<CompoundV2MarketsData> => {
-  const cAddresses = compoundV2CollateralAssets.map(a => a.address);
+export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkNumber, account: string) => {
+  const contract = ComptrollerContract(web3, network);
 
+  return contract.methods.getAssetsIn(account).call();
+};
+
+export const getAllMarketAddresses = async (web3: Web3, network: NetworkNumber, block: Blockish) => {
+  const contract = ComptrollerContract(web3, network);
+
+  return contract.methods.getAllMarkets().call({}, block);
+};
+
+export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumber): Promise<CompoundV2MarketsData> => {
+  const cAddresses = returnOnlyExistingTokens(await getAllMarketAddresses(web3, network, 'latest'), network);
   const loanInfoContract = CompoundLoanInfoContract(web3, network);
   const loanInfo = await loanInfoContract.methods.getFullTokensInfo(cAddresses).call();
 
@@ -35,7 +48,7 @@ export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumbe
       const compBorrowSpeeds = market.compBorrowSpeeds.toString();
       const assetPrice = market.price.toString();
 
-      const pricePrecisionDiff = 18 - getAssetInfo(getAssetInfoByAddress(cAddresses[i]).underlyingAsset).decimals;
+      const pricePrecisionDiff = 18 - getAssetInfo(symbol).decimals;
 
       // compSupplySpeeds/compBorrowSpeeds is per block per market (borrow & supply are separate markets)
       const incentiveSupplyApy = aprToApy((100 * BLOCKS_IN_A_YEAR * +compSupplySpeeds * +compPrice) / +assetPrice / +totalSupply).toString();
@@ -93,18 +106,6 @@ export const EMPTY_COMPOUND_DATA = {
   incentiveUsd: '0',
   totalInterestUsd: '0',
   borrowStableSupplyUnstable: false,
-};
-
-export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkNumber, account: string) => {
-  const contract = ComptrollerContract(web3, network);
-
-  return contract.methods.getAssetsIn(account).call();
-};
-
-export const getAllMarketAddresses = async (web3: Web3, network: NetworkNumber, block: Blockish) => {
-  const contract = ComptrollerContract(web3, network);
-
-  return contract.methods.getAllMarkets().call({}, block);
 };
 
 

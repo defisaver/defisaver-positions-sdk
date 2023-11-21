@@ -5,12 +5,13 @@ import configRaw from '../config/contracts';
 import {
   AaveIncentiveDataProviderV3Contract,
   AaveV3ViewContract,
+  createContractWrapper,
   getConfigContractAbi,
   getConfigContractAddress,
   GhoTokenContract,
 } from '../contracts';
 import {
-  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network, wethToEth, wethToEthByAddress,
+  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network, returnOnlyExistingTokens, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import {
   AaveMarketInfo,
@@ -102,7 +103,12 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 };
 
 export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
+
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+  const _addresses = returnOnlyExistingTokens(reserveTokens.map((a: any) => a.tokenAddress), network);
+  const symbols = _addresses.map(a => wethToEth(a).symbol);
 
   const isL2 = isLayer2Network(network);
 
@@ -172,7 +178,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
 
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
-      const symbol = market.assets[i];
+      const symbol = symbols[i];
       const nativeAsset = symbol === 'GHO';
 
       let borrowCap = tokenMarket.borrowCap;

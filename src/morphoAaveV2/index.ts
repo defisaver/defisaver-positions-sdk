@@ -1,7 +1,7 @@
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import Dec from 'decimal.js';
 import Web3 from 'web3';
-import { wethToEthByAddress } from '../services/utils';
+import { returnOnlyExistingTokens, wethToEthByAddress } from '../services/utils';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -29,7 +29,8 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
     throw new Error('Failed to fetch market data.');
   }
 
-  const { marketInfo, aaveTokenInfo } = contractData.value;
+  const marketInfo = returnOnlyExistingTokens(contractData.value.marketInfo, network, (a: any) => a.underlying);
+  const aaveTokenInfo = returnOnlyExistingTokens(contractData.value.aaveTokenInfo, network, (a: any) => a.underlyingTokenAddress);
 
   const morphoRewardsData = morphoRewardsRes.status === 'fulfilled' ? await morphoRewardsRes.value.json() : null;
 

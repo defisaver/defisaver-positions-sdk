@@ -6,8 +6,10 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
-import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
-import { AaveLoanInfoV2Contract } from '../contracts';
+import {
+  ethToWeth, returnOnlyExistingTokens, wethToEth, wethToEthByAddress,
+} from '../services/utils';
+import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
@@ -20,13 +22,18 @@ import configRaw from '../config/contracts';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, mainnetWeb3: Web3) => {
   const ethPrice = await getEthPrice(mainnetWeb3);
-  const _addresses = selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address);
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, selectedMarket.protocolData, selectedMarket.protocolDataAddress);
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+  const _addresses = returnOnlyExistingTokens(reserveTokens.map((a: any) => a.tokenAddress), network);
+  const symbols = _addresses.map(a => wethToEth(a).symbol);
+
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
   const marketAddress = selectedMarket.providerAddress;
   const loanInfo = await loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call();
   const markets = loanInfo
     .map((market, i) => ({
-      symbol: selectedMarket.assets[i],
+      symbol: symbols[i],
       underlyingTokenAddress: market.underlyingTokenAddress,
       supplyRate: new Dec(market.supplyRate.toString()).div(1e25).toString(),
       borrowRate: new Dec(market.borrowRateVariable.toString()).div(1e25).toString(),
@@ -35,7 +42,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
       liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
       marketLiquidity: assetAmountInEth(new Dec(market.totalSupply.toString())
         .sub(market.totalBorrow.toString())
-        .toString(), selectedMarket.assets[i]),
+        .toString(), symbols[i]),
       utilization: new Dec(market.totalBorrow.toString())
         .div(new Dec(market.totalSupply.toString()))
         .times(100)
@@ -43,7 +50,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
       usageAsCollateralEnabled: market.usageAsCollateralEnabled,
       supplyCap: '0',
       borrowCap: '0', // v2 doesnt have borrow cap but adding it for compatability with v3
-      totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
+      totalSupply: assetAmountInEth(market.totalSupply.toString(), symbols[i]),
       isInactive: !market.isActive,
       isFrozen: market.isFrozen,
       canBeBorrowed: market.isActive && market.borrowingEnabled && !market.isFrozen,
@@ -51,8 +58,8 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
       canBeWithdrawn: market.isActive,
       canBePayBacked: market.isActive,
       disabledStableBorrowing: !market.stableBorrowRateEnabled,
-      totalBorrow: assetAmountInEth(market.totalBorrow.toString(), selectedMarket.assets[i]),
-      totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), selectedMarket.assets[i]),
+      totalBorrow: assetAmountInEth(market.totalBorrow.toString(), symbols[i]),
+      totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), symbols[i]),
       priceInEth: new Dec(market.price.toString()).div(1e18).toString(),
       incentiveSupplyToken: 'AAVE',
       incentiveBorrowToken: 'AAVE',

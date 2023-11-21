@@ -14,7 +14,7 @@ import {
 import {
   getCbETHApr, getStETHApr, getStETHByWstETHMultiple, getWstETHByStETH,
 } from '../staking';
-import { wethToEth } from '../services/utils';
+import { returnOnlyExistingTokens, wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
@@ -41,7 +41,9 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
     },
   ];
   const data = await multicall(calls, web3, network);
-  const colls = data[1].colls.map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+  const colls = returnOnlyExistingTokens(data[1].colls, network, (a: any) => a.tokenAddr)
+    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+
   if (selectedMarket.value === CompoundVersions.CompoundV3ETH) {
     for (const coll of colls) {
       if (coll.symbol === 'wstETH') {
