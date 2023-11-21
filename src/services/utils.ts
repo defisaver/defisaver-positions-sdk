@@ -1,6 +1,6 @@
 import Dec from 'decimal.js';
 import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import { NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber } from '../types/common';
 
 export const isLayer2Network = (networkId: NetworkNumber) => [10, 42161, 8453].includes(+networkId);
 
@@ -33,3 +33,11 @@ export const bytesToString = (hex: string) => Buffer.from(hex.replace(/^0x/, '')
   .toString()
   // eslint-disable-next-line no-control-regex
   .replace(/\x00/g, '');
+
+/**
+ * @description check if token address exists in @defisaver/tokens
+ */
+export const returnOnlyExistingTokens = (tokens: any[], network: NetworkNumber, addressExtractingMethod: Function = (a: EthAddress) => a) => {
+  const checkExistence = (a: EthAddress) => getAssetInfoByAddress(a, network).symbol !== '?';
+  return tokens.filter((a) => checkExistence(addressExtractingMethod(a)));
+};
