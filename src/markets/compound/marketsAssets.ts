@@ -15,6 +15,15 @@ export const v3USDCCollAssets = {
   [NetworkNumber.Base]: [],
 } as const;
 
+export const v3USDCeCollAssets = {
+  [NetworkNumber.Eth]: [],
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [
+    'ARB', 'ETH', 'GMX', 'WBTC',
+  ],
+  [NetworkNumber.Base]: [],
+} as const;
+
 export const v3ETHCollAssets = {
   [NetworkNumber.Eth]: [
     'cbETH', 'wstETH',
