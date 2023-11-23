@@ -5,6 +5,7 @@ import {
 export enum CompoundVersions {
   'CompoundV2' = 'v2',
   'CompoundV3USDC' = 'v3-USDC',
+  'CompoundV3USDCe' = 'v3-USDC.e',
   'CompoundV3ETH' = 'v3-ETH',
   'CompoundV3USDbC' = 'v3-USDbC',
 }
