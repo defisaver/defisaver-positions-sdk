@@ -10,6 +10,11 @@ export enum CompoundVersions {
   'CompoundV3USDbC' = 'v3-USDbC',
 }
 
+export interface CompoundBulkerOptions {
+  supply: number | string,
+  withdraw: number | string,
+}
+
 export interface CompoundMarketData {
   chainIds: NetworkNumber[],
   label: string,
@@ -22,7 +27,7 @@ export interface CompoundMarketData {
   secondLabel: string,
   bulkerName: string,
   bulkerAddress: string,
-  bulkerOptions: { supply: string | number, withdraw: string | number },
+  bulkerOptions: CompoundBulkerOptions,
   // icon: Function,
 }
 
