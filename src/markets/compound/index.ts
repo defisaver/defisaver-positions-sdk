@@ -8,7 +8,6 @@ import {
   v3USDCCollAssets,
   v3USDCeCollAssets,
 } from './marketsAssets';
-import { isLayer2Network } from '../../services/utils';
 
 const EMPTY_BULKER_OPTIONS: CompoundBulkerOptions = { supply: '', withdraw: '' };
 
