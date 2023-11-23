@@ -8,6 +8,7 @@ import {
   v3USDCCollAssets,
   v3USDCeCollAssets,
 } from './marketsAssets';
+import { isLayer2Network } from '../../services/utils';
 
 const EMPTY_BULKER_OPTIONS: CompoundBulkerOptions = { supply: '', withdraw: '' };
 
@@ -79,8 +80,8 @@ export const COMPOUND_V3_USDC = (networkId: NetworkNumber): CompoundMarketData =
   baseMarket: 'cUSDCv3',
   baseMarketAddress: getConfigContractAddress('cUSDCv3', networkId),
   secondLabel: 'Market',
-  bulkerName: 'CompV3USDCBulker',
-  bulkerAddress: getConfigContractAddress('CompV3USDCBulker', networkId),
+  bulkerName: networkId === NetworkNumber.Arb ? 'CompV3USDCBulkerArb' : 'CompV3USDCBulker',
+  bulkerAddress: getConfigContractAddress(networkId === NetworkNumber.Arb ? 'CompV3USDCBulkerArb' : 'CompV3USDCBulker', networkId),
   bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3USDC],
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });
@@ -95,8 +96,8 @@ export const COMPOUND_V3_USDCe = (networkId: NetworkNumber): CompoundMarketData 
   baseMarket: 'cUSDCev3',
   baseMarketAddress: getConfigContractAddress('cUSDCev3', networkId),
   secondLabel: 'Market',
-  bulkerName: 'CompV3USDCeBulker',
-  bulkerAddress: getConfigContractAddress('CompV3USDCeBulker', networkId),
+  bulkerName: 'CompV3USDCBulkerArb',
+  bulkerAddress: getConfigContractAddress('CompV3USDCBulkerArb', networkId),
   bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3USDCe],
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });
