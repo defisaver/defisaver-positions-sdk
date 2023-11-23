@@ -11,7 +11,9 @@ export const v3USDCCollAssets = {
     'ETH', 'COMP', 'WBTC', 'UNI', 'LINK',
   ],
   [NetworkNumber.Opt]: [],
-  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Arb]: [
+    'ARB', 'ETH', 'GMX', 'WBTC',
+  ],
   [NetworkNumber.Base]: [],
 } as const;
 
