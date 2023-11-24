@@ -1,13 +1,12 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import * as net from 'net';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
-import { AaveLoanInfoV2Contract } from '../contracts';
+import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
@@ -16,7 +15,6 @@ import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
-import configRaw from '../config/contracts';
 
 export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, mainnetWeb3: Web3) => {
   const ethPrice = await getEthPrice(mainnetWeb3);
@@ -97,11 +95,8 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
   const loanInfoContract = AaveLoanInfoV2Contract(web3, network, block);
 
   const marketAddress = market.providerAddress;
-  const protocolDataProviderContract = new web3.eth.Contract(
-    // @ts-ignore
-    configRaw[market.protocolData].abi,
-    market.protocolDataAddress,
-  );
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
 
   const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
