@@ -28,7 +28,6 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { MORPHO_AAVE_V3_ETH } from '../markets/aave';
-import configRaw from '../config/contracts';
 
 const morphoAaveMath = new MorphoAaveMath();
 const poolInterestRates = new PoolInterestRates();
@@ -358,12 +357,8 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   const selectedMarket = MORPHO_AAVE_V3_ETH(network);
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
-
-  const protocolDataProviderContract = new web3.eth.Contract(
-    // @ts-ignore
-    configRaw[selectedMarket.protocolData].abi,
-    selectedMarket.protocolDataAddress,
-  );
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, selectedMarket.protocolData, selectedMarket.protocolDataAddress);
 
   const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);

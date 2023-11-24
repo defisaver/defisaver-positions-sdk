@@ -11,13 +11,24 @@ export const v3USDCCollAssets = {
     'ETH', 'COMP', 'WBTC', 'UNI', 'LINK',
   ],
   [NetworkNumber.Opt]: [],
-  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Arb]: [
+    'ARB', 'ETH', 'GMX', 'WBTC',
+  ],
+  [NetworkNumber.Base]: [],
+} as const;
+
+export const v3USDCeCollAssets = {
+  [NetworkNumber.Eth]: [],
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [
+    'ARB', 'ETH', 'GMX', 'WBTC',
+  ],
   [NetworkNumber.Base]: [],
 } as const;
 
 export const v3ETHCollAssets = {
   [NetworkNumber.Eth]: [
-    'cbETH', 'wstETH',
+    'cbETH', 'wstETH', 'rETH',
   ],
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],

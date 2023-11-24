@@ -1,7 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import configRaw from '../config/contracts';
 import {
   AaveIncentiveDataProviderV3Contract,
   AaveV3ViewContract,
@@ -365,12 +364,8 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
 
   const market = AAVE_V3(network);
   const marketAddress = market.providerAddress;
-
-  const protocolDataProviderContract = new web3.eth.Contract(
-    // @ts-ignore
-    configRaw[market.protocolData].abi,
-    market.protocolDataAddress,
-  );
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
 
   const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);

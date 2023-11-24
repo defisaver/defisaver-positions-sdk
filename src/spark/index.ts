@@ -31,7 +31,6 @@ import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import { SPARK_V1 } from '../markets/spark';
-import configRaw from '../config/contracts';
 
 export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkAssetsData }, usedAssets: SparkUsedAssets) => {
   const { assetsData } = extractedState;
@@ -245,12 +244,8 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
 
   const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;
-
-  const protocolDataProviderContract = new web3.eth.Contract(
-    // @ts-ignore
-    configRaw[market.protocolData].abi,
-    market.protocolDataAddress,
-  );
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
 
   const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
