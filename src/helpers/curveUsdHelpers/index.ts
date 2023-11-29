@@ -29,5 +29,6 @@ export const getCrvUsdAggregatedData = ({
     borrowedUsd: _borrowedUsd,
     borrowed: _borrowed,
     safetyRatio: ratio,
+    borrowLimitUsd: '0',
   };
 };

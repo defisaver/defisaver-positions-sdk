@@ -4,7 +4,7 @@ import { NetworkNumber } from '../../types/common';
 
 export const CRVUSD_WSTETH_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
   chainIds: [1],
-  label: 'wstETH',
+  label: 'CurveUSD - wstETH',
   shortLabel: 'wstETH',
   value: CrvUSDVersions.crvUSDwstETH,
   collAsset: 'wstETH',
@@ -15,7 +15,7 @@ export const CRVUSD_WSTETH_MARKET = (networkId: NetworkNumber): CrvUSDMarketData
 });
 export const CRVUSD_ETH_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
   chainIds: [1],
-  label: 'ETH',
+  label: 'CurveUSD - ETH',
   shortLabel: 'ETH',
   value: CrvUSDVersions.crvUSDETH,
   collAsset: 'ETH',
@@ -26,7 +26,7 @@ export const CRVUSD_ETH_MARKET = (networkId: NetworkNumber): CrvUSDMarketData =>
 });
 export const CRVUSD_WBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
   chainIds: [1],
-  label: 'WBTC',
+  label: 'CurveUSD - WBTC',
   shortLabel: 'WBTC',
   value: CrvUSDVersions.crvUSDWBTC,
   collAsset: 'WBTC',
@@ -38,7 +38,7 @@ export const CRVUSD_WBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData =
 
 export const CRVUSD_TBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
   chainIds: [1],
-  label: 'tBTC',
+  label: 'CurveUSD - tBTC',
   shortLabel: 'tBTC',
   value: CrvUSDVersions.crvUSDtBTC,
   collAsset: 'tBTC',
@@ -50,7 +50,7 @@ export const CRVUSD_TBTC_MARKET = (networkId: NetworkNumber): CrvUSDMarketData =
 
 export const CRVUSD_SFRXETH_MARKET = (networkId: NetworkNumber): CrvUSDMarketData => ({
   chainIds: [1],
-  label: 'sfrxETH',
+  label: 'CurveUSD - sfrxETH',
   shortLabel: 'sfrxETH',
   value: CrvUSDVersions.crvUSDsfrxETH,
   collAsset: 'sfrxETH',

@@ -74,6 +74,7 @@ export interface CrvUSDAggregatedPositionData {
   borrowedUsd: string,
   borrowed: string,
   safetyRatio: string,
+  borrowLimitUsd: string,
 }
 
 export interface CrvUSDUsedAsset {
