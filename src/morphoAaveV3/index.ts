@@ -353,8 +353,12 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   const selectedMarket = MORPHO_AAVE_V3_ETH(network);
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, selectedMarket.protocolData, selectedMarket.protocolDataAddress);
 
-  const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a), network).address);
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
+  const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
   const multicallArray = [
     ...(_addresses.map((underlyingAddress: string) => ([
@@ -398,7 +402,8 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
   _addresses.forEach((underlyingAddr: string, i: number) => {
     const currentMulticallIndex = numberOfMultiCalls * i;
     const morphoMarketData = multicallResponse[currentMulticallIndex][0];
-    const { symbol, address: assetAddr } = getAssetInfoByAddress(wethToEthByAddress(underlyingAddr, network), network);
+    const assetAddr = wethToEthByAddress(underlyingAddr, network).toLowerCase();
+    const { symbol } = getAssetInfoByAddress(assetAddr, network);
 
     const suppliedP2P = morphoAaveMath.indexMul(
       multicallResponse[currentMulticallIndex + 1][0],
@@ -428,11 +433,11 @@ export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: Networ
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: supplied,
+        [addressMapping ? assetAddr : symbol]: supplied,
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? assetAddr.toLowerCase() : symbol]: borrowed,
+        [addressMapping ? assetAddr : symbol]: borrowed,
       },
     };
   });

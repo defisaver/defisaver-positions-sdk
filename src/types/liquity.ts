@@ -27,4 +27,5 @@ export interface LiquityTroveInfo {
   totalLUSD: string,
   minCollateralRatio: number,
   priceForRecovery: string,
+  debtInFront: string,
 }

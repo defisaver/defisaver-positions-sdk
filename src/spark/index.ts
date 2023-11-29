@@ -5,7 +5,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  ethToWeth, getAbiItem, isLayer2Network, wethToEth,
+  ethToWeth, getAbiItem, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import {
   calculateNetApy, getCbETHApr, getREthApr, getStETHApr,
@@ -15,6 +15,7 @@ import {
   SparkIncentiveDataProviderContract,
   SparkViewContract,
   getConfigContractAbi,
+  createContractWrapper,
 } from '../contracts';
 import {
   EModeCategoryDataMapping,
@@ -240,7 +241,13 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
 
   const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+  // @ts-ignore
+  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
+
+  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
+  const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
+
 
   // split addresses in half to avoid gas limit by multicall
   const middleAddressIndex = Math.floor(_addresses.length / 2);
@@ -263,16 +270,17 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
   const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
-    const asset = wethToEth(market.assets[i]);
+    const asset = wethToEth(symbols[i]);
+    const assetAddr = wethToEthByAddress(_addresses[i], network).toLowerCase();
 
     balances = {
       collateral: {
         ...balances.collateral,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: tokenInfo.balance.toString(),
+        [addressMapping ? assetAddr : asset]: tokenInfo.balance.toString(),
       },
       debt: {
         ...balances.debt,
-        [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
+        [addressMapping ? assetAddr : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
       },
     };
   });
