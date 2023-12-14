@@ -2,11 +2,12 @@ import Dec from 'decimal.js';
 import { CrvUSDAggregatedPositionData, CrvUSDMarketData, CrvUSDUsedAssets } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import { getAssetsTotal } from '../../moneymarket';
+import { mapRange } from '../../services/utils';
 
 export const getCrvUsdAggregatedData = ({
-  loanExists, usedAssets, network, selectedMarket, ...rest
+  loanExists, usedAssets, network, selectedMarket, numOfBands, ...rest
 }:{
-  loanExists: boolean, usedAssets: CrvUSDUsedAssets, network: NetworkNumber, selectedMarket: CrvUSDMarketData,
+  loanExists: boolean, usedAssets: CrvUSDUsedAssets, network: NetworkNumber, selectedMarket: CrvUSDMarketData, numOfBands: number | string
 }): CrvUSDAggregatedPositionData => {
   const _supplied = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ supplied }: { supplied: string }) => supplied); // this is wrong if we are in soft-liquidations
   const _borrowed = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowed }: { borrowed: string }) => borrowed);
@@ -20,6 +21,7 @@ export const getCrvUsdAggregatedData = ({
       .toString()
     : '0';
 
+  const minAllowedRatio = mapRange(numOfBands, 4, 50, 115, 140);
   // we don't have borrowLimitUsd here
 
   return {
@@ -29,5 +31,7 @@ export const getCrvUsdAggregatedData = ({
     borrowedUsd: _borrowedUsd,
     borrowed: _borrowed,
     safetyRatio: ratio,
+    borrowLimitUsd: '0',
+    minAllowedRatio,
   };
 };
