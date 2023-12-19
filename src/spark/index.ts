@@ -124,6 +124,7 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       price: new Dec(market.price.toString()).div(1e8).toString(), // is actually price in USD
       isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
       isFlashLoanEnabled: market.isFlashLoanEnabled,
+      aTokenAddress: market.aTokenAddress,
       eModeCategoryData: {
         label: market.label,
         liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
