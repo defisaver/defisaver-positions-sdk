@@ -533,9 +533,9 @@ module.exports = {
         "address": "0x4BbCf0e587853aAEdFC3E60f74C10E07D8deA701",
         "createdBlock": 18823384,
         "oldVersions": {
-          "18419795": "0x4df1281f9d2303be453e0085881702a4b1358692",
+          "17657253": "0xa81430a4eC71466264b9ee50403F8d63E8c72B95",
           "17683243": "0x512460CF2Bb80823C135F5DC04D2a1fF258FAA1e",
-          "17657253": "0xa81430a4eC71466264b9ee50403F8d63E8c72B95"
+          "18419795": "0x4df1281f9d2303be453e0085881702a4b1358692",
         }
       }
     }
