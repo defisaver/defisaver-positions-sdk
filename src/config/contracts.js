@@ -535,7 +535,10 @@ module.exports = {
         "oldVersions": {
           "17657253": "0xa81430a4eC71466264b9ee50403F8d63E8c72B95",
           "17683243": "0x512460CF2Bb80823C135F5DC04D2a1fF258FAA1e",
-          "18419795": "0x4df1281f9d2303be453e0085881702a4b1358692",
+          "18419795": {
+            "address": "0x4df1281f9d2303be453e0085881702a4b1358692",
+            "abi": [{"inputs":[{"internalType":"address","name":"market","type":"address"},{"internalType":"address","name":"user","type":"address"}],"name":"userData","outputs":[{"components":[{"internalType":"bool","name":"loanExists","type":"bool"},{"internalType":"uint256","name":"collateralPrice","type":"uint256"},{"internalType":"uint256","name":"marketCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"curveUsdCollateralAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"N","type":"uint256"},{"internalType":"uint256","name":"priceLow","type":"uint256"},{"internalType":"uint256","name":"priceHigh","type":"uint256"},{"internalType":"uint256","name":"liquidationDiscount","type":"uint256"},{"internalType":"int256","name":"health","type":"int256"},{"internalType":"int256[2]","name":"bandRange","type":"int256[2]"},{"internalType":"uint256[][2]","name":"usersBands","type":"uint256[][2]"}],"internalType":"struct CurveUsdView.UserData","name":"","type":"tuple"}],"stateMutability":"view","type":"function"}],
+          },
         }
       }
     }
