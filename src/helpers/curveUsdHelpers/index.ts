@@ -26,7 +26,7 @@ export const getCrvUsdAggregatedData = ({
   payload.minAllowedRatio = mapRange(numOfBands, 4, 50, 115, 140); // collateral ratio
   payload.collFactor = new Dec(1).div(payload.minAllowedRatio).mul(100).toString(); // collateral factor = 1 / collateral ratio
   // only take in consideration collAsset
-  payload.borrowLimitUsd = usedAssets[selectedMarket.collAsset].isSupplied
+  payload.borrowLimitUsd = usedAssets?.[selectedMarket.collAsset]?.isSupplied
     ? new Dec(usedAssets[selectedMarket.collAsset].suppliedUsd).mul(payload.collFactor).toString()
     : '0';
 
