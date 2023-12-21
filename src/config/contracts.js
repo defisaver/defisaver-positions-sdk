@@ -556,7 +556,10 @@ module.exports = {
           "12549073": "0xFCDd12C6317adbd033B93486d176f99441344A0f",
           "12567960": "0x0bE59e4804d957026a0E31B5d0BEA0fbaE262ba7",
           "12638758": "0x30EFEF27A6919d927E4c684E373198F671c686Dc",
-          "12746821": "0xD1913B977737c9505B8EcFEDB8121546096d3393"
+          "12746821": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_troveOwner","type":"address"}],"name":"getTroveInfo","outputs":[{"internalType":"uint256","name":"troveStatus","type":"uint256"},{"internalType":"uint256","name":"collAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"collPrice","type":"uint256"},{"internalType":"uint256","name":"TCRatio","type":"uint256"},{"internalType":"bool","name":"recoveryMode","type":"bool"}],"stateMutability":"view","type":"function"}],
+            "address": "0xD1913B977737c9505B8EcFEDB8121546096d3393"
+          },
         }
       }
     }
