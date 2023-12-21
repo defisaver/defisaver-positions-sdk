@@ -25,6 +25,7 @@ export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber
     }
 
     const oldVersions = networkData?.oldVersions || {};
+    // Versions are ordered from oldest to the newest
     for (const [createdBlock, addressOrObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
         if (typeof addressOrObject !== 'string') {
@@ -47,6 +48,7 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
     }
 
     const oldVersions = networkData?.oldVersions || {};
+    // Versions are ordered from oldest to the newest
     for (const [createdBlock, addressOrObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
         if (typeof addressOrObject !== 'string') {
