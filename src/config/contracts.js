@@ -510,8 +510,10 @@ module.exports = {
         "address": "0xB3B13838F6F57CE76b94f0744Ab0B045B780836e",
         "createdBlock": 17870357,
         "oldVersions": {
-          "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct SparkView.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
-          "17734126": "0x29d01EF37514912ab874D51fEc76c8f5d4d6712e"
+          "17734126": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct SparkView.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x29d01EF37514912ab874D51fEc76c8f5d4d6712e",
+          }
         }
       }
     }
