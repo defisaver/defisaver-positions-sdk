@@ -8,35 +8,86 @@ module.exports = {
         "address": "0x8095fFFC3cDdE58C4F537D39f9795A40a103e633",
         "createdBlock": 17870436,
         "oldVersions": {
-          "16483408": "0x9ECB0645b357fDD7B92789B91595160862Bd45d0",
-          "16690564": "0xf4B715BB788cC4071061bd67dC8B56681460A2fF"
+          "16483408": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x9ECB0645b357fDD7B92789B91595160862Bd45d0"
+          },
+          "16690564": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xf4B715BB788cC4071061bd67dC8B56681460A2fF"
+          }
         }
       },
       "10": {
         "address": "0xB6aF2C91E3eBB250615aaa33Bb955f7a7f21AD17",
         "createdBlock": 107950604,
         "oldVersions": {
-          "6723401": "0xc3A1859A5B0Ffe9ccF1f70f6F3AaB8e8EF8E6366",
-          "6926482": "0x2cB32d185a6211b07bCaaEE79D2FD8566e5711a9",
-          "8908372": "0x9629685De9Cc4adaC27F7F1733E046A9549D23F5",
-          "13445522": "0x2136949bb2Aa4056A7505Fa0895DD797d4C7c683",
-          "18286606": "0xf924f1E8cdB6AFC02d115fb9C6f80275B2E63cc9",
-          "23450199": "0xcd5380201fdc29Bc417C8aFB926Df60aacc0C0F4",
-          "76015698": "0xC20fA40Dd4f0D3f7431Eb4B6bc0614F36932F6Dc",
-          "106560861": "0x05f8Ba4Db7F7C65a61881297D86Aea3c83C26304"
+          "6723401": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xc3A1859A5B0Ffe9ccF1f70f6F3AaB8e8EF8E6366"
+          },
+          "6926482": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x2cB32d185a6211b07bCaaEE79D2FD8566e5711a9"
+          },
+          "8908372": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x9629685De9Cc4adaC27F7F1733E046A9549D23F5"
+          },
+          "13445522": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x2136949bb2Aa4056A7505Fa0895DD797d4C7c683"
+          },
+          "18286606": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xf924f1E8cdB6AFC02d115fb9C6f80275B2E63cc9"
+          },
+          "23450199": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xcd5380201fdc29Bc417C8aFB926Df60aacc0C0F4"
+          },
+          "76015698": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xC20fA40Dd4f0D3f7431Eb4B6bc0614F36932F6Dc"
+          },
+          "106560861": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x05f8Ba4Db7F7C65a61881297D86Aea3c83C26304"
+          },
         }
       },
       "42161": {
         "address": "0x2596e41933136E87C04b56f632CEcA2cdCCC2Cc6",
         "createdBlock": 119382184,
         "oldVersions": {
-          "12855842": "0xfCCB21cAd40ADeB097533E027f335b87c5d6CA21",
-          "16400389": "0x710f01037018Daad969B8FeFe69b4823Ef788bc6",
-          "18522551": "0x8C589b04a4C1f8F280f0133395451F6c2BE02450",
-          "19702666": "0x48D32ee631ebCe01f2cd8F99B94911D5A059E9dA",
-          "24918146": "0x8EF42fF40e9a9dD3E1ae81e7947D4E89e6d9f968",
-          "63484252": "0xA74a85407D5A940542915458616aC3cf3f404E3b",
-          "108724549": "0x401E66549DF354a21B3CC95e3F548Df6854d6DEE"
+          "12855842": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xfCCB21cAd40ADeB097533E027f335b87c5d6CA21"
+            },
+          "16400389": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x710f01037018Daad969B8FeFe69b4823Ef788bc6"
+            },
+          "18522551": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x8C589b04a4C1f8F280f0133395451F6c2BE02450"
+            },
+          "19702666": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x48D32ee631ebCe01f2cd8F99B94911D5A059E9dA"
+          },
+          "24918146": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x8EF42fF40e9a9dD3E1ae81e7947D4E89e6d9f968"
+            },
+          "63484252": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xA74a85407D5A940542915458616aC3cf3f404E3b"
+          },
+          "108724549": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveV3View.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x401E66549DF354a21B3CC95e3F548Df6854d6DEE"
+          },
         }
       },
       "8453": {
@@ -224,7 +275,10 @@ module.exports = {
         "address": "0xf522b1588688b9887623b9C666175684d284D363",
         "createdBlock": 15581957,
         "oldVersions": {
-          "15520449": "0x5e07E953dac1d7c19091c3b493579ba7283572a4"
+          "15520449": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"}],"name":"getLoanData","outputs":[{"components":[{"internalType":"address","name":"user","type":"address"},{"internalType":"address[]","name":"collAddr","type":"address[]"},{"internalType":"uint256[]","name":"collAmounts","type":"uint256[]"},{"internalType":"uint256","name":"depositAmount","type":"uint256"},{"internalType":"uint256","name":"depositValue","type":"uint256"},{"internalType":"uint256","name":"borrowAmount","type":"uint256"},{"internalType":"uint256","name":"borrowValue","type":"uint256"},{"internalType":"uint256","name":"collValue","type":"uint256"}],"internalType":"struct CompV3View.LoanData","name":"data","type":"tuple"}],"stateMutability":"view","type":"function"}],
+            "address": "0x5e07E953dac1d7c19091c3b493579ba7283572a4",
+          }
         }
       },
       "8453": {
@@ -285,14 +339,34 @@ module.exports = {
         "address": "0xEDf1087544a01596b70Da746F861B878F245B08f",
         "createdBlock": 15484097,
         "oldVersions": {
-          "11374778": "0xbC18860D3212e97D488cCDa2e37ff4ab8593D31d",
-          "11375123": "0xE66d12b13224C0cD490CaC2FF7746e258Bc8E60c",
-          "11375721": "0x682868AdbcFC9fECC3506B0A182E7E5D683F83BC",
-          "11377499": "0x7ce5B82B44fa3037A1dE3F01133bfC3b945635a1",
-          "11420152": "0x8F07659525e78fd73Bf86f8E97AEa41bd54dEb54",
-          "11637629": "0xd0C9ADDABbA270493A6503e74E62794435c8F1D3",
-          "12317383": "0x21F46013a19Ee99191a04C62C9c88B1F50E00bb2",
-          "15484097": "0xEDf1087544a01596b70Da746F861B878F245B08f"
+          "11374778": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xbC18860D3212e97D488cCDa2e37ff4ab8593D31d"
+          },
+          "11375123": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xE66d12b13224C0cD490CaC2FF7746e258Bc8E60c"
+          },
+          "11377499": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x7ce5B82B44fa3037A1dE3F01133bfC3b945635a1"
+          },
+          "11420152": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x8F07659525e78fd73Bf86f8E97AEa41bd54dEb54"
+          },
+          "11637629": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xd0C9ADDABbA270493A6503e74E62794435c8F1D3"
+          },
+          "12317383": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x21F46013a19Ee99191a04C62C9c88B1F50E00bb2"
+          },
+          "15484097": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct AaveLoanInfoV2.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xEDf1087544a01596b70Da746F861B878F245B08f"
+          },
         }
       },
     }
@@ -328,14 +402,38 @@ module.exports = {
         "address": "0xb25b98d3ca2dde635829870f852472bdd0b01b7e",
         "createdBlock": 17819315,
         "oldVersions": {
-          "10024350": "0x576501AbD98ce5472b03B7AB4F5980941DB7Ef37",
-          "10027063": "0x5F0679505134b1a146aD614bD2766A67df584D6b",
-          "10052917": "0xEc8cd4B51BCA40D6342d5b880D6Dc0AA4317D506",
-          "10411281": "0x781FDB68cE5EE5Cd7470bbFEec0F98c24eA18c93",
-          "10684038": "0xB1F40B5109bba75C27a302C4E5d2afc30d5D1F30",
-          "12503103": "0x8b7b8a0Ec22d4b2dBfB103947D8cD11e80E1CE22",
-          "13416222": "0x19c76C1EdECd4551Fa8e49D1f96598dCDFF7A65F",
-          "15442192": "0x4D81E17ce35A81b70b2E5eD4a0592e1C2C01219d"
+          "10024350": {
+            "abi": [],
+            "address": "0x576501AbD98ce5472b03B7AB4F5980941DB7Ef37",
+          },
+          "10027063": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x5F0679505134b1a146aD614bD2766A67df584D6b",
+          },
+          "10052917": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xEc8cd4B51BCA40D6342d5b880D6Dc0AA4317D506",
+          },
+          "10411281": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x781FDB68cE5EE5Cd7470bbFEec0F98c24eA18c93",
+          },
+          "10684038": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0xB1F40B5109bba75C27a302C4E5d2afc30d5D1F30",
+          },
+          "12503103": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x8b7b8a0Ec22d4b2dBfB103947D8cD11e80E1CE22",
+          },
+          "13416222": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x19c76C1EdECd4551Fa8e49D1f96598dCDFF7A65F",
+          },
+          "15442192": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_cTokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"internalType":"uint256[]","name":"balances","type":"uint256[]"},{"internalType":"uint256[]","name":"borrows","type":"uint256[]"}],"stateMutability":"view","type":"function"}],
+            "address": "0x4D81E17ce35A81b70b2E5eD4a0592e1C2C01219d",
+          },
         }
       }
     }
@@ -397,7 +495,10 @@ module.exports = {
         "address": "0x3667d1DB1f47F2c3a2f2411895d3476cc515b687",
         "createdBlock": 16741545,
         "oldVersions": {
-          "16586304": "0x6518a138Da4ecE07cC6263FB2e7c4Ae773360302"
+          "16586304": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_usr","type":"address"}],"name":"getUserInfo","outputs":[{"components":[{"internalType":"uint256","name":"userHealthFactor","type":"uint256"},{"internalType":"uint256","name":"morphoClaimed","type":"uint256"},{"components":[{"internalType":"address","name":"market","type":"address"},{"internalType":"address","name":"underlying","type":"address"},{"internalType":"uint256","name":"userSupplyRate","type":"uint256"},{"internalType":"uint256","name":"userBorrowRate","type":"uint256"},{"internalType":"uint256","name":"supplyBalanceInP2P","type":"uint256"},{"internalType":"uint256","name":"supplyBalanceOnPool","type":"uint256"},{"internalType":"uint256","name":"borrowBalanceInP2P","type":"uint256"},{"internalType":"uint256","name":"borrowBalanceOnPool","type":"uint256"}],"internalType":"struct MorphoAaveV2View.UserBalance[]","name":"userBalances","type":"tuple[]"}],"internalType":"struct MorphoAaveV2View.UserInfo","name":"userInfo","type":"tuple"}],"stateMutability":"view","type":"function"}],
+            "address": "0x6518a138Da4ecE07cC6263FB2e7c4Ae773360302",
+          }
         }
       }
     }
@@ -409,6 +510,7 @@ module.exports = {
         "address": "0xB3B13838F6F57CE76b94f0744Ab0B045B780836e",
         "createdBlock": 17870357,
         "oldVersions": {
+          "abi": [{"inputs":[{"internalType":"address","name":"_market","type":"address"},{"internalType":"address","name":"_user","type":"address"},{"internalType":"address[]","name":"_tokens","type":"address[]"}],"name":"getTokenBalances","outputs":[{"components":[{"internalType":"address","name":"token","type":"address"},{"internalType":"uint256","name":"balance","type":"uint256"},{"internalType":"uint256","name":"borrowsStable","type":"uint256"},{"internalType":"uint256","name":"borrowsVariable","type":"uint256"},{"internalType":"uint256","name":"stableBorrowRate","type":"uint256"},{"internalType":"bool","name":"enabledAsCollateral","type":"bool"}],"internalType":"struct SparkView.UserToken[]","name":"userTokens","type":"tuple[]"}],"stateMutability":"view","type":"function"}],
           "17734126": "0x29d01EF37514912ab874D51fEc76c8f5d4d6712e"
         }
       }
@@ -564,9 +666,18 @@ module.exports = {
         "address": "0xb760e60Dff6263E8Ab31B04ee5Cc010beA47e2Df",
         "createdBlock": 17017214,
         "oldVersions": {
-          "12549073": "0xFCDd12C6317adbd033B93486d176f99441344A0f",
-          "12567960": "0x0bE59e4804d957026a0E31B5d0BEA0fbaE262ba7",
-          "12638758": "0x30EFEF27A6919d927E4c684E373198F671c686Dc",
+          "12549073": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_troveOwner","type":"address"}],"name":"getTroveInfo","outputs":[{"internalType":"uint256","name":"troveStatus","type":"uint256"},{"internalType":"uint256","name":"collAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"collPrice","type":"uint256"},{"internalType":"uint256","name":"TCRatio","type":"uint256"},{"internalType":"bool","name":"recoveryMode","type":"bool"}],"stateMutability":"view","type":"function"}],
+            "address": "0xFCDd12C6317adbd033B93486d176f99441344A0f"
+          },
+          "12567960": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_troveOwner","type":"address"}],"name":"getTroveInfo","outputs":[{"internalType":"uint256","name":"troveStatus","type":"uint256"},{"internalType":"uint256","name":"collAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"collPrice","type":"uint256"},{"internalType":"uint256","name":"TCRatio","type":"uint256"},{"internalType":"bool","name":"recoveryMode","type":"bool"}],"stateMutability":"view","type":"function"}],
+            "address": "0x0bE59e4804d957026a0E31B5d0BEA0fbaE262ba7"
+          },
+          "12638758": {
+            "abi": [{"inputs":[{"internalType":"address","name":"_troveOwner","type":"address"}],"name":"getTroveInfo","outputs":[{"internalType":"uint256","name":"troveStatus","type":"uint256"},{"internalType":"uint256","name":"collAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"collPrice","type":"uint256"},{"internalType":"uint256","name":"TCRatio","type":"uint256"},{"internalType":"bool","name":"recoveryMode","type":"bool"}],"stateMutability":"view","type":"function"}],
+            "address": "0x30EFEF27A6919d927E4c684E373198F671c686Dc"
+          },
           "12746821": {
             "abi": [{"inputs":[{"internalType":"address","name":"_troveOwner","type":"address"}],"name":"getTroveInfo","outputs":[{"internalType":"uint256","name":"troveStatus","type":"uint256"},{"internalType":"uint256","name":"collAmount","type":"uint256"},{"internalType":"uint256","name":"debtAmount","type":"uint256"},{"internalType":"uint256","name":"collPrice","type":"uint256"},{"internalType":"uint256","name":"TCRatio","type":"uint256"},{"internalType":"bool","name":"recoveryMode","type":"bool"}],"stateMutability":"view","type":"function"}],
             "address": "0xD1913B977737c9505B8EcFEDB8121546096d3393"
@@ -614,7 +725,10 @@ module.exports = {
         "address": "0x922C795aE0be55Aaeb3FF51813B76AFc78e97C7c",
         "createdBlock": 14410792,
         "oldVersions": {
-          "14384301": "0x119a9B532FEe9Ce4a07F86f7053e635dD4E166F9"
+          "14384301": {
+            "abi": [{"inputs":[{"internalType":"contract IManager","name":"_manager","type":"address"},{"internalType":"uint256","name":"_cdpId","type":"uint256"},{"internalType":"bytes32","name":"_ilk","type":"bytes32"}],"name":"getCdpInfo","outputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}],
+            "address": "0x119a9B532FEe9Ce4a07F86f7053e635dD4E166F9"
+          }
         }
       }
     }
