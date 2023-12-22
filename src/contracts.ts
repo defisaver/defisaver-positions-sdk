@@ -13,7 +13,7 @@ declare type ContractConfig = {
 declare type Network = {
   createdBlock?: number,
   address: string,
-  oldVersions?: Record<string, EthAddress | { address: EthAddress, abi: any[] }>,
+  oldVersions?: Record<string, { address: EthAddress, abi: any[] }>,
 };
 const contractConfig:Record<ConfigKey, ContractConfig> = configRaw;
 export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): string => {
@@ -26,12 +26,9 @@ export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber
 
     const oldVersions = networkData?.oldVersions || {};
     // Versions are ordered from oldest to the newest
-    for (const [createdBlock, addressOrObject] of Object.entries(oldVersions).reverse()) {
+    for (const [createdBlock, oldVersionObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
-        if (typeof addressOrObject !== 'string') {
-          return addressOrObject.address;
-        }
-        return addressOrObject;
+        return oldVersionObject.address;
       }
     }
   }
@@ -49,12 +46,9 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
 
     const oldVersions = networkData?.oldVersions || {};
     // Versions are ordered from oldest to the newest
-    for (const [createdBlock, addressOrObject] of Object.entries(oldVersions).reverse()) {
+    for (const [createdBlock, oldVersionObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
-        if (typeof addressOrObject !== 'string') {
-          return addressOrObject.abi;
-        }
-        return latestAbi;
+        return oldVersionObject.abi;
       }
     }
   }
