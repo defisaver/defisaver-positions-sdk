@@ -5,7 +5,7 @@ export const MORPHO_BLUE_WSTETH_ETH = (networkId: NetworkNumber = NetworkNumber.
   chainIds: [1],
   label: 'Morpho Blue',
   shortLabel: 'wstETH/ETH',
-  value: MorphoBlueVersions.MorphoBlueWstEth,
+  value: MorphoBlueVersions.MorphoBlueWstEthEth,
   url: 'default',
   loanToken: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
   collateralToken: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
@@ -32,6 +32,6 @@ export const MORPHO_BLUE_RETH_ETH = (networkId: NetworkNumber = NetworkNumber.Et
 });
 
 export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
-  [MorphoBlueVersions.MorphoBlueWstEth]: MORPHO_BLUE_WSTETH_ETH(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthEth]: MORPHO_BLUE_WSTETH_ETH(networkId),
   [MorphoBlueVersions.MorphoBlueREthEth]: MORPHO_BLUE_RETH_ETH(networkId),
 }) as const;

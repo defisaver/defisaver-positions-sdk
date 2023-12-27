@@ -1,7 +1,7 @@
 import { MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
-  MorphoBlueWstEth = 'morphobluewstetheth',
+  MorphoBlueWstEthEth = 'morphobluewstetheth',
   MorphoBlueREthEth = 'morphoblueretheth',
 }
 

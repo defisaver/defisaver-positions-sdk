@@ -44,7 +44,7 @@ describe('Morpho Blue', () => {
   it('can fetch wstETH/ETH market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEth];
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth];
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
