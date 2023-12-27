@@ -2,10 +2,9 @@ import Dec from 'decimal.js';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMUsedAssets } from '../../types/common';
-import { MorphoBlueAggregatedPositionData, MorphoBlueMarketInfo } from '../../types';
+import { MorphoBlueAggregatedPositionData, MorphoBlueAssetsData } from '../../types';
 
-export const getMorphoBlueAggregatedPositionData = ({ usedAssets, marketInfo }: { usedAssets: MMUsedAssets, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
-  const { assetsData } = marketInfo;
+export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, lltv }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, lltv: string }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
@@ -17,7 +16,7 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, marketInfo }: 
     ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
       const suppliedUsdAmount = suppliedUsd;
 
-      return new Dec(suppliedUsdAmount).mul(marketInfo.lltv);
+      return new Dec(suppliedUsdAmount).mul(lltv);
     },
   );
   payload.liquidationLimitUsd = payload.borrowLimitUsd;

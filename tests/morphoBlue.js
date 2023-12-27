@@ -11,8 +11,8 @@ describe('Morpho Blue', () => {
     web3 = new Web3(process.env.RPC);
   });
 
-  const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.morphoBlue.getMorphoBlueMarketData(_web3, network, sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEth]);
+  const fetchMarketData = async (network, _web3, selectedMarket) => {
+    const marketData = await sdk.morphoBlue.getMorphoBlueMarketData(_web3, network, selectedMarket, web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData', 'oracle', 'utillization']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -25,12 +25,12 @@ describe('Morpho Blue', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData) => {
+  const fetchAccountData = async (network, web3, marketData, selectedMarket) => {
     const accountData = await sdk.morphoBlue.getMorphoBlueAccountData(
       web3,
       network,
       '0x199666178740df61638b5fcd188eae70180cc8e8',
-      sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEth],
+      selectedMarket,
       marketData,
     );
     // console.log(accountData);
@@ -41,11 +41,21 @@ describe('Morpho Blue', () => {
 
   // Ethereum
 
-  it('can fetch market and account data for Ethereum', async function () {
+  it('can fetch wstETH/ETH market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEth];
 
-    const marketData = await fetchMarketData(network, web3);
-    await fetchAccountData(network, web3, marketData);
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  it('can fetch rETH/ETH market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueREthEth];
+
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 });

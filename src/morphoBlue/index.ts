@@ -91,6 +91,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     price: new Dec(loanTokenPrice).div(1e8).toString(),
     supplyRate: new Dec(supplyRate).div(WAD).mul(100).toString(),
     borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
+    totalSupply: new Dec(marketInfo.totalSupplyAssets).div(WAD).toString(),
+    totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(WAD).toString(),
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
@@ -108,8 +110,6 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
 
   return {
     id: marketInfo.id,
-    totalSupplyAssets: new Dec(marketInfo.totalSupplyAssets).div(WAD).toString(),
-    totalBorrowAssets: new Dec(marketInfo.totalBorrowAssets).div(WAD).toString(),
     fee: new Dec(marketInfo.fee).div(WAD).toString(),
     loanToken: wethToEth(loanTokenInfo.symbol),
     collateralToken: wethToEth(collateralTokenInfo.symbol),
@@ -161,6 +161,6 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
 
   return {
     usedAssets,
-    ...getMorphoBlueAggregatedPositionData({ usedAssets, marketInfo }),
+    ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, lltv: marketInfo.lltv }),
   };
 }

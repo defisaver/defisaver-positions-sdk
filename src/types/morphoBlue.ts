@@ -1,7 +1,8 @@
 import { MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
-  MorphoBlueWstEth = 'morphobluewsteth',
+  MorphoBlueWstEth = 'morphobluewstetheth',
+  MorphoBlueREthEth = 'morphoblueretheth',
 }
 
 export interface MorphoBlueMarketData {
@@ -27,14 +28,14 @@ export interface MorphoBlueAssetData {
   borrowRate: string,
   incentiveSupplyApy?: string,
   incentiveSupplyToken?: string,
+  totalSupply?: string,
+  totalBorrow?: string,
 }
 
 export type MorphoBlueAssetsData = { [key: string]: MorphoBlueAssetData };
 
 export interface MorphoBlueMarketInfo {
   id: string,
-  totalSupplyAssets: string,
-  totalBorrowAssets: string,
   fee: string,
   loanToken: string,
   collateralToken: string,
