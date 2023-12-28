@@ -7,6 +7,12 @@ jobs:
   update-markets:
     runs-on: ubuntu-latest
 
+    env:
+      RPC: ${{ secrets.RPC }}
+      RPCOPT: ${{ secrets.RPCOPT }}
+      RPCBASE: ${{ secrets.RPCBASE }}
+      RPCARB: ${{ secrets.RPCARB }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v3
