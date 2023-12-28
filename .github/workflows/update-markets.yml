@@ -1,0 +1,69 @@
+name: Update markets
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 12 * * *
+jobs:
+  update-markets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+        with:
+          ref: 'main'
+
+      - name: Set node version
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+
+      - name: Install dependencies
+        working-directory: ./scripts/updateMarkets
+        run: npm install
+
+      - name: Run script
+        working-directory: ./scripts/updateMarkets
+        shell: bash
+        run: |
+          node index.js > DATA.json
+          echo SCRIPT_HAS_NEW_SYMBOLS=$(jq '.hasNewSymbols' DATA.json) >> $GITHUB_ENV
+          echo SCRIPT_HAS_MISSING_TOKENS=$(jq '.hasMissingTokens' DATA.json) >> $GITHUB_ENV
+          echo SCRIPT_DESCRIPTION=$(jq '.description' DATA.json) >> $GITHUB_ENV
+          rm DATA.json
+
+      - name: Log script result
+        working-directory: ./scripts/updateMarkets
+        if: env.SCRIPT_HAS_NEW_SYMBOLS == 'true' || env.SCRIPT_HAS_MISSING_TOKENS == 'true'
+        shell: bash
+        run: echo -e $SCRIPT_DESCRIPTION
+
+      - name: Store missing tokens
+        working-directory: ./scripts/updateMarkets
+        if: env.SCRIPT_HAS_NEW_SYMBOLS != 'true' && env.SCRIPT_HAS_MISSING_TOKENS == 'true'
+        shell: bash
+        run: echo -e $SCRIPT_DESCRIPTION > missing-tokens.txt
+
+      - name: Create pull request
+        id: pull_request
+        if: env.SCRIPT_HAS_NEW_SYMBOLS == 'true' || env.SCRIPT_HAS_MISSING_TOKENS == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          title: 'Update markets'
+          branch: 'update-markets/patch'
+          delete-branch: true
+
+      - name: Write comment
+        if: env.SCRIPT_HAS_NEW_SYMBOLS == 'true' || env.SCRIPT_HAS_MISSING_TOKENS == 'true'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            let data = `${{ env.SCRIPT_DESCRIPTION }}`;
+            data = data.replace(/"/g, '');
+            
+            github.rest.issues.createComment({
+              issue_number: ${{ steps.pull_request.outputs.pull-request-number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: data
+            })
