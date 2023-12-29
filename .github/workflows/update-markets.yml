@@ -1,6 +1,8 @@
 name: Update markets
 on:
   workflow_dispatch:
+  pull_request:
+    types: [ opened, synchronize ]
   schedule:
     - cron: 0 12 * * *
 jobs:
@@ -17,7 +19,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
         with:
-          ref: 'main'
+          ref: 'improvement/update-markets-gh-action'
 
       - name: Set node version
         uses: actions/setup-node@v3
