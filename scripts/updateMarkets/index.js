@@ -164,6 +164,8 @@ async function setSymbolsToFile(fileName, variableName, assets, missingAddresses
   const constantsDirectory = path.resolve(process.cwd(), '../../../src/markets');
   const filePath = `${constantsDirectory}/${fileName}`;
 
+  console.log('filePath', filePath, process.cwd(), constantsDirectory, fileName);
+
   const mod = await loadFile(filePath);
 
   let currValues = Object.values(mod.exports[variableName]);
