@@ -1,4 +1,3 @@
-const fs = require('fs');
 const path = require('path');
 const Web3 = require('web3');
 const { loadFile, writeFile, detectCodeFormat } = require('magicast');
@@ -19,7 +18,7 @@ const {
 } = require('../../src/config/contracts');
 
 const getWeb3 = (chainId) => new Web3(({
-  1: process.env.RPC, // TODO see how to get vars from GH action
+  1: process.env.RPC,
   10: process.env.RPCOPT,
   8453: process.env.RPCBASE,
   42161: process.env.RPCARB,
@@ -113,7 +112,7 @@ const morphoAave = {
 const compound = {
   V3: {
     hasMultipleMarkets: true,
-    fileName: 'compound/marketAssets.ts',
+    fileName: 'compound/marketsAssets.ts',
     variableName: {
       1: {
         [cETHv3.networks[1].address.toLowerCase()]: 'v3ETHCollAssetsEth',
@@ -161,10 +160,8 @@ const spark = {
 };
 
 async function setSymbolsToFile(fileName, variableName, assets, missingAddresses) {
-  const constantsDirectory = path.resolve(process.cwd(), '../../../src/markets');
+  const constantsDirectory = path.resolve(process.cwd(), '../../src/markets');
   const filePath = `${constantsDirectory}/${fileName}`;
-
-  console.log('filePath', filePath, process.cwd(), constantsDirectory, fileName);
 
   const mod = await loadFile(filePath);
 
