@@ -161,7 +161,7 @@ const spark = {
 };
 
 async function setSymbolsToFile(fileName, variableName, assets, missingAddresses) {
-  const constantsDirectory = path.resolve(process.cwd(), '../../src/markets');
+  const constantsDirectory = path.resolve(process.cwd(), '../../../src/markets');
   const filePath = `${constantsDirectory}/${fileName}`;
 
   const mod = await loadFile(filePath);
