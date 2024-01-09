@@ -1,10 +1,11 @@
 import { NetworkNumber } from '../../types/common';
 
+export const sparkAssetsDefaultMarketEth = ['DAI', 'sDAI', 'USDC', 'ETH', 'wstETH', 'WBTC', 'GNO', 'rETH', 'USDT'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const sparkAssetsDefaultMarket = {
-  [NetworkNumber.Eth]: [
-    'ETH', 'USDC', 'DAI', 'GNO', 'rETH', 'sDAI', 'wstETH', 'WBTC',
-  ],
+  [NetworkNumber.Eth]: sparkAssetsDefaultMarketEth,
   [NetworkNumber.Opt]: [],
-  [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Arb]: [],
 } as const;

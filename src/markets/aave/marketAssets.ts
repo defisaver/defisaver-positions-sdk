@@ -1,33 +1,25 @@
-// TODO generate this file automatically
-
 import { NetworkNumber } from '../../types/common';
 
-export const aaveV2AssetsDefaultMarket = [
-  'AAVE', 'BAL', 'BAT', 'BUSD', 'CRV', 'DAI', 'ENJ', 'ETH', 'GUSD', 'LINK', 'MANA', 'MKR',
-  'REN', 'SNX', 'SUSD', 'TUSD', 'UNI', 'USDC', 'USDT', 'WBTC', 'YFI', 'xSUSHI', 'ZRX', 'RAI',
-  'AMPL', 'DPI', 'USDP', 'RENFIL', 'FRAX', 'FEI', 'stETH', 'ENS', 'UST', 'CVX', '1INCH', 'LUSD',
-] as const;
-
-export const morphoAaveV2AssetDefaultMarket = [
-  'ETH', 'stETH', 'USDC', 'WBTC', 'USDT', 'DAI', 'CRV',
-];
+export const aaveV2AssetsDefaultMarket = ['USDT', 'WBTC', 'ETH', 'YFI', 'ZRX', 'UNI', 'AAVE', 'BAT', 'BUSD', 'DAI', 'ENJ', 'KNCL', 'LINK', 'MANA', 'MKR', 'REN', 'SNX', 'SUSD', 'TUSD', 'USDC', 'CRV', 'GUSD', 'BAL', 'xSUSHI', 'RENFIL', 'RAI', 'AMPL', 'USDP', 'DPI', 'FRAX', 'FEI', 'stETH', 'ENS', 'UST', 'CVX', '1INCH', 'LUSD'];
+export const morphoAaveV2AssetDefaultMarket = ['DAI', 'ETH', 'USDC', 'USDT', 'WBTC', 'stETH', 'CRV'];
 
 export const morphoAaveV3AssetEthMarket = [
-  'ETH', 'wstETH', 'DAI', 'USDC', 'WBTC', 'rETH', 'cbETH',
+  'ETH', 'wstETH', 'DAI', 'USDC', 'WBTC', 'rETH', 'cbETH', 'sDAI', 'USDT',
 ];
 
+export const aaveV3AssetsDefaultMarketEth = ['ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD'];
+export const aaveV3AssetsDefaultMarketOpt = [
+  'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
+];
+export const aaveV3AssetsDefaultMarketArb = [
+  'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB',
+];
+export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
-  [NetworkNumber.Eth]: [
-    'WBTC', 'ETH', 'wstETH', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'UNI', 'MKR', 'SNX', 'BAL',
-    'LDO', 'CRV', 'ENS', '1INCH', 'GHO', 'FRAX', 'RPL', 'sDAI',
-  ],
-  [NetworkNumber.Opt]: [
-    'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH',
-  ],
-  [NetworkNumber.Arb]: [
-    'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB',
-  ],
-  [NetworkNumber.Base]: [
-    'ETH', 'USDbC', 'cbETH', 'wstETH',
-  ],
+  [NetworkNumber.Eth]: aaveV3AssetsDefaultMarketEth,
+  [NetworkNumber.Opt]: aaveV3AssetsDefaultMarketOpt,
+  [NetworkNumber.Arb]: aaveV3AssetsDefaultMarketArb,
+  [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
 } as const;
