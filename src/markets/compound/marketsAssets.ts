@@ -6,42 +6,44 @@ export const compoundV2CollateralAssets = [
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));
 
+export const v3USDCCollAssetsEth = ['ETH', 'COMP', 'WBTC', 'UNI', 'LINK'];
+export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3USDCCollAssets = {
-  [NetworkNumber.Eth]: [
-    'ETH', 'COMP', 'WBTC', 'UNI', 'LINK',
-  ],
+  [NetworkNumber.Eth]: v3USDCCollAssetsEth,
   [NetworkNumber.Opt]: [],
-  [NetworkNumber.Arb]: [
-    'ARB', 'ETH', 'GMX', 'WBTC',
-  ],
+  [NetworkNumber.Arb]: v3USDCCollAssetsArb,
   [NetworkNumber.Base]: [],
 } as const;
 
+export const v3USDCeCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3USDCeCollAssets = {
   [NetworkNumber.Eth]: [],
   [NetworkNumber.Opt]: [],
-  [NetworkNumber.Arb]: [
-    'ARB', 'ETH', 'GMX', 'WBTC',
-  ],
+  [NetworkNumber.Arb]: v3USDCeCollAssetsArb,
   [NetworkNumber.Base]: [],
 } as const;
 
+export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH'];
+export const v3ETHCollAssetsBase = ['cbETH'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3ETHCollAssets = {
-  [NetworkNumber.Eth]: [
-    'cbETH', 'wstETH', 'rETH',
-  ],
+  [NetworkNumber.Eth]: v3ETHCollAssetsEth,
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
-  [NetworkNumber.Base]: [
-    'cbETH',
-  ],
+  [NetworkNumber.Base]: v3ETHCollAssetsBase,
 } as const;
 
+export const v3USDbCCollAssetsBase = ['ETH', 'cbETH'];
+
+// @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3USDbCCollAssets = {
   [NetworkNumber.Eth]: [],
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
-  [NetworkNumber.Base]: [
-    'ETH', 'cbETH',
-  ],
+  [NetworkNumber.Base]: v3USDbCCollAssetsBase,
 };

@@ -4,3 +4,7 @@ node_modules/
 src/types/contracts/generated/
 esm/
 cjs/
+
+scripts/updateMarkets/yarn.lock
+scripts/updateMarkets/package-lock.json
+scripts/updateMarkets/DATA.json
