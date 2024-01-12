@@ -216,7 +216,7 @@ export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, ad
     usedAssets,
     status,
     ...getCrvUsdAggregatedData({
-      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket,
+      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N,
     }),
     userBands,
   };

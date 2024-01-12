@@ -33,3 +33,16 @@ export const bytesToString = (hex: string) => Buffer.from(hex.replace(/^0x/, '')
   .toString()
   // eslint-disable-next-line no-control-regex
   .replace(/\x00/g, '');
+
+/**
+ * Map an input value from one range (minInput, maxInput) to a value in another range (minOutput, maxOutput)
+ */
+export const mapRange = (input: number | string, minInput: number | string, maxInput: number | string, minOutput:number | string, maxOutput: number | string) => {
+  // slope = 1.0 * (output_end - output_start) / (input_end - input_start)
+  const inputDiff = new Dec(maxInput).minus(minInput);
+  const outputDiff = new Dec(maxOutput).minus(minOutput);
+  const slope = new Dec(outputDiff).div(inputDiff);
+
+  // output = output_start + slope * (input - input_start)
+  return new Dec(minOutput).plus(new Dec(slope).mul(new Dec(input).minus(minInput))).toDP(2).toNumber();
+};
