@@ -214,7 +214,7 @@ export const getCompoundV3AccountData = async (
   if (loanData.depositAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isSupplied = true;
     usedAssets[baseAssetSymbol].supplied = assetAmountInEth(loanData.depositAmount, baseAssetInfo.symbol);
-    usedAssets[baseAssetSymbol].suppliedUsd = assetAmountInEth(loanData.depositValue, baseAssetInfo.symbol);
+    usedAssets[baseAssetSymbol].suppliedUsd = new Dec(assetAmountInEth(loanData.depositValue, baseAssetInfo.symbol)).mul(assetsData[baseAssetSymbol].price).toString();
   }
   if (loanData.borrowAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isBorrowed = true;
