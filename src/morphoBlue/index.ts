@@ -83,7 +83,12 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate, marketInfo.totalBorrowShares);
   const utillization = new Dec(marketInfo.totalBorrowAssets).div(marketInfo.totalSupplyAssets).mul(100).toString();
 
-  const oracleRate = new Dec(marketInfo.oracle).div(1e36).toString();
+  const oracleScaleFactor = new Dec(36).add(loanTokenInfo.decimals).sub(collateralTokenInfo.decimals).toString();
+  const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
+
+  const scale = new Dec(10).pow(loanTokenInfo.decimals).toString();
+
+  const oracleRate = new Dec(marketInfo.oracle).div(oracleScale).toString();
   const assetsData: MorphoBlueAssetsData = {};
   assetsData[wethToEth(loanTokenInfo.symbol)] = {
     symbol: wethToEth(loanTokenInfo.symbol),
@@ -91,8 +96,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     price: new Dec(loanTokenPrice).div(1e8).toString(),
     supplyRate: new Dec(supplyRate).div(WAD).mul(100).toString(),
     borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
-    totalSupply: new Dec(marketInfo.totalSupplyAssets).div(WAD).toString(),
-    totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(WAD).toString(),
+    totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
+    totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
