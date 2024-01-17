@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { MMUsedAssets, NetworkNumber } from '../types/common';
 import {
   MorphoBlueViewContract,
@@ -138,8 +138,8 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
   const usedAssets: MMUsedAssets = {};
 
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
-  const loanTokenSupplied = new Dec(loanInfo.suppliedInAssets).div(WAD).toString();
-  const loanTokenBorrowed = new Dec(loanInfo.borrowedInAssets).div(WAD).toString();
+  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets, marketInfo.loanToken);
+  const loanTokenBorrowed = assetAmountInEth(loanInfo.borrowedInAssets, marketInfo.loanToken);
   usedAssets[marketInfo.loanToken] = {
     symbol: loanTokenInfo.symbol,
     supplied: loanTokenSupplied,
@@ -152,7 +152,7 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
   };
 
   const collateralTokenInfo = marketInfo.assetsData[marketInfo.collateralToken];
-  const collateralTokenSupplied = new Dec(loanInfo.collateral).div(WAD).toString();
+  const collateralTokenSupplied = assetAmountInEth(loanInfo.collateral, marketInfo.collateralToken);
   usedAssets[marketInfo.collateralToken] = {
     symbol: collateralTokenInfo.symbol,
     supplied: collateralTokenSupplied,
@@ -166,6 +166,6 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
 
   return {
     usedAssets,
-    ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, lltv: marketInfo.lltv }),
+    ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
   };
 }

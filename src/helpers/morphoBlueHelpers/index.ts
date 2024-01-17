@@ -2,13 +2,17 @@ import Dec from 'decimal.js';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMUsedAssets } from '../../types/common';
-import { MorphoBlueAggregatedPositionData, MorphoBlueAssetsData } from '../../types';
+import { MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketInfo } from '../../types';
 
-export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, lltv }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, lltv: string }): MorphoBlueAggregatedPositionData => {
+export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
+
+  const {
+    lltv, oracle, collateralToken, loanToken,
+  } = marketInfo;
 
   payload.borrowLimitUsd = getAssetsTotal(
     usedAssets,
@@ -23,12 +27,17 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ll
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
 
+  payload.leftToBorrow = new Dec(usedAssets[collateralToken].supplied).mul(oracle).mul(lltv).sub(usedAssets[loanToken].borrowed)
+    .toString();
+
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData as any);
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
 
   payload.ltv = new Dec(payload.borrowedUsd).div(payload.suppliedCollateralUsd).toString();
+  payload.ltv = new Dec(usedAssets[loanToken].borrowed).div(oracle).div(usedAssets[collateralToken].supplied).toString();
+  payload.ratio = new Dec(usedAssets[collateralToken].supplied).mul(oracle).div(usedAssets[loanToken].borrowed).toString();
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
