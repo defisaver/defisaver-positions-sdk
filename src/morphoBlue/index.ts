@@ -98,6 +98,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
     totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
     totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
+    canBeSupplied: true,
+    canBeBorrowed: true,
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
@@ -106,6 +108,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     price: new Dec(loanTokenPrice).div(1e8).mul(oracleRate).toString(),
     supplyRate: '0',
     borrowRate: '0',
+    canBeSupplied: true,
+    canBeBorrowed: false,
   };
 
   if (['wstETH', 'cbETH', 'rETH'].includes(collateralTokenInfo.symbol)) {

@@ -30,6 +30,8 @@ export interface MorphoBlueAssetData {
   incentiveSupplyToken?: string,
   totalSupply?: string,
   totalBorrow?: string,
+  canBeSupplied?: boolean,
+  canBeBorrowed?: boolean,
 }
 
 export type MorphoBlueAssetsData = { [key: string]: MorphoBlueAssetData };
