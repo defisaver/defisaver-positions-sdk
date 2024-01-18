@@ -125,6 +125,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     utillization,
     oracle: oracleRate,
     lltv: new Dec(lltv).toString(),
+    minRatio: new Dec(1).div(lltv).mul(100).toString(),
     assetsData,
   };
 }

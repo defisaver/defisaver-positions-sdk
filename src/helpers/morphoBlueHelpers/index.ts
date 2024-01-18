@@ -37,7 +37,8 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
 
   payload.ltv = new Dec(payload.borrowedUsd).div(payload.suppliedCollateralUsd).toString();
   payload.ltv = new Dec(usedAssets[loanToken].borrowed).div(oracle).div(usedAssets[collateralToken].supplied).toString();
-  payload.ratio = new Dec(usedAssets[collateralToken].supplied).mul(oracle).div(usedAssets[loanToken].borrowed).toString();
+  payload.ratio = new Dec(usedAssets[collateralToken].supplied).mul(oracle).div(usedAssets[loanToken].borrowed).mul(100)
+    .toString();
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;

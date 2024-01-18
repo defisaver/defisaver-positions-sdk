@@ -44,6 +44,7 @@ export interface MorphoBlueMarketInfo {
   utillization: string,
   oracle: string,
   lltv: string,
+  minRatio: string,
   assetsData: MorphoBlueAssetsData,
 }
 
