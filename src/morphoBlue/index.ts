@@ -170,6 +170,8 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
   };
 
   return {
+    supplyShares: loanInfo.supplyShares,
+    borrowShares: loanInfo.borrowShares,
     usedAssets,
     ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
   };

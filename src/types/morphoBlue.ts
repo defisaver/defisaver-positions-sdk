@@ -85,4 +85,6 @@ export interface MorphoBluePositionData {
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
+  supplyShares: string,
+  borrowShares: string,
 }
