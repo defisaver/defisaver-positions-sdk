@@ -27,7 +27,7 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
 
-  payload.leftToBorrow = new Dec(usedAssets[collateralToken].supplied).mul(oracle).mul(lltv).sub(usedAssets[loanToken].borrowed)
+  payload.leftToBorrow = new Dec(usedAssets[collateralToken]?.supplied || 0).mul(oracle).mul(lltv).sub(usedAssets[loanToken]?.borrowed || 0)
     .toString();
 
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData as any);
@@ -36,8 +36,8 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   payload.totalInterestUsd = totalInterestUsd;
 
   payload.ltv = new Dec(payload.borrowedUsd).div(payload.suppliedCollateralUsd).toString();
-  payload.ltv = new Dec(usedAssets[loanToken].borrowed).div(oracle).div(usedAssets[collateralToken].supplied).toString();
-  payload.ratio = new Dec(usedAssets[collateralToken].supplied).mul(oracle).div(usedAssets[loanToken].borrowed).mul(100)
+  payload.ltv = new Dec(usedAssets[loanToken]?.borrowed || 0).div(oracle).div(usedAssets[collateralToken]?.supplied || 1).toString(); // default to 1 because can't div 0
+  payload.ratio = new Dec(usedAssets[collateralToken]?.supplied || 0).mul(oracle).div(usedAssets[loanToken]?.borrowed || 1).mul(100)
     .toString();
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
