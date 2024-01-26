@@ -124,7 +124,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   return CrvUSDStatus.Nonexistant;
 };
 
-export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, crvUsdVersion: CrvUSDVersions): Promise<PositionBalances> => {
+export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -135,7 +135,7 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
   }
 
   const contract = CrvUSDViewContract(web3, network, block);
-  const selectedMarket = CrvUsdMarkets(network)[crvUsdVersion];
+  const selectedMarket = Object.values(CrvUsdMarkets(network)).find(i => i.controllerAddress.toLowerCase() === controllerAddress.toLowerCase()) as CrvUSDMarketData;
 
   const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
 
