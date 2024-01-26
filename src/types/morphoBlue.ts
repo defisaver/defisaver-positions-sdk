@@ -3,6 +3,9 @@ import { MMUsedAssets, NetworkNumber } from './common';
 export enum MorphoBlueVersions {
   MorphoBlueWstEthEth = 'morphobluewstetheth',
   MorphoBlueWstEthUSDC = 'morphobluewstethusdc',
+  MorphoBlueSDAIUSDC = 'morphobluesdaiusdc',
+  MorphoBlueWBTCUSDC = 'morphobluewbtcusdc',
+  MorphoBlueEthUSDC = 'morphoblueethusdc',
 }
 
 export interface MorphoBlueMarketData {
