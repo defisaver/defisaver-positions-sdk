@@ -1,13 +1,15 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo, ilkToAsset } from '@defisaver/tokens';
-import { Blockish, NetworkNumber, PositionBalances } from '../types/common';
+import {
+  Blockish, EthAddress, NetworkNumber, PositionBalances,
+} from '../types/common';
 import { McdViewContract } from '../contracts';
 import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
 import { wethToEth } from '../services/utils';
 
-export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string): Promise<PositionBalances> => {
+export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, managerAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -18,18 +20,31 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
   }
 
   const viewContract = McdViewContract(web3, network, block);
-  // @ts-ignore
-  const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call({}, block);
-  const ilkInfo = await makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network, block);
 
-  const asset = wethToEth(ilkToAsset(cdpInfo.ilk));
+  let ilk;
+
+  const needsIlk = new Dec(block).lt(14410792) && new Dec(block).gte(14384301);
+
+  if (needsIlk) {
+    ilk = (await viewContract.methods.getUrnAndIlk(managerAddress, cdpId).call({}, block)).ilk;
+  }
+
+  // @ts-ignore
+  const cdpInfo = await viewContract.methods.getCdpInfo(...(needsIlk ? [managerAddress, cdpId, ilk] : [cdpId])).call({}, block);
+  const ilkInfo = await makerHelpers.getCollateralInfo(needsIlk ? ilk : cdpInfo.ilk, web3, network, block);
+
+
+  const collateral = needsIlk ? cdpInfo[1] : cdpInfo.collateral;
+  const debt = needsIlk ? cdpInfo[0] : cdpInfo.debt;
+
+  const asset = wethToEth(ilkToAsset(needsIlk ? ilk : cdpInfo.ilk));
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: asset === 'WBTC' ? new Dec(cdpInfo.collateral).div(1e10).floor().toString() : cdpInfo.collateral,
+      [addressMapping ? getAssetInfo(asset, network).address.toLowerCase() : asset]: asset === 'WBTC' ? new Dec(collateral).div(1e10).floor().toString() : collateral,
     },
     debt: {
-      [addressMapping ? getAssetInfo('DAI', network).address.toLowerCase() : 'DAI']: new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor()
+      [addressMapping ? getAssetInfo('DAI', network).address.toLowerCase() : 'DAI']: new Dec(debt).times(ilkInfo.currentRate).div(1e27).floor()
         .toString(),
     },
   };
