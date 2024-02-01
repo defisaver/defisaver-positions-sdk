@@ -12,6 +12,7 @@ export const MORPHO_BLUE_WSTETH_ETH = (networkId: NetworkNumber = NetworkNumber.
   oracle: '0x2a01eb9496094da03c4e364def50f5ad1280ad72',
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.945,
+  marketId: '0xc54d7acf14de29e0e5527cabd7a576506870346a78a11a6762e2cca66322ec41',
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
@@ -27,6 +28,7 @@ export const MORPHO_BLUE_WSTETH_USDC = (networkId: NetworkNumber = NetworkNumber
   oracle: '0x48F7E36EB6B826B2dF4B2E630B62Cd25e89E40e2',
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.86,
+  marketId: '0xb323495f7e4148be5643a4ea4a8221eef163e4bccfdedc2a6f4696baacbc86cc',
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
@@ -42,6 +44,7 @@ export const MORPHO_BLUE_SDAI_USDC = (networkId: NetworkNumber = NetworkNumber.E
   oracle: '0x6CAFE228eC0B0bC2D076577d56D35Fe704318f6d',
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.965,
+  marketId: '0x06f2842602373d247c4934f7656e513955ccc4c377f0febc0d9ca2c3bcc191b1',
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
@@ -57,6 +60,7 @@ export const MORPHO_BLUE_WBTC_USDC = (networkId: NetworkNumber = NetworkNumber.E
   oracle: '0xDddd770BADd886dF3864029e4B377B5F6a2B6b83',
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.86,
+  marketId: '0x3a85e619751152991742810df6ec69ce473daef99e28a64ab2340d7b7ccfee49',
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
@@ -72,6 +76,7 @@ export const MORPHO_BLUE_ETH_USDC = (networkId: NetworkNumber = NetworkNumber.Et
   oracle: '0xdC6fd5831277c693b1054e19E94047cB37c77615',
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.915,
+  marketId: '0xf9acc677910cc17f650416a22e2a14d5da7ccb9626db18f1bf94efe64f92b372',
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });

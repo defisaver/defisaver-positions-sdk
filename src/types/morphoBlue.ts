@@ -19,6 +19,7 @@ export interface MorphoBlueMarketData {
   oracle: string,
   irm: string,
   lltv: number | string,
+  marketId: string,
   // icon: Function,
   protocolName: string,
 }
