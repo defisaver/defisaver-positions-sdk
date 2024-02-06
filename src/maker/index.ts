@@ -9,11 +9,12 @@ import { makerHelpers } from '../helpers';
 import { CdpData } from '../types';
 import { wethToEth } from '../services/utils';
 
-export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, managerAddress: EthAddress): Promise<PositionBalances> => {
+export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
   };
+  const managerAddress = _managerAddress || '0x5ef30b9986345249bc32d8928B7ee64DE9435E39'; // Default CDP Manager (This is used only to differentiate BProtocol CDPs)
 
   if (!cdpId) {
     return balances;
