@@ -80,6 +80,36 @@ export const MORPHO_BLUE_ETH_USDC = (networkId: NetworkNumber = NetworkNumber.Et
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
+export const MORPHO_BLUE_WBTC_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho Blue',
+  shortLabel: 'WBTC/USDT',
+  value: MorphoBlueVersions.MorphoBlueWBTCUSDT,
+  url: 'wbtcusdt',
+  loanToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  collateralToken: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599',
+  oracle: '0x008bF4B1cDA0cc9f0e882E0697f036667652E1ef',
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.86,
+  marketId: '0xa921ef34e2fc7a27ccc50ae7e4b154e16c9799d3387076c421423ef52ac4df99',
+  // icon: SvgAdapter(protocolIcons.spark),
+  protocolName: 'morpho-blue',
+});
+export const MORPHO_BLUE_WSTETH_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho Blue',
+  shortLabel: 'wstETH/USDT',
+  value: MorphoBlueVersions.MorphoBlueWstEthUSDT,
+  url: 'wstethusdt',
+  loanToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+  collateralToken: '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+  oracle: '0x95DB30fAb9A3754e42423000DF27732CB2396992',
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.86,
+  marketId: '0xe7e9694b754c4d4f7e21faf7223f6fa71abaeb10296a4c43a54a7977149687d2',
+  // icon: SvgAdapter(protocolIcons.spark),
+  protocolName: 'morpho-blue',
+});
 
 export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueWstEthEth]: MORPHO_BLUE_WSTETH_ETH(networkId),
@@ -87,4 +117,6 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueSDAIUSDC]: MORPHO_BLUE_SDAI_USDC(networkId),
   [MorphoBlueVersions.MorphoBlueWBTCUSDC]: MORPHO_BLUE_WBTC_USDC(networkId),
   [MorphoBlueVersions.MorphoBlueEthUSDC]: MORPHO_BLUE_ETH_USDC(networkId),
+  [MorphoBlueVersions.MorphoBlueWBTCUSDT]: MORPHO_BLUE_WBTC_USDT(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthUSDT]: MORPHO_BLUE_WSTETH_USDT(networkId),
 }) as const;
