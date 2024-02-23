@@ -17,7 +17,7 @@ import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
 
 export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, mainnetWeb3: Web3): Promise<MorphoAaveV2MarketData> => {
-  const ethPrice = await getEthPrice(mainnetWeb3);
+  const ethPrice = await getEthPrice(web3);
   const morphoAaveV2ViewContract = MorphoAaveV2ViewContract(web3, network);
 
   const [contractData, morphoRewardsRes] = await Promise.allSettled([
