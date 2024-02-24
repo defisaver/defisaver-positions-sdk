@@ -21,6 +21,8 @@ export const isAddress = (address: string) => typeof address === 'string' && (ne
 
 export const compareAddresses = (addr1 = '', addr2 = '') => addr1.toLowerCase() === addr2.toLowerCase();
 
+export const getWeiAmountForDecimals = (amount: string | number, decimals: number) => new Dec(amount).mul(10 ** decimals).floor().toString();
+
 export const getEthAmountForDecimals = (amount: string | number, decimals: string | number) => new Dec(amount).div(10 ** +decimals).toString();
 
 export const handleWbtcLegacy = (asset: string) => (asset === 'WBTC Legacy' ? 'WBTC' : asset);
@@ -46,3 +48,4 @@ export const mapRange = (input: number | string, minInput: number | string, maxI
   // output = output_start + slope * (input - input_start)
   return new Dec(minOutput).plus(new Dec(slope).mul(new Dec(input).minus(minInput))).toDP(2).toNumber();
 };
+

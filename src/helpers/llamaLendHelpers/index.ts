@@ -1,0 +1,45 @@
+import Dec from 'decimal.js';
+import { LlamaLendAggregatedPositionData, LlamaLendMarketData, LlamaLendUsedAssets } from '../../types';
+import { MMUsedAssets, NetworkNumber } from '../../types/common';
+import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import { mapRange } from '../../services/utils';
+
+export const getLlamaLendAggregatedData = ({
+  loanExists, usedAssets, network, selectedMarket, numOfBands, ...rest
+}:{
+  loanExists: boolean, usedAssets: LlamaLendUsedAssets, network: NetworkNumber, selectedMarket: LlamaLendMarketData, numOfBands: number | string
+}): LlamaLendAggregatedPositionData => {
+
+  const collAsset = selectedMarket.collAsset;
+  const debtAsset = selectedMarket.baseAsset;
+  const payload = {} as LlamaLendAggregatedPositionData;
+
+  payload.supplied = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ supplied }: { supplied: string }) => supplied);
+  payload.borrowed = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowed }: { borrowed: string }) => borrowed);
+  payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
+  payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
+
+  payload.ratio = loanExists
+    ? new Dec(payload.suppliedUsd)
+      .dividedBy(payload.borrowedUsd)
+      .times(100)
+      .toString()
+    : '0';
+
+  // this is all approximation
+  payload.minAllowedRatio = mapRange(numOfBands, 4, 50, 115, 140); // collateral ratio
+  payload.collFactor = new Dec(1).div(payload.minAllowedRatio).mul(100).toString(); // collateral factor = 1 / collateral ratio
+  // only take in consideration collAsset
+  payload.borrowLimitUsd = usedAssets?.[collAsset]?.isSupplied
+    ? new Dec(usedAssets[collAsset].suppliedUsd).mul(payload.collFactor).toString()
+    : '0';
+
+  const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets as unknown as MMUsedAssets);
+  payload.leveragedType = leveragedType;
+  if (leveragedType !== '') {
+    payload.leveragedAsset = leveragedAsset;
+    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, usedAssets[collAsset].price, payload.borrowedUsd, payload.borrowLimitUsd);
+  }
+
+  return payload;
+};

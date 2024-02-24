@@ -6,3 +6,4 @@ export * from './liquity';
 export * from './maker';
 export * from './chickenBonds';
 export * from './morphoBlue';
+export * from './llamaLend';
