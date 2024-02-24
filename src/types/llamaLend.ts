@@ -1,5 +1,5 @@
 import { AssetDataBase } from '@defisaver/tokens';
-import { NetworkNumber } from './common';
+import { EthAddress, NetworkNumber } from './common';
 import { BandData, UserBandData } from './curveUsd';
 
 export enum LlamaLendVersions {
@@ -24,6 +24,8 @@ export interface LlamaLendMarketData {
   collAsset: string,
   baseAsset: string,
   controllerAddress: string,
+  vaultAddress: EthAddress,
+  url: string,
 }
 export interface LlamaLendAssetData {
   symbol: string,
