@@ -5,3 +5,4 @@ export * as curveUsdHelpers from './curveUsdHelpers';
 export * as makerHelpers from './makerHelpers';
 export * as chickenBondsHelpers from './chickenBondsHelpers';
 export * as morphoBlueHelpers from './morphoBlueHelpers';
+export * as llamaLendHelpers from './llamaLendHelpers';

@@ -19,6 +19,7 @@ import * as helpers from './helpers';
 import * as chickenBonds from './chickenBonds';
 import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
+import * as llamaLend from './llamaLend';
 
 export * from './types';
 
@@ -41,4 +42,5 @@ export {
   markets,
   helpers,
   morphoBlue,
+  llamaLend,
 };
