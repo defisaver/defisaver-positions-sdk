@@ -98,14 +98,16 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
 
   const leftToBorrow = getEthAmountForDecimals(data.debtTokenLeftToBorrow, 18);
+  const borrowApr = getEthAmountForDecimals(data.borrowApr, 18);
+  const lendApr = getEthAmountForDecimals(data.lendApr, 18);
 
   const assetsData:any = {};
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,
     price: debtUsdPrice,
-    supplyRate: data.borrowApr,
-    borrowRate: data.lendApr,
+    supplyRate: lendApr,
+    borrowRate: borrowApr,
     canBeSupplied: true,
     canBeBorrowed: true,
   };
@@ -125,6 +127,8 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     assetsData,
     totalDebt,
     ammPrice,
+    borrowApr,
+    lendApr,
     oraclePrice: assetAmountInEth(data.oraclePrice, debtAsset),
     basePrice: assetAmountInEth(data.basePrice, debtAsset),
     minted: assetAmountInEth(data.minted, debtAsset),
