@@ -90,8 +90,8 @@ export interface LlamaLendUsedAsset {
   collateral: boolean,
   price: string,
   interestRate?: string,
-  suppliedSoftLiq?: string,
-  suppliedSoftLiqUsd?: string,
+  suppliedForYield?: string,
+  suppliedForYieldUsd?: string,
   shares?: string,
 }
 

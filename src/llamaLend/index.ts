@@ -193,14 +193,14 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   const collSupplied = assetAmountInEth(data.marketCollateralAmount, collAsset);
   const collSuppliedUsd = new Dec(collSupplied).mul(collPrice).toString();
 
-  const debtSuppliedSoftLiq = assetAmountInEth(data.debtTokenCollateralAmount, debtAsset);
-  const debtSuppliedSoftLiqUsd = new Dec(debtSuppliedSoftLiq).mul(debtPrice).toString();
-
-  const debtSupplied = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
+  const debtSupplied = assetAmountInEth(data.debtTokenCollateralAmount, debtAsset);
   const debtSuppliedUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
+  const debtSuppliedForYield = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
+  const debtSuppliedForYieldUsd = new Dec(debtSupplied).mul(debtPrice).toString();
+
   const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
-  const shares = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
+  const shares = assetAmountInEth(data.debtTokenSuppliedShares, debtAsset);
 
   const usedAssets: LlamaLendUsedAssets = data.loanExists ? {
     [collAsset]: {
@@ -219,8 +219,8 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       collateral: new Dec(debtSupplied).gt('0'),
       supplied: debtSupplied,
       suppliedUsd: debtSuppliedUsd,
-      suppliedSoftLiq: debtSuppliedSoftLiq,
-      suppliedSoftLiqUsd: debtSuppliedSoftLiqUsd,
+      suppliedForYield: debtSuppliedForYield,
+      suppliedForYieldUsd: debtSuppliedForYieldUsd,
       borrowed: debtBorrowed,
       borrowedUsd: debtBorrowed,
       isBorrowed: new Dec(debtBorrowed).gt('0'),
@@ -235,7 +235,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
 
   const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
 
-  const status = data.loanExists ? getStatusForUser(data.bandRange, marketData.activeBand, debtSuppliedSoftLiq, collSupplied) : LlamaLendStatus.Nonexistant;
+  const status = data.loanExists ? getStatusForUser(data.bandRange, marketData.activeBand, debtSupplied, collSupplied) : LlamaLendStatus.Nonexistant;
 
   const userBands = _userBands.map((band, index) => ({
     ...band,
