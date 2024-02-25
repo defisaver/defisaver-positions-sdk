@@ -58,6 +58,7 @@ export interface LlamaLendGlobalMarketData {
   maxBand: string,
   debtCeiling: string,
   borrowRate: string,
+  lendRate: string,
   futureBorrowRate: string,
   leftToBorrow: string,
   bands: BandData[],

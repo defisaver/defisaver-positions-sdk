@@ -96,18 +96,19 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     .toString();
 
   const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
-
+  const cap = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
   const leftToBorrow = getEthAmountForDecimals(data.debtTokenLeftToBorrow, 18);
-  const borrowApr = getEthAmountForDecimals(data.borrowApr, 18);
-  const lendApr = getEthAmountForDecimals(data.lendApr, 18);
+
+  const debtInAYearBN = new Dec(totalDebt).mul(new Dec(2.718281828459).pow(exponentRate).toNumber());
+  const lendRate = debtInAYearBN.minus(totalDebt).div(cap).mul(100).toString();
 
   const assetsData:any = {};
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,
     price: debtUsdPrice,
-    supplyRate: lendApr,
-    borrowRate: borrowApr,
+    supplyRate: lendRate,
+    borrowRate,
     canBeSupplied: true,
     canBeBorrowed: true,
   };
@@ -127,13 +128,12 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     assetsData,
     totalDebt,
     ammPrice,
-    borrowApr,
-    lendApr,
     oraclePrice: assetAmountInEth(data.oraclePrice, debtAsset),
     basePrice: assetAmountInEth(data.basePrice, debtAsset),
     minted: assetAmountInEth(data.minted, debtAsset),
     redeemed: assetAmountInEth(data.redeemed, debtAsset),
     borrowRate,
+    lendRate,
     futureBorrowRate,
     bands: bandsData,
     leftToBorrow,
