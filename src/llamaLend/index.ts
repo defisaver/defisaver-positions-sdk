@@ -219,7 +219,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       price: collPrice,
     },
     [debtAsset]: {
-      isSupplied: new Dec(debtSupplied).gt('0'),
+      isSupplied: new Dec(debtSupplied).gt('0') || new Dec(debtSuppliedForYield).gt('0'),
       collateral: new Dec(debtSupplied).gt('0'),
       supplied: debtSupplied,
       suppliedUsd: debtSuppliedUsd,

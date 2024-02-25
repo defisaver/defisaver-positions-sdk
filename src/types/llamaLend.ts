@@ -67,10 +67,9 @@ export interface LlamaLendGlobalMarketData {
 
 export interface LlamaLendAggregatedPositionData {
   ratio: string,
-  supplied: string,
   suppliedUsd: string,
   borrowedUsd: string,
-  borrowed: string,
+  suppliedForYieldUsd: string,
   safetyRatio: string,
   borrowLimitUsd: string,
   minAllowedRatio: number,
@@ -111,10 +110,9 @@ export interface LlamaLendUserData {
   usedAssets: LlamaLendUsedAssets,
   status: LlamaLendStatus,
   ratio: string,
-  supplied: string,
   suppliedUsd: string,
   borrowedUsd: string,
-  borrowed: string,
+  suppliedForYieldUsd: string,
   safetyRatio: string,
   userBands: UserBandData[],
 }
