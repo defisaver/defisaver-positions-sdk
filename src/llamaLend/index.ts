@@ -98,7 +98,6 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
 
   const leftToBorrow = getEthAmountForDecimals(data.debtTokenLeftToBorrow, 18);
-  // const shares = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
 
   const assetsData:any = {};
   assetsData[debtAsset] = {
@@ -201,6 +200,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   const debtSuppliedUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
   const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const shares = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
 
   const usedAssets: LlamaLendUsedAssets = data.loanExists ? {
     [collAsset]: {
@@ -226,6 +226,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       isBorrowed: new Dec(debtBorrowed).gt('0'),
       symbol: debtAsset,
       price: debtPrice,
+      shares,
     },
   } : {};
 

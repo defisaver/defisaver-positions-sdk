@@ -92,6 +92,7 @@ export interface LlamaLendUsedAsset {
   interestRate?: string,
   suppliedSoftLiq?: string,
   suppliedSoftLiqUsd?: string,
+  shares?: string,
 }
 
 export interface LlamaLendUsedAssets {
