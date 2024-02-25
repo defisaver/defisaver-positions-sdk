@@ -9,7 +9,6 @@ export const getLlamaLendAggregatedData = ({
 }:{
   loanExists: boolean, usedAssets: LlamaLendUsedAssets, network: NetworkNumber, selectedMarket: LlamaLendMarketData, numOfBands: number | string
 }): LlamaLendAggregatedPositionData => {
-
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
   const payload = {} as LlamaLendAggregatedPositionData;

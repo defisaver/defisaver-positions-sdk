@@ -206,7 +206,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
   const shares = assetAmountInEth(data.debtTokenSuppliedShares, debtAsset);
 
-  const usedAssets: LlamaLendUsedAssets = data.loanExists ? {
+  const usedAssets: LlamaLendUsedAssets = {
     [collAsset]: {
       isSupplied: true,
       supplied: collSupplied,
@@ -232,7 +232,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       price: debtPrice,
       shares,
     },
-  } : {};
+  };
 
   const priceHigh = assetAmountInEth(data.priceHigh);
   const priceLow = assetAmountInEth(data.priceLow);
