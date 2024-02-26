@@ -208,7 +208,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
 
   const usedAssets: LlamaLendUsedAssets = {
     [collAsset]: {
-      isSupplied: true,
+      isSupplied: new Dec(collSupplied).gt('0'),
       supplied: collSupplied,
       suppliedUsd: collSuppliedUsd,
       borrowed: '0',
