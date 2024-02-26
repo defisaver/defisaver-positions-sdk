@@ -82,6 +82,10 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   console.log('here');
   // all prices are in 18 decimals
   const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
+  const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
+  const utilization = new Dec(totalDebtSupplied).gt(0)
+    ? new Dec(totalDebt).div(totalDebtSupplied).mul(100)
+    : 0;
   const ammPrice = assetAmountInEth(data.ammPrice, debtAsset);
   const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
 
@@ -127,6 +131,8 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     ...data,
     assetsData,
     totalDebt,
+    totalDebtSupplied,
+    utilization,
     ammPrice,
     oraclePrice: assetAmountInEth(data.oraclePrice, debtAsset),
     basePrice: assetAmountInEth(data.basePrice, debtAsset),
