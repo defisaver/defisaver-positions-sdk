@@ -146,12 +146,13 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   };
 };
 
-const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied: string, collSupplied: string) => {
+const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied: string, collSupplied: string, healthPercent: string) => {
   // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
   if (new Dec(bandRange[0]).eq(bandRange[1])) return LlamaLendStatus.Nonexistant;
   // if user doesn't have debtAsset as collateral, then his position is not in soft liquidation
   if (new Dec(debtSupplied).lte(0)) {
-    if (new Dec(bandRange[0]).minus(activeBand).lte(3)) return LlamaLendStatus.Risk; // if user band is less than 3 bands away from active band, his position is at risk
+    const isHealthRisky = new Dec(healthPercent).lt(10);
+    if (new Dec(bandRange[0]).minus(activeBand).lte(3) || isHealthRisky) return LlamaLendStatus.Risk; // if user band is less than 3 bands away from active band, his position is at risk
     return LlamaLendStatus.Safe;
   }
   if (new Dec(bandRange[0]).lte(activeBand) && new Dec(bandRange[1]).gte(activeBand)) return LlamaLendStatus.SoftLiquidating; // user has debtAsset as coll so he is in soft liquidation
@@ -245,7 +246,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
 
   const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
 
-  const status = data.loanExists ? getStatusForUser(data.bandRange, marketData.activeBand, debtSupplied, collSupplied) : LlamaLendStatus.Nonexistant;
+  const status = data.loanExists ? getStatusForUser(data.bandRange, marketData.activeBand, debtSupplied, collSupplied, healthPercent) : LlamaLendStatus.Nonexistant;
 
   const userBands = _userBands.map((band, index) => ({
     ...band,

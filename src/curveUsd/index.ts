@@ -111,12 +111,13 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
   };
 };
 
-const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplied: string, collSupplied: string) => {
+const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplied: string, collSupplied: string, healthPercent: string) => {
   // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
   if (new Dec(bandRange[0]).eq(bandRange[1])) return CrvUSDStatus.Nonexistant;
   // if user doesn't have crvUSD as collateral, then his position is not in soft liquidation
   if (new Dec(crvUSDSupplied).lte(0)) {
-    if (new Dec(bandRange[0]).minus(activeBand).lte(3)) return CrvUSDStatus.Risk; // if user band is less than 3 bands away from active band, his position is at risk
+    const isHealthRisky = new Dec(healthPercent).lt(10);
+    if (new Dec(bandRange[0]).minus(activeBand).lte(3) || isHealthRisky) return CrvUSDStatus.Risk; // if user band is less than 3 bands away from active band, his position is at risk
     return CrvUSDStatus.Safe;
   }
   if (new Dec(bandRange[0]).lte(activeBand) && new Dec(bandRange[1]).gte(activeBand)) return CrvUSDStatus.SoftLiquidating; // user has crvUSD as coll so he is in soft liquidation
@@ -196,7 +197,7 @@ export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, ad
 
   const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
 
-  const status = data.loanExists ? getStatusForUser(data.bandRange, activeBand, crvUSDSupplied, collSupplied) : CrvUSDStatus.Nonexistant;
+  const status = data.loanExists ? getStatusForUser(data.bandRange, activeBand, crvUSDSupplied, collSupplied, healthPercent) : CrvUSDStatus.Nonexistant;
 
   const userBands = _userBands.map((band, index) => ({
     ...band,
