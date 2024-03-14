@@ -6,6 +6,7 @@ export enum LlamaLendVersions {
   'LlamaLendwstETHcrvUSD' = 'llamaLendwstETHcrvUSD',
   'LlamaLendCRVcrvUSD' = 'llamaLendCRVcrvUSD',
   'LlamaLendcrvUSDCRV' = 'llamaLendcrvUSDCRV',
+  'LlamaLendTBTCcrvUSD' = 'llamaLendTBTCcrvUSD',
 }
 
 export enum LlamaLendStatus {
