@@ -8,6 +8,8 @@ export enum MorphoBlueVersions {
   MorphoBlueEthUSDC = 'morphoblueethusdc',
   MorphoBlueWBTCUSDT = 'morphobluewbtcusdt',
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt',
+  MorphoBlueSUSDeDAI = 'morphobluesusdedai',
+  MorphoBlueUSDeDAI = 'morphoblueusdedai',
 }
 
 export interface MorphoBlueMarketData {

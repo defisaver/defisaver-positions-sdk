@@ -110,6 +110,36 @@ export const MORPHO_BLUE_WSTETH_USDT = (networkId: NetworkNumber = NetworkNumber
   // icon: SvgAdapter(protocolIcons.spark),
   protocolName: 'morpho-blue',
 });
+export const MORPHO_BLUE_SUSDE_DAI = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho Blue',
+  shortLabel: 'sUSDe/DAI',
+  value: MorphoBlueVersions.MorphoBlueSUSDeDAI,
+  url: 'susdedai',
+  loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+  collateralToken: '0x9D39A5DE30e57443BfF2A8307A4256c8797A3497',
+  oracle: '0x5D916980D5Ae1737a8330Bf24dF812b2911Aae25',
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.915,
+  marketId: '0x1247f1c237eceae0602eab1470a5061a6dd8f734ba88c7cdc5d6109fb0026b28',
+  // icon: SvgAdapter(protocolIcons.spark),
+  protocolName: 'morpho-blue',
+});
+export const MORPHO_BLUE_USDE_DAI = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho Blue',
+  shortLabel: 'USDe/DAI',
+  value: MorphoBlueVersions.MorphoBlueUSDeDAI,
+  url: 'usdedai',
+  loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+  collateralToken: '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
+  oracle: '0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35',
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.915,
+  marketId: '0xe7e9694b754c4d4f7e21faf7223f6fa71abaeb10296a4c43a54a7977149687d2',
+  // icon: SvgAdapter(protocolIcons.spark),
+  protocolName: 'morpho-blue',
+});
 
 export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueWstEthEth]: MORPHO_BLUE_WSTETH_ETH(networkId),
@@ -119,4 +149,6 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueEthUSDC]: MORPHO_BLUE_ETH_USDC(networkId),
   [MorphoBlueVersions.MorphoBlueWBTCUSDT]: MORPHO_BLUE_WBTC_USDT(networkId),
   [MorphoBlueVersions.MorphoBlueWstEthUSDT]: MORPHO_BLUE_WSTETH_USDT(networkId),
+  [MorphoBlueVersions.MorphoBlueSUSDeDAI]: MORPHO_BLUE_SUSDE_DAI(networkId),
+  [MorphoBlueVersions.MorphoBlueUSDeDAI]: MORPHO_BLUE_USDE_DAI(networkId),
 }) as const;
