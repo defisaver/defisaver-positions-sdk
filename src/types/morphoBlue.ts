@@ -9,13 +9,13 @@ export enum MorphoBlueVersions {
   MorphoBlueWBTCUSDT = 'morphobluewbtcusdt',
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt',
   // sUSDe/DAI
-  MorphoBlueSUSDeDAI_77 = 'morphobluesusdedai_77',
-  MorphoBlueSUSDeDAI_86 = 'morphobluesusdedai_86',
+  MorphoBlueSUSDeDAI_770 = 'morphobluesusdedai_770',
+  MorphoBlueSUSDeDAI_860 = 'morphobluesusdedai_860',
   MorphoBlueSUSDeDAI_915 = 'morphobluesusdedai_915',
   MorphoBlueSUSDeDAI_945 = 'morphobluesusdedai_945',
   // USDe/DAI
-  MorphoBlueUSDeDAI_77 = 'morphoblueusdedai_77',
-  MorphoBlueUSDeDAI_86 = 'morphoblueusdedai_86',
+  MorphoBlueUSDeDAI_770 = 'morphoblueusdedai_770',
+  MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
   MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
 }
