@@ -112,7 +112,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     canBeBorrowed: false,
   };
 
-  if (['wstETH', 'cbETH', 'rETH'].includes(collateralTokenInfo.symbol)) {
+  if (['wstETH', 'cbETH', 'rETH', 'sUSDe'].includes(collateralTokenInfo.symbol)) {
     assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol, mainnetWeb3);
     assetsData[collateralTokenInfo.symbol].incentiveSupplyToken = collateralTokenInfo.symbol;
   }

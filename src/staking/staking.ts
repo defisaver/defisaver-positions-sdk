@@ -76,11 +76,18 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
       .toString();
 };
 
+export const getSUSDeApy = async () => {
+  const res = await fetch('https://www.ethena.fi/api/yields/protocol-and-staking-yield');
+  const data = await res.json();
+  return data.stakingYield.value;
+};
+
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   if (asset === 'stETH' || asset === 'wstETH') return getStETHApr(web3, fromBlock, blockNumber);
   if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);
   if (asset === 'rETH') return getREthApr(web3, blockNumber);
   if (asset === 'sDAI') return getDsrApy(web3);
+  if (asset === 'sUSDe') return getSUSDeApy();
 };
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {
