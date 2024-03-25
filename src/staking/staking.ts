@@ -77,9 +77,9 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
 };
 
 export const getSUSDeApy = async () => {
-  const res = await fetch('https://www.ethena.fi/api/yields/protocol-and-staking-yield');
+  const res = await fetch('https://app.defisaver.com/api/staking/apy?asset=sUSDe');
   const data = await res.json();
-  return data.stakingYield.value;
+  return data.apy;
 };
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
