@@ -114,7 +114,8 @@ export const MORPHO_BLUE_WSTETH_USDT = (networkId: NetworkNumber = NetworkNumber
 export const MORPHO_BLUE_SUSDE_DAI_770 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'sUSDe/DAI 77%',
+  shortLabel: 'sUSDe/DAI',
+  pill: '77%',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_770,
   url: 'susdedai-42dcfb38',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -129,7 +130,8 @@ export const MORPHO_BLUE_SUSDE_DAI_770 = (networkId: NetworkNumber = NetworkNumb
 export const MORPHO_BLUE_SUSDE_DAI_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'sUSDe/DAI 86%',
+  shortLabel: 'sUSDe/DAI',
+  pill: '86%',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_860,
   url: 'susdedai-39d11026',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -144,7 +146,8 @@ export const MORPHO_BLUE_SUSDE_DAI_860 = (networkId: NetworkNumber = NetworkNumb
 export const MORPHO_BLUE_SUSDE_DAI_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'sUSDe/DAI 91.5%',
+  shortLabel: 'sUSDe/DAI',
+  pill: '91.5%',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_915,
   url: 'susdedai-1247f1c2',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -159,7 +162,8 @@ export const MORPHO_BLUE_SUSDE_DAI_915 = (networkId: NetworkNumber = NetworkNumb
 export const MORPHO_BLUE_SUSDE_DAI_945 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'sUSDe/DAI 94.5%',
+  shortLabel: 'sUSDe/DAI',
+  pill: '94.5%',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_945,
   url: 'susdedai-0e475337',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -176,7 +180,8 @@ export const MORPHO_BLUE_SUSDE_DAI_945 = (networkId: NetworkNumber = NetworkNumb
 export const MORPHO_BLUE_USDE_DAI_770 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'USDe/DAI 77%',
+  shortLabel: 'USDe/DAI',
+  pill: '77%',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_770,
   url: 'usdedai-fd8493f0',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -191,7 +196,8 @@ export const MORPHO_BLUE_USDE_DAI_770 = (networkId: NetworkNumber = NetworkNumbe
 export const MORPHO_BLUE_USDE_DAI_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'USDe/DAI 86%',
+  shortLabel: 'USDe/DAI',
+  pill: '86%',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_860,
   url: 'usdedai-c581c5f7',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -206,7 +212,8 @@ export const MORPHO_BLUE_USDE_DAI_860 = (networkId: NetworkNumber = NetworkNumbe
 export const MORPHO_BLUE_USDE_DAI_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'USDe/DAI 91.5%',
+  shortLabel: 'USDe/DAI',
+  pill: '91.5%',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_915,
   url: 'usdedai-8e6aeb10',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
@@ -221,7 +228,8 @@ export const MORPHO_BLUE_USDE_DAI_915 = (networkId: NetworkNumber = NetworkNumbe
 export const MORPHO_BLUE_USDE_DAI_945 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho Blue',
-  shortLabel: 'USDe/DAI 94.5%',
+  shortLabel: 'USDe/DAI',
+  pill: '94.5%',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_945,
   url: 'usdedai-db760246',
   loanToken: '0x6B175474E89094C44Da98b954EedeAC495271d0F',

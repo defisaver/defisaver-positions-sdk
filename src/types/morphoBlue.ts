@@ -24,6 +24,7 @@ export interface MorphoBlueMarketData {
   chainIds: NetworkNumber[],
   label: string,
   shortLabel: string,
+  pill?: string,
   url: string,
   value: MorphoBlueVersions,
   loanToken: string,
