@@ -60,7 +60,6 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  console.log(selectedMarket.controllerAddress);
   // if something else is needed
   const multicallData = [
     {
@@ -76,10 +75,8 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   ];
 
   const multiRes = await multicall(multicallData, web3, network);
-  console.log(multiRes);
   const data = multiRes[1][0];
   const debtUsdPrice = getEthAmountForDecimals(multiRes[0][0], 8);
-  console.log('here');
   // all prices are in 18 decimals
   const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
   const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
