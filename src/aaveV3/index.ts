@@ -161,7 +161,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  if (network === 10) {
+  const networksWithIncentives = [10, 42161];
+  if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
       // eslint-disable-next-line no-param-reassign
