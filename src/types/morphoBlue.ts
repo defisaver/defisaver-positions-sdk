@@ -58,7 +58,7 @@ export interface MorphoBlueMarketInfo {
   fee: string,
   loanToken: string,
   collateralToken: string,
-  utillization: string,
+  utilization: string,
   oracle: string,
   lltv: string,
   minRatio: string,

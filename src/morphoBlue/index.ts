@@ -26,9 +26,9 @@ const getSupplyRate = (totalSupplyAssets: string, totalBorrowAssets: string, bor
   if (totalBorrowAssets === '0' || totalSupplyAssets === '0') {
     return 0;
   }
-  const utillization = new Dec(totalBorrowAssets).mul(WAD).div(totalSupplyAssets).ceil()
+  const utilization = new Dec(totalBorrowAssets).mul(WAD).div(totalSupplyAssets).ceil()
     .toString();
-  const supplyRate = new Dec(utillization).mul(borrowRate).div(WAD).ceil()
+  const supplyRate = new Dec(utilization).mul(borrowRate).div(WAD).ceil()
     .toString();
   const ratePerSecond = new Dec(supplyRate).mul(new Dec(WAD).minus(fee)).div(WAD).ceil()
     .toString();
@@ -81,7 +81,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
 
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
   const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate, marketInfo.totalBorrowShares);
-  const utillization = new Dec(marketInfo.totalBorrowAssets).div(marketInfo.totalSupplyAssets).mul(100).toString();
+  const utilization = new Dec(marketInfo.totalBorrowAssets).div(marketInfo.totalSupplyAssets).mul(100).toString();
 
   const oracleScaleFactor = new Dec(36).add(loanTokenInfo.decimals).sub(collateralTokenInfo.decimals).toString();
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
@@ -122,7 +122,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     fee: new Dec(marketInfo.fee).div(WAD).toString(),
     loanToken: wethToEth(loanTokenInfo.symbol),
     collateralToken: wethToEth(collateralTokenInfo.symbol),
-    utillization,
+    utilization,
     oracle: oracleRate,
     lltv: new Dec(lltv).toString(),
     minRatio: new Dec(1).div(lltv).mul(100).toString(),
