@@ -11,8 +11,8 @@ import {
 import { getConfigContractAbi, getConfigContractAddress, LlamaLendViewContract } from '../contracts';
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
 import { getAbiItem, getEthAmountForDecimals, wethToEth } from '../services/utils';
-import { LlamaLendMarkets } from '../markets/llamaLend';
 import { USD_QUOTE } from '../constants';
+import {getLlamaLendMarketFromControllerAddress} from "../markets/llamaLend";
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
   const contract = LlamaLendViewContract(web3, network);
@@ -168,8 +168,8 @@ export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNu
   }
 
   const contract = LlamaLendViewContract(web3, network, block);
-  const selectedMarket = Object.values(LlamaLendMarkets(network)).find(i => i.controllerAddress.toLowerCase() === controllerAddress.toLowerCase()) as LlamaLendMarketData;
 
+  const selectedMarket = getLlamaLendMarketFromControllerAddress(controllerAddress, network);
   const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
 
   balances = {
