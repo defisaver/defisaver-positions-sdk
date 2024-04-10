@@ -8,3 +8,5 @@ cjs/
 scripts/updateMarkets/yarn.lock
 scripts/updateMarkets/package-lock.json
 scripts/updateMarkets/DATA.json
+.yarn
+.yarnrc.yml

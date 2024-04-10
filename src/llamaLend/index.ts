@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import Web3 from 'web3';
 import {
-  BandData, LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData, LlamaLendVersions,
+  BandData, LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
 } from '../types';
 import { multicall } from '../multicall';
 import {

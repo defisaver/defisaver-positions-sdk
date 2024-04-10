@@ -1,13 +1,36 @@
-import { AssetDataBase } from '@defisaver/tokens';
 import { EthAddress, NetworkNumber } from './common';
 import { BandData, UserBandData } from './curveUsd';
 
-export enum LlamaLendVersions {
-  'LlamaLendwstETHcrvUSD' = 'llamaLendwstETHcrvUSD',
-  'LlamaLendCRVcrvUSD' = 'llamaLendCRVcrvUSD',
-  'LlamaLendcrvUSDCRV' = 'llamaLendcrvUSDCRV',
-  'LlamaLendTBTCcrvUSD' = 'llamaLendTBTCcrvUSD',
+export enum LLVersionsEth {
+  //long only
+  LLWstethCrvusd = 'llamaLendwstETHcrvUSD',
+  LLSusdeCrvusd = 'llamaLendsUSDecrvUSD',
+  // long and short crv
+  LLCrvCrvusd = 'llamaLendCRVcrvUSD',
+  LLCrvusdCrv = 'llamaLendcrvUSDCRV',
+  // long and short tbtc
+  LLTbtcCrvusd = 'llamaLendTBTCcrvUSD',
+  LLCrvusdTbtc = 'llamaLendcrvUSDTBTC',
+  // long and short weth
+  LLWethCrvusd = 'llamaLendWETHcrvUSD',
+  LLCrvusdWeth = 'llamaLendcrvUSDWETH',
 }
+
+export enum LLVersionsArb {
+  //long only
+  LLArbCrvusd = 'llamaLendArbcrvUSD',
+  LLFxnCrvusd = 'llamaLendFXNcrvUSD',
+  LLWbtcCrvusd = 'llamaLendWBTCcrvUSD',
+  LLCrvCrvusd = 'llamaLendCRVcrvUSD',
+  LLWethCrvusd = 'llamaLendWETHcrvUSD',
+}
+
+export const LlamaLendVersions = {
+  ...LLVersionsEth,
+  ...LLVersionsArb
+} as const;
+
+export type LlamaLendVersionsType = typeof LlamaLendVersions[keyof typeof LlamaLendVersions];
 
 export enum LlamaLendStatus {
   Nonexistant = 'Nonexistant',
@@ -21,7 +44,7 @@ export interface LlamaLendMarketData {
   chainIds: NetworkNumber[],
   label: string,
   shortLabel: string,
-  value: LlamaLendVersions,
+  value: LlamaLendVersionsType,
   collAsset: string,
   baseAsset: string,
   controllerAddress: string,
