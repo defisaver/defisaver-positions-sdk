@@ -71,10 +71,10 @@ export const LLAMALEND_CRVUSD_TBTC_MARKET = (networkId:NetworkNumber): LlamaLend
 
 export const LLAMALEND_WETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Arb],
-  label: 'LlamaLend - WETH/crvUSD',
-  shortLabel: 'WETH/crvUSD',
+  label: 'LlamaLend - ETH/crvUSD',
+  shortLabel: 'ETH/crvUSD',
   value: LlamaLendVersions.LLWethCrvusd,
-  collAsset: 'WETH',
+  collAsset: 'ETH',
   baseAsset: 'crvUSD',
   url: 'wethcrvusd',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWethCrvusd),
