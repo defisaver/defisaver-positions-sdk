@@ -67,10 +67,12 @@ export interface LlamaLendAssetData {
 export type LlamaLendAssetsData = { [key: string]: LlamaLendAssetData };
 
 export interface LlamaLendGlobalMarketData {
-  collateral: string,
-  decimals: string,
+  A:string,
+  loanDiscount: string,
   activeBand: string,
   totalDebt: string,
+  totalDebtSupplied:string,
+  utilization:string,
   ammPrice: string,
   basePrice: string,
   oraclePrice: string,
@@ -80,7 +82,6 @@ export interface LlamaLendGlobalMarketData {
   ammRate: string,
   minBand: string,
   maxBand: string,
-  debtCeiling: string,
   borrowRate: string,
   lendRate: string,
   futureBorrowRate: string,

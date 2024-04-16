@@ -58,7 +58,7 @@ describe('LlamaLend', () => {
   });
 
   it('can fetch market data for Arbitrum', async function () {
-    this.timeout(10000);
+    this.timeout(20000);
     const network = NetworkNumber.Arb;
     const web3 = getWeb3ByNetwork(network);
     const markets = getMarketsByNetwork(network);

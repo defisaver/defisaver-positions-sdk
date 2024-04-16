@@ -54,37 +54,24 @@ const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMar
 
 export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData): Promise<LlamaLendGlobalMarketData> => {
   const contract = LlamaLendViewContract(web3, network);
-  const FeedRegistryAddress = getConfigContractAddress('FeedRegistry', network);
-  const FeedRegistryAbi = getConfigContractAbi('FeedRegistry');
 
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  // if something else is needed
-  const multicallData = [
-    {
-      target: FeedRegistryAddress,
-      abiItem: getAbiItem(FeedRegistryAbi, 'latestAnswer'),
-      params: [getAssetInfo(debtAsset).address, USD_QUOTE],
-    },
-    {
-      target: contract.options.address,
-      abiItem: contract.options.jsonInterface.find(({ name }) => name === 'globalData'),
-      params: [selectedMarket.controllerAddress],
-    },
-  ];
 
-  const multiRes = await multicall(multicallData, web3, network);
-  const data = multiRes[1][0];
-  const debtUsdPrice = getEthAmountForDecimals(multiRes[0][0], 8);
+  const data = await contract.methods.globalData(selectedMarket.controllerAddress).call()
+
   // all prices are in 18 decimals
+  const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
+  const collPriceUsd = collAsset === 'crvUSD'?'1': new Dec(1).mul(oraclePrice).toDP(18).toString();
+  const debtPriceUsd = debtAsset === 'crvUSD'? '1' : new Dec(1).div(oraclePrice).toDP(18).toString();
+
   const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
   const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
   const utilization = new Dec(totalDebtSupplied).gt(0)
-    ? new Dec(totalDebt).div(totalDebtSupplied).mul(100)
-    : 0;
+    ? new Dec(totalDebt).div(totalDebtSupplied).mul(100).toString()
+    : '0';
   const ammPrice = assetAmountInEth(data.ammPrice, debtAsset);
-  const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
 
   const rate = assetAmountInEth(data.ammRate);
   const futureRate = assetAmountInEth(data.monetaryPolicyRate);
@@ -107,7 +94,7 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,
-    price: debtUsdPrice,
+    price: debtPriceUsd,
     supplyRate: lendRate,
     borrowRate,
     canBeSupplied: true,
@@ -117,15 +104,20 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   assetsData[collAsset] = {
     symbol: collAsset,
     address: data.collateralToken,
-    price: new Dec(debtUsdPrice).mul(oraclePrice).toString(),
+    price: collPriceUsd,
     supplyRate: '0',
     borrowRate: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
   };
-
   return {
-    ...data,
+    A:data.A,
+    loanDiscount: data.loanDiscount,
+    activeBand: data.activeBand,
+    monetaryPolicyRate: data.monetaryPolicyRate,
+    ammRate: data.ammRate,
+    minBand: data.minBand,
+    maxBand: data.maxBand,
     assetsData,
     totalDebt,
     totalDebtSupplied,
