@@ -82,11 +82,11 @@ export const LLAMALEND_WETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
 
 export const LLAMALEND_CRVUSD_WETH_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'LlamaLend - crvUSD/WETH',
-  shortLabel: 'crvUSD/WETH',
+  label: 'LlamaLend - crvUSD/ETH',
+  shortLabel: 'crvUSD/ETH',
   value: LlamaLendVersions.LLCrvusdWeth,
   collAsset: 'crvUSD',
-  baseAsset: 'WETH',
+  baseAsset: 'ETH',
   url: 'crvusdweth',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLCrvusdWeth),
 });
