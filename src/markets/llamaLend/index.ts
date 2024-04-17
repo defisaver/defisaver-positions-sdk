@@ -1,6 +1,6 @@
-import {LlamaLendMarketData, LlamaLendVersions, LlamaLendVersionsType} from '../../types';
-import {NetworkNumber} from '../../types/common';
-import {getLLamaLendAddresses} from "./contractAddresses";
+import { LlamaLendMarketData, LlamaLendVersions, LlamaLendVersionsType } from '../../types';
+import { NetworkNumber } from '../../types/common';
+import { getLLamaLendAddresses } from './contractAddresses';
 
 export const LLAMALEND_WSTETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
@@ -67,7 +67,7 @@ export const LLAMALEND_CRVUSD_TBTC_MARKET = (networkId:NetworkNumber): LlamaLend
   baseAsset: 'tBTC',
   url: 'crvusdtbtc',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLCrvusdTbtc),
-})
+});
 
 export const LLAMALEND_WETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Arb],
@@ -100,7 +100,7 @@ export const LLAMALEND_ARB_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLend
   baseAsset: 'crvUSD',
   url: 'arbcrvusd',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLArbCrvusd),
-})
+});
 
 export const LLAMALEND_FXN_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Arb],
@@ -111,7 +111,7 @@ export const LLAMALEND_FXN_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLend
   baseAsset: 'crvUSD',
   url: 'fxncrvusd',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLFxnCrvusd),
-})
+});
 
 export const LLAMALEND_WBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Arb],
@@ -122,7 +122,7 @@ export const LLAMALEND_WBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
   baseAsset: 'crvUSD',
   url: 'wbtcusd',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWbtcCrvusd),
-})
+});
 
 export const LlamaLendMarkets = (networkId: NetworkNumber):Record<LlamaLendVersionsType, LlamaLendMarketData> => ({
   [LlamaLendVersions.LLWstethCrvusd]: LLAMALEND_WSTETH_CRVUSD_MARKET(networkId),
@@ -145,6 +145,6 @@ export const getLlamaLendMarketData = (market: LlamaLendVersionsType, network: N
 export const getLlamaLendMarketFromControllerAddress = (controllerAddress: string, network: NetworkNumber) => {
   const markets = LlamaLendMarkets(network);
   const market = Object.values(markets).find((market) => market.controllerAddress === controllerAddress);
-  if(!market) throw new Error('Market not found');
+  if (!market) throw new Error('Market not found');
   return market;
-}
+};

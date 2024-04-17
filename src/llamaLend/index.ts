@@ -12,7 +12,7 @@ import { getConfigContractAbi, getConfigContractAddress, LlamaLendViewContract }
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
 import { getAbiItem, getEthAmountForDecimals, wethToEth } from '../services/utils';
 import { USD_QUOTE } from '../constants';
-import {getLlamaLendMarketFromControllerAddress} from "../markets/llamaLend";
+import { getLlamaLendMarketFromControllerAddress } from '../markets/llamaLend';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
   const contract = LlamaLendViewContract(web3, network);
@@ -58,13 +58,12 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-
-  const data = await contract.methods.globalData(selectedMarket.controllerAddress).call()
+  const data = await contract.methods.globalData(selectedMarket.controllerAddress).call();
 
   // all prices are in 18 decimals
   const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
-  const collPriceUsd = collAsset === 'crvUSD'?'1': new Dec(1).mul(oraclePrice).toDP(18).toString();
-  const debtPriceUsd = debtAsset === 'crvUSD'? '1' : new Dec(1).div(oraclePrice).toDP(18).toString();
+  const collPriceUsd = collAsset === 'crvUSD' ? '1' : new Dec(1).mul(oraclePrice).toDP(18).toString();
+  const debtPriceUsd = debtAsset === 'crvUSD' ? '1' : new Dec(1).div(oraclePrice).toDP(18).toString();
 
   const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
   const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
@@ -111,7 +110,7 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     canBeBorrowed: false,
   };
   return {
-    A:data.A,
+    A: data.A,
     loanDiscount: data.loanDiscount,
     activeBand: data.activeBand,
     monetaryPolicyRate: data.monetaryPolicyRate,
