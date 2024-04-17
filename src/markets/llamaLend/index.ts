@@ -49,8 +49,8 @@ export const LLAMALEND_CRVUSD_CRV_MARKET = (networkId: NetworkNumber): LlamaLend
 
 export const LLAMALEND_TBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'LlamaLend - TBTC/crvUSD',
-  shortLabel: 'TBTC/crvUSD',
+  label: 'LlamaLend - tBTC/crvUSD',
+  shortLabel: 'tBTC/crvUSD',
   value: LlamaLendVersions.LLTbtcCrvusd,
   collAsset: 'tBTC',
   baseAsset: 'crvUSD',
@@ -60,8 +60,8 @@ export const LLAMALEND_TBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
 
 export const LLAMALEND_CRVUSD_TBTC_MARKET = (networkId:NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'LlamaLend - crvUSD/TBTC',
-  shortLabel: 'crvUSD/TBTC',
+  label: 'LlamaLend - crvUSD/tBTC',
+  shortLabel: 'crvUSD/tBTC',
   value: LlamaLendVersions.LLCrvusdTbtc,
   collAsset: 'crvUSD',
   baseAsset: 'tBTC',
