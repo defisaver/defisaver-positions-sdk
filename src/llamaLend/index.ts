@@ -200,6 +200,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   const debtSuppliedForYieldUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
   const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const debtBorrowedUsd = new Dec(debtBorrowed).mul(debtPrice).toString();
   const shares = assetAmountInEth(data.debtTokenSuppliedShares, debtAsset);
 
   const usedAssets: LlamaLendUsedAssets = {
@@ -222,7 +223,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       suppliedForYield: debtSuppliedForYield,
       suppliedForYieldUsd: debtSuppliedForYieldUsd,
       borrowed: debtBorrowed,
-      borrowedUsd: debtBorrowed,
+      borrowedUsd: debtBorrowedUsd,
       isBorrowed: new Dec(debtBorrowed).gt('0'),
       symbol: debtAsset,
       price: debtPrice,
