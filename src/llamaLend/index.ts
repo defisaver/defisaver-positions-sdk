@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import Web3 from 'web3';
 import {
-  BandData, LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData, LlamaLendVersions,
+  BandData, LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
 } from '../types';
 import { multicall } from '../multicall';
 import {
@@ -11,8 +11,8 @@ import {
 import { getConfigContractAbi, getConfigContractAddress, LlamaLendViewContract } from '../contracts';
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
 import { getAbiItem, getEthAmountForDecimals, wethToEth } from '../services/utils';
-import { LlamaLendMarkets } from '../markets/llamaLend';
 import { USD_QUOTE } from '../constants';
+import { getLlamaLendMarketFromControllerAddress } from '../markets/llamaLend';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
   const contract = LlamaLendViewContract(web3, network);
@@ -54,37 +54,23 @@ const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMar
 
 export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData): Promise<LlamaLendGlobalMarketData> => {
   const contract = LlamaLendViewContract(web3, network);
-  const FeedRegistryAddress = getConfigContractAddress('FeedRegistry', network);
-  const FeedRegistryAbi = getConfigContractAbi('FeedRegistry');
 
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  // if something else is needed
-  const multicallData = [
-    {
-      target: FeedRegistryAddress,
-      abiItem: getAbiItem(FeedRegistryAbi, 'latestAnswer'),
-      params: [getAssetInfo(debtAsset).address, USD_QUOTE],
-    },
-    {
-      target: contract.options.address,
-      abiItem: contract.options.jsonInterface.find(({ name }) => name === 'globalData'),
-      params: [selectedMarket.controllerAddress],
-    },
-  ];
+  const data = await contract.methods.globalData(selectedMarket.controllerAddress).call();
 
-  const multiRes = await multicall(multicallData, web3, network);
-  const data = multiRes[1][0];
-  const debtUsdPrice = getEthAmountForDecimals(multiRes[0][0], 8);
   // all prices are in 18 decimals
+  const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
+  const collPriceUsd = collAsset === 'crvUSD' ? '1' : new Dec(1).mul(oraclePrice).toDP(18).toString();
+  const debtPriceUsd = debtAsset === 'crvUSD' ? '1' : new Dec(1).div(oraclePrice).toDP(18).toString();
+
   const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
   const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
   const utilization = new Dec(totalDebtSupplied).gt(0)
-    ? new Dec(totalDebt).div(totalDebtSupplied).mul(100)
-    : 0;
+    ? new Dec(totalDebt).div(totalDebtSupplied).mul(100).toString()
+    : '0';
   const ammPrice = assetAmountInEth(data.ammPrice, debtAsset);
-  const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
 
   const rate = assetAmountInEth(data.ammRate);
   const futureRate = assetAmountInEth(data.monetaryPolicyRate);
@@ -107,7 +93,7 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,
-    price: debtUsdPrice,
+    price: debtPriceUsd,
     supplyRate: lendRate,
     borrowRate,
     canBeSupplied: true,
@@ -117,15 +103,20 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   assetsData[collAsset] = {
     symbol: collAsset,
     address: data.collateralToken,
-    price: new Dec(debtUsdPrice).mul(oraclePrice).toString(),
+    price: collPriceUsd,
     supplyRate: '0',
     borrowRate: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
   };
-
   return {
-    ...data,
+    A: data.A,
+    loanDiscount: data.loanDiscount,
+    activeBand: data.activeBand,
+    monetaryPolicyRate: data.monetaryPolicyRate,
+    ammRate: data.ammRate,
+    minBand: data.minBand,
+    maxBand: data.maxBand,
     assetsData,
     totalDebt,
     totalDebtSupplied,
@@ -168,8 +159,8 @@ export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNu
   }
 
   const contract = LlamaLendViewContract(web3, network, block);
-  const selectedMarket = Object.values(LlamaLendMarkets(network)).find(i => i.controllerAddress.toLowerCase() === controllerAddress.toLowerCase()) as LlamaLendMarketData;
 
+  const selectedMarket = getLlamaLendMarketFromControllerAddress(controllerAddress, network);
   const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
 
   balances = {
@@ -208,6 +199,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   const debtSuppliedForYieldUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
   const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const debtBorrowedUsd = new Dec(debtBorrowed).mul(debtPrice).toString();
   const shares = assetAmountInEth(data.debtTokenSuppliedShares, debtAsset);
 
   const usedAssets: LlamaLendUsedAssets = {
@@ -230,7 +222,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
       suppliedForYield: debtSuppliedForYield,
       suppliedForYieldUsd: debtSuppliedForYieldUsd,
       borrowed: debtBorrowed,
-      borrowedUsd: debtBorrowed,
+      borrowedUsd: debtBorrowedUsd,
       isBorrowed: new Dec(debtBorrowed).gt('0'),
       symbol: debtAsset,
       price: debtPrice,
