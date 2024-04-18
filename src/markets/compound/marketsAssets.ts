@@ -9,11 +9,12 @@ export const compoundV2CollateralAssets = [
 export const v3USDCCollAssetsEth = ['ETH', 'COMP', 'WBTC', 'UNI', 'LINK'];
 export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
 export const v3USDCCollAssetsBase = ['ETH', 'cbETH'];
+export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3USDCCollAssets = {
   [NetworkNumber.Eth]: v3USDCCollAssetsEth,
-  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Opt]: v3USDCCollAssetsOpt,
   [NetworkNumber.Arb]: v3USDCCollAssetsArb,
   [NetworkNumber.Base]: v3USDCCollAssetsBase,
 } as const;

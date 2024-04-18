@@ -245,6 +245,9 @@ module.exports = {
       "1": {
         "address": "0xc3d688B66703497DAA19211EEdff47f25384cdc3"
       },
+      "10": {
+        "address": "0x2e44e174f7D53F0212823acC11C01A11d58c5bCB"
+      },
       "8453": {
         "address": "0xb125E6687d4313864e53df431d5425969c15Eb2F"
       },
@@ -293,6 +296,9 @@ module.exports = {
           }
         }
       },
+      "10": {
+        "address": "0x969d845618596787DBc64687Ee90b16931BBBCBC"
+      },
       "8453": {
         "address": "0x22591183c0eb7B2Fe07F6F44fd360d1117D07b4f"
       },
@@ -320,6 +326,9 @@ module.exports = {
   "CompV3BulkerL2": {
     "abi": [{"inputs":[{"internalType":"address","name":"admin_","type":"address"},{"internalType":"address payable","name":"wrappedNativeToken_","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},{"inputs":[],"name":"FailedToSendNativeToken","type":"error"},{"inputs":[],"name":"InvalidAddress","type":"error"},{"inputs":[],"name":"InvalidArgument","type":"error"},{"inputs":[],"name":"TransferInFailed","type":"error"},{"inputs":[],"name":"TransferOutFailed","type":"error"},{"inputs":[],"name":"Unauthorized","type":"error"},{"inputs":[],"name":"UnhandledAction","type":"error"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"oldAdmin","type":"address"},{"indexed":true,"internalType":"address","name":"newAdmin","type":"address"}],"name":"AdminTransferred","type":"event"},{"inputs":[],"name":"ACTION_CLAIM_REWARD","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ACTION_SUPPLY_ASSET","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ACTION_SUPPLY_NATIVE_TOKEN","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ACTION_TRANSFER_ASSET","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ACTION_WITHDRAW_ASSET","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"ACTION_WITHDRAW_NATIVE_TOKEN","outputs":[{"internalType":"bytes32","name":"","type":"bytes32"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"admin","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"bytes32[]","name":"actions","type":"bytes32[]"},{"internalType":"bytes[]","name":"data","type":"bytes[]"}],"name":"invoke","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"}],"name":"sweepNativeToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"recipient","type":"address"},{"internalType":"address","name":"asset","type":"address"}],"name":"sweepToken","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"newAdmin","type":"address"}],"name":"transferAdmin","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"wrappedNativeToken","outputs":[{"internalType":"address payable","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"stateMutability":"payable","type":"receive"}],
     "networks": {
+      "10": {
+        "address": "0xcb3643CC8294B23171272845473dEc49739d4Ba3"
+      },
       "8453": {
         "address": "0x78D0677032A35c63D142a48A2037048871212a8C"
       },
