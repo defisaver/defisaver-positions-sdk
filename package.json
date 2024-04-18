@@ -13,7 +13,8 @@
     "lint": "eslint src/ --fix",
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*",
-    "build-test": "npm run build && mocha tests/*"
+    "build-test": "npm run build && mocha tests/*",
+    "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
   },
   "keywords": [],
   "author": "",
