@@ -12,7 +12,7 @@ export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
 ];
 export const aaveV3AssetsDefaultMarketArb = [
-  'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB',
+  'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB', 'weETH',
 ];
 export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC'];
 
