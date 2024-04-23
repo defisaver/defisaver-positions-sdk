@@ -44,11 +44,12 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
   },
-  [NetworkNumber.Opt]: { // Non-existing markets, keeping it because of typescript
+  [NetworkNumber.Opt]: {
+    [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
+    // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV3ETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
-    [CompoundVersions.CompoundV3USDC]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
   },
 };
@@ -70,7 +71,7 @@ export const COMPOUND_V2: CompoundMarketData = {
 };
 
 export const COMPOUND_V3_USDC = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Opt],
   label: 'Compound V3 - USDC',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3USDC,
