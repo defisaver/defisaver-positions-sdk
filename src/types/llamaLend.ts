@@ -2,7 +2,7 @@ import { EthAddress, NetworkNumber } from './common';
 import { BandData, UserBandData } from './curveUsd';
 
 export enum LLVersionsEth {
-  //long only
+  // long only
   LLWstethCrvusd = 'llamaLendwstETHcrvUSD',
   LLSusdeCrvusd = 'llamaLendsUSDecrvUSD',
   // long and short crv
@@ -17,7 +17,7 @@ export enum LLVersionsEth {
 }
 
 export enum LLVersionsArb {
-  //long only
+  // long only
   LLArbCrvusd = 'llamaLendArbcrvUSD',
   LLFxnCrvusd = 'llamaLendFXNcrvUSD',
   LLWbtcCrvusd = 'llamaLendWBTCcrvUSD',
@@ -27,7 +27,7 @@ export enum LLVersionsArb {
 
 export const LlamaLendVersions = {
   ...LLVersionsEth,
-  ...LLVersionsArb
+  ...LLVersionsArb,
 } as const;
 
 export type LlamaLendVersionsType = typeof LlamaLendVersions[keyof typeof LlamaLendVersions];

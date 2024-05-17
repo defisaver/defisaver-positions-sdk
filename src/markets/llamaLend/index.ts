@@ -144,7 +144,7 @@ export const getLlamaLendMarketData = (market: LlamaLendVersionsType, network: N
 
 export const getLlamaLendMarketFromControllerAddress = (controllerAddress: string, network: NetworkNumber) => {
   const markets = LlamaLendMarkets(network);
-  const market = Object.values(markets).find((market) => market.controllerAddress === controllerAddress);
+  const market = Object.values(markets).find((tempMarket) => tempMarket.controllerAddress === controllerAddress);
   if (!market) throw new Error('Market not found');
   return market;
 };

@@ -69,11 +69,11 @@ export const getREthApr = async (web3: Web3, blockNumber: 'latest' | number = 'l
 export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   const potContract = PotContract(web3, NetworkNumber.Eth);
   return new Dec(await potContract.methods.dsr().call())
-      .div(new Dec(1e27))
-      .pow(SECONDS_PER_YEAR)
-      .sub(1)
-      .mul(100)
-      .toString();
+    .div(new Dec(1e27))
+    .pow(SECONDS_PER_YEAR)
+    .sub(1)
+    .mul(100)
+    .toString();
 };
 
 export const getSUSDeApy = async () => {
@@ -85,11 +85,11 @@ export const getSUSDeApy = async () => {
 const getWeEthApr = async () => {
   const res = await fetch('https://www.etherfi.bid/api/etherfi/apr');
   const data = await res.json();
-  const total = (data.latest_aprs as string[]).reduce((acc,apr) => new Dec(acc).add(apr).toString());
+  const total = (data.latest_aprs as string[]).reduce((acc, apr) => new Dec(acc).add(apr).toString());
   return new Dec(total).div(data.latest_aprs.length).div(100).toString();
-}
+};
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI','weETH'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
