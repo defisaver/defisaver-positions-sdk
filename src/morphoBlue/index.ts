@@ -10,7 +10,7 @@ import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
 } from '../types';
 import { WAD, SECONDS_PER_YEAR, USD_QUOTE } from '../constants';
-import { getStakingApy } from '../staking';
+import {getStakingApy, STAKING_ASSETS} from '../staking';
 import { getAbiItem, wethToEth } from '../services/utils';
 import { multicall } from '../multicall';
 import { getMorphoBlueAggregatedPositionData } from '../helpers/morphoBlueHelpers';
@@ -112,7 +112,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     canBeBorrowed: false,
   };
 
-  if (['wstETH', 'cbETH', 'rETH', 'sUSDe'].includes(collateralTokenInfo.symbol)) {
+  if (STAKING_ASSETS.includes(collateralTokenInfo.symbol)) {
     assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol, mainnetWeb3);
     assetsData[collateralTokenInfo.symbol].incentiveSupplyToken = collateralTokenInfo.symbol;
   }

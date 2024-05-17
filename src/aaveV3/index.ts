@@ -26,7 +26,7 @@ import {
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { calculateNetApy, getStakingApy } from '../staking';
+import {calculateNetApy, getStakingApy, STAKING_ASSETS} from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 import { getAssetsBalances } from '../assets';
@@ -268,7 +268,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
-    if (['wstETH', 'cbETH', 'rETH', 'sDAI'].includes(_market.symbol)) {
+    if (STAKING_ASSETS.includes(_market.symbol)) {
       _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
       _market.incentiveSupplyToken = _market.symbol;
     }

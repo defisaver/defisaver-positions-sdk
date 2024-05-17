@@ -82,12 +82,22 @@ export const getSUSDeApy = async () => {
   return data.apy;
 };
 
+const getWeEthApr = async () => {
+  const res = await fetch('https://www.etherfi.bid/api/etherfi/apr');
+  const data = await res.json();
+  const total = (data.latest_aprs as string[]).reduce((acc,apr) => new Dec(acc).add(apr).toString());
+  return new Dec(total).div(data.latest_aprs.length).div(100).toString();
+}
+
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI','weETH'];
+
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   if (asset === 'stETH' || asset === 'wstETH') return getStETHApr(web3, fromBlock, blockNumber);
   if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);
   if (asset === 'rETH') return getREthApr(web3, blockNumber);
   if (asset === 'sDAI') return getDsrApy(web3);
   if (asset === 'sUSDe') return getSUSDeApy();
+  if (asset === 'weETH') return getWeEthApr();
 };
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {
