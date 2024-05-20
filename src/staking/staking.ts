@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import Web3 from 'web3';
+import { StakeWiseSDK, Network } from '@stakewise/v3-sdk';
 import {
   CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
 } from '../contracts';
@@ -7,6 +8,7 @@ import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../types/common';
 import { ContractEventLog } from '../types/contracts/generated/types';
 import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants';
 import { multicall } from '../multicall';
+
 
 export const getStETHApr = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
   try {
@@ -89,7 +91,13 @@ const getWeEthApr = async () => {
   return new Dec(total).div(data.latest_aprs.length).div(100).toString();
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe'];
+const getOsETHApy = async () => {
+  const sdk = new StakeWiseSDK({ network: Network.Mainnet });
+  const apy = await sdk.osToken.getAPY();
+  return apy;
+};
+
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
@@ -99,6 +107,7 @@ export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' |
     if (asset === 'sDAI') return getDsrApy(web3);
     if (asset === 'sUSDe') return getSUSDeApy();
     if (asset === 'weETH') return getWeEthApr();
+    if (asset === 'osETH') return getOsETHApy();
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
     return '0';
