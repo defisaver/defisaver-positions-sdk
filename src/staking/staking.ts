@@ -85,10 +85,9 @@ export const getSUSDeApy = async () => {
 };
 
 const getWeEthApr = async () => {
-  const res = await fetch('https://www.etherfi.bid/api/etherfi/apr');
+  const res = await fetch('hhttps://app.defisaver.com/api/staking/apy?asset=weETH');
   const data = await res.json();
-  const total = (data.latest_aprs as string[]).reduce((acc, apr) => new Dec(acc).add(apr).toString());
-  return new Dec(total).div(data.latest_aprs.length).div(100).toString();
+  return data.apy;
 };
 
 const getOsETHApy = async () => {
