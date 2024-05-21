@@ -183,7 +183,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         const facilitatorBucket = await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call();
         const availableFacilitatorCap = assetAmountInEth(new Dec(facilitatorBucket[0]).sub(facilitatorBucket[1]).toString(), 'GHO');
 
-        borrowCap = Dec.min(borrowCap, availableFacilitatorCap).toString();
+        borrowCap = Dec.min(borrowCap, assetAmountInEth(facilitatorBucket[0],'GHO')).toString();
 
         discountRateOnBorrow = aaveV3CalculateDiscountRate(
           tokenMarket.totalBorrow.toString(),

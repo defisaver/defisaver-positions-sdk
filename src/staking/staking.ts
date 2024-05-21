@@ -85,7 +85,7 @@ export const getSUSDeApy = async () => {
 };
 
 const getWeEthApr = async () => {
-  const res = await fetch('hhttps://app.defisaver.com/api/staking/apy?asset=weETH');
+  const res = await fetch('https://app.defisaver.com/api/staking/apy?asset=weETH');
   const data = await res.json();
   return data.apy;
 };
