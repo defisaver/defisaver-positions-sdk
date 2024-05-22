@@ -34,7 +34,7 @@ export enum MorphoBlueVersions {
 
 export enum MorphoBlueOracleType {
   MARKET_RATE = 'Market rate',
-  LIDO_RATE = 'Lido Exchange rate',
+  LIDO_RATE = 'Lido rate',
 }
 
 export interface MorphoBlueMarketData {
