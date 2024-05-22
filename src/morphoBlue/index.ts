@@ -93,7 +93,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   assetsData[wethToEth(loanTokenInfo.symbol)] = {
     symbol: wethToEth(loanTokenInfo.symbol),
     address: loanToken,
-    price: new Dec(loanTokenPrice).div(1e8).toString(),
+    price: loanTokenInfo.symbol === 'USDA' ? '1' : new Dec(loanTokenPrice).div(1e8).toString(),
     supplyRate: new Dec(supplyRate).div(WAD).mul(100).toString(),
     borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
     totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
@@ -105,7 +105,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
     symbol: wethToEth(collateralTokenInfo.symbol),
     address: collateralToken,
-    price: new Dec(loanTokenPrice).div(1e8).mul(oracleRate).toString(),
+    price: new Dec(assetsData[wethToEth(loanTokenInfo.symbol)].price).mul(oracleRate).toString(),
     supplyRate: '0',
     borrowRate: '0',
     canBeSupplied: true,
