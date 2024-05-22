@@ -1,13 +1,25 @@
 import { MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
-  MorphoBlueWstEthEth = 'morphobluewstetheth',
-  MorphoBlueWstEthUSDC = 'morphobluewstethusdc',
-  MorphoBlueSDAIUSDC = 'morphobluesdaiusdc',
-  MorphoBlueWBTCUSDC = 'morphobluewbtcusdc',
-  MorphoBlueEthUSDC = 'morphoblueethusdc',
-  MorphoBlueWBTCUSDT = 'morphobluewbtcusdt',
-  MorphoBlueWstEthUSDT = 'morphobluewstethusdt',
+  MorphoBlueWstEthUSDC = 'morphobluewstethusdc', // wstETH/USDC
+  MorphoBlueSDAIUSDC = 'morphobluesdaiusdc', // sDAI/USDC
+  MorphoBlueWBTCUSDC = 'morphobluewbtcusdc', // WBTC/USDC
+  MorphoBlueEthUSDC = 'morphoblueethusdc', // ETH/USDC
+  MorphoBlueWBTCUSDT = 'morphobluewbtcusdt', // WBTC/USDT
+  MorphoBlueWstEthUSDT = 'morphobluewstethusdt', // wstETH/USDT
+  MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
+  MorphoBlueWstEthPYUSD = 'morphobluwstethpyusd', // wstETH/PYUSD
+  MorphoBlueWeEthEth = 'morphoblueweetheth', // weETH/ETH
+  MorphoBlueWBTCPYUSD = 'morphobluewbtcpyusd', // WBTC/PYUSD
+  MorphoBlueWBTCEth = 'morphobluewbtceth', // WBTC/ETH
+  MorphoBlueUSDeUSDT = 'morphoblueusdeusdt', // USDe/USDT
+  MorphoBlueSUSDeUSDT = 'morphobluesusdeusdt', // sUSDe/USDT
+  MorphoBlueSDAIEth = 'morphobluesdaieth', // sDAI/ETH
+  MorphoBlueEzEthEth = 'morphoblueezetheth', // ezETH/ETH
+  // wstETH/WETH
+  MorphoBlueWstEthEth_945 = 'morphobluewstetheth_945',
+  MorphoBlueWstEthEth_945_Exchange_Rate = 'morphobluewstetheth_945_exchange_rate',
+  MorphoBlueWstEthEth_965_Exchange_Rate = 'morphobluewstetheth_965_exchange_rate',
   // sUSDe/DAI
   MorphoBlueSUSDeDAI_770 = 'morphobluesusdedai_770',
   MorphoBlueSUSDeDAI_860 = 'morphobluesusdedai_860',
@@ -20,16 +32,21 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
 }
 
+export enum MorphoBlueOracleType {
+  MARKET_RATE = 'Market rate',
+  LIDO_RATE = 'Lido Exchange rate',
+}
+
 export interface MorphoBlueMarketData {
   chainIds: NetworkNumber[],
   label: string,
   shortLabel: string,
-  pill?: string,
   url: string,
   value: MorphoBlueVersions,
   loanToken: string,
   collateralToken: string,
   oracle: string,
+  oracleType: MorphoBlueOracleType,
   irm: string,
   lltv: number | string,
   marketId: string,
@@ -60,6 +77,7 @@ export interface MorphoBlueMarketInfo {
   collateralToken: string,
   utillization: string,
   oracle: string,
+  oracleType: MorphoBlueOracleType,
   lltv: string,
   minRatio: string,
   assetsData: MorphoBlueAssetsData,

@@ -45,7 +45,7 @@ const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => {
 
 export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
   const {
-    loanToken, collateralToken, oracle, irm, lltv,
+    loanToken, collateralToken, oracle, irm, lltv, oracleType,
   } = selectedMarket;
   const lltvInWei = new Dec(lltv).mul(WAD).toString();
   const loanTokenInfo = getAssetInfoByAddress(loanToken);
@@ -123,6 +123,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     collateralToken: wethToEth(collateralTokenInfo.symbol),
     utillization,
     oracle: oracleRate,
+    oracleType,
     lltv: new Dec(lltv).toString(),
     minRatio: new Dec(1).div(lltv).mul(100).toString(),
     assetsData,
