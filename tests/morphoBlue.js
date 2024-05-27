@@ -272,4 +272,20 @@ describe('Morpho Blue', () => {
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
+
+  // utils
+  it('can fetch wstETH/ETH 96.5% Lido Exchange rate market for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const market = sdk.markets.findMorphoBlueMarket(
+      '0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0',
+      '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+      0.965,
+      '0xbD60A6770b27E084E8617335ddE769241B0e71D8',
+      '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+      network,
+    );
+    if (!market) throw new Error('Market not found');
+  });
 });

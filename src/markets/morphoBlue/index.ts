@@ -430,3 +430,13 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueUSDeDAI_915]: MORPHO_BLUE_USDE_DAI_915(networkId),
   [MorphoBlueVersions.MorphoBlueUSDeDAI_945]: MORPHO_BLUE_USDE_DAI_945(networkId),
 }) as const;
+
+export const findMorphoBlueMarket = (collateralToken: string, loanToken: string, lltv: number, oracle: string, irm: string, network = NetworkNumber.Eth) => {
+  const markets = MorphoBlueMarkets(network);
+  for (const market of Object.values(markets)) {
+    if (market.collateralToken === collateralToken && market.loanToken === loanToken && market.lltv === lltv && market.oracle === oracle && market.irm === irm) {
+      return market;
+    }
+  }
+  return null;
+};
