@@ -1,3 +1,4 @@
+import { compareAddresses } from '../../services/utils';
 import { MorphoBlueMarketData, MorphoBlueOracleType, MorphoBlueVersions } from '../../types';
 import { NetworkNumber } from '../../types/common';
 
@@ -434,7 +435,7 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
 export const findMorphoBlueMarket = (collateralToken: string, loanToken: string, lltv: number, oracle: string, irm: string, network = NetworkNumber.Eth) => {
   const markets = MorphoBlueMarkets(network);
   for (const market of Object.values(markets)) {
-    if (market.collateralToken === collateralToken && market.loanToken === loanToken && market.lltv === lltv && market.oracle === oracle && market.irm === irm) {
+    if (compareAddresses(market.collateralToken, collateralToken) && compareAddresses(market.loanToken, loanToken) && market.lltv === lltv && compareAddresses(market.oracle, oracle) && compareAddresses(market.irm, irm)) {
       return market;
     }
   }
