@@ -7,8 +7,11 @@ const { NetworkNumber } = require('../cjs/types/common');
 
 describe('Morpho Blue', () => {
   let web3;
+  let web3Base;
+
   before(async () => {
     web3 = new Web3(process.env.RPC);
+    web3Base = new Web3(process.env.RPCBASE);
   });
 
   const fetchMarketData = async (network, _web3, selectedMarket) => {
@@ -77,7 +80,7 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 
-  it('can fetch WSTETH/USDT market and account data for Ethereum', async function () {
+  it('can fetch wstETH/USDT market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthUSDT];
@@ -271,6 +274,17 @@ describe('Morpho Blue', () => {
 
     const marketData = await fetchMarketData(network, web3, selectedMarket);
     await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  // base
+
+  it('can fetch cbETH/USDC 86% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbEthUSDC_860];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
   });
 
   // utils

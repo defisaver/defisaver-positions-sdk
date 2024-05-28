@@ -822,6 +822,9 @@ module.exports = {
     "networks": {
       "1": {
         "address": "0xE29175a86B60138403a9534A391acaDb19f1E9a6",
+      },
+      "8453": {
+        "address": "0xDBCACF59C5063da8B15481F88E7D70E13c92f2a1",
       }
     }
   },

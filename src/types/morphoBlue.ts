@@ -1,6 +1,7 @@
 import { MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
+  // MAINNET
   MorphoBlueWstEthUSDC = 'morphobluewstethusdc', // wstETH/USDC
   MorphoBlueSDAIUSDC = 'morphobluesdaiusdc', // sDAI/USDC
   MorphoBlueWBTCUSDC = 'morphobluewbtcusdc', // WBTC/USDC
@@ -30,6 +31,9 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
   MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
+
+  // BASE
+  MorphoBlueCbEthUSDC_860 = 'morphobluecbethusdc_860',
 }
 
 export enum MorphoBlueOracleType {

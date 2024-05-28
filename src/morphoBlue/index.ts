@@ -3,16 +3,15 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { MMUsedAssets, NetworkNumber } from '../types/common';
 import {
+  FeedRegistryContract,
   MorphoBlueViewContract,
-  getConfigContractAbi, getConfigContractAddress,
 } from '../contracts';
 import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
 } from '../types';
 import { WAD, SECONDS_PER_YEAR, USD_QUOTE } from '../constants';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { getAbiItem, wethToEth } from '../services/utils';
-import { multicall } from '../multicall';
+import { wethToEth } from '../services/utils';
 import { getMorphoBlueAggregatedPositionData } from '../helpers/morphoBlueHelpers';
 
 
@@ -48,36 +47,21 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     loanToken, collateralToken, oracle, irm, lltv, oracleType,
   } = selectedMarket;
   const lltvInWei = new Dec(lltv).mul(WAD).toString();
-  const loanTokenInfo = getAssetInfoByAddress(loanToken);
-  const collateralTokenInfo = getAssetInfoByAddress(collateralToken);
-  let loanTokenFeedAddress = loanToken;
+  const loanTokenInfo = getAssetInfoByAddress(loanToken, network);
+  const collateralTokenInfo = getAssetInfoByAddress(collateralToken, network);
+  let loanTokenFeedAddress = loanTokenInfo.addresses[NetworkNumber.Eth];
   if (loanTokenInfo.symbol === 'WETH') {
     const ethAddress = getAssetInfo('ETH').address;
     loanTokenFeedAddress = ethAddress;
   }
 
-  const FeedRegistryAddress = getConfigContractAddress('FeedRegistry', network);
-  const FeedRegistryAbi = getConfigContractAbi('FeedRegistry');
+  const feedRegistryContract = FeedRegistryContract(mainnetWeb3, NetworkNumber.Eth);
+  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
 
-  const viewContractAddress = getConfigContractAddress('MorphoBlueView', network);
-  const viewContractAbi = getConfigContractAbi('MorphoBlueView');
-
-  const multicallCallsObject = [
-    {
-      target: FeedRegistryAddress,
-      abiItem: getAbiItem(FeedRegistryAbi, 'latestAnswer'),
-      params: [loanTokenFeedAddress, USD_QUOTE],
-    },
-    {
-      target: viewContractAddress,
-      abiItem: getAbiItem(viewContractAbi, 'getMarketInfoNotTuple'),
-      params: [loanToken, collateralToken, oracle, irm, lltvInWei],
-    },
-  ];
-
-  const multicallData = await multicall(multicallCallsObject, web3, network);
-  const loanTokenPrice = multicallData[0][0];
-  const marketInfo = multicallData[1][0];
+  const [loanTokenPrice, marketInfo] = await Promise.all([
+    loanTokenInfo.symbol === 'USDA' ? '100000000' : feedRegistryContract.methods.latestAnswer(loanTokenFeedAddress, USD_QUOTE).call(),
+    morphoBlueViewContract.methods.getMarketInfoNotTuple(loanToken, collateralToken, oracle, irm, lltvInWei).call(),
+  ]);
 
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
   const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate, marketInfo.totalBorrowShares);
@@ -93,7 +77,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   assetsData[wethToEth(loanTokenInfo.symbol)] = {
     symbol: wethToEth(loanTokenInfo.symbol),
     address: loanToken,
-    price: loanTokenInfo.symbol === 'USDA' ? '1' : new Dec(loanTokenPrice).div(1e8).toString(),
+    price: new Dec(loanTokenPrice).div(1e8).toString(),
     supplyRate: new Dec(supplyRate).div(WAD).mul(100).toString(),
     borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
     totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
