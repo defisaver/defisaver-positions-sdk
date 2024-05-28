@@ -281,7 +281,7 @@ describe('Morpho Blue', () => {
   it('can fetch cbETH/USDC 86% market and account data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
-    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbEthUSDC_860];
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base];
 
     const marketData = await fetchMarketData(network, web3Base, selectedMarket);
     await fetchAccountData(network, web3Base, marketData, selectedMarket);

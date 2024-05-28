@@ -33,7 +33,7 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
 
   // BASE
-  MorphoBlueCbEthUSDC_860 = 'morphobluecbethusdc_860',
+  MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
 }
 
 export enum MorphoBlueOracleType {
