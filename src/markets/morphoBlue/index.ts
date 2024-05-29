@@ -405,7 +405,7 @@ export const MORPHO_BLUE_USDE_DAI_945 = (networkId: NetworkNumber = NetworkNumbe
 export const MORPHO_BLUE_CBETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
   label: 'Morpho Blue',
-  shortLabel: 'cbETH/ETH',
+  shortLabel: 'cbETH/USDC',
   value: MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base,
   url: 'cbethusdc-dba352d9',
   loanToken: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
