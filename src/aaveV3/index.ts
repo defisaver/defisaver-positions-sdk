@@ -181,9 +181,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
 
       if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {
         const facilitatorBucket = await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call();
-        const availableFacilitatorCap = assetAmountInEth(new Dec(facilitatorBucket[0]).sub(facilitatorBucket[1]).toString(), 'GHO');
 
-        borrowCap = Dec.min(borrowCap, assetAmountInEth(facilitatorBucket[0],'GHO')).toString();
+        borrowCap = Dec.min(borrowCap, assetAmountInEth(facilitatorBucket[0], 'GHO')).toString();
 
         discountRateOnBorrow = aaveV3CalculateDiscountRate(
           tokenMarket.totalBorrow.toString(),
@@ -195,8 +194,9 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         );
       }
 
-      let marketLiquidity = nativeAsset
-        ? assetAmountInEth(new Dec(assetAmountInWei(borrowCap.toString(), 'GHO'))
+      const borrowCapInWei = new Dec(assetAmountInWei(borrowCap.toString(), symbol));
+      let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply)) || nativeAsset
+        ? assetAmountInEth(borrowCapInWei
           .sub(tokenMarket.totalBorrow.toString())
           .toString(), symbol)
         : assetAmountInEth(new Dec(tokenMarket.totalSupply.toString())
@@ -232,10 +232,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         collateralFactor: new Dec(tokenMarket.collateralFactor.toString()).div(10000).toString(),
         liquidationRatio: new Dec(tokenMarket.liquidationRatio.toString()).div(10000).toString(),
         marketLiquidity,
-        utilization: new Dec(tokenMarket.totalBorrow.toString())
-          .div(new Dec(tokenMarket.totalSupply.toString()))
-          .times(100)
-          .toString(),
+        utilization: new Dec(tokenMarket.totalBorrow.toString()).times(100).div(new Dec(tokenMarket.totalSupply.toString())).toString(),
         usageAsCollateralEnabled: tokenMarket.usageAsCollateralEnabled,
         supplyCap: tokenMarket.supplyCap,
         borrowCap,

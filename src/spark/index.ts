@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
+import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -85,53 +85,64 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address),
   ).call();
 
-  const assetsData: SparkAssetData[] = loanInfo
-    .map((market, i) => ({
-      symbol: selectedMarket.assets[i],
-      isIsolated: new Dec(market.debtCeilingForIsolationMode).gt(0),
-      debtCeilingForIsolationMode: new Dec(market.debtCeilingForIsolationMode).div(100).toString(),
-      isSiloed: market.isSiloedForBorrowing,
-      eModeCategory: +market.emodeCategory,
-      isolationModeTotalDebt: new Dec(market.isolationModeTotalDebt).div(100).toString(),
-      assetId: Number(market.assetId),
-      underlyingTokenAddress: market.underlyingTokenAddress,
-      supplyRate: new Dec(market.supplyRate.toString()).div(1e25).toString(),
-      borrowRate: new Dec(market.borrowRateVariable.toString()).div(1e25).toString(),
-      borrowRateStable: new Dec(market.borrowRateStable.toString()).div(1e25).toString(),
-      collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
-      liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
-      marketLiquidity: assetAmountInEth(new Dec(market.totalSupply.toString())
-        .sub(market.totalBorrow.toString())
-        .toString(), selectedMarket.assets[i]),
-      utilization: new Dec(market.totalBorrow.toString())
-        .div(new Dec(market.totalSupply.toString()))
-        .times(100)
-        .toString(),
-      usageAsCollateralEnabled: market.usageAsCollateralEnabled,
-      supplyCap: market.supplyCap,
-      borrowCap: market.borrowCap,
-      totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
-      isInactive: !market.isActive,
-      isFrozen: market.isFrozen,
-      isPaused: market.isPaused,
-      canBeBorrowed: market.isActive && !market.isPaused && !market.isFrozen && market.borrowingEnabled,
-      canBeSupplied: market.isActive && !market.isPaused && !market.isFrozen,
-      canBeWithdrawn: market.isActive && !market.isPaused,
-      canBePayBacked: market.isActive && !market.isPaused,
-      disabledStableBorrowing: !market.stableBorrowRateEnabled,
-      totalBorrow: assetAmountInEth(market.totalBorrow.toString(), selectedMarket.assets[i]),
-      totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), selectedMarket.assets[i]),
-      price: new Dec(market.price.toString()).div(1e8).toString(), // is actually price in USD
-      isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
-      isFlashLoanEnabled: market.isFlashLoanEnabled,
-      aTokenAddress: market.aTokenAddress,
-      eModeCategoryData: {
-        label: market.label,
-        liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
-        liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
-        collateralFactor: new Dec(market.ltv).div(10000).toString(),
-        priceSource: market.priceSource,
-      },
+  const assetsData: SparkAssetData[] = await Promise.all(loanInfo
+    .map(async (market, i) => {
+      const symbol = selectedMarket.assets[i];
+
+      const borrowCapInWei = new Dec(assetAmountInWei(market.borrowCap.toString(), symbol));
+      let marketLiquidity = borrowCapInWei.lt(new Dec(market.totalSupply))
+        ? assetAmountInEth(borrowCapInWei
+          .sub(market.totalBorrow.toString())
+          .toString(), symbol)
+        : assetAmountInEth(new Dec(market.totalSupply.toString())
+          .sub(market.totalBorrow.toString())
+          .toString(), symbol);
+
+      if (new Dec(marketLiquidity).lt(0)) {
+        marketLiquidity = '0';
+      }
+      return ({
+        symbol: selectedMarket.assets[i],
+        isIsolated: new Dec(market.debtCeilingForIsolationMode).gt(0),
+        debtCeilingForIsolationMode: new Dec(market.debtCeilingForIsolationMode).div(100).toString(),
+        isSiloed: market.isSiloedForBorrowing,
+        eModeCategory: +market.emodeCategory,
+        isolationModeTotalDebt: new Dec(market.isolationModeTotalDebt).div(100).toString(),
+        assetId: Number(market.assetId),
+        underlyingTokenAddress: market.underlyingTokenAddress,
+        supplyRate: new Dec(market.supplyRate.toString()).div(1e25).toString(),
+        borrowRate: new Dec(market.borrowRateVariable.toString()).div(1e25).toString(),
+        borrowRateStable: new Dec(market.borrowRateStable.toString()).div(1e25).toString(),
+        collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
+        liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
+        marketLiquidity,
+        utilization: new Dec(market.totalBorrow.toString()).times(100).div(new Dec(market.totalSupply.toString())).toString(),
+        usageAsCollateralEnabled: market.usageAsCollateralEnabled,
+        supplyCap: market.supplyCap,
+        borrowCap: market.borrowCap,
+        totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
+        isInactive: !market.isActive,
+        isFrozen: market.isFrozen,
+        isPaused: market.isPaused,
+        canBeBorrowed: market.isActive && !market.isPaused && !market.isFrozen && market.borrowingEnabled,
+        canBeSupplied: market.isActive && !market.isPaused && !market.isFrozen,
+        canBeWithdrawn: market.isActive && !market.isPaused,
+        canBePayBacked: market.isActive && !market.isPaused,
+        disabledStableBorrowing: !market.stableBorrowRateEnabled,
+        totalBorrow: assetAmountInEth(market.totalBorrow.toString(), selectedMarket.assets[i]),
+        totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), selectedMarket.assets[i]),
+        price: new Dec(market.price.toString()).div(1e8).toString(), // is actually price in USD
+        isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
+        isFlashLoanEnabled: market.isFlashLoanEnabled,
+        aTokenAddress: market.aTokenAddress,
+        eModeCategoryData: {
+          label: market.label,
+          liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
+          liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
+          collateralFactor: new Dec(market.ltv).div(10000).toString(),
+          priceSource: market.priceSource,
+        },
+      });
     }));
 
   await Promise.all(assetsData.map(async (market) => {
