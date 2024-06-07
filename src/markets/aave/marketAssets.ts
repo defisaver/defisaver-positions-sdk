@@ -14,7 +14,7 @@ export const aaveV3AssetsDefaultMarketOpt = [
 export const aaveV3AssetsDefaultMarketArb = [
   'ETH', 'DAI', 'EURS', 'USDC', 'USDT', 'AAVE', 'LINK', 'WBTC', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC.e', 'FRAX', 'ARB', 'weETH',
 ];
-export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC'];
+export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
