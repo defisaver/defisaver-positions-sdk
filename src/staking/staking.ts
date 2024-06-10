@@ -78,25 +78,18 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
     .toString();
 };
 
-export const getSUSDeApy = async () => {
-  const res = await fetch('https://app.defisaver.com/api/staking/apy?asset=sUSDe');
+const getApyFromDfsApi = async (asset: string) => {
+  const res = await fetch(`https://app.defisaver.com/api/staking/apy?asset=${asset}`);
   const data = await res.json();
   return data.apy;
-};
-
-const getWeEthApr = async () => {
-  const res = await fetch('https://app.defisaver.com/api/staking/apy?asset=weETH');
-  const data = await res.json();
-  return data.apy;
-};
-
+}
 const getOsETHApy = async () => {
   const sdk = new StakeWiseSDK({ network: Network.Mainnet });
   const apy = await sdk.osToken.getAPY();
   return apy;
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
@@ -104,8 +97,9 @@ export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' |
     if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);
     if (asset === 'rETH') return getREthApr(web3, blockNumber);
     if (asset === 'sDAI') return getDsrApy(web3);
-    if (asset === 'sUSDe') return getSUSDeApy();
-    if (asset === 'weETH') return getWeEthApr();
+    if (asset === 'sUSDe') return getApyFromDfsApi('sUSDe');
+    if (asset === 'weETH') return getApyFromDfsApi('weETH');
+    if (asset === 'ezETH') return getApyFromDfsApi('ezETH')
     if (asset === 'osETH') return getOsETHApy();
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
