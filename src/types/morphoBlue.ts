@@ -17,6 +17,7 @@ export enum MorphoBlueVersions {
   MorphoBlueSUSDeUSDT = 'morphobluesusdeusdt', // sUSDe/USDT
   MorphoBlueSDAIEth = 'morphobluesdaieth', // sDAI/ETH
   MorphoBlueEzEthEth = 'morphoblueezetheth', // ezETH/ETH
+  MorphoBlueMKRUSDC = 'morphobluemkrusdc', // MKR/USDC
   // wstETH/WETH
   MorphoBlueWstEthEth_945 = 'morphobluewstetheth_945',
   MorphoBlueWstEthEth_945_Exchange_Rate = 'morphobluewstetheth_945_exchange_rate',
