@@ -11,7 +11,7 @@ import {
   AavePositionData,
   AaveVersions, MorphoAaveV2AssetData, MorphoAaveV2AssetsData, MorphoAaveV2MarketData, MorphoAaveV2PositionData,
 } from '../types';
-import { calculateBorrowingAssetLimit } from '../moneymarket';
+import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
@@ -39,8 +39,8 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
 
     const morphoReward = morphoRewardsData?.markets?.[aaveInfo.aTokenAddress.toLowerCase()];
 
-    const supplyRateP2P = new Dec(market.p2pSupplyRate).div(1e25).toString();
-    const borrowRateP2P = new Dec(market.p2pBorrowRate).div(1e25).toString();
+    const supplyRateP2P = aprToApy(new Dec(market.p2pSupplyRate).div(1e25).toString());
+    const borrowRateP2P = aprToApy(new Dec(market.p2pBorrowRate).div(1e25).toString());
     const hasDelta = new Dec(borrowRateP2P).minus(supplyRateP2P).gte(0.3);
 
     return {
@@ -51,9 +51,9 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
       priceInEth: new Dec(aaveInfo.price).div(1e18).toString(),
       price: new Dec(aaveInfo.price).div(1e18).times(ethPrice).toString(),
 
-      supplyRate: new Dec(market.poolSupplyRate).div(1e25).toString(),
+      supplyRate: aprToApy(new Dec(market.poolSupplyRate).div(1e25).toString()),
       supplyRateP2P,
-      borrowRate: new Dec(market.poolBorrowRate).div(1e25).toString(),
+      borrowRate: aprToApy(new Dec(market.poolBorrowRate).div(1e25).toString()),
       borrowRateP2P,
 
       totalSupply: assetAmountInEth(aaveInfo.totalSupply, symbol),
@@ -216,8 +216,8 @@ export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNum
       borrowedUsdVariable: borrowedUsd,
       isSupplied: new Dec(supplied).gt(0),
       isBorrowed: new Dec(borrowed).gt(0),
-      supplyRate: new Dec(market.userSupplyRate).div(1e25).toString(),
-      borrowRate: new Dec(market.userBorrowRate).div(1e25).toString(),
+      supplyRate: aprToApy(new Dec(market.userSupplyRate).div(1e25).toString()),
+      borrowRate: aprToApy(new Dec(market.userBorrowRate).div(1e25).toString()),
       limit: '0',
 
       collateral: true, // Morpho doesn't have all these, keeping it for compatability

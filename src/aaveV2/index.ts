@@ -7,7 +7,7 @@ import {
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
 import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
-import { calculateBorrowingAssetLimit } from '../moneymarket';
+import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
 } from '../types';
@@ -26,9 +26,9 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
     .map((market, i) => ({
       symbol: selectedMarket.assets[i],
       underlyingTokenAddress: market.underlyingTokenAddress,
-      supplyRate: new Dec(market.supplyRate.toString()).div(1e25).toString(),
-      borrowRate: new Dec(market.borrowRateVariable.toString()).div(1e25).toString(),
-      borrowRateStable: new Dec(market.borrowRateStable.toString()).div(1e25).toString(),
+      supplyRate: aprToApy(new Dec(market.supplyRate.toString()).div(1e25).toString()),
+      borrowRate: aprToApy(new Dec(market.borrowRateVariable.toString()).div(1e25).toString()),
+      borrowRateStable: aprToApy(new Dec(market.borrowRateStable.toString()).div(1e25).toString()),
       collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
       liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
       marketLiquidity: assetAmountInEth(new Dec(market.totalSupply.toString())
@@ -173,7 +173,7 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
       suppliedUsd: new Dec(supplied).mul(assetsData[asset].price).toString(),
       isSupplied,
       collateral: enabledAsCollateral,
-      stableBorrowRate: new Dec(tokenInfo.stableBorrowRate).div(1e25).toString(),
+      stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate).div(1e25).toString()),
       borrowedStable,
       borrowedVariable,
       borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),
