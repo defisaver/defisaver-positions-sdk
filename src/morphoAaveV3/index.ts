@@ -24,7 +24,7 @@ import {
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
 import { getDsrApy } from '../services/dsrService';
-import { calculateBorrowingAssetLimit } from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { MORPHO_AAVE_V3_ETH } from '../markets/aave';
@@ -229,9 +229,9 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       underlyingTokenAddress: address,
       price: new Dec(marketData.price.toString()).div(1e8).toString(), // is actually price in USD
 
-      supplyRate: new Dec(marketData.supplyRate.toString()).div(1e25).toString(),
+      supplyRate: aprToApy(new Dec(marketData.supplyRate.toString()).div(1e25).toString()),
       supplyRateP2P: marketData.p2pSupplyAPY,
-      borrowRate: new Dec(marketData.borrowRateVariable.toString()).div(1e25).toString(),
+      borrowRate: aprToApy(new Dec(marketData.borrowRateVariable.toString()).div(1e25).toString()),
       borrowRateP2P: marketData.p2pBorrowAPY,
       totalSupply: assetAmountInEth(marketData.totalSupply.toString(), symbol),
       totalBorrow: assetAmountInEth(marketData.totalBorrow.toString(), symbol),

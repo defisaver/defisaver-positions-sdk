@@ -73,4 +73,4 @@ export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
   };
 };
 
-export const aprToApy = (interest: string | number, frequency = BLOCKS_IN_A_YEAR) => ((1 + (+interest / 100) / frequency) ** frequency - 1) * 100; // eslint-disable-line
+export const aprToApy = (interest:string | number, frequency = BLOCKS_IN_A_YEAR) => new Dec(interest).div(100).div(frequency).plus(1).pow(frequency).minus(1).times(100).toString();

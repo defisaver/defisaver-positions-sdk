@@ -29,7 +29,7 @@ import {
 } from '../types';
 import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
-import { calculateBorrowingAssetLimit } from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { SPARK_V1 } from '../markets/spark';
 
 export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkAssetsData }, usedAssets: SparkUsedAssets) => {
@@ -110,9 +110,9 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
         isolationModeTotalDebt: new Dec(market.isolationModeTotalDebt).div(100).toString(),
         assetId: Number(market.assetId),
         underlyingTokenAddress: market.underlyingTokenAddress,
-        supplyRate: new Dec(market.supplyRate.toString()).div(1e25).toString(),
-        borrowRate: new Dec(market.borrowRateVariable.toString()).div(1e25).toString(),
-        borrowRateStable: new Dec(market.borrowRateStable.toString()).div(1e25).toString(),
+        supplyRate: aprToApy(new Dec(market.supplyRate.toString()).div(1e25).toString()),
+        borrowRate: aprToApy(new Dec(market.borrowRateVariable.toString()).div(1e25).toString()),
+        borrowRateStable: aprToApy(new Dec(market.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
         liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
         marketLiquidity,
@@ -374,7 +374,7 @@ export const getSparkAccountData = async (web3: Web3, network: NetworkNumber, ad
       suppliedUsd: new Dec(supplied).mul(assetsData[asset].price).toString(),
       isSupplied,
       collateral: enabledAsCollateral,
-      stableBorrowRate: new Dec(tokenInfo.stableBorrowRate).div(1e25).toString(),
+      stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate).div(1e25).toString()),
       borrowedStable,
       borrowedVariable,
       borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),
