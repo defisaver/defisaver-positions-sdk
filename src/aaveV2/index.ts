@@ -7,7 +7,7 @@ import {
 import { calculateNetApy, getStETHApr } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
 import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
-import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
 } from '../types';

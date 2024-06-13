@@ -11,7 +11,7 @@ import {
   AavePositionData,
   AaveVersions, MorphoAaveV2AssetData, MorphoAaveV2AssetsData, MorphoAaveV2MarketData, MorphoAaveV2PositionData,
 } from '../types';
-import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';

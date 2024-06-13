@@ -24,7 +24,7 @@ import {
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
 import { getDsrApy } from '../services/dsrService';
-import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { MORPHO_AAVE_V3_ETH } from '../markets/aave';

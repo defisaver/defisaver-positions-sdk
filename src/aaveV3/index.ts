@@ -30,7 +30,7 @@ import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 import { getAssetsBalances } from '../assets';
-import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   aaveAnyGetAggregatedPositionData,
   aaveV3IsInIsolationMode,

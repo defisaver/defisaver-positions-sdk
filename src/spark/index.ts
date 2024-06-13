@@ -29,7 +29,7 @@ import {
 } from '../types';
 import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
-import {aprToApy, calculateBorrowingAssetLimit} from '../moneymarket';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { SPARK_V1 } from '../markets/spark';
 
 export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkAssetsData }, usedAssets: SparkUsedAssets) => {
