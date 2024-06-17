@@ -19,7 +19,7 @@ import {
   getConfigContractAddress,
 } from '../contracts';
 import { multicall } from '../multicall';
-import { getCbETHApr, getREthApr, getStETHApr } from '../staking';
+import { getStakingApy, STAKING_ASSETS} from '../staking';
 import {
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
@@ -304,17 +304,9 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       isFlashLoanEnabled: false,
     };
 
-    if (symbol === 'wstETH') {
-      data.incentiveSupplyApy = await getStETHApr(mainnetWeb3);
-      data.incentiveSupplyToken = symbol;
-    }
-    if (symbol === 'cbETH' && !isLayer2Network(network)) {
-      data.incentiveSupplyApy = await getCbETHApr(mainnetWeb3);
-      data.incentiveSupplyToken = symbol;
-    }
-    if (symbol === 'rETH') {
-      data.incentiveSupplyApy = await getREthApr(mainnetWeb3);
-      data.incentiveSupplyToken = symbol;
+    if (STAKING_ASSETS.includes(data.symbol)) {
+      data.incentiveSupplyApy = await getStakingApy(data.symbol, mainnetWeb3);
+      data.incentiveSupplyToken = data.symbol;
     }
     if (data.symbol === 'sDAI') {
       data.incentiveSupplyApy = await getDsrApy(web3, network);

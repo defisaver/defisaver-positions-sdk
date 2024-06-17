@@ -12,7 +12,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  getCbETHApr, getREthApr, getStETHApr, getStETHByWstETHMultiple, getWstETHByStETH,
+  getStakingApy, getStETHByWstETHMultiple, getWstETHByStETH, STAKING_ASSETS,
 } from '../staking';
 import { wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
@@ -57,18 +57,10 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       coll.priceAlternative = assetAmountInEth(priceAlternative, 'wstETH');
       // const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
       // eslint-disable-next-line no-await-in-loop
-      coll.incentiveSupplyApy = await getStETHApr(defaultWeb3);
-      coll.incentiveSupplyToken = 'wstETH';
     }
-    if (coll.symbol === 'cbETH') {
-      // eslint-disable-next-line no-await-in-loop
-      coll.incentiveSupplyApy = await getCbETHApr(defaultWeb3);
-      coll.incentiveSupplyToken = 'cbETH';
-    }
-    if (coll.symbol === 'rETH') {
-      // eslint-disable-next-line no-await-in-loop
-      coll.incentiveSupplyApy = await getREthApr(defaultWeb3);
-      coll.incentiveSupplyToken = 'rETH';
+    if (STAKING_ASSETS.includes(coll.symbol)) {
+      coll.incentiveSupplyApy = await getStakingApy(coll.symbol, defaultWeb3);
+      coll.incentiveSupplyToken = coll.symbol;
     }
   }
   const base = formatBaseData(data[0].baseToken, network, baseAssetPrice);
