@@ -295,6 +295,46 @@ describe('Morpho Blue', () => {
     const marketData = await fetchMarketData(network, web3Base, selectedMarket);
     await fetchAccountData(network, web3Base, marketData, selectedMarket);
   });
+  it('can fetch wstETH/ETH 94.5% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+  it('can fetch wstETH/ETH 96.5% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_965_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+  it('can fetch wstETH/USDC 86% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+  it('can fetch cbETH/ETH 96.5% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbEthEth_965_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+  it('can fetch ETH/USDC 86% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueEthUSDC_860_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
 
   // utils
   it('can fetch wstETH/ETH 96.5% Lido Exchange rate market for Ethereum', async function () {
