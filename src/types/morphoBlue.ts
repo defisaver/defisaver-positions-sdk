@@ -36,10 +36,13 @@ export enum MorphoBlueVersions {
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
   MorphoBlueWstEthUSDC_860_Base = 'morphobluewstethusdc_860_base',
-  MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
   MorphoBlueEthUSDC_860_Base = 'morphoblueethusdc_860_base',
+  MorphoBlueCbEthEth_945_Base = 'morphobluecbetheth_945_base',
+  MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
   MorphoBlueWstEthEth_945_Base = 'morphobluewstetheth_945_base',
   MorphoBlueWstEthEth_965_Base = 'morphobluewstetheth_965_base',
+  MorphoBlueREthUSDC_860_Base = 'morphobluerethusdc_860_base',
+  MorphoBlueREthEth_945_Base = 'morphoblueretheth_945_base',
 }
 
 export enum MorphoBlueOracleType {
