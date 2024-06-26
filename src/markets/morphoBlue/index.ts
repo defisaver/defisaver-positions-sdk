@@ -437,7 +437,7 @@ export const MORPHO_BLUE_WSTETH_ETH_945_BASE = (networkId: NetworkNumber = Netwo
   label: 'Morpho Blue',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_945_Base,
-  url: 'wstetheth-e3c4d4d0',
+  url: 'wstetheth-3a4048c6',
   loanToken: '0x4200000000000000000000000000000000000006',
   collateralToken: '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
   oracle: '0x4A11590e5326138B514E08A9B52202D42077Ca65',
