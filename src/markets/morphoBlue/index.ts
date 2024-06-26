@@ -440,11 +440,11 @@ export const MORPHO_BLUE_WSTETH_ETH_945_BASE = (networkId: NetworkNumber = Netwo
   url: 'wstetheth-e3c4d4d0',
   loanToken: '0x4200000000000000000000000000000000000006',
   collateralToken: '0xc1CBa3fCea344f92D9239c08C0568f6F2F0ee452',
-  oracle: '0xaE10cbdAa587646246c8253E4532A002EE4fa7A4',
+  oracle: '0x4A11590e5326138B514E08A9B52202D42077Ca65',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
   lltv: 0.945,
-  marketId: '0xe3c4d4d0e214fdc52635d7f9b2f7b3b0081771ae2efeb3cb5aae26009f34f7a7',
+  marketId: '0x3a4048c64ba1b375330d376b1ce40e4047d03b47ab4d48af484edec9fec801ba',
   protocolName: 'morpho-blue',
 });
 export const MORPHO_BLUE_WSTETH_ETH_965_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
