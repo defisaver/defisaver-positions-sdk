@@ -83,7 +83,7 @@ const getApyFromDfsApi = async (asset: string) => {
   return data.apy;
 }
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
@@ -95,6 +95,7 @@ export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' |
     if (asset === 'weETH') return getApyFromDfsApi('weETH');
     if (asset === 'ezETH') return getApyFromDfsApi('ezETH')
     if (asset === 'osETH') return getApyFromDfsApi('osETH');
+    if (asset === 'ETHx') return getApyFromDfsApi('ETHx');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
     return '0';
