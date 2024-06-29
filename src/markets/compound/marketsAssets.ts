@@ -29,7 +29,7 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Base]: [],
 } as const;
 
-export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH'];
+export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH'];
 export const v3ETHCollAssetsBase = ['cbETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
