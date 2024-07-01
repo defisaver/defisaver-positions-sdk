@@ -1,7 +1,9 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import { MMUsedAssets, NetworkNumber } from '../types/common';
+import {
+  Blockish, EthAddress, MMUsedAssets, NetworkNumber, PositionBalances,
+} from '../types/common';
 import {
   FeedRegistryContract,
   MorphoBlueViewContract,
@@ -113,6 +115,41 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     assetsData,
   };
 }
+
+export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
+  let balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address) {
+    return balances;
+  }
+
+  const viewContract = MorphoBlueViewContract(web3, network, block);
+  const {
+    loanToken, collateralToken, oracle, irm, lltv,
+  } = selectedMarket;
+  const lltvInWei = new Dec(lltv).mul(WAD).toString();
+  const marketObject = {
+    loanToken, collateralToken, oracle, irm, lltv: lltvInWei,
+  };
+
+  const loanInfo = await viewContract.methods.getUserInfo(marketObject, address).call({}, block);
+  const loanTokenInfo = getAssetInfoByAddress(selectedMarket.loanToken, network);
+  const collateralTokenInfo = getAssetInfoByAddress(selectedMarket.collateralToken, network);
+
+  balances = {
+    collateral: {
+      [addressMapping ? collateralTokenInfo.address.toLowerCase() : wethToEth(collateralTokenInfo.symbol)]: assetAmountInEth(loanInfo.collateral, collateralTokenInfo.symbol),
+    },
+    debt: {
+      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(loanInfo.borrowedInAssets, loanTokenInfo.symbol),
+    },
+  };
+
+  return balances;
+};
 
 export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumber, account: string, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   const {

@@ -42,6 +42,26 @@ describe('Morpho Blue', () => {
     ]);
   };
 
+  const fetchAccountBalances = async (network, _web3, blockNumber, selectedMarket) => {
+    const balances = await sdk.morphoBlue.getMorphoBlueAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
+    // console.log(balances);
+    assert.containsAllKeys(balances, [
+      'collateral', 'debt',
+    ]);
+    return balances;
+  };
+
+  // Balances
+
+  it('can fetch wstETH/ETH balance for position for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    const balances = await fetchAccountBalances(network, web3, 'latest', selectedMarket);
+    // console.log(balances);
+  });
+
   // Ethereum
 
   it('can fetch wstETH/USDC market and account data for Ethereum', async function () {
