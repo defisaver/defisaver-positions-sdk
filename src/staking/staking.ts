@@ -81,7 +81,7 @@ const getApyFromDfsApi = async (asset: string) => {
   const res = await fetch(`https://app.defisaver.com/api/staking/apy?asset=${asset}`);
   const data = await res.json();
   return data.apy;
-}
+};
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx'];
 
@@ -93,7 +93,7 @@ export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' |
     if (asset === 'sDAI') return getDsrApy(web3);
     if (asset === 'sUSDe') return getApyFromDfsApi('sUSDe');
     if (asset === 'weETH') return getApyFromDfsApi('weETH');
-    if (asset === 'ezETH') return getApyFromDfsApi('ezETH')
+    if (asset === 'ezETH') return getApyFromDfsApi('ezETH');
     if (asset === 'osETH') return getApyFromDfsApi('osETH');
     if (asset === 'ETHx') return getApyFromDfsApi('ETHx');
   } catch (e) {
