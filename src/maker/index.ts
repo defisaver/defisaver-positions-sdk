@@ -24,7 +24,7 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
 
   let ilk;
 
-  const needsIlk = new Dec(block).lt(14410792) && new Dec(block).gte(14384301);
+  const needsIlk = block !== 'latest' && new Dec(block).lt(14410792) && new Dec(block).gte(14384301);
 
   if (needsIlk) {
     ilk = (await viewContract.methods.getUrnAndIlk(managerAddress, cdpId).call({}, block)).ilk;

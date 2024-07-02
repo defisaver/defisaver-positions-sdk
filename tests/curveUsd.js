@@ -34,8 +34,8 @@ describe('CurveUsd', () => {
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber, version) => {
-    const balances = await sdk.curveUsd.getCrvUsdAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', version);
+  const fetchAccountBalances = async (network, web3, blockNumber, controllerAddress) => {
+    const balances = await sdk.curveUsd.getCrvUsdAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', controllerAddress);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -65,15 +65,17 @@ describe('CurveUsd', () => {
   it('can fetch ETH market latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDETH].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 'latest', sdk.CrvUSDVersions.crvUSDETH);
+    await fetchAccountBalances(network, web3, 'latest', controllerAddress);
   });
 
   it('can fetch ETH market past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDETH].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 18000000, sdk.CrvUSDVersions.crvUSDETH);
+    await fetchAccountBalances(network, web3, 18000000, controllerAddress);
   });
 
   it('can fetch wstETH market and account data for Ethereum', async function () {
@@ -98,15 +100,17 @@ describe('CurveUsd', () => {
   it('can fetch wstETH market latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDwstETH].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 'latest', sdk.CrvUSDVersions.crvUSDwstETH);
+    await fetchAccountBalances(network, web3, 'latest', controllerAddress);
   });
 
   it('can fetch wstETH market past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDwstETH].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 18000000, sdk.CrvUSDVersions.crvUSDwstETH);
+    await fetchAccountBalances(network, web3, 18000000, controllerAddress);
   });
 
   it('can fetch WBTC market and account data for Ethereum', async function () {
@@ -131,15 +135,17 @@ describe('CurveUsd', () => {
   it('can fetch WBTC market latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDWBTC].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 'latest', sdk.CrvUSDVersions.crvUSDWBTC);
+    await fetchAccountBalances(network, web3, 'latest', controllerAddress);
   });
 
   it('can fetch WBTC market past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDWBTC].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 18000000, sdk.CrvUSDVersions.crvUSDWBTC);
+    await fetchAccountBalances(network, web3, 18000000, controllerAddress);
   });
 
   it('can fetch tBTC market and account data for Ethereum', async function () {
@@ -164,15 +170,18 @@ describe('CurveUsd', () => {
   it('can fetch tBTC market latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDtBTC].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 'latest', sdk.CrvUSDVersions.crvUSDtBTC);
+    await fetchAccountBalances(network, web3, 'latest', controllerAddress);
   });
 
   it('can fetch tBTC market past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDtBTC].controllerAddress;
+
     // in 18001227 block was tBTC controller deployed
-    await fetchAccountBalances(network, web3, 18001300, sdk.CrvUSDVersions.crvUSDtBTC);
+    await fetchAccountBalances(network, web3, 18001300, controllerAddress);
   });
 
   it('can fetch sfrxETH market and account data for Ethereum', async function () {
@@ -197,14 +206,17 @@ describe('CurveUsd', () => {
   it('can fetch sfrxETH market latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDsfrxETH].controllerAddress;
 
-    await fetchAccountBalances(network, web3, 'latest', sdk.CrvUSDVersions.crvUSDsfrxETH);
+    await fetchAccountBalances(network, web3, 'latest', controllerAddress);
   });
 
   it('can fetch sfrxETH market past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
+    const controllerAddress = sdk.markets.CrvUsdMarkets(network)[sdk.CrvUSDVersions.crvUSDsfrxETH].controllerAddress;
+
     // in 18001224 block was sfrxETH controller deployed
-    await fetchAccountBalances(network, web3, 18001300, sdk.CrvUSDVersions.crvUSDsfrxETH);
+    await fetchAccountBalances(network, web3, 18001300, controllerAddress);
   });
 });
