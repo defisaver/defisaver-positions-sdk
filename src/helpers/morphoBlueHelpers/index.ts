@@ -1,8 +1,15 @@
 import Dec from 'decimal.js';
+import { assetAmountInWei } from '@defisaver/tokens';
+import Web3 from 'web3';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { MMUsedAssets } from '../../types/common';
-import { MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketInfo } from '../../types';
+import { MMUsedAssets, NetworkNumber } from '../../types/common';
+import {
+  MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
+} from '../../types';
+import { SECONDS_PER_YEAR, WAD } from '../../constants';
+import { MorphoBlueViewContract } from '../../contracts';
+import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
@@ -54,4 +61,58 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   }
 
   return payload;
+};
+
+const compound = (ratePerSeconds: string) => {
+  const compounding = new Dec(ratePerSeconds).mul(SECONDS_PER_YEAR).toString();
+  const apyNumber = Math.expm1(new Dec(compounding).div(WAD).toNumber());
+  return new Dec(apyNumber).mul(WAD).floor().toString();
+};
+
+export const getSupplyRate = (totalSupplyAssets: string, totalBorrowAssets: string, borrowRate: string, fee: string) => {
+  if (totalBorrowAssets === '0' || totalSupplyAssets === '0') {
+    return '0';
+  }
+  const utillization = new Dec(totalBorrowAssets).mul(WAD).div(totalSupplyAssets).ceil()
+    .toString();
+  const supplyRate = new Dec(utillization).mul(borrowRate).div(WAD).ceil()
+    .toString();
+  const ratePerSecond = new Dec(supplyRate).mul(new Dec(WAD).minus(fee)).div(WAD).ceil()
+    .toString();
+  return new Dec(compound(ratePerSecond)).div(1e18).mul(100).toString();
+};
+
+export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => {
+  if (totalBorrowShares === '0') {
+    return '0';
+  }
+  return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
+};
+
+const borrowOperations = ['borrow', 'payback'];
+
+export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, action: string, amount: string, asset: string, web3: Web3, network: NetworkNumber) => {
+  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+  const lltvInWei = assetAmountInWei(selectedMarket.lltv, 'ETH');
+  const marketData: MarketParamsStruct = [selectedMarket.loanToken, selectedMarket.collateralToken, selectedMarket.oracle, selectedMarket.irm, lltvInWei];
+  const isBorrowOperation = borrowOperations.includes(action);
+  const amountInWei = assetAmountInWei(amount, asset);
+  let liquidityAdded;
+  let liquidityRemoved;
+  if (isBorrowOperation) {
+    liquidityAdded = action === 'payback' ? amountInWei : '0';
+    liquidityRemoved = action === 'borrow' ? amountInWei : '0';
+  } else {
+    liquidityAdded = action === 'collateral' ? amountInWei : '0';
+    liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
+  }
+  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation([
+    marketData,
+    isBorrowOperation,
+    liquidityAdded,
+    liquidityRemoved,
+  ]).call();
+  const borrowRate = getBorrowRate(data.borrowRate, data.market.totalBorrowShares);
+  const supplyRate = getSupplyRate(data.market.totalSupplyAssets, data.market.totalBorrowAssets, data.borrowRate, data.market.fee);
+  return { borrowRate, supplyRate };
 };

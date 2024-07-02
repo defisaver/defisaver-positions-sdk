@@ -11,38 +11,10 @@ import {
 import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
 } from '../types';
-import { WAD, SECONDS_PER_YEAR, USD_QUOTE } from '../constants';
+import { WAD, USD_QUOTE } from '../constants';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { wethToEth } from '../services/utils';
-import { getMorphoBlueAggregatedPositionData } from '../helpers/morphoBlueHelpers';
-
-
-const compound = (ratePerSeconds: string) => {
-  const compounding = new Dec(ratePerSeconds).mul(SECONDS_PER_YEAR).toString();
-  const apyNumber = Math.expm1(new Dec(compounding).div(WAD).toNumber());
-  return new Dec(apyNumber).mul(WAD).floor().toString();
-};
-
-const getSupplyRate = (totalSupplyAssets: string, totalBorrowAssets: string, borrowRate: string, fee: string) => {
-  if (totalBorrowAssets === '0' || totalSupplyAssets === '0') {
-    return 0;
-  }
-  const utillization = new Dec(totalBorrowAssets).mul(WAD).div(totalSupplyAssets).ceil()
-    .toString();
-  const supplyRate = new Dec(utillization).mul(borrowRate).div(WAD).ceil()
-    .toString();
-  const ratePerSecond = new Dec(supplyRate).mul(new Dec(WAD).minus(fee)).div(WAD).ceil()
-    .toString();
-  return compound(ratePerSecond);
-};
-
-const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => {
-  if (totalBorrowShares === '0') {
-    return 0;
-  }
-  return compound(borrowRate);
-};
-
+import { getBorrowRate, getMorphoBlueAggregatedPositionData, getSupplyRate } from '../helpers/morphoBlueHelpers';
 
 export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
   const {
@@ -80,8 +52,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     symbol: wethToEth(loanTokenInfo.symbol),
     address: loanToken,
     price: new Dec(loanTokenPrice).div(1e8).toString(),
-    supplyRate: new Dec(supplyRate).div(WAD).mul(100).toString(),
-    borrowRate: new Dec(compoundedBorrowRate).div(WAD).mul(100).toString(),
+    supplyRate,
+    borrowRate: compoundedBorrowRate,
     totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
     totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
     canBeSupplied: true,
