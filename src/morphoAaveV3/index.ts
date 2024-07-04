@@ -19,7 +19,7 @@ import {
   getConfigContractAddress,
 } from '../contracts';
 import { multicall } from '../multicall';
-import { getStakingApy, STAKING_ASSETS} from '../staking';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
@@ -250,12 +250,12 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       isFrozen: marketData.isFrozen,
       isPaused: marketData.isPaused,
       canBeBorrowed: !marketData.isFrozen
-            && marketData.borrowingEnabled
-            && !marketData.pauseStatuses.isBorrowPaused
-            && !marketData.pauseStatuses.isDeprecated,
+        && marketData.borrowingEnabled
+        && !marketData.pauseStatuses.isBorrowPaused
+        && !marketData.pauseStatuses.isDeprecated,
       canBeSupplied: !marketData.isFrozen
         && marketData.isCollateral ? !marketData.pauseStatuses.isSupplyCollateralPaused : !marketData.pauseStatuses.isSupplyPaused
-            && !marketData.pauseStatuses.isDeprecated,
+      && !marketData.pauseStatuses.isDeprecated,
       canBeWithdrawn: marketData.isActive
         && !marketData.isPaused
         && marketData.isCollateral ? !marketData.pauseStatuses.isWithdrawCollateralPaused : !marketData.pauseStatuses.isWithdrawPaused,
