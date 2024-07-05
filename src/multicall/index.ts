@@ -6,7 +6,7 @@ export const multicall = async (calls: any[], web3: Web3, network: NetworkNumber
   const multicallContract = UniMulticallContract(web3, network);
   const formattedCalls = calls.map((call) => {
     const callData = web3.eth.abi.encodeFunctionCall(call.abiItem, call.params);
-    return { callData, target: call.target || '0x0', gasLimit: call.gasLimit || 1e6 };
+    return { callData, target: call.target || '0x0', gasLimit: call.gasLimit || 1200000 };
   });
   const callResult = await multicallContract.methods.multicall(formattedCalls.filter(item => item.target !== '0x0')).call({}, blockNumber);
 
