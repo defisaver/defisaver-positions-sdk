@@ -4,7 +4,13 @@ import { BandData, UserBandData } from './curveUsd';
 export enum LLVersionsEth {
   // long only
   LLWstethCrvusd = 'llamaLendwstETHcrvUSD',
+  LLWstethCrvusd2 = 'llamaLendwstETHcrvUSD2',
   LLSusdeCrvusd = 'llamaLendsUSDecrvUSD',
+  LLSusdeCrvusd2 = 'llamaLendsUSDecrvUSD2',
+  LLWbtcCrvusd = 'llamaLendWBTCcrvUSD',
+  LLPufethCrvusd = 'llamaLendPufETHcrvUSD',
+  LLUsdeCrvusd = 'llamaLendUSDecrvUSD',
+  LLWethCrvusd2 = 'llamaLendWETHcrvUSD2',
   // long and short crv
   LLCrvCrvusd = 'llamaLendCRVcrvUSD',
   LLCrvusdCrv = 'llamaLendcrvUSDCRV',

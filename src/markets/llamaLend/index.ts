@@ -13,6 +13,17 @@ export const LLAMALEND_WSTETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaL
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWstethCrvusd),
 });
 
+export const LLAMALEND_WSTETH_CRVUSD_MARKET_2 = (networkId: NetworkNumber): LlamaLendMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'LlamaLend - wstETH/crvUSD #2',
+  shortLabel: 'wstETH/crvUSD #2',
+  value: LlamaLendVersions.LLWstethCrvusd2,
+  collAsset: 'wstETH',
+  baseAsset: 'crvUSD',
+  url: 'wstethcrvusd2',
+  ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWstethCrvusd2),
+});
+
 export const LLAMALEND_SUSDE_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
   label: 'LlamaLend - sUSDe/crvUSD',
@@ -22,6 +33,17 @@ export const LLAMALEND_SUSDE_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLe
   baseAsset: 'crvUSD',
   url: 'susdecrvusd',
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLSusdeCrvusd),
+});
+
+export const LLAMALEND_SUSDE_CRVUSD_MARKET_2 = (networkId: NetworkNumber): LlamaLendMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'LlamaLend - sUSDe/crvUSD #2',
+  shortLabel: 'sUSDe/crvUSD #2',
+  value: LlamaLendVersions.LLSusdeCrvusd2,
+  collAsset: 'sUSDe',
+  baseAsset: 'crvUSD',
+  url: 'susdecrvusd2',
+  ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLSusdeCrvusd2),
 });
 
 export const LLAMALEND_CRV_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
@@ -91,6 +113,17 @@ export const LLAMALEND_CRVUSD_WETH_MARKET = (networkId: NetworkNumber): LlamaLen
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLCrvusdWeth),
 });
 
+export const LLAMALEND_WETH_CRVUSD_MARKET_2 = (networkId: NetworkNumber): LlamaLendMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'LlamaLend - ETH/crvUSD #2',
+  shortLabel: 'ETH/crvUSD #2',
+  value: LlamaLendVersions.LLWethCrvusd2,
+  collAsset: 'ETH',
+  baseAsset: 'crvUSD',
+  url: 'wethcrvusd2',
+  ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWethCrvusd2),
+});
+
 export const LLAMALEND_ARB_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Arb],
   label: 'LlamaLend - ARB/crvUSD',
@@ -114,7 +147,7 @@ export const LLAMALEND_FXN_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLend
 });
 
 export const LLAMALEND_WBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
-  chainIds: [NetworkNumber.Arb],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Arb],
   label: 'LlamaLend - WBTC/crvUSD',
   shortLabel: 'WBTC/crvUSD',
   value: LlamaLendVersions.LLWbtcCrvusd,
@@ -124,18 +157,45 @@ export const LLAMALEND_WBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLWbtcCrvusd),
 });
 
+export const LLAMALEND_USDE_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'LlamaLend - USDe/crvUSD',
+  shortLabel: 'USDe/crvUSD',
+  value: LlamaLendVersions.LLUsdeCrvusd,
+  collAsset: 'USDe',
+  baseAsset: 'crvUSD',
+  url: 'usdecrvusd',
+  ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLUsdeCrvusd),
+});
+
+export const LLAMALEND_PUFETH_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'LlamaLend - pufETH/crvUSD',
+  shortLabel: 'pufETH/crvUSD',
+  value: LlamaLendVersions.LLPufethCrvusd,
+  collAsset: 'pufETH',
+  baseAsset: 'crvUSD',
+  url: 'pufethcrvusd',
+  ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLPufethCrvusd),
+});
+
 export const LlamaLendMarkets = (networkId: NetworkNumber):Record<LlamaLendVersionsType, LlamaLendMarketData> => ({
   [LlamaLendVersions.LLWstethCrvusd]: LLAMALEND_WSTETH_CRVUSD_MARKET(networkId),
+  [LlamaLendVersions.LLWstethCrvusd2]: LLAMALEND_WSTETH_CRVUSD_MARKET_2(networkId),
   [LlamaLendVersions.LLCrvusdCrv]: LLAMALEND_CRVUSD_CRV_MARKET(networkId),
   [LlamaLendVersions.LLCrvCrvusd]: LLAMALEND_CRV_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLTbtcCrvusd]: LLAMALEND_TBTC_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLCrvusdTbtc]: LLAMALEND_CRVUSD_TBTC_MARKET(networkId),
   [LlamaLendVersions.LLWethCrvusd]: LLAMALEND_WETH_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLCrvusdWeth]: LLAMALEND_CRVUSD_WETH_MARKET(networkId),
+  [LlamaLendVersions.LLWethCrvusd2]: LLAMALEND_WETH_CRVUSD_MARKET_2(networkId),
   [LlamaLendVersions.LLArbCrvusd]: LLAMALEND_ARB_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLFxnCrvusd]: LLAMALEND_FXN_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLWbtcCrvusd]: LLAMALEND_WBTC_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLSusdeCrvusd]: LLAMALEND_SUSDE_CRVUSD_MARKET(networkId),
+  [LlamaLendVersions.LLSusdeCrvusd2]: LLAMALEND_SUSDE_CRVUSD_MARKET_2(networkId),
+  [LlamaLendVersions.LLUsdeCrvusd]: LLAMALEND_USDE_CRVUSD_MARKET(networkId),
+  [LlamaLendVersions.LLPufethCrvusd]: LLAMALEND_PUFETH_CRVUSD_MARKET(networkId),
 }) as const;
 
 

@@ -15,10 +15,20 @@ const ethAddresses: Record<LLVersionsEth, LLAddresses> = {
     controllerAddress: '0x1E0165DbD2019441aB7927C018701f3138114D71',
     vaultAddress: '0x8cf1DE26729cfB7137AF1A6B2a665e099EC319b5',
   },
+  [LlamaLendVersions.LLWstethCrvusd2]: {
+    controllerId: 11,
+    controllerAddress: '0xB536FEa3a01c95Dd09932440eC802A75410139D6',
+    vaultAddress: '0x4a7999c55d3a93dAf72EA112985e57c2E3b9e95D',
+  },
   [LlamaLendVersions.LLSusdeCrvusd]: {
     controllerId: 7,
     controllerAddress: '0x98fc283d6636f6dcff5a817a00ac69a3add96907',
     vaultAddress: '0x52096539ed1391CB50C6b9e4Fd18aFd2438ED23b',
+  },
+  [LlamaLendVersions.LLSusdeCrvusd2]: {
+    controllerId: 11,
+    controllerAddress: '0xB536FEa3a01c95Dd09932440eC802A75410139D6',
+    vaultAddress: '0x4a7999c55d3a93dAf72EA112985e57c2E3b9e95D',
   },
   [LlamaLendVersions.LLCrvCrvusd]: {
     controllerId: 3,
@@ -49,6 +59,26 @@ const ethAddresses: Record<LLVersionsEth, LLAddresses> = {
     controllerId: 5,
     controllerAddress: '0xa5d9137d2a1ee912469d911a8e74b6c77503bac8',
     vaultAddress: '0x46196C004de85c7a75C8b1bB9d54Afb0f8654A45',
+  },
+  [LlamaLendVersions.LLWethCrvusd2]: {
+    controllerId: 12,
+    controllerAddress: '0x23F5a668A9590130940eF55964ead9787976f2CC',
+    vaultAddress: '0x8fb1c7AEDcbBc1222325C39dd5c1D2d23420CAe3',
+  },
+  [LlamaLendVersions.LLWbtcCrvusd]: {
+    controllerId: 9,
+    controllerAddress: '0xcaD85b7fe52B1939DCEebEe9bCf0b2a5Aa0cE617',
+    vaultAddress: '0xccd37EB6374Ae5b1f0b85ac97eFf14770e0D0063',
+  },
+  [LlamaLendVersions.LLPufethCrvusd]: {
+    controllerId: 10,
+    controllerAddress: '0x4f87158350c296955966059C50263F711cE0817C',
+    vaultAddress: '0xff467c6E827ebbEa64DA1ab0425021E6c89Fbe0d',
+  },
+  [LlamaLendVersions.LLUsdeCrvusd]: {
+    controllerId: 14,
+    controllerAddress: '0x74f88Baa966407b50c10B393bBD789639EFfE78B',
+    vaultAddress: '0xc687141c18F20f7Ba405e45328825579fDdD3195',
   },
 };
 

@@ -1,16 +1,16 @@
 require('dotenv').config();
-const {assert} = require('chai');
+const { assert } = require('chai');
 const Web3 = require('web3');
 
 const sdk = require('../cjs');
-const {NetworkNumber} = require('../cjs/types/common');
+const { NetworkNumber } = require('../cjs/types/common');
 
 describe('LlamaLend', () => {
   let web3Eth;
   let web3Arb;
   before(async () => {
     web3Eth = new Web3(process.env.RPC);
-    web3Arb = new Web3(process.env.RPCARB)
+    web3Arb = new Web3(process.env.RPCARB);
   });
 
   // const fetchAccountBalances = async (network, web3, blockNumber) => {
@@ -24,9 +24,8 @@ describe('LlamaLend', () => {
   const getWeb3ByNetwork = (network) => {
     if (network === NetworkNumber.Eth) return web3Eth;
     if (network === NetworkNumber.Arb) return web3Arb;
-  }
+  };
   const fetchMarketData = async (network, web3, selectedMarket) => {
-
     const marketData = await sdk.llamaLend.getLlamaLendGlobalData(web3, network, selectedMarket);
     return marketData;
   };
@@ -41,12 +40,12 @@ describe('LlamaLend', () => {
 
   const getMarketsByNetwork = (network) => {
     const markets = sdk.markets.LlamaLendMarkets(network);
-    return Object.values(markets).filter(({chainIds}) => chainIds.includes(network));
+    return Object.values(markets).filter(({ chainIds }) => chainIds.includes(network));
   };
 
 
   it('can fetch market data for Ethereum', async function () {
-    this.timeout(10000);
+    this.timeout(20000);
     const network = NetworkNumber.Eth;
     const web3 = getWeb3ByNetwork(network);
     const markets = getMarketsByNetwork(network);
