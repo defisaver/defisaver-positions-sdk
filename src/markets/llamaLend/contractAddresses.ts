@@ -16,9 +16,9 @@ const ethAddresses: Record<LLVersionsEth, LLAddresses> = {
     vaultAddress: '0x8cf1DE26729cfB7137AF1A6B2a665e099EC319b5',
   },
   [LlamaLendVersions.LLWstethCrvusd2]: {
-    controllerId: 11,
-    controllerAddress: '0xB536FEa3a01c95Dd09932440eC802A75410139D6',
-    vaultAddress: '0x4a7999c55d3a93dAf72EA112985e57c2E3b9e95D',
+    controllerId: 13,
+    controllerAddress: '0x5756A035F276a8095A922931F224F4ed06149608',
+    vaultAddress: '0x21CF1c5Dc48C603b89907FE6a7AE83EA5e3709aF',
   },
   [LlamaLendVersions.LLSusdeCrvusd]: {
     controllerId: 7,
