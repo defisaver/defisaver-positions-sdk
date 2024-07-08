@@ -1,13 +1,16 @@
 import Dec from 'decimal.js';
-import { LlamaLendAggregatedPositionData, LlamaLendMarketData, LlamaLendUsedAssets } from '../../types';
+import {
+  LlamaLendAggregatedPositionData, LlamaLendAssetsData, LlamaLendMarketData, LlamaLendUsedAssets,
+} from '../../types';
 import { MMUsedAssets, NetworkNumber } from '../../types/common';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { mapRange } from '../../services/utils';
+import { calculateNetApy } from '../../staking';
 
 export const getLlamaLendAggregatedData = ({
-  loanExists, usedAssets, network, selectedMarket, numOfBands, ...rest
+  loanExists, usedAssets, network, selectedMarket, numOfBands, assetsData, ...rest
 }:{
-  loanExists: boolean, usedAssets: LlamaLendUsedAssets, network: NetworkNumber, selectedMarket: LlamaLendMarketData, numOfBands: number | string
+  loanExists: boolean, usedAssets: LlamaLendUsedAssets, network: NetworkNumber, selectedMarket: LlamaLendMarketData, numOfBands: number | string, assetsData: LlamaLendAssetsData,
 }): LlamaLendAggregatedPositionData => {
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
@@ -18,6 +21,11 @@ export const getLlamaLendAggregatedData = ({
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ collateral }: { collateral: boolean }) => collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   payload.suppliedForYieldUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedForYield }: { suppliedForYield?: string }) => suppliedForYield || '0');
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData as any);
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
 
   payload.ratio = loanExists
     ? new Dec(payload.suppliedUsd)

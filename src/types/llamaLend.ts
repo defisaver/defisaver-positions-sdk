@@ -111,6 +111,9 @@ export interface LlamaLendAggregatedPositionData {
   leveragedType: string,
   leveragedAsset?: string,
   liquidationPrice?: string,
+  netApy: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
 }
 
 export interface LlamaLendUsedAsset {

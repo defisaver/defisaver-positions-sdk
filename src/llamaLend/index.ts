@@ -13,6 +13,7 @@ import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
 import { getAbiItem, getEthAmountForDecimals, wethToEth } from '../services/utils';
 import { USD_QUOTE } from '../constants';
 import { getLlamaLendMarketFromControllerAddress } from '../markets/llamaLend';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
   const contract = LlamaLendViewContract(web3, network);
@@ -52,7 +53,7 @@ const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMar
   }));
 };
 
-export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData): Promise<LlamaLendGlobalMarketData> => {
+export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, defaultWeb3: Web3): Promise<LlamaLendGlobalMarketData> => {
   const contract = LlamaLendViewContract(web3, network);
 
   const collAsset = selectedMarket.collAsset;
@@ -109,6 +110,12 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     canBeSupplied: true,
     canBeBorrowed: false,
   };
+
+  if (STAKING_ASSETS.includes(collAsset)) {
+    assetsData[collAsset].incentiveSupplyApy = await getStakingApy(collAsset, defaultWeb3);
+    assetsData[collAsset].incentiveSupplyToken = collAsset;
+  }
+
   return {
     A: data.A,
     loanDiscount: data.loanDiscount,
@@ -255,14 +262,14 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
     usedAssets,
     status,
     ...getLlamaLendAggregatedData({
-      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N,
+      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N, assetsData,
     }),
     userBands,
   };
 };
 
-export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
-  const marketData = await getLlamaLendGlobalData(web3, network, selectedMarket);
+export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData, defaultWeb3: Web3): Promise<LlamaLendUserData> => {
+  const marketData = await getLlamaLendGlobalData(web3, network, selectedMarket, defaultWeb3);
   const positionData = await getLlamaLendUserData(web3, network, address, selectedMarket, marketData);
   return positionData;
 };

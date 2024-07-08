@@ -26,7 +26,7 @@ describe('LlamaLend', () => {
     if (network === NetworkNumber.Arb) return web3Arb;
   };
   const fetchMarketData = async (network, web3, selectedMarket) => {
-    const marketData = await sdk.llamaLend.getLlamaLendGlobalData(web3, network, selectedMarket);
+    const marketData = await sdk.llamaLend.getLlamaLendGlobalData(web3, network, selectedMarket, web3Eth);
     return marketData;
   };
 
@@ -42,6 +42,17 @@ describe('LlamaLend', () => {
     const markets = sdk.markets.LlamaLendMarkets(network);
     return Object.values(markets).filter(({ chainIds }) => chainIds.includes(network));
   };
+
+  // it('can fetch market data for Ethereum', async function () {
+  //   this.timeout(20000);
+  //   const network = NetworkNumber.Eth;
+  //   const web3 = getWeb3ByNetwork(network);
+  //   const market = sdk.markets.LlamaLendMarkets(network)[sdk.LlamaLendVersions.LLPufethCrvusd];
+  //   const marketData = await fetchMarketData(network, web3, market);
+
+  //   delete marketData.bands;
+  //   console.log(marketData);
+  // });
 
 
   it('can fetch market data for Ethereum', async function () {
