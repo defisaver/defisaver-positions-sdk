@@ -88,6 +88,11 @@ const arbAddresses: Record<LLVersionsArb, LLAddresses> = {
     controllerAddress: '0x76709bc0da299ab0234eec51385e900922ae98f5',
     vaultAddress: '0x65592b1F12c07D434e95c7BF87F4f2f464e950e4',
   },
+  [LlamaLendVersions.LLArbCrvusd2]: {
+    controllerId: 11,
+    controllerAddress: '0xeCF99dE21c31eC75b4Fb97e980F9d084b1d8Da8f',
+    vaultAddress: '0xa6C2E6A83D594e862cDB349396856f7FFE9a979B',
+  },
   [LlamaLendVersions.LLFxnCrvusd]: {
     controllerId: 7,
     controllerAddress: '0x7adcc491f0b7f9bc12837b8f5edf0e580d176f1f',
@@ -98,6 +103,11 @@ const arbAddresses: Record<LLVersionsArb, LLAddresses> = {
     controllerAddress: '0x013be86e1cdb0f384daf24bd974fe75edffe6b68',
     vaultAddress: '0x60D38b12d22BF423F28082bf396ff8F28cC506B1',
   },
+  [LlamaLendVersions.LLWbtcCrvusd2]: {
+    controllerId: 10,
+    controllerAddress: '0xb9aDddCf4e01c2f64F8F2CD9a050DC35585ea053',
+    vaultAddress: '0xe07f1151887b8FDC6800f737252f6b91b46b5865',
+  },
   [LlamaLendVersions.LLCrvCrvusd]: {
     controllerId: 4,
     controllerAddress: '0x88f88e937db48bbfe8e3091718576430704e47ab',
@@ -107,6 +117,11 @@ const arbAddresses: Record<LLVersionsArb, LLAddresses> = {
     controllerId: 0,
     controllerAddress: '0xb5b6f0e69c283aa32425fa18220e64283b51f0a4',
     vaultAddress: '0x49014A8eB1585cBee6A7a9A50C3b81017BF6Cc4d',
+  },
+  [LlamaLendVersions.LLWethCrvusd2]: {
+    controllerId: 9,
+    controllerAddress: '0xB5c6082d3307088C98dA8D79991501E113e6365d',
+    vaultAddress: '0xd3cA9BEc3e681b0f578FD87f20eBCf2B7e0bb739',
   },
 };
 

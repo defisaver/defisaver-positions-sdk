@@ -25,10 +25,13 @@ export enum LLVersionsEth {
 export enum LLVersionsArb {
   // long only
   LLArbCrvusd = 'llamaLendArbcrvUSD',
+  LLArbCrvusd2 = 'llamaLendArbcrvUSD2',
   LLFxnCrvusd = 'llamaLendFXNcrvUSD',
   LLWbtcCrvusd = 'llamaLendWBTCcrvUSD',
+  LLWbtcCrvusd2 = 'llamaLendWBTCcrvUSD2',
   LLCrvCrvusd = 'llamaLendCRVcrvUSD',
   LLWethCrvusd = 'llamaLendWETHcrvUSD',
+  LLWeth2Crvusd = 'llamaLendWETHcrvUSD2',
 }
 
 export const LlamaLendVersions = {
