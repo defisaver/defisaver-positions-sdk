@@ -70,11 +70,12 @@ const ethAddresses: Record<LLVersionsEth, LLAddresses> = {
     controllerAddress: '0xcaD85b7fe52B1939DCEebEe9bCf0b2a5Aa0cE617',
     vaultAddress: '0xccd37EB6374Ae5b1f0b85ac97eFf14770e0D0063',
   },
-  [LlamaLendVersions.LLPufethCrvusd]: {
-    controllerId: 10,
-    controllerAddress: '0x4f87158350c296955966059C50263F711cE0817C',
-    vaultAddress: '0xff467c6E827ebbEa64DA1ab0425021E6c89Fbe0d',
-  },
+  // temp disabled
+  // [LlamaLendVersions.LLPufethCrvusd]: {
+  //   controllerId: 10,
+  //   controllerAddress: '0x4f87158350c296955966059C50263F711cE0817C',
+  //   vaultAddress: '0xff467c6E827ebbEa64DA1ab0425021E6c89Fbe0d',
+  // },
   [LlamaLendVersions.LLUsdeCrvusd]: {
     controllerId: 14,
     controllerAddress: '0x74f88Baa966407b50c10B393bBD789639EFfE78B',

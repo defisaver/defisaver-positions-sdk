@@ -8,7 +8,7 @@ export enum LLVersionsEth {
   LLSusdeCrvusd = 'llamaLendsUSDecrvUSD',
   LLSusdeCrvusd2 = 'llamaLendsUSDecrvUSD2',
   LLWbtcCrvusd = 'llamaLendWBTCcrvUSD',
-  LLPufethCrvusd = 'llamaLendPufETHcrvUSD',
+  // LLPufethCrvusd = 'llamaLendPufETHcrvUSD', // temp disabled
   LLUsdeCrvusd = 'llamaLendUSDecrvUSD',
   LLWethCrvusd2 = 'llamaLendWETHcrvUSD2',
   // long and short crv
