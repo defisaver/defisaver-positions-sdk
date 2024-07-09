@@ -8,6 +8,7 @@ export enum CompoundVersions {
   'CompoundV3USDCe' = 'v3-USDC.e',
   'CompoundV3ETH' = 'v3-ETH',
   'CompoundV3USDbC' = 'v3-USDbC',
+  'CompoundV3USDT' = 'v3-USDT',
 }
 
 export interface CompoundBulkerOptions {

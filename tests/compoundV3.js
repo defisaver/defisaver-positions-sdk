@@ -8,9 +8,13 @@ const { NetworkNumber } = require('../cjs/types/common');
 describe('Compound v3', () => {
   let web3;
   let web3Base;
+  let web3Arb;
+  let web3Opt;
   before(async () => {
     web3 = new Web3(process.env.RPC);
     web3Base = new Web3(process.env.RPCBASE);
+    web3Arb = new Web3(process.env.RPCARB);
+    web3Opt = new Web3(process.env.RPCOPT);
   });
 
   const fetchMarketData = async (network, _web3, selectedMarket) => {
@@ -98,6 +102,28 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
 
     await fetchAccountBalances(network, web3, 18000000, '0xc3d688B66703497DAA19211EEdff47f25384cdc3');
+  });
+
+  // Arbitrum
+
+  it('can fetch market and account data for USDT Market on Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
+
+    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
+    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+  });
+
+  // Optimism
+
+  it('can fetch market and account data for USDT Market on Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
+
+    const marketData = await fetchMarketData(network, web3Opt, selectedMarket);
+    await fetchAccountData(network, web3Opt, marketData, selectedMarket);
   });
 
   // Base
