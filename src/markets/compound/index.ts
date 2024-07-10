@@ -172,13 +172,3 @@ export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV3USDCe]: COMPOUND_V3_USDCe(networkId),
   [CompoundVersions.CompoundV3USDT]: COMPOUND_V3_USDT(networkId),
 }) as const;
-
-export const COMPOUND_V3_VERSIONS = [COMPOUND_V3_USDC, COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDCe, COMPOUND_V3_USDT];
-
-export const getCompoundVersionData = (version: CompoundVersions, network: NetworkNumber) => CompoundMarkets(network)[version];
-export const getCompoundVersionsDataForNetwork = (network: NetworkNumber) => (
-  Object.values(CompoundMarkets(network as NetworkNumber)).filter(({ chainIds }) => chainIds.includes(network))
-);
-export const getCompoundV3VersionsDataForNetwork = (network: NetworkNumber) => (
-  Object.values(CompoundMarkets(network as NetworkNumber)).filter(({ value }) => value !== CompoundVersions.CompoundV2).filter(({ chainIds }) => chainIds.includes(network))
-);

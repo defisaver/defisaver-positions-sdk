@@ -1,10 +1,6 @@
 export { AaveMarkets } from './aave';
 export {
   CompoundMarkets,
-  COMPOUND_V3_VERSIONS,
-  getCompoundVersionData,
-  getCompoundVersionsDataForNetwork,
-  getCompoundV3VersionsDataForNetwork,
   compoundV2CollateralAssets,
   v3ETHCollAssets,
   v3USDbCCollAssets,
