@@ -30,12 +30,12 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
   [NetworkNumber.Eth]: {
     [CompoundVersions.CompoundV3USDC]: { supply: 2, withdraw: 5 },
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDT]: STANDARD_BULKER_OPTIONS,
 
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
-    [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Arb]: {
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
@@ -149,7 +149,7 @@ export const COMPOUND_V3_USDBC = (networkId: NetworkNumber): CompoundMarketData 
 });
 
 export const COMPOUND_V3_USDT = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Arb, NetworkNumber.Opt],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt],
   label: 'Compound V3 - USDT',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3USDT,
@@ -158,8 +158,8 @@ export const COMPOUND_V3_USDT = (networkId: NetworkNumber): CompoundMarketData =
   baseMarket: 'cUSDTv3',
   baseMarketAddress: getConfigContractAddress('cUSDTv3', networkId),
   secondLabel: 'Market',
-  bulkerName: 'CompV3BulkerL2',
-  bulkerAddress: getConfigContractAddress('CompV3BulkerL2', networkId),
+  bulkerName: networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2',
+  bulkerAddress: getConfigContractAddress(networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2', networkId),
   bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3USDT],
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });

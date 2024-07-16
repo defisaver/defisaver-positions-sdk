@@ -51,12 +51,13 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
 };
 
+export const v3USDTCollAssetsEth = ['ETH', 'WBTC', 'wstETH', 'COMP', 'UNI', 'LINK'];
 export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3USDTCollAssets = {
-  [NetworkNumber.Eth]: [],
+  [NetworkNumber.Eth]: v3USDTCollAssetsEth,
   [NetworkNumber.Opt]: v3USDTCollAssetsOpt,
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
   [NetworkNumber.Base]: [],
