@@ -90,6 +90,23 @@ describe('Compound v3', () => {
     await fetchFullPositionData(network, web3, selectedMarket);
   });
 
+  it('can fetch market and account data for USDT Market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
+
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  it('can fetch full position data for USDT Market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
+
+    await fetchFullPositionData(network, web3, selectedMarket);
+  });
+
   it('can fetch latest account balances for ETH Market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
