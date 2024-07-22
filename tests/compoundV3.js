@@ -132,6 +132,15 @@ describe('Compound v3', () => {
     await fetchAccountData(network, web3Arb, marketData, selectedMarket);
   });
 
+  it('can fetch market and account data for USDC Market on Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDC];
+
+    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
+    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+  });
+
   // Optimism
 
   it('can fetch market and account data for USDT Market on Optimism', async function () {
