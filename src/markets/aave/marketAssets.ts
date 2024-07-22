@@ -1,4 +1,10 @@
+import { getAssetInfo } from '@defisaver/tokens';
 import { NetworkNumber } from '../../types/common';
+
+export const aaveV1AssetsDefaultMarket = [
+  'aETH', 'aDAI', 'aUSDC', 'aSUSD', 'aTUSD', 'aUSDT', 'aBUSD', 'aBAT', 'aLEND',
+  'aLINK', 'aMANA', 'aMKR', 'aREP', 'aSNX', 'aWBTC', 'aZRX', 'aENJ', 'aREN', 'aYFI', 'aUNI', 'aAAVE',
+].map((symbol) => getAssetInfo(symbol));
 
 export const aaveV2AssetsDefaultMarket = ['USDT', 'WBTC', 'ETH', 'YFI', 'ZRX', 'UNI', 'AAVE', 'BAT', 'BUSD', 'DAI', 'ENJ', 'KNCL', 'LINK', 'MANA', 'MKR', 'REN', 'SNX', 'SUSD', 'TUSD', 'USDC', 'CRV', 'GUSD', 'BAL', 'xSUSHI', 'RENFIL', 'RAI', 'AMPL', 'USDP', 'DPI', 'FRAX', 'FEI', 'stETH', 'ENS', 'UST', 'CVX', '1INCH', 'LUSD'];
 export const morphoAaveV2AssetDefaultMarket = ['DAI', 'ETH', 'USDC', 'USDT', 'WBTC', 'stETH', 'CRV'];

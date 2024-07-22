@@ -5,6 +5,7 @@ import {
 import { IUiIncentiveDataProviderV3 } from './contracts/generated/AaveUiIncentiveDataProviderV3';
 
 export enum AaveVersions {
+  AaveV1 = 'v1',
   AaveV2 = 'v2default',
   AaveV3 = 'v3default',
   MorphoAaveV2 = 'morphoAaveV2',

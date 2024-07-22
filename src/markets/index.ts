@@ -1,4 +1,11 @@
-export { AaveMarkets } from './aave';
+export {
+  AaveMarkets,
+  aaveV1AssetsDefaultMarket,
+  aaveV2AssetsDefaultMarket,
+  aaveV3AssetsDefaultMarket,
+  morphoAaveV2AssetDefaultMarket,
+  morphoAaveV3AssetEthMarket,
+} from './aave';
 export {
   CompoundMarkets,
   compoundV2CollateralAssets,

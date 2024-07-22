@@ -4,11 +4,37 @@ import {
 } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import {
-  aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
+  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
 } from './marketAssets';
 
+export {
+  aaveV1AssetsDefaultMarket,
+  aaveV2AssetsDefaultMarket,
+  aaveV3AssetsDefaultMarket,
+  morphoAaveV2AssetDefaultMarket,
+  morphoAaveV3AssetEthMarket,
+};
+
+export const AAVE_V1: AaveMarketInfo = {
+  chainIds: [NetworkNumber.Eth],
+  label: 'Aave v1',
+  shortLabel: 'v1',
+  url: '',
+  value: AaveVersions.AaveV1,
+  assets: aaveV1AssetsDefaultMarket.map((a) => a.underlyingAsset),
+  provider: '',
+  providerAddress: '',
+  lendingPool: '',
+  lendingPoolAddress: '',
+  protocolData: '',
+  protocolDataAddress: '',
+  // icon: SvgAdapter(protocolIcons.aave),
+  disabled: true,
+  protocolName: 'aave',
+};
+
 export const AAVE_V2: AaveMarketInfo = {
-  chainIds: [1],
+  chainIds: [NetworkNumber.Eth],
   label: 'Aave v2',
   shortLabel: 'v2',
   value: AaveVersions.AaveV2,
@@ -73,6 +99,7 @@ export const MORPHO_AAVE_V3_ETH = (networkId: NetworkNumber = NetworkNumber.Eth)
 
 
 export const AaveMarkets = (networkId: NetworkNumber) => ({
+  [AaveVersions.AaveV1]: AAVE_V1,
   [AaveVersions.AaveV2]: AAVE_V2,
   [AaveVersions.AaveV3]: AAVE_V3(networkId),
   [AaveVersions.MorphoAaveV3Eth]: MORPHO_AAVE_V3_ETH(networkId),
