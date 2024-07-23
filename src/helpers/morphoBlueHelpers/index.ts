@@ -7,7 +7,7 @@ import { MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
 } from '../../types';
-import { SECONDS_PER_YEAR, WAD } from '../../constants';
+import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
 import { MorphoBlueViewContract } from '../../contracts';
 import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
 
@@ -88,8 +88,6 @@ export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => 
   }
   return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
 };
-
-const borrowOperations = ['borrow', 'payback'];
 
 export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, action: string, amount: string, asset: string, web3: Web3, network: NetworkNumber) => {
   const morphoBlueViewContract = MorphoBlueViewContract(web3, network);

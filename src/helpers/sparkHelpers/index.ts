@@ -1,11 +1,18 @@
 import Dec from 'decimal.js';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import Web3 from 'web3';
+import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import {
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+} from '../../moneymarket';
 import {
   SparkAggregatedPositionData,
-  SparkAssetsData, SparkHelperCommon, SparkUsedAssets,
+  SparkAssetsData, SparkHelperCommon, SparkMarketData, SparkUsedAssets,
 } from '../../types';
 import { calculateNetApy } from '../../staking';
-import { wethToEth } from '../../services/utils';
+import { ethToWeth, wethToEth } from '../../services/utils';
+import { SparkViewContract } from '../../contracts';
+import { NetworkNumber } from '../../types/common';
+import { borrowOperations } from '../../constants';
 
 export const sparkIsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets: SparkUsedAssets, assetsData: SparkAssetsData }) => Object.values(usedAssets).some(({ symbol, collateral }) => collateral && assetsData[symbol].isIsolated);
 
@@ -104,4 +111,41 @@ export const sparkGetAggregatedPositionData = ({
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   return payload;
+};
+
+export const getApyAfterValuesEstimation = async (selectedMarket: SparkMarketData, actions: [{ action: string, amount: string, asset: string }], web3: Web3) => {
+  const sparkViewContract = SparkViewContract(web3, NetworkNumber.Eth);
+  const params = actions.map(({ action, asset, amount }: { action: string, amount: string, asset: string }) => {
+    const isDebtAsset = borrowOperations.includes(action);
+    const amountInWei = assetAmountInWei(amount, asset);
+    const assetInfo = getAssetInfo(ethToWeth(asset));
+    let liquidityAdded;
+    let liquidityTaken;
+    if (isDebtAsset) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityTaken = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityTaken = action === 'withdraw' ? amountInWei : '0';
+    }
+    return {
+      reserveAddress: assetInfo.address,
+      liquidityAdded,
+      liquidityTaken,
+      isDebtAsset,
+    };
+  });
+  const data = await sparkViewContract.methods.getApyAfterValuesEstimation(
+    selectedMarket.providerAddress,
+    params,
+  ).call();
+  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  data.forEach((d) => {
+    const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress).symbol);
+    rates[asset] = {
+      supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
+      borrowRate: aprToApy(new Dec(d.variableBorrowRate.toString()).div(1e25).toString()),
+    };
+  });
+  return rates;
 };
