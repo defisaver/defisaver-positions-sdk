@@ -1,11 +1,20 @@
 import Dec from 'decimal.js';
+import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import Web3 from 'web3';
 import {
   AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
-import { wethToEth } from '../../services/utils';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import { ethToWeth, wethToEth } from '../../services/utils';
+import {
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+} from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
+import { borrowOperations } from '../../constants';
+import { EthAddress, NetworkNumber } from '../../types/common';
+import { AaveLoanInfoV2Contract, AaveV3ViewContract } from '../../contracts';
+import { BaseContract } from '../../types/contracts/generated/types';
 
+export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
 export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3;
 export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
 export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
@@ -132,4 +141,51 @@ export const aaveAnyGetAggregatedPositionData = ({
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   return payload;
+};
+
+const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], viewContract: BaseContract, network: NetworkNumber) => {
+  const params = actions.map(({ action, asset, amount }) => {
+    const isDebtAsset = borrowOperations.includes(action);
+    const amountInWei = assetAmountInWei(amount, asset);
+    const assetInfo = getAssetInfo(ethToWeth(asset), network);
+    let liquidityAdded;
+    let liquidityTaken;
+    if (isDebtAsset) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityTaken = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityTaken = action === 'withdraw' ? amountInWei : '0';
+    }
+    return {
+      reserveAddress: assetInfo.address,
+      liquidityAdded,
+      liquidityTaken,
+      isDebtAsset,
+    };
+  });
+  const data = await viewContract.methods.getApyAfterValuesEstimation(
+    selectedMarket.providerAddress,
+    params,
+  ).call();
+  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  data.forEach((d: { reserveAddress: EthAddress, supplyRate: string, variableBorrowRate: string }) => {
+    const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
+    rates[asset] = {
+      supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
+      borrowRate: aprToApy(new Dec(d.variableBorrowRate.toString()).div(1e25).toString()),
+    };
+  });
+  return rates;
+};
+
+export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], web3: Web3, network: NetworkNumber) => {
+  if (isAaveV2({ selectedMarket })) {
+    return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveLoanInfoV2Contract(web3, network), network);
+  }
+  if (isAaveV3({ selectedMarket })) {
+    return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveV3ViewContract(web3, network), network);
+  }
+
+  return {};
 };
