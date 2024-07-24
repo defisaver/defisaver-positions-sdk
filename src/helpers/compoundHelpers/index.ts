@@ -1,15 +1,17 @@
 import Dec from 'decimal.js';
-import { getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import Web3 from 'web3';
 import {
   BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundVersions,
 } from '../../types';
 import { getEthAmountForDecimals, handleWbtcLegacy, wethToEth } from '../../services/utils';
-import { SECONDS_PER_YEAR } from '../../constants';
+import { BLOCKS_IN_A_YEAR, borrowOperations, SECONDS_PER_YEAR } from '../../constants';
 import {
   aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { NetworkNumber } from '../../types/common';
+import { EthAddress, NetworkNumber } from '../../types/common';
+import { CompoundLoanInfoContract, CompV3ViewContract } from '../../contracts';
 
 export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
@@ -179,4 +181,67 @@ export const getCompoundV3AggregatedData = ({
   } */
 
   return payload;
+};
+
+export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: string, amount: string, asset: string }], web3: Web3) => {
+  const compViewContract = CompoundLoanInfoContract(web3, NetworkNumber.Eth);
+  const params = actions.map(({ action, asset, amount }) => {
+    const isBorrowOperation = borrowOperations.includes(action);
+    const amountInWei = assetAmountInWei(amount, asset);
+    const assetInfo = getAssetInfo(`c${asset}`);
+    let liquidityAdded;
+    let liquidityTaken;
+    if (isBorrowOperation) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityTaken = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityTaken = action === 'withdraw' ? amountInWei : '0';
+    }
+    return {
+      cTokenAddr: assetInfo.address,
+      liquidityAdded,
+      liquidityTaken,
+      isBorrowOperation,
+    };
+  });
+  const data = await compViewContract.methods.getApyAfterValuesEstimation(
+    params,
+  ).call();
+  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  data.forEach((d) => {
+    const asset = wethToEth(getAssetInfoByAddress(d.cTokenAddr).underlyingAsset);
+    rates[asset] = {
+      supplyRate: aprToApy(new Dec(BLOCKS_IN_A_YEAR).times(d.supplyRate.toString()).div(1e16).toString()).toString(),
+      borrowRate: aprToApy(new Dec(BLOCKS_IN_A_YEAR).times(d.borrowRate.toString()).div(1e16).toString()).toString(),
+    };
+  });
+  return rates;
+};
+
+export const getApyAfterValuesEstimationCompoundV3 = async (selectedMarket: CompoundMarketData, action: string, asset: string, amount: string, account: EthAddress, web3: Web3, network: NetworkNumber) => {
+  const compV3ViewContract = CompV3ViewContract(web3, network);
+  const isBorrowOperation = borrowOperations.includes(action);
+  const amountInWei = assetAmountInWei(amount, asset);
+  let liquidityAdded;
+  let liquidityTaken;
+  if (isBorrowOperation) {
+    liquidityAdded = action === 'payback' ? amountInWei : '0';
+    liquidityTaken = action === 'borrow' ? amountInWei : '0';
+  } else {
+    liquidityAdded = action === 'collateral' ? amountInWei : '0';
+    liquidityTaken = action === 'withdraw' ? amountInWei : '0';
+  }
+  const data = await compV3ViewContract.methods.getApyAfterValuesEstimation(
+    selectedMarket.baseMarketAddress,
+    account,
+    liquidityAdded,
+    liquidityTaken,
+  ).call();
+  return {
+    supplyRate: aprToApy(new Dec(data.supplyRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
+      .toString()),
+    borrowRate: aprToApy(new Dec(data.borrowRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
+      .toString()),
+  };
 };
