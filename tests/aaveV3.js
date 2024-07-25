@@ -64,6 +64,18 @@ describe('Aave v3', () => {
 
   // Ethereum
 
+  it('can fetch apy after values data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const afterValues = await sdk.helpers.aaveHelpers.getApyAfterValuesEstimation(
+      sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3],
+      [{ action: 'collateral', amount: '1000', asset: 'USDC' }],
+      web3,
+      network,
+    );
+  });
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
