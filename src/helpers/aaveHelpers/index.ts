@@ -180,10 +180,10 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], web3: Web3, network: NetworkNumber) => {
-  if (isAaveV2({ selectedMarket })) {
+  if (isAaveV2({ selectedMarket }) || isMorphoAaveV2({ selectedMarket })) {
     return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveLoanInfoV2Contract(web3, network), network);
   }
-  if (isAaveV3({ selectedMarket })) {
+  if (isAaveV3({ selectedMarket }) || isMorphoAaveV3({ selectedMarket })) {
     return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveV3ViewContract(web3, network), network);
   }
 
