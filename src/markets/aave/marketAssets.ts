@@ -29,3 +29,12 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Arb]: aaveV3AssetsDefaultMarketArb,
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
 } as const;
+
+export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH'];
+
+export const aaveV3AssetsLidoMarket = {
+  [NetworkNumber.Eth]: aaveV3AssetsLidoMarketEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [],
+} as const;
