@@ -5,6 +5,7 @@ export {
   aaveV3AssetsDefaultMarket,
   morphoAaveV2AssetDefaultMarket,
   morphoAaveV3AssetEthMarket,
+  getAaveV3MarketByMarketAddress,
 } from './aave';
 export {
   CompoundMarkets,

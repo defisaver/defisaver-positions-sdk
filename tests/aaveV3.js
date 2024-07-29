@@ -76,6 +76,13 @@ describe('Aave v3', () => {
     );
   });
 
+  it('can fetch market by market address for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const market = sdk.markets.getAaveV3MarketByMarketAddress('0x2f39d218133AFaB8F2B819B1066c7E434Ad94E9e', network);
+  });
+
   it('can fetch market and account data for Lido Market Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;

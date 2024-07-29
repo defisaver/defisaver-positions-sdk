@@ -1,4 +1,5 @@
 import { getConfigContractAddress } from '../../contracts';
+import { compareAddresses } from '../../services/utils';
 import {
   AaveMarketInfo, AaveVersions, MorphoAaveV2MarketInfo, MorphoAaveV3MarketInfo,
 } from '../../types';
@@ -124,3 +125,8 @@ export const AaveMarkets = (networkId: NetworkNumber) => ({
   [AaveVersions.MorphoAaveV3Eth]: MORPHO_AAVE_V3_ETH(networkId),
   [AaveVersions.MorphoAaveV2]: MORPHO_AAVE_V2,
 }) as const;
+
+export const getAaveV3MarketByMarketAddress = (marketAddress: string, network = NetworkNumber.Eth): AaveMarketInfo | MorphoAaveV2MarketInfo | MorphoAaveV3MarketInfo | undefined => {
+  const markets = AaveMarkets(network);
+  return Object.values(markets).filter((m) => (![AaveVersions.MorphoAaveV3Eth, AaveVersions.MorphoAaveV2].includes(m.value))).find((m) => compareAddresses(m.providerAddress, marketAddress));
+};
