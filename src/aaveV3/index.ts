@@ -73,7 +73,27 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   const { assetsData }: { assetsData: AaveV3AssetsData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
-  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
+  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {
+    0: {
+      enteringTerms: [true, true],
+      canEnterCategory: true,
+      id: 0,
+      data: {
+        label: 'Default',
+        liquidationBonus: '0',
+        liquidationRatio: '0',
+        collateralFactor: '0',
+        priceSource: '0',
+      },
+      assets: [],
+      enabledData: {
+        ratio: '0',
+        liqRatio: '0',
+        liqPercent: '0',
+        collRatio: '0',
+      },
+    },
+  };
   Object.values(assetsData).forEach((a: AaveV3AssetData) => {
     const borrowingOnlyFromCategory = a.eModeCategory === 0
       ? true

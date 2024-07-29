@@ -23,8 +23,8 @@ describe('Aave v3', () => {
     assert.equal(res, '64');
   });
 
-  const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
+  const fetchMarketData = async (network, _web3, version = sdk.AaveVersions.AaveV3) => {
+    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -38,8 +38,8 @@ describe('Aave v3', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { selectedMarket: sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], assetsData: marketData.assetsData });
+  const fetchAccountData = async (network, web3, marketData, version = sdk.AaveVersions.AaveV3) => {
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
@@ -74,6 +74,14 @@ describe('Aave v3', () => {
       web3,
       network,
     );
+  });
+
+  it('can fetch market and account data for Lido Market Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const marketData = await fetchMarketData(network, web3, sdk.AaveVersions.AaveV3Lido);
+    await fetchAccountData(network, web3, marketData, sdk.AaveVersions.AaveV3Lido);
   });
 
   it('can fetch market and account data for Ethereum', async function () {

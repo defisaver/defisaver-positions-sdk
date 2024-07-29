@@ -15,7 +15,7 @@ import { AaveLoanInfoV2Contract, AaveV3ViewContract } from '../../contracts';
 import { BaseContract } from '../../types/contracts/generated/types';
 
 export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
-export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3;
+export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3 || selectedMarket.value === AaveVersions.AaveV3Lido;
 export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
 export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
 export const isMorphoAave = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
