@@ -6,7 +6,7 @@ export const compoundV2CollateralAssets = [
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));
 
-export const v3USDCCollAssetsEth = ['ETH', 'COMP', 'WBTC', 'UNI', 'LINK'];
+export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH'];
 export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH'];
 export const v3USDCCollAssetsBase = ['ETH', 'cbETH'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC'];
@@ -30,7 +30,7 @@ export const v3USDCeCollAssets = {
 } as const;
 
 export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH'];
-export const v3ETHCollAssetsBase = ['cbETH'];
+export const v3ETHCollAssetsBase = ['cbETH', 'ezETH'];
 export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
