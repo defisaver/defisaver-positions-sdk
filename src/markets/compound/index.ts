@@ -117,7 +117,7 @@ export const COMPOUND_V3_USDCe = (networkId: NetworkNumber): CompoundMarketData 
 });
 
 export const COMPOUND_V3_ETH = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Eth, NetworkNumber.Base],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Base, NetworkNumber.Arb],
   label: 'Compound V3 - ETH',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3ETH,

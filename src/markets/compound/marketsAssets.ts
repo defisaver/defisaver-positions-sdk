@@ -31,7 +31,7 @@ export const v3USDCeCollAssets = {
 
 export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH'];
 export const v3ETHCollAssetsBase = ['cbETH', 'ezETH'];
-export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH'];
+export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3ETHCollAssets = {
