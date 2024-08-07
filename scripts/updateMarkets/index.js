@@ -15,6 +15,7 @@ const {
   cUSDCv3,
   cETHv3,
   MorphoAaveV3ProxyEthMarket,
+  cUSDTv3,
 } = require('../../src/config/contracts');
 
 const getWeb3 = (chainId) => new Web3(({
@@ -117,14 +118,22 @@ const compound = {
       1: {
         [cETHv3.networks[1].address.toLowerCase()]: 'v3ETHCollAssetsEth',
         [cUSDCv3.networks[1].address.toLowerCase()]: 'v3USDCCollAssetsEth',
+        [cUSDTv3.networks[1].address.toLowerCase()]: 'v3USDTCollAssetsEth',
+      },
+      10: {
+        [cUSDCv3.networks[10].address.toLowerCase()]: 'v3USDCCollAssetsOpt',
+        [cUSDTv3.networks[10].address.toLowerCase()]: 'v3USDTCollAssetsOpt',
       },
       8453: {
         [cETHv3.networks[8453].address.toLowerCase()]: 'v3ETHCollAssetsBase',
         [cUSDbCv3.networks[8453].address.toLowerCase()]: 'v3USDbCCollAssetsBase',
+        [cUSDCv3.networks[8453].address.toLowerCase()]: 'v3USDCCollAssetsBase',
       },
       42161: {
         [cUSDCev3.networks[42161].address.toLowerCase()]: 'v3USDCeCollAssetsArb',
         [cUSDCv3.networks[42161].address.toLowerCase()]: 'v3USDCCollAssetsArb',
+        [cETHv3.networks[42161].address.toLowerCase()]: 'v3ETHCollAssetsArb',
+        [cUSDTv3.networks[42161].address.toLowerCase()]: 'v3USDTCollAssetsArb',
       },
     },
     networks: [1, 8453, 42161],
