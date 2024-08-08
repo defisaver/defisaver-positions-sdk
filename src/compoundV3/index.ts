@@ -6,8 +6,8 @@ import {
 import { CompV3ViewContract } from '../contracts';
 import { multicall } from '../multicall';
 import {
-  CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData, CompoundVersions,
-} from '../types/compound';
+  CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
+} from '../types';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
@@ -22,6 +22,8 @@ import {
 } from '../helpers/compoundHelpers';
 import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
 import { getEthPrice, getCompPrice, getUSDCPrice } from '../services/priceService';
+
+const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(asset, network)).map(addr => addr.address.toLowerCase());
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const baseAssetPrice = selectedMarket.baseAsset === 'ETH' ? await getEthPrice(defaultWeb3) : await getUSDCPrice(defaultWeb3);
@@ -41,7 +43,12 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
     },
   ];
   const data = await multicall(calls, web3, network);
-  const colls = data[1].colls.map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+  const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
+
+  const colls = data[1].colls
+    .filter((coll: any) => supportedAssetsAddresses.includes(coll.tokenAddr.toLowerCase()))
+    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+
   for (const coll of colls) {
     if (coll.symbol === 'wstETH') {
       // eslint-disable-next-line no-await-in-loop
@@ -219,7 +226,11 @@ export const getCompoundV3AccountData = async (
       usedAssets[baseAssetSymbol].borrowedUsd = assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol);
     }
   }
+  const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
+
   loanData.collAddr.forEach((coll: string, i: number): void => {
+    // not filtering collAddr because there is no way of knowing how to filter loanData.collAmounts
+    if (!supportedAssetsAddresses.includes(coll.toLowerCase())) return;
     const assetInfo = getAssetInfoByAddress(coll, network);
     const symbol = wethToEth(assetInfo.symbol);
     const supplied = assetAmountInEth(loanData.collAmounts[i].toString(), symbol);
