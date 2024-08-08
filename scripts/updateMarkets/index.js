@@ -123,6 +123,7 @@ const compound = {
       10: {
         [cUSDCv3.networks[10].address.toLowerCase()]: 'v3USDCCollAssetsOpt',
         [cUSDTv3.networks[10].address.toLowerCase()]: 'v3USDTCollAssetsOpt',
+        [cETHv3.networks[10].address.toLowerCase()]: 'v3ETHCollAssetsOpt',
       },
       8453: {
         [cETHv3.networks[8453].address.toLowerCase()]: 'v3ETHCollAssetsBase',
