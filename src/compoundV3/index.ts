@@ -14,7 +14,7 @@ import {
 import {
   getStakingApy, getStETHByWstETHMultiple, getWstETHByStETH, STAKING_ASSETS,
 } from '../staking';
-import { wethToEth } from '../services/utils';
+import { ethToWeth, wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
 import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
@@ -23,7 +23,7 @@ import {
 import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
 import { getEthPrice, getCompPrice, getUSDCPrice } from '../services/priceService';
 
-const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(asset, network)).map(addr => addr.address.toLowerCase());
+const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
 
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
   const baseAssetPrice = selectedMarket.baseAsset === 'ETH' ? await getEthPrice(defaultWeb3) : await getUSDCPrice(defaultWeb3);
