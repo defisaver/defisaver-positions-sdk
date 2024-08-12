@@ -4,7 +4,7 @@ import { NetworkNumber } from '../../types/common';
 
 export const MORPHO_BLUE_WSTETH_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/USDC',
   value: MorphoBlueVersions.MorphoBlueWstEthUSDC,
   url: 'wstethusdc',
@@ -20,7 +20,7 @@ export const MORPHO_BLUE_WSTETH_USDC = (networkId: NetworkNumber = NetworkNumber
 
 export const MORPHO_BLUE_SDAI_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sDAI/USDC',
   value: MorphoBlueVersions.MorphoBlueSDAIUSDC,
   url: 'sdaiusdc',
@@ -36,7 +36,7 @@ export const MORPHO_BLUE_SDAI_USDC = (networkId: NetworkNumber = NetworkNumber.E
 
 export const MORPHO_BLUE_WBTC_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'WBTC/USDC',
   value: MorphoBlueVersions.MorphoBlueWBTCUSDC,
   url: 'wbtcusdc',
@@ -52,7 +52,7 @@ export const MORPHO_BLUE_WBTC_USDC = (networkId: NetworkNumber = NetworkNumber.E
 
 export const MORPHO_BLUE_ETH_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'ETH/USDC',
   value: MorphoBlueVersions.MorphoBlueEthUSDC,
   url: 'ethusdc',
@@ -67,7 +67,7 @@ export const MORPHO_BLUE_ETH_USDC = (networkId: NetworkNumber = NetworkNumber.Et
 });
 export const MORPHO_BLUE_WBTC_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'WBTC/USDT',
   value: MorphoBlueVersions.MorphoBlueWBTCUSDT,
   url: 'wbtcusdt',
@@ -82,7 +82,7 @@ export const MORPHO_BLUE_WBTC_USDT = (networkId: NetworkNumber = NetworkNumber.E
 });
 export const MORPHO_BLUE_WBTC_PYUSD = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'WBTC/PYUSD',
   value: MorphoBlueVersions.MorphoBlueWBTCPYUSD,
   url: 'wbtcpyusd',
@@ -97,7 +97,7 @@ export const MORPHO_BLUE_WBTC_PYUSD = (networkId: NetworkNumber = NetworkNumber.
 });
 export const MORPHO_BLUE_WBTC_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'WBTC/ETH',
   value: MorphoBlueVersions.MorphoBlueWBTCEth,
   url: 'wbtceth',
@@ -112,7 +112,7 @@ export const MORPHO_BLUE_WBTC_ETH = (networkId: NetworkNumber = NetworkNumber.Et
 });
 export const MORPHO_BLUE_WSTETH_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/USDT',
   value: MorphoBlueVersions.MorphoBlueWstEthUSDT,
   url: 'wstethusdt',
@@ -127,7 +127,7 @@ export const MORPHO_BLUE_WSTETH_USDT = (networkId: NetworkNumber = NetworkNumber
 });
 export const MORPHO_BLUE_WSTETH_USDA_EXCHANGE_RATE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/USDA',
   value: MorphoBlueVersions.MorphoBlueWstEthUSDA_Exchange_Rate,
   url: 'wstethusda',
@@ -142,7 +142,7 @@ export const MORPHO_BLUE_WSTETH_USDA_EXCHANGE_RATE = (networkId: NetworkNumber =
 });
 export const MORPHO_BLUE_WSTETH_PYUSD = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/PYUSD',
   value: MorphoBlueVersions.MorphoBlueWstEthPYUSD,
   url: 'wstethpyusd',
@@ -157,7 +157,7 @@ export const MORPHO_BLUE_WSTETH_PYUSD = (networkId: NetworkNumber = NetworkNumbe
 });
 export const MORPHO_BLUE_WEETH_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'weETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWeEthEth,
   url: 'weetheth',
@@ -172,7 +172,7 @@ export const MORPHO_BLUE_WEETH_ETH = (networkId: NetworkNumber = NetworkNumber.E
 });
 export const MORPHO_BLUE_USDE_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'USDe/USDT',
   value: MorphoBlueVersions.MorphoBlueUSDeUSDT,
   url: 'usdeusdt',
@@ -187,7 +187,7 @@ export const MORPHO_BLUE_USDE_USDT = (networkId: NetworkNumber = NetworkNumber.E
 });
 export const MORPHO_BLUE_SUSDE_USDT = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sUSDe/USDT',
   value: MorphoBlueVersions.MorphoBlueSUSDeUSDT,
   url: 'susdeusdt',
@@ -202,7 +202,7 @@ export const MORPHO_BLUE_SUSDE_USDT = (networkId: NetworkNumber = NetworkNumber.
 });
 export const MORPHO_BLUE_SDAI_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sDAI/ETH',
   value: MorphoBlueVersions.MorphoBlueSDAIEth,
   url: 'sdaieth',
@@ -217,7 +217,7 @@ export const MORPHO_BLUE_SDAI_ETH = (networkId: NetworkNumber = NetworkNumber.Et
 });
 export const MORPHO_BLUE_EZETH_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'ezETH/ETH',
   value: MorphoBlueVersions.MorphoBlueEzEthEth,
   url: 'ezetheth',
@@ -232,7 +232,7 @@ export const MORPHO_BLUE_EZETH_ETH = (networkId: NetworkNumber = NetworkNumber.E
 });
 export const MORPHO_BLUE_MKR_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'MKR/USDC',
   value: MorphoBlueVersions.MorphoBlueMKRUSDC,
   url: 'mkrusdc',
@@ -248,7 +248,7 @@ export const MORPHO_BLUE_MKR_USDC = (networkId: NetworkNumber = NetworkNumber.Et
 // wstETH/WETH
 export const MORPHO_BLUE_WSTETH_ETH_945 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_945,
   url: 'wstetheth-c54d7acf',
@@ -263,7 +263,7 @@ export const MORPHO_BLUE_WSTETH_ETH_945 = (networkId: NetworkNumber = NetworkNum
 });
 export const MORPHO_BLUE_WSTETH_ETH_945_EXCHANGE_RATE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_945_Exchange_Rate,
   url: 'wstetheth-d0e50cda',
@@ -278,7 +278,7 @@ export const MORPHO_BLUE_WSTETH_ETH_945_EXCHANGE_RATE = (networkId: NetworkNumbe
 });
 export const MORPHO_BLUE_WSTETH_ETH_965_EXCHANGE_RATE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_965_Exchange_Rate,
   url: 'wstetheth-b8fc70e8',
@@ -294,7 +294,7 @@ export const MORPHO_BLUE_WSTETH_ETH_965_EXCHANGE_RATE = (networkId: NetworkNumbe
 // sUSDe/DAI
 export const MORPHO_BLUE_SUSDE_DAI_770 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sUSDe/DAI',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_770,
   url: 'susdedai-42dcfb38',
@@ -309,7 +309,7 @@ export const MORPHO_BLUE_SUSDE_DAI_770 = (networkId: NetworkNumber = NetworkNumb
 });
 export const MORPHO_BLUE_SUSDE_DAI_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sUSDe/DAI',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_860,
   url: 'susdedai-39d11026',
@@ -324,7 +324,7 @@ export const MORPHO_BLUE_SUSDE_DAI_860 = (networkId: NetworkNumber = NetworkNumb
 });
 export const MORPHO_BLUE_SUSDE_DAI_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sUSDe/DAI',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_915,
   url: 'susdedai-1247f1c2',
@@ -339,7 +339,7 @@ export const MORPHO_BLUE_SUSDE_DAI_915 = (networkId: NetworkNumber = NetworkNumb
 });
 export const MORPHO_BLUE_SUSDE_DAI_945 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'sUSDe/DAI',
   value: MorphoBlueVersions.MorphoBlueSUSDeDAI_945,
   url: 'susdedai-0e475337',
@@ -356,7 +356,7 @@ export const MORPHO_BLUE_SUSDE_DAI_945 = (networkId: NetworkNumber = NetworkNumb
 // USDe/DAI
 export const MORPHO_BLUE_USDE_DAI_770 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'USDe/DAI',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_770,
   url: 'usdedai-fd8493f0',
@@ -371,7 +371,7 @@ export const MORPHO_BLUE_USDE_DAI_770 = (networkId: NetworkNumber = NetworkNumbe
 });
 export const MORPHO_BLUE_USDE_DAI_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'USDe/DAI',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_860,
   url: 'usdedai-c581c5f7',
@@ -386,7 +386,7 @@ export const MORPHO_BLUE_USDE_DAI_860 = (networkId: NetworkNumber = NetworkNumbe
 });
 export const MORPHO_BLUE_USDE_DAI_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'USDe/DAI',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_915,
   url: 'usdedai-8e6aeb10',
@@ -401,7 +401,7 @@ export const MORPHO_BLUE_USDE_DAI_915 = (networkId: NetworkNumber = NetworkNumbe
 });
 export const MORPHO_BLUE_USDE_DAI_945 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'USDe/DAI',
   value: MorphoBlueVersions.MorphoBlueUSDeDAI_945,
   url: 'usdedai-db760246',
@@ -419,7 +419,7 @@ export const MORPHO_BLUE_USDE_DAI_945 = (networkId: NetworkNumber = NetworkNumbe
 
 export const MORPHO_BLUE_CBETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'cbETH/USDC',
   value: MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base,
   url: 'cbethusdc-dba352d9',
@@ -434,7 +434,7 @@ export const MORPHO_BLUE_CBETH_USDC_860_BASE = (networkId: NetworkNumber = Netwo
 });
 export const MORPHO_BLUE_WSTETH_ETH_945_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_945_Base,
   url: 'wstetheth-3a4048c6',
@@ -449,7 +449,7 @@ export const MORPHO_BLUE_WSTETH_ETH_945_BASE = (networkId: NetworkNumber = Netwo
 });
 export const MORPHO_BLUE_WSTETH_ETH_965_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/ETH',
   value: MorphoBlueVersions.MorphoBlueWstEthEth_965_Base,
   url: 'wstetheth-6aa81f51',
@@ -464,7 +464,7 @@ export const MORPHO_BLUE_WSTETH_ETH_965_BASE = (networkId: NetworkNumber = Netwo
 });
 export const MORPHO_BLUE_WSTETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'wstETH/USDC',
   value: MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base,
   url: 'wstethusdc-a066f389',
@@ -479,7 +479,7 @@ export const MORPHO_BLUE_WSTETH_USDC_860_BASE = (networkId: NetworkNumber = Netw
 });
 export const MORPHO_BLUE_CBETH_ETH_965_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'cbETH/ETH',
   value: MorphoBlueVersions.MorphoBlueCbEthEth_965_Base,
   url: 'cbetheth-6600aae6',
@@ -494,7 +494,7 @@ export const MORPHO_BLUE_CBETH_ETH_965_BASE = (networkId: NetworkNumber = Networ
 });
 export const MORPHO_BLUE_CBETH_ETH_945_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'cbETH/ETH',
   value: MorphoBlueVersions.MorphoBlueCbEthEth_945_Base,
   url: 'cbetheth-84662b4f',
@@ -509,7 +509,7 @@ export const MORPHO_BLUE_CBETH_ETH_945_BASE = (networkId: NetworkNumber = Networ
 });
 export const MORPHO_BLUE_ETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'ETH/USDC',
   value: MorphoBlueVersions.MorphoBlueEthUSDC_860_Base,
   url: 'ethusdc-8793cf30',
@@ -524,7 +524,7 @@ export const MORPHO_BLUE_ETH_USDC_860_BASE = (networkId: NetworkNumber = Network
 });
 export const MORPHO_BLUE_RETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'rETH/USDC',
   value: MorphoBlueVersions.MorphoBlueREthUSDC_860_Base,
   url: 'rethusdc-db0bc9f1',
@@ -539,7 +539,7 @@ export const MORPHO_BLUE_RETH_USDC_860_BASE = (networkId: NetworkNumber = Networ
 });
 export const MORPHO_BLUE_RETH_ETH_945_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
-  label: 'Morpho Blue',
+  label: 'Morpho',
   shortLabel: 'rETH/ETH',
   value: MorphoBlueVersions.MorphoBlueREthEth_945_Base,
   url: 'retheth-dc69cf2c',
