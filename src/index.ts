@@ -18,7 +18,7 @@ import * as markets from './markets';
 import * as helpers from './helpers';
 import * as chickenBonds from './chickenBonds';
 import * as exchange from './exchange';
-import * as morphoBlue from './morphoBlue';
+import * as morpho from './morpho';
 import * as llamaLend from './llamaLend';
 
 export * from './types';
@@ -41,6 +41,6 @@ export {
   moneymarket,
   markets,
   helpers,
-  morphoBlue,
+  morpho,
   llamaLend,
 };

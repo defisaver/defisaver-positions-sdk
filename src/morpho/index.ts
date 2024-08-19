@@ -6,17 +6,17 @@ import {
 } from '../types/common';
 import {
   FeedRegistryContract,
-  MorphoBlueViewContract,
+  MorphoViewContract,
 } from '../contracts';
 import {
-  MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
+  MorphoAssetsData, MorphoMarketData, MorphoMarketInfo, MorphoPositionData,
 } from '../types';
 import { WAD, USD_QUOTE } from '../constants';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { wethToEth } from '../services/utils';
-import { getBorrowRate, getMorphoBlueAggregatedPositionData, getSupplyRate } from '../helpers/morphoBlueHelpers';
+import { getBorrowRate, getMorphoAggregatedPositionData, getSupplyRate } from '../helpers/morphoHelpers';
 
-export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
+export async function getMorphoMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoMarketData, mainnetWeb3: Web3): Promise<MorphoMarketInfo> {
   const {
     loanToken, collateralToken, oracle, irm, lltv, oracleType,
   } = selectedMarket;
@@ -30,11 +30,11 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   }
 
   const feedRegistryContract = FeedRegistryContract(mainnetWeb3, NetworkNumber.Eth);
-  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+  const morphoViewContract = MorphoViewContract(web3, network);
 
   const [loanTokenPrice, marketInfo] = await Promise.all([
     loanTokenInfo.symbol === 'USDA' ? '100000000' : feedRegistryContract.methods.latestAnswer(loanTokenFeedAddress, USD_QUOTE).call(),
-    morphoBlueViewContract.methods.getMarketInfoNotTuple(loanToken, collateralToken, oracle, irm, lltvInWei).call(),
+    morphoViewContract.methods.getMarketInfoNotTuple(loanToken, collateralToken, oracle, irm, lltvInWei).call(),
   ]);
 
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
@@ -47,7 +47,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   const scale = new Dec(10).pow(loanTokenInfo.decimals).toString();
 
   const oracleRate = new Dec(marketInfo.oracle).div(oracleScale).toString();
-  const assetsData: MorphoBlueAssetsData = {};
+  const assetsData: MorphoAssetsData = {};
   assetsData[wethToEth(loanTokenInfo.symbol)] = {
     symbol: wethToEth(loanTokenInfo.symbol),
     address: loanToken,
@@ -88,7 +88,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   };
 }
 
-export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
+export const getMorphoAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoMarketData): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -98,7 +98,7 @@ export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
-  const viewContract = MorphoBlueViewContract(web3, network, block);
+  const viewContract = MorphoViewContract(web3, network, block);
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
@@ -123,7 +123,7 @@ export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkN
   return balances;
 };
 
-export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumber, account: string, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
+export async function getMorphoAccountData(web3: Web3, network: NetworkNumber, account: string, selectedMarket: MorphoMarketData, marketInfo: MorphoMarketInfo): Promise<MorphoPositionData> {
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
@@ -131,7 +131,7 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
   const marketObject = {
     loanToken, collateralToken, oracle, irm, lltv: lltvInWei,
   };
-  const viewContract = MorphoBlueViewContract(web3, network);
+  const viewContract = MorphoViewContract(web3, network);
   const loanInfo = await viewContract.methods.getUserInfo(marketObject, account).call();
   const usedAssets: MMUsedAssets = {};
 
@@ -166,6 +166,6 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
     supplyShares: loanInfo.supplyShares,
     borrowShares: loanInfo.borrowShares,
     usedAssets,
-    ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
+    ...getMorphoAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
   };
 }
