@@ -5,14 +5,14 @@ import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../mone
 import { calculateNetApy } from '../../staking';
 import { MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
-  MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
+  MorphoAggregatedPositionData, MorphoAssetsData, MorphoMarketData, MorphoMarketInfo,
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
-import { MorphoBlueViewContract } from '../../contracts';
-import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
+import { MorphoViewContract } from '../../contracts';
+import { MarketParamsStruct } from '../../types/contracts/generated/MorphoView';
 
-export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
-  const payload = {} as MorphoBlueAggregatedPositionData;
+export const getMorphoAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoAssetsData, marketInfo: MorphoMarketInfo }): MorphoAggregatedPositionData => {
+  const payload = {} as MorphoAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
@@ -89,8 +89,8 @@ export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => 
   return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
 };
 
-export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, action: string, amount: string, asset: string, web3: Web3, network: NetworkNumber) => {
-  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+export const getApyAfterValuesEstimation = async (selectedMarket: MorphoMarketData, action: string, amount: string, asset: string, web3: Web3, network: NetworkNumber) => {
+  const morphoViewContract = MorphoViewContract(web3, network);
   const lltvInWei = assetAmountInWei(selectedMarket.lltv, 'ETH');
   const marketData: MarketParamsStruct = [selectedMarket.loanToken, selectedMarket.collateralToken, selectedMarket.oracle, selectedMarket.irm, lltvInWei];
   const isBorrowOperation = borrowOperations.includes(action);
@@ -104,7 +104,7 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
     liquidityAdded = action === 'collateral' ? amountInWei : '0';
     liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
   }
-  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation([
+  const data = await morphoViewContract.methods.getApyAfterValuesEstimation([
     marketData,
     isBorrowOperation,
     liquidityAdded,
