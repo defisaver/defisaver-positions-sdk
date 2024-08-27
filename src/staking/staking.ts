@@ -145,7 +145,7 @@ export const calculateNetApy = (usedAssets: MMUsedAssets, assetsData: MMAssetsDa
       acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
       const rate = isMorpho
         ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
-        : usedAsset.symbol === 'GHO'
+        : (usedAsset.symbol === 'GHO' && assetsData.nativeAsset)
           ? usedAsset.discountedBorrowRate
           : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
