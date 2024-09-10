@@ -91,6 +91,14 @@ describe('Aave v3', () => {
     await fetchAccountData(network, web3, marketData, sdk.AaveVersions.AaveV3Lido);
   });
 
+  it('can fetch market and account data for Etherfi Market Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const marketData = await fetchMarketData(network, web3, sdk.AaveVersions.AaveV3Etherfi);
+    await fetchAccountData(network, web3, marketData, sdk.AaveVersions.AaveV3Etherfi);
+  });
+
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;

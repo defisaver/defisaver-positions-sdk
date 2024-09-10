@@ -5,7 +5,7 @@ import {
 } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import {
-  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, aaveV3AssetsLidoMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
+  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, aaveV3AssetsEtherfiMarket, aaveV3AssetsLidoMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
 } from './marketAssets';
 
 export {
@@ -86,6 +86,23 @@ export const AAVE_V3_LIDO = (networkId: NetworkNumber): AaveMarketInfo => ({
   protocolName: 'aave',
 });
 
+export const AAVE_V3_ETHERFI = (networkId: NetworkNumber): AaveMarketInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Aave v3 Etherfi',
+  shortLabel: 'v3',
+  value: AaveVersions.AaveV3Etherfi,
+  url: 'etherfi',
+  assets: networkId ? aaveV3AssetsEtherfiMarket[networkId] : [],
+  provider: 'AaveV3EtherfiPoolAddressesProvider',
+  providerAddress: getConfigContractAddress('AaveV3EtherfiPoolAddressesProvider', networkId),
+  lendingPool: 'AaveV3EtherfiLendingPool',
+  lendingPoolAddress: getConfigContractAddress('AaveV3EtherfiLendingPool', networkId),
+  protocolData: 'AaveV3EtherfiProtocolDataProvider',
+  protocolDataAddress: getConfigContractAddress('AaveV3EtherfiProtocolDataProvider', networkId),
+  // icon: SvgAdapter(protocolIcons.aave),
+  protocolName: 'aave',
+});
+
 export const MORPHO_AAVE_V2: MorphoAaveV2MarketInfo = {
   chainIds: [1],
   label: 'Morpho-Aave V2',
@@ -122,6 +139,7 @@ export const AaveMarkets = (networkId: NetworkNumber) => ({
   [AaveVersions.AaveV2]: AAVE_V2,
   [AaveVersions.AaveV3]: AAVE_V3(networkId),
   [AaveVersions.AaveV3Lido]: AAVE_V3_LIDO(networkId),
+  [AaveVersions.AaveV3Etherfi]: AAVE_V3_ETHERFI(networkId),
   [AaveVersions.MorphoAaveV3Eth]: MORPHO_AAVE_V3_ETH(networkId),
   [AaveVersions.MorphoAaveV2]: MORPHO_AAVE_V2,
 }) as const;
