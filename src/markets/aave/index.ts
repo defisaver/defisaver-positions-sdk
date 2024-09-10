@@ -88,7 +88,7 @@ export const AAVE_V3_LIDO = (networkId: NetworkNumber): AaveMarketInfo => ({
 
 export const AAVE_V3_ETHERFI = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Aave v3 Etherfi',
+  label: 'Aave v3 EtherFi',
   shortLabel: 'v3',
   value: AaveVersions.AaveV3Etherfi,
   url: 'etherfi',
