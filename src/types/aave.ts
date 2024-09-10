@@ -9,6 +9,7 @@ export enum AaveVersions {
   AaveV2 = 'v2default',
   AaveV3 = 'v3default',
   AaveV3Lido = 'v3lido',
+  AaveV3Etherfi = 'v3etherfi',
   MorphoAaveV2 = 'morphoAaveV2',
   MorphoAaveV3Eth = 'morphoAaveV3Eth',
 }
@@ -19,11 +20,11 @@ export type AaveMarketInfo = {
   url: string,
   value: AaveVersions,
   assets: readonly string[],
-  provider: '' | 'LendingPoolAddressesProvider' | 'AaveV3PoolAddressesProvider' | 'AaveV3LidoPoolAddressesProvider',
+  provider: '' | 'LendingPoolAddressesProvider' | 'AaveV3PoolAddressesProvider' | 'AaveV3LidoPoolAddressesProvider' | 'AaveV3EtherfiPoolAddressesProvider',
   providerAddress: string,
-  lendingPool: '' | 'AaveLendingPoolV2' | 'AaveV3LendingPool' | 'MorphoAaveV3ProxyEthMarket' | 'AaveV3LidoLendingPool',
+  lendingPool: '' | 'AaveLendingPoolV2' | 'AaveV3LendingPool' | 'MorphoAaveV3ProxyEthMarket' | 'AaveV3LidoLendingPool' | 'AaveV3EtherfiLendingPool',
   lendingPoolAddress: string,
-  protocolData: '' | 'AaveProtocolDataProvider' | 'AaveV3ProtocolDataProvider' | 'AaveV3LidoProtocolDataProvider',
+  protocolData: '' | 'AaveProtocolDataProvider' | 'AaveV3ProtocolDataProvider' | 'AaveV3LidoProtocolDataProvider' | 'AaveV3EtherfiProtocolDataProvider',
   protocolDataAddress: string
   subVersionLabel?: string
   protocolName: string,

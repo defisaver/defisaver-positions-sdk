@@ -14,8 +14,10 @@ import { EthAddress, NetworkNumber } from '../../types/common';
 import { AaveLoanInfoV2Contract, AaveV3ViewContract } from '../../contracts';
 import { BaseContract } from '../../types/contracts/generated/types';
 
+export const AAVE_V3_MARKETS = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi];
+
 export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
-export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3 || selectedMarket.value === AaveVersions.AaveV3Lido;
+export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => AAVE_V3_MARKETS.includes(selectedMarket.value as AaveVersions);
 export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
 export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
 export const isMorphoAave = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
