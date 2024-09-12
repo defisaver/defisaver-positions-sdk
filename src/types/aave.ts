@@ -76,6 +76,7 @@ export interface AaveAssetData extends MMAssetData {
 
 export interface AaveV2AssetData extends AaveAssetData {
   priceInEth: string,
+  isFrozen: boolean,
 }
 
 export interface MorphoAaveV2AssetData extends AaveV2AssetData {
