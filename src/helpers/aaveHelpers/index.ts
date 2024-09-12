@@ -133,6 +133,7 @@ export const aaveAnyGetAggregatedPositionData = ({
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
   payload.leveragedAsset = leveragedAsset;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     let assetPrice = data.assetsData[leveragedAsset].price;
     if (leveragedType === 'lsd-leverage') {
