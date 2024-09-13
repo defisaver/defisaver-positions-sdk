@@ -217,6 +217,24 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 
+  it('can fetch cbBTC/ETH market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbBTCEth_915];
+
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
+  it('can fetch cbBTC/USDC market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbBTCUSDC_860];
+
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
   // wstETH/WETH
 
   it('can fetch wstETH/ETH 94.5% market and account data for Ethereum', async function () {
@@ -384,6 +402,24 @@ describe('Morpho Blue', () => {
     this.timeout(10000);
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueREthEth_945_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+
+  it('can fetch cbBTC/ETH market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbBTCEth_915_Base];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
+
+  it('can fetch cbBTC/USDC market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueCbBTCUSDC_860_Base];
 
     const marketData = await fetchMarketData(network, web3Base, selectedMarket);
     await fetchAccountData(network, web3Base, marketData, selectedMarket);
