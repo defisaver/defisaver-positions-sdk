@@ -7,7 +7,7 @@ export const compoundV2CollateralAssets = [
 ].map((symbol) => getAssetInfo(symbol));
 
 export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH'];
-export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH'];
+export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH'];
 export const v3USDCCollAssetsBase = ['ETH', 'cbETH', 'wstETH'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
 
@@ -30,9 +30,9 @@ export const v3USDCeCollAssets = {
 } as const;
 
 export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH'];
-export const v3ETHCollAssetsBase = ['cbETH', 'ezETH'];
-export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC', 'rsETH'];
-export const v3ETHCollAssetsOpt = ['rETH', 'wstETH', 'WBTC'];
+export const v3ETHCollAssetsBase = ['cbETH', 'ezETH', 'USDC', 'wrsETH', 'wstETH', 'weETH'];
+export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC', 'rsETH', 'ezETH', 'USDC', 'USDT'];
+export const v3ETHCollAssetsOpt = ['rETH', 'wstETH', 'WBTC', 'ezETH', 'USDC', 'USDT', 'weETH', 'wrsETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const v3ETHCollAssets = {

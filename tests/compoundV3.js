@@ -123,6 +123,15 @@ describe('Compound v3', () => {
 
   // Arbitrum
 
+  it('can fetch market and account data for ETH Market on Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
+
+    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
+    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+  });
+
   it('can fetch market and account data for USDT Market on Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
@@ -142,6 +151,15 @@ describe('Compound v3', () => {
   });
 
   // Optimism
+
+  it('can fetch market and account data for ETH Market on Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
+
+    const marketData = await fetchMarketData(network, web3Opt, selectedMarket);
+    await fetchAccountData(network, web3Opt, marketData, selectedMarket);
+  });
 
   it('can fetch market and account data for USDT Market on Optimism', async function () {
     this.timeout(10000);
