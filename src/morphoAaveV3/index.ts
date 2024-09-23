@@ -204,7 +204,10 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     throw new Error('Failed to fetch market data.');
   }
 
-  const morphoRewardsData = morphoRewards.status === 'fulfilled' ? await morphoRewards.value.json() : null;
+  let morphoRewardsData: any = null;
+  if (morphoRewards.status === 'fulfilled') {
+    morphoRewardsData = morphoRewards.value.ok ? await morphoRewards.value.json() : null;
+  }
 
   const assetsData: MorphoAaveV3AssetData[] = await Promise.all(loanInfo.map(async (info, i: number) => {
     const morphoMarketData = {
@@ -290,7 +293,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       incentiveSupplyToken: 'MORPHO',
       incentiveBorrowToken: 'MORPHO',
       incentiveSupplyApy: morphoRewardsData?.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondSupplySide || '0',
-      incentiveBorrowApy: morphoRewardsData.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondBorrowSide || '0',
+      incentiveBorrowApy: morphoRewardsData?.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondBorrowSide || '0',
 
       totalBorrowVar: '0', // Morpho doesn't have all these, keeping it for compatability
       borrowRateStable: '0',
