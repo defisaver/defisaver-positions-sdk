@@ -6,7 +6,7 @@ export const compoundV2CollateralAssets = [
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));
 
-export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC'];
+export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'rswETH'];
 export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH'];
 export const v3USDCCollAssetsBase = ['ETH', 'cbETH', 'wstETH', 'cbBTC'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
