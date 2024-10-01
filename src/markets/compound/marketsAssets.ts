@@ -6,9 +6,9 @@ export const compoundV2CollateralAssets = [
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));
 
-export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH'];
+export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC'];
 export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH'];
-export const v3USDCCollAssetsBase = ['ETH', 'cbETH', 'wstETH'];
+export const v3USDCCollAssetsBase = ['ETH', 'cbETH', 'wstETH', 'cbBTC'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
@@ -52,7 +52,7 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
 };
 
-export const v3USDTCollAssetsEth = ['ETH', 'WBTC', 'wstETH', 'COMP', 'UNI', 'LINK'];
+export const v3USDTCollAssetsEth = ['ETH', 'WBTC', 'wstETH', 'COMP', 'UNI', 'LINK', 'cbBTC'];
 export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
