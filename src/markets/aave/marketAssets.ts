@@ -13,7 +13,7 @@ export const morphoAaveV3AssetEthMarket = [
   'ETH', 'wstETH', 'DAI', 'USDC', 'WBTC', 'rETH', 'cbETH', 'sDAI', 'USDT',
 ];
 
-export const aaveV3AssetsDefaultMarketEth = ['ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD', 'PYUSD', 'weETH', 'osETH', 'USDe', 'ETHx', 'sUSDe', 'tBTC', 'cbBTC'];
+export const aaveV3AssetsDefaultMarketEth = ['ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD', 'PYUSD', 'weETH', 'osETH', 'USDe', 'ETHx', 'sUSDe', 'tBTC', 'cbBTC', 'USDS'];
 export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
 ];
@@ -30,7 +30,7 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
 } as const;
 
-export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH'];
+export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS'];
 
 export const aaveV3AssetsLidoMarket = {
   [NetworkNumber.Eth]: aaveV3AssetsLidoMarketEth,
