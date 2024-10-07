@@ -30,7 +30,7 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
 } as const;
 
-export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS'];
+export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS', 'USDC'];
 
 export const aaveV3AssetsLidoMarket = {
   [NetworkNumber.Eth]: aaveV3AssetsLidoMarketEth,
