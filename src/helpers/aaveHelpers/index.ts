@@ -62,21 +62,23 @@ export const aaveAnyGetSuppliableAsCollAssets = ({
 export const aaveAnyGetEmodeMutableProps = (
   {
     eModeCategory,
+    eModeCategoriesData,
     assetsData,
   }: AaveHelperCommon, _asset: string) => {
   const asset = wethToEth(_asset);
 
   const assetData = assetsData[asset];
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
 
   if (
     eModeCategory === 0
-    || assetData.eModeCategory !== eModeCategory
-    || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
+    || !eModeCategoryData.collateralAssets.includes(asset)
+    || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
   }
-  const { liquidationRatio, collateralFactor } = assetData.eModeCategoryData;
+  const { liquidationRatio, collateralFactor } = eModeCategoryData;
   return ({ liquidationRatio, collateralFactor });
 };
 

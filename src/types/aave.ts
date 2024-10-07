@@ -40,17 +40,19 @@ export interface DiscountData {
 
 export interface EModeCategoryData {
   label: string,
+  id: number,
   liquidationBonus: string,
   liquidationRatio: string,
   collateralFactor: string,
-  priceSource: string,
+  borrowableBitmap?: string,
+  collateralBitmap?: string,
+  collateralAssets: string[],
+  borrowAssets: string[],
 }
 export interface EModeCategoryDataMapping {
   enteringTerms: boolean[],
   canEnterCategory: boolean,
   id: number,
-  data: EModeCategoryData,
-  assets: string[],
   enabledData: {
     ratio: string,
     liqRatio: string,
@@ -88,11 +90,9 @@ export interface AaveV3AssetData extends AaveAssetData {
   nativeAsset: boolean,
   discountData: DiscountData,
   debtCeilingForIsolationMode: string,
-  eModeCategory: number,
   isolationModeTotalDebt: string,
   borrowRateDiscounted: string,
   isolationModeBorrowingEnabled: boolean,
-  eModeCategoryData: EModeCategoryData,
   supplyRateP2P?: string,
   borrowRateP2P?: string,
   isFrozen: boolean,
@@ -100,6 +100,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFlashLoanEnabled: boolean,
   assetId: string | null,
 }
+
+export type EModeCategoriesData = Record<number, EModeCategoryData>;
 
 export interface MorphoAaveV3AssetData extends Omit<AaveV3AssetData, 'nativeAsset' | 'discountData' | 'borrowRateDiscounted'> {
 }
@@ -116,7 +118,7 @@ export type MorphoAaveV2MarketData = { assetsData: MorphoAaveV2AssetsData };
 
 export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
 
-export type AaveV3MarketData = { assetsData: AaveV3AssetsData };
+export type AaveV3MarketData = { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData };
 
 export type MorphoAaveV3AssetsData = AaveAssetsData<MorphoAaveV3AssetData>;
 
@@ -247,7 +249,8 @@ export interface AaveV3AggregatedPositionData {
 export interface AaveHelperCommon {
   usedAssets: any,
   eModeCategory: number,
-  eModeCategories?: object,
+  eModeCategories?: { [key: number]: EModeCategoryDataMapping },
+  eModeCategoriesData?: EModeCategoriesData,
   assetsData: any,
   selectedMarket: Partial<AaveMarketInfo>,
   network?: NetworkNumber,
