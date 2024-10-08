@@ -21,6 +21,7 @@ import {
   AaveV3PositionData,
   AaveV3UsedAsset,
   AaveV3UsedAssets,
+  AaveVersions,
   EModeCategoriesData,
   EModeCategoryData,
   EModeCategoryDataMapping,
@@ -105,19 +106,39 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 const isEnabledOnBitmap = (bitmap: number, assetId: number) => (((bitmap >> assetId) & 1) !== 0);
 
 // @DEV: hardcode emodes till they add new emodes structs to all chains
-const getAllEmodesHardcoded = (network: NetworkNumber) => {
+const getAllEmodesHardcoded = (network: NetworkNumber, selectedMarket: AaveVersions) => {
   switch (network) {
     case NetworkNumber.Eth:
-      return [
-        {
-          ltv: 9300,
-          liquidationThreshold: 9500,
-          liquidationBonus: 10100,
-          collateralBitmap: '2952790659',
-          label: 'ETH correlated',
-          borrowableBitmap: '2952790659',
-        },
-      ];
+    {
+      switch (selectedMarket) {
+        case AaveVersions.AaveV3:
+          return [
+            {
+              ltv: 9300,
+              liquidationThreshold: 9500,
+              liquidationBonus: 10100,
+              collateralBitmap: '2952790659',
+              label: 'ETH correlated',
+              borrowableBitmap: '2952790659',
+            },
+          ];
+        case AaveVersions.AaveV3Lido:
+          return [
+            {
+              ltv: 9350,
+              liquidationThreshold: 9550,
+              liquidationBonus: 10100,
+              collateralBitmap: '3',
+              label: 'ETH correlated',
+              borrowableBitmap: '3',
+            },
+          ];
+        case AaveVersions.AaveV3Etherfi:
+          return [];
+        default:
+          throw new Error('Emode not implemented for this market');
+      }
+    }
     case NetworkNumber.Arb:
       return [
         {
@@ -219,7 +240,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
     // loanInfoContract.methods.getAllEmodes(marketAddress).call(),
-    getAllEmodesHardcoded(network),
+    getAllEmodesHardcoded(network, market.value),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
@@ -249,7 +270,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  const networksWithIncentives = [10];
+  const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
