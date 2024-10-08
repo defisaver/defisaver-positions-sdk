@@ -139,6 +139,7 @@ const computeMorphoMarketData = (
 export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3MarketData> => {
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+  const aaveLendingPoolContract = createContractWrapper(web3, network, selectedMarket.aaveLendingPool, selectedMarket.aaveLendingPoolAddress);
 
   const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a)).address);
 
@@ -166,9 +167,9 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
         params: [underlyingAddress],
       },
       {
-        target: selectedMarket.protocolDataAddress, // TODO: aave refactor add to Aave view
+        target: aaveLendingPoolContract.options.address, // TODO: aave refactor add to Aave view
         // @ts-ignore
-        abiItem: getAbiItem(getConfigContractAbi(selectedMarket.protocolData), 'getReserveData'),
+        abiItem: getAbiItem(getConfigContractAbi(selectedMarket.aaveLendingPool), 'getReserveData'),
         params: [underlyingAddress],
       }]
     ))).flat(),
@@ -218,7 +219,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     const marketData = computeMorphoMarketData(
       info,
       morphoMarketData,
-      multicallResponse[(2 * i) + (loanInfoCallsToSkip + 1)],
+      multicallResponse[(2 * i) + (loanInfoCallsToSkip + 1)][0],
     );
 
     const { symbol, address } = getAssetInfoByAddress(wethToEthByAddress(marketData.underlyingTokenAddress));

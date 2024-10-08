@@ -258,6 +258,6 @@ export interface AaveHelperCommon {
 
 export type MorphoAaveV2MarketInfo = Omit<AaveMarketInfo, 'provider' | 'lendingPool' | 'protocolData' | 'protocolDataAddress'>;
 
-export type MorphoAaveV3MarketInfo = Omit<AaveMarketInfo, 'provider'>;
+export type MorphoAaveV3MarketInfo = Omit<AaveMarketInfo, 'provider'> & { aaveLendingPool: 'AaveV3LendingPool', aaveLendingPoolAddress: string };
 
 export type MorphoAaveMarketInfo = MorphoAaveV2MarketInfo | MorphoAaveV3MarketInfo;
