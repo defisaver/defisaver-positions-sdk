@@ -103,96 +103,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 };
 
 // eslint-disable-next-line no-bitwise
-const isEnabledOnBitmap = (bitmap: number, assetId: number) => (((bitmap >> assetId) & 1) !== 0);
-
-// @DEV: hardcode emodes till they add new emodes structs to all chains
-const getAllEmodesHardcoded = (network: NetworkNumber, selectedMarket: AaveVersions) => {
-  switch (network) {
-    case NetworkNumber.Eth:
-    {
-      switch (selectedMarket) {
-        case AaveVersions.AaveV3:
-          return [
-            {
-              ltv: 9300,
-              liquidationThreshold: 9500,
-              liquidationBonus: 10100,
-              collateralBitmap: '2952790659',
-              label: 'ETH correlated',
-              borrowableBitmap: '2952790659',
-            },
-          ];
-        case AaveVersions.AaveV3Lido:
-          return [
-            {
-              ltv: 9350,
-              liquidationThreshold: 9550,
-              liquidationBonus: 10100,
-              collateralBitmap: '3',
-              label: 'ETH correlated',
-              borrowableBitmap: '3',
-            },
-          ];
-        case AaveVersions.AaveV3Etherfi:
-          return [];
-        default:
-          throw new Error('Emode not implemented for this market');
-      }
-    }
-    case NetworkNumber.Arb:
-      return [
-        {
-          ltv: 9300,
-          liquidationThreshold: 9500,
-          liquidationBonus: 10100,
-          collateralBitmap: '4261',
-          label: 'Stablecoins',
-          borrowableBitmap: '4261',
-        },
-        {
-          ltv: 9300,
-          liquidationThreshold: 9500,
-          liquidationBonus: 10100,
-          collateralBitmap: '33040',
-          label: 'ETH correlated',
-          borrowableBitmap: '33040',
-        },
-      ];
-    case NetworkNumber.Opt:
-      return [
-        {
-          ltv: 9000,
-          liquidationThreshold: 9300,
-          liquidationBonus: 10100,
-          collateralBitmap: '8357',
-          label: 'Stablecoins',
-          borrowableBitmap: '8357',
-        },
-        {
-          ltv: 9300,
-          liquidationThreshold: 9500,
-          liquidationBonus: 10100,
-          collateralBitmap: '4624',
-          label: 'ETH correlated',
-          borrowableBitmap: '4624',
-        },
-      ];
-    case NetworkNumber.Base:
-      return [
-        {
-          ltv: 9000,
-          liquidationThreshold: 9300,
-          liquidationBonus: 10200,
-          collateralBitmap: '43',
-          label: 'ETH correlated',
-          borrowableBitmap: '43',
-        },
-      ];
-    default:
-      throw new Error('Emode not implemented for this network');
-  }
-};
-
+const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bitmap) >> BigInt(assetId)) & BigInt(1);
 export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
@@ -239,8 +150,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
-    // loanInfoContract.methods.getAllEmodes(marketAddress).call(),
-    getAllEmodesHardcoded(network, market.value),
+    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
@@ -270,9 +180,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  // @DEV: Temporarily disable incentives for Arbitrum and Optimism
-  // const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
-  const networksWithIncentives: NetworkNumber[] = [];
+  const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
@@ -671,6 +579,6 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
 
 export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV3PositionData> => {
   const marketData = await getAaveV3MarketData(web3, network, market, mainnetWeb3);
-  const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+  const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };
