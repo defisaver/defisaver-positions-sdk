@@ -21,6 +21,8 @@ import {
   AaveV3PositionData,
   AaveV3UsedAsset,
   AaveV3UsedAssets,
+  EModeCategoriesData,
+  EModeCategoryData,
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
@@ -70,46 +72,24 @@ export const aaveV3CalculateDiscountRate = (
 };
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
-  const { assetsData }: { assetsData: AaveV3AssetsData } = extractedState;
+  const { assetsData, eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
-  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {
-    0: {
-      enteringTerms: [true, true],
-      canEnterCategory: true,
-      id: 0,
-      data: {
-        label: 'Default',
-        liquidationBonus: '0',
-        liquidationRatio: '0',
-        collateralFactor: '0',
-        priceSource: '0',
-      },
-      assets: [],
-      enabledData: {
-        ratio: '0',
-        liqRatio: '0',
-        liqPercent: '0',
-        collRatio: '0',
-      },
-    },
-  };
-  Object.values(assetsData).forEach((a: AaveV3AssetData) => {
-    const borrowingOnlyFromCategory = a.eModeCategory === 0
+  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
+
+  Object.values(eModeCategoriesData).forEach((e: EModeCategoryData) => {
+    const borrowingOnlyFromCategory = e.id === 0
       ? true
-      : !usedAssetsValues.filter(u => u.isBorrowed && u.eModeCategory !== a.eModeCategory).length;
+      : !usedAssetsValues.filter(u => u.isBorrowed && !e.borrowAssets.includes(u.symbol)).length;
     const afterEnteringCategory = aaveAnyGetAggregatedPositionData({
-      ...extractedState, usedAssets, eModeCategory: a.eModeCategory,
+      ...extractedState, usedAssets, eModeCategory: e.id,
     });
     const willStayOverCollateralized = new Dec(afterEnteringCategory.ratio).eq(0) || new Dec(afterEnteringCategory.ratio).gt(afterEnteringCategory.liqPercent);
     const enteringTerms = [borrowingOnlyFromCategory, willStayOverCollateralized];
-
-    categoriesMapping[a.eModeCategory] = {
+    categoriesMapping[e.id] = {
       enteringTerms,
       canEnterCategory: !enteringTerms.includes(false),
-      id: a.eModeCategory,
-      data: a.eModeCategoryData,
-      assets: a.eModeCategory === 0 ? [] : [...(categoriesMapping[a.eModeCategory]?.assets || []), a.symbol],
+      id: e.id,
       enabledData: {
         ratio: afterEnteringCategory.ratio,
         liqRatio: afterEnteringCategory.liqRatio,
@@ -119,6 +99,77 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
     };
   });
   return categoriesMapping;
+};
+
+// eslint-disable-next-line no-bitwise
+const isEnabledOnBitmap = (bitmap: number, assetId: number) => (((bitmap >> assetId) & 1) !== 0);
+
+// @DEV: hardcode emodes till they add new emodes structs to all chains
+const getAllEmodesHardcoded = (network: NetworkNumber) => {
+  switch (network) {
+    case NetworkNumber.Eth:
+      return [
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '2952790659',
+          label: 'ETH correlated',
+          borrowableBitmap: '2952790659',
+        },
+      ];
+    case NetworkNumber.Arb:
+      return [
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '4261',
+          label: 'Stablecoins',
+          borrowableBitmap: '4261',
+        },
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '33040',
+          label: 'ETH correlated',
+          borrowableBitmap: '33040',
+        },
+      ];
+    case NetworkNumber.Opt:
+      return [
+        {
+          ltv: 9000,
+          liquidationThreshold: 9300,
+          liquidationBonus: 10100,
+          collateralBitmap: '8357',
+          label: 'Stablecoins',
+          borrowableBitmap: '8357',
+        },
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '4624',
+          label: 'ETH correlated',
+          borrowableBitmap: '4624',
+        },
+      ];
+    case NetworkNumber.Base:
+      return [
+        {
+          ltv: 9000,
+          liquidationThreshold: 9300,
+          liquidationBonus: 10200,
+          collateralBitmap: '43',
+          label: 'ETH correlated',
+          borrowableBitmap: '43',
+        },
+      ];
+    default:
+      throw new Error('Emode not implemented for this network');
+  }
 };
 
 export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
@@ -165,13 +216,30 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   const ghoContract = GhoTokenContract(web3, network);
 
   // eslint-disable-next-line prefer-const
-  let [loanInfo, isBorrowAllowed, multiRes] = await Promise.all([
+  let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
+    // loanInfoContract.methods.getAllEmodes(marketAddress).call(),
+    getAllEmodesHardcoded(network),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
+  const eModeCategoriesData: EModeCategoriesData = {};
+  for (let i = 0; i < eModesInfo.length; i++) {
+    if (!eModesInfo[i].label) break;
+    eModeCategoriesData[i + 1] = {
+      label: eModesInfo[i].label,
+      id: i + 1,
+      liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
+      liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
+      collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
+      borrowableBitmap: eModesInfo[i].borrowableBitmap,
+      collateralBitmap: eModesInfo[i].collateralBitmap,
+      borrowAssets: [],
+      collateralAssets: [],
+    };
+  }
   const [
     { 0: ghoDiscountedPerDiscountToken },
     { 0: discountRate },
@@ -181,7 +249,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  const networksWithIncentives = [10, 42161];
+  const networksWithIncentives = [10];
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
@@ -195,6 +263,12 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO';
+
+      // eslint-disable-next-line guard-for-in
+      for (const eModeIndex in eModeCategoriesData) {
+        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].collateralBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
+        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
+      }
 
       let borrowCap = tokenMarket.borrowCap;
       let discountRateOnBorrow = '0';
@@ -240,7 +314,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         isIsolated: new Dec(tokenMarket.debtCeilingForIsolationMode).gt(0),
         debtCeilingForIsolationMode: new Dec(tokenMarket.debtCeilingForIsolationMode).div(100).toString(),
         isSiloed: tokenMarket.isSiloedForBorrowing,
-        eModeCategory: +tokenMarket.emodeCategory,
         isolationModeTotalDebt: new Dec(tokenMarket.isolationModeTotalDebt).div(100).toString(),
         assetId: Number(tokenMarket.assetId),
         underlyingTokenAddress: tokenMarket.underlyingTokenAddress,
@@ -269,13 +342,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         price: new Dec(tokenMarket.price.toString()).div(1e8).toString(), // is actually price in USD
         isolationModeBorrowingEnabled: tokenMarket.isolationModeBorrowingEnabled,
         isFlashLoanEnabled: tokenMarket.isFlashLoanEnabled,
-        eModeCategoryData: {
-          label: tokenMarket.label,
-          liquidationBonus: new Dec(tokenMarket.liquidationBonus).div(10000).toString(),
-          liquidationRatio: new Dec(tokenMarket.liquidationThreshold).div(10000).toString(),
-          collateralFactor: new Dec(tokenMarket.ltv).div(10000).toString(),
-          priceSource: tokenMarket.priceSource,
-        },
         aTokenAddress: tokenMarket.aTokenAddress,
       });
     }));
@@ -337,7 +403,17 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       payload[assetData.symbol] = { ...assetData, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  eModeCategoriesData[0] = {
+    id: 0,
+    label: '',
+    liquidationBonus: '0',
+    liquidationRatio: '0',
+    collateralFactor: '0',
+    collateralAssets: assetsData.map((a) => a.symbol),
+    borrowAssets: assetsData.map((a) => a.symbol),
+  };
+
+  return { assetsData: payload, eModeCategoriesData };
 }
 
 export const EMPTY_AAVE_DATA = {
@@ -424,7 +500,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
 
 export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
-    selectedMarket: market, assetsData,
+    selectedMarket: market, assetsData, eModeCategoriesData,
   } = extractedState;
   let payload: AaveV3PositionData = {
     ...EMPTY_AAVE_DATA,
@@ -434,7 +510,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
     // structure that this function returns is complex and dynamic so i didnt want to hardcode it in EMPTY_AAVE_DATA
     // This case only triggers if user doesnt have proxy and data is refetched once proxy is created
     // TODO when refactoring aave figure out if this is the best solution.
-    payload.eModeCategories = aaveV3EmodeCategoriesMapping(extractedState, {});
+    // payload.eModeCategories = aaveV3EmodeCategoriesMapping(extractedState, {});
 
     return payload;
   }
@@ -528,7 +604,6 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       borrowed,
       borrowedUsd: new Dec(new Dec(borrowedVariable).add(borrowedStable)).mul(assetsData[asset].price).toString(),
       isBorrowed,
-      eModeCategory: assetsData[asset].eModeCategory,
       interestMode,
     };
   });
