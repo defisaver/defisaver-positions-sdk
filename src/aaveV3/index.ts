@@ -270,7 +270,9 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
+  // @DEV: Temporarily disable incentives for Arbitrum and Optimism
+  // const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
+  const networksWithIncentives: NetworkNumber[] = [];
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
