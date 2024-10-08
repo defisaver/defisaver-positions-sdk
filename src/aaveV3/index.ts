@@ -104,6 +104,74 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 // eslint-disable-next-line no-bitwise
 const isEnabledOnBitmap = (bitmap: number, assetId: number) => (((bitmap >> assetId) & 1) !== 0);
 
+// @DEV: hardcode emodes till they add new emodes structs to all chains
+const getAllEmodesHardcoded = (network: NetworkNumber) => {
+  switch (network) {
+    case NetworkNumber.Eth:
+      return [
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '2952790659',
+          label: 'ETH correlated',
+          borrowableBitmap: '2952790659',
+        },
+      ];
+    case NetworkNumber.Arb:
+      return [
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '4261',
+          label: 'Stablecoins',
+          borrowableBitmap: '4261',
+        },
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '33040',
+          label: 'ETH correlated',
+          borrowableBitmap: '33040',
+        },
+      ];
+    case NetworkNumber.Opt:
+      return [
+        {
+          ltv: 9000,
+          liquidationThreshold: 9300,
+          liquidationBonus: 10100,
+          collateralBitmap: '8357',
+          label: 'Stablecoins',
+          borrowableBitmap: '8357',
+        },
+        {
+          ltv: 9300,
+          liquidationThreshold: 9500,
+          liquidationBonus: 10100,
+          collateralBitmap: '4624',
+          label: 'ETH correlated',
+          borrowableBitmap: '4624',
+        },
+      ];
+    case NetworkNumber.Base:
+      return [
+        {
+          ltv: 9000,
+          liquidationThreshold: 9300,
+          liquidationBonus: 10200,
+          collateralBitmap: '43',
+          label: 'ETH correlated',
+          borrowableBitmap: '43',
+        },
+      ];
+    default:
+      throw new Error('Emode not implemented for this network');
+  }
+};
+
 export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
@@ -150,7 +218,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
     loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
-    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
+    // loanInfoContract.methods.getAllEmodes(marketAddress).call(),
+    getAllEmodesHardcoded(network),
     loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
