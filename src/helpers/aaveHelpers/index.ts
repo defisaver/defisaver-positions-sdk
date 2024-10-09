@@ -29,10 +29,10 @@ export const aaveAnyGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: AaveV
   .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral);
 
 export const aaveAnyGetSuppliableAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: AaveHelperCommon) => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
   };
 
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
@@ -54,9 +54,9 @@ export const aaveAnyGetSuppliableAssets = ({
 };
 
 export const aaveAnyGetSuppliableAsCollAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: AaveHelperCommon) => aaveAnyGetSuppliableAssets({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
 }).filter(({ canBeCollateral }) => canBeCollateral);
 
 export const aaveAnyGetEmodeMutableProps = (
@@ -85,14 +85,13 @@ export const aaveAnyGetEmodeMutableProps = (
 export const aaveAnyGetAggregatedPositionData = ({
   usedAssets,
   eModeCategory,
-  eModeCategories,
   assetsData,
   selectedMarket,
   network,
   ...rest
 }: AaveHelperCommon): AaveV3AggregatedPositionData => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
   };
   const payload = {} as AaveV3AggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);

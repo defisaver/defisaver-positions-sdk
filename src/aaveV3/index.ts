@@ -10,7 +10,7 @@ import {
   GhoTokenContract,
 } from '../contracts';
 import {
-  addToObjectIf, ethToWeth, getAbiItem, isLayer2Network, wethToEth, wethToEthByAddress,
+  addToObjectIf, ethToWeth, getAbiItem, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import {
   AaveMarketInfo,
@@ -102,8 +102,6 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-// eslint-disable-next-line no-bitwise
-const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bitmap) >> BigInt(assetId)) & BigInt(1);
 export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 

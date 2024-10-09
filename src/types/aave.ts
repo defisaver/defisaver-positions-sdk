@@ -122,7 +122,7 @@ export type AaveV3MarketData = { assetsData: AaveV3AssetsData, eModeCategoriesDa
 
 export type MorphoAaveV3AssetsData = AaveAssetsData<MorphoAaveV3AssetData>;
 
-export type MorphoAaveV3MarketData = { assetsData: MorphoAaveV3AssetsData };
+export type MorphoAaveV3MarketData = { assetsData: MorphoAaveV3AssetsData, eModeCategoriesData: EModeCategoriesData };
 
 export interface AaveUsedAsset extends MMUsedAsset {
   stableBorrowRate: string,
@@ -153,7 +153,6 @@ export interface MorphoAaveV2UsedAsset extends Omit<AaveV2UsedAsset, 'debt'> {
 }
 export interface AaveV3UsedAsset extends AaveUsedAsset {
   discountedBorrowRate: string,
-  eModeCategory: number,
   supplyRate: string,
   borrowRate: string,
   interestMode: string,

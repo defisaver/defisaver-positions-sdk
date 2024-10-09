@@ -49,3 +49,6 @@ export const mapRange = (input: number | string, minInput: number | string, maxI
   return new Dec(minOutput).plus(new Dec(slope).mul(new Dec(input).minus(minInput))).toDP(2).toNumber();
 };
 
+// eslint-disable-next-line no-bitwise
+export const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bitmap) >> BigInt(assetId)) & BigInt(1);
+
