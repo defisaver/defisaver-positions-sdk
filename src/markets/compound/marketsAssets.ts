@@ -29,8 +29,8 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Base]: [],
 } as const;
 
-export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH'];
-export const v3ETHCollAssetsBase = ['cbETH', 'ezETH', 'USDC', 'wrsETH', 'wstETH', 'weETH'];
+export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH'];
+export const v3ETHCollAssetsBase = ['cbETH', 'ezETH', 'wstETH', 'USDC', 'weETH', 'wrsETH', 'cbBTC'];
 export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC', 'rsETH', 'ezETH', 'USDC', 'USDT'];
 export const v3ETHCollAssetsOpt = ['rETH', 'wstETH', 'WBTC', 'ezETH', 'USDC', 'USDT', 'weETH', 'wrsETH'];
 
