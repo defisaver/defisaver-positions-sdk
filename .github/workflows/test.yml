@@ -26,8 +26,11 @@ jobs:
       - name: Prep dependencies
         run: npm i
 
+      - name: Generate contracts
+        run: npm run generate-contracts
+
       - name: Lint
-        run: npm run lint
+        run: npm run lint-check
 
       - name: Run tests
         run: npm run test
