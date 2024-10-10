@@ -6,13 +6,13 @@
   "module": "./esm/index.js",
   "types": "./esm/index.d.ts",
   "scripts": {
-    "build:esm": "rm -rf esm && tsc -p tsconfig.json",
-    "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
+    "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
+    "build:cjs": "rm -rf cjs && tsc -p tsconfig.json",
     "build": "npm run generate-contracts && npm run build:cjs && npm run build:esm",
     "dev": "npm run generate-contracts && tsc -p tsconfig.cjs.json --watch",
     "lint": "eslint src/ --fix",
     "generate-contracts": "node scripts/generateContracts.js",
-    "test": "mocha tests/*",
+    "test": "mocha tests/* --require ts-node/register --extension ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "build-test": "npm run build && npm run test"
   },
@@ -31,6 +31,7 @@
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
     "mocha": "^10.2.0",
+    "ts-node": "^10.9.2",
     "typechain": "^8.3.1",
     "typechain-target-web3-v1-3mihai3": "^6.0.2",
     "typescript": "^5.2.2"

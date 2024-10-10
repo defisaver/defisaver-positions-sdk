@@ -1,10 +1,7 @@
 
 module.exports = {
   extends: ['@defisaver/eslint-config/base-config'],
-  plugins: ['import', '@typescript-eslint'],
-  // parser: '@babel/eslint-parser',
   parserOptions: {
-    // requireConfigFile: false,
     ecmaVersion: 2018,
     sourceType: 'module',
   },
@@ -15,12 +12,10 @@ module.exports = {
   },
   ignorePatterns: ['esm/', 'cjs/'],
   overrides: [{
-    // these are overrides for .ts files, meaning these are only applied to .ts files
     files: ['*.ts', '*.tsx'],
     extends: ['@defisaver/eslint-config/base-config-typescript'],
     parser: '@typescript-eslint/parser',
     parserOptions: { project: ['./tsconfig.json'] },
-    // typescript rules must be added here to work
   }],
   rules: {
     'max-len': 0,
