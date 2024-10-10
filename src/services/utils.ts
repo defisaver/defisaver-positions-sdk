@@ -49,3 +49,6 @@ export const mapRange = (input: number | string, minInput: number | string, maxI
   return new Dec(minOutput).plus(new Dec(slope).mul(new Dec(input).minus(minInput))).toDP(2).toNumber();
 };
 
+export const MAXUINT:string = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+
+export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);

@@ -126,3 +126,5 @@ export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.F
 export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
 
 export const LlamaLendViewContract = createContractFromConfigFunc<ContractTypes.LlamaLendView>('LlamaLendView');
+
+export const EulerV2ViewContract = createContractFromConfigFunc<ContractTypes.EulerV2View>('EulerV2View');
