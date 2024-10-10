@@ -178,7 +178,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   ] = multiRes;
 
   let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  const networksWithIncentives = [NetworkNumber.Arb, NetworkNumber.Opt];
+  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt];
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
@@ -294,6 +294,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     if (supplyRewardData) {
       if (+supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
       _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
+      // reward token is aave asset
+      if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveSupplyToken = _market.symbol;
       const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
       const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** +supplyRewardData.priceFeedDecimals).toString();
       _market.incentiveSupplyApy = new Dec(supplyEmissionPerSecond).div((10 ** +supplyRewardData.rewardTokenDecimals) / 100)
@@ -307,6 +309,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     if (borrowRewardData) {
       if (+borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
       _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
+      if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveBorrowToken = _market.symbol;
       const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
       const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** +borrowRewardData.priceFeedDecimals).toString();
       _market.incentiveBorrowApy = new Dec(supplyEmissionPerSecond).div((10 ** +borrowRewardData.rewardTokenDecimals) / 100)
