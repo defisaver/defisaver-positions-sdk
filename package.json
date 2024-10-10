@@ -14,7 +14,7 @@
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*",
     "test:debugger": "mocha --inspect-brk tests/*",
-    "build-test": "npm run build && mocha tests/*"
+    "build-test": "npm run build && npm run test"
   },
   "keywords": [],
   "author": "",
