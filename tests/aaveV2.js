@@ -6,10 +6,6 @@ const sdk = require('../cjs');
 const { NetworkNumber } = require('../cjs/types/common');
 
 describe('Aave v2', () => {
-  let web3;
-  before(async () => {
-    web3 = new Web3(process.env.RPC);
-  });
 
   const fetchMarketData = async (network, _web3) => {
     const marketData = await sdk.aaveV2.getAaveV2MarketsData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV2], web3);
