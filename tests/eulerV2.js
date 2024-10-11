@@ -9,7 +9,7 @@ const { EulerV2Versions } = require('../cjs/types/euler');
 describe('Euler v2', () => {
   let web3;
   before(async () => {
-    web3 = new Web3('https://rpc.tenderly.co/fork/a6d6e178-63f0-4451-b887-d3f66ae50348');
+    web3 = new Web3('https://rpc.tenderly.co/fork/45695c22-49c5-4bd0-a8a3-50eae1b0614f');
   });
 
   const fetchMarketData = async (network, _web3) => {

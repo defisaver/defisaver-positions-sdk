@@ -7,6 +7,13 @@ export enum EulerV2Versions {
   eUSDC8 = 'eUSDC-8',
   eWETH2 = 'eWETH-2',
 }
+
+export enum EulerV2VaultType {
+  Escrow = 'Escrow',
+  Governed = 'Governed',
+  Ungoverned = 'Ungoverned',
+}
+
 export interface EulerV2Market {
   chainIds: NetworkNumber[],
   label: string,
@@ -71,11 +78,13 @@ export interface EulerV2MarketInfoData {
   creator: string,
   governorAdmin: string,
   unitOfAccount: string,
+  unitOfAccountUsdPrice: string,
   isInUSD: boolean,
   oracle: string,
   collaterals: string[],
   isEscrow: boolean,
   isGoverned: boolean,
+  vaultType: EulerV2VaultType,
 }
 
 export type EulerV2AssetsData = { [key: string]: EulerV2AssetData };

@@ -7,11 +7,13 @@ import { compareAddresses, getEthAmountForDecimals, isMaxuint } from '../service
 import {
   EulerV2AssetData,
   EulerV2AssetsData,
-  EulerV2FullMarketData, EulerV2Market,
+  EulerV2FullMarketData,
+  EulerV2Market,
   EulerV2MarketData,
   EulerV2MarketInfoData,
   EulerV2PositionData,
   EulerV2UsedAssets,
+  EulerV2VaultType,
 } from '../types';
 import { getEulerV2AggregatedData } from '../helpers/eulerHelpers';
 import { ZERO_ADDRESS } from '../constants';
@@ -35,6 +37,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   const contract = EulerV2ViewContract(web3, network);
 
   const data = await contract.methods.getVaultInfoFull(selectedMarket.marketAddress).call();
+  const isInUSD = compareAddresses(UnitOfAccountUSD, data.unitOfAccount);
+
+  const usdPrice = getEthAmountForDecimals(data.unitOfAccountInUsd, 8);
 
   // parse collateral tokens
   // imma use address as key for assetsData because there can be more collateral vaults with the same name
@@ -51,9 +56,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       collateralFactor: new Dec(collateral.borrowLTV).div(100).toString(),
       totalBorrow: getEthAmountForDecimals(collateral.totalBorrows, decimals), // parse
       cash: getEthAmountForDecimals(collateral.cash, decimals),
-      supplyCap: isMaxuint(data.supplyCap) ? data.supplyCap : getEthAmountForDecimals(collateral.supplyCap, decimals),
+      supplyCap: isMaxuint(collateral.supplyCap) ? collateral.supplyCap : getEthAmountForDecimals(collateral.supplyCap, decimals),
       borrowCap: '0',
-      price: assetAmountInEth(collateral.assetPriceInUnit), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
+      price: isInUSD ? assetAmountInEth(collateral.assetPriceInUnit) : new Dec(assetAmountInEth(collateral.assetPriceInUnit)).mul(usdPrice).toString(), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
       canBeBorrowed: false,
       canBeSupplied: true,
       borrowRate: '0',
@@ -68,6 +73,10 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   }
   const isEscrow = data.collaterals.length === 0;
   const isGoverned = !compareAddresses(data.governorAdmin, ZERO_ADDRESS);
+
+  const vaultType = isEscrow ? EulerV2VaultType.Escrow : (
+    isGoverned ? EulerV2VaultType.Governed : EulerV2VaultType.Ungoverned
+  );
   const decimals = data.decimals;
 
   // (1 + SPY/10**27) ** secondsPerYear - 1
@@ -89,12 +98,13 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     assetAddr: data.assetAddr,
     vaultAddr: data.vaultAddr,
     symbol: data.symbol,
+    vaultSymbol: selectedMarket.shortLabel,
     decimals,
     totalBorrow: getEthAmountForDecimals(data.totalBorrows, decimals), // parse
     cash: getEthAmountForDecimals(data.cash, decimals),
     supplyCap: isMaxuint(data.supplyCap) ? data.supplyCap : getEthAmountForDecimals(data.supplyCap, decimals),
     borrowCap: isMaxuint(data.supplyCap) ? data.borrowCap : getEthAmountForDecimals(data.borrowCap, decimals),
-    price: assetAmountInEth(data.assetPriceInUnit), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
+    price: isInUSD ? assetAmountInEth(data.assetPriceInUnit) : new Dec(assetAmountInEth(data.assetPriceInUnit)).mul(usdPrice).toString(), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
     sortIndex: 0,
     canBeBorrowed: true,
     canBeSupplied: false,
@@ -119,8 +129,6 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       assetsData[market.vaultAddr.toLowerCase()] = { ...market, sortIndex: i + 1 };
     });
 
-
-  const isInUSD = compareAddresses(UnitOfAccountUSD, data.unitOfAccount);
   const marketData: EulerV2MarketInfoData = {
     name: data.name,
     symbol: data.symbol,
@@ -129,11 +137,13 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     creator: data.creator,
     governorAdmin: data.governorAdmin,
     unitOfAccount: data.unitOfAccount,
+    unitOfAccountUsdPrice: usdPrice,
     isInUSD,
     oracle: data.oracle,
     collaterals: data.collaterals.map((collateral) => collateral.vaultAddr),
     isEscrow,
     isGoverned,
+    vaultType,
     vaultAddr: data.vaultAddr,
   };
 
@@ -194,6 +204,7 @@ export const getEulerV2AccountData = async (
 
   const isInUSD = marketData.isInUSD;
 
+  // TODO: maybe not the best practice to get decimals from tokens package
   const parsingDecimals = isInUSD ? 18 : getAssetInfoByAddress(marketData.unitOfAccount).decimals;
   const contract = EulerV2ViewContract(web3, network);
 
@@ -208,14 +219,15 @@ export const getEulerV2AccountData = async (
   };
 
   const usedAssets: EulerV2UsedAssets = {};
-  const borrowed = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
+  const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
+  const borrowedInAsset = getEthAmountForDecimals(loanData.borrowAmountInAsset, marketData.decimals);
   const borrowVault = loanData.borrowVault;
-  if (borrowVault && borrowed) {
+  if (borrowVault && borrowedInUnit) {
     usedAssets[borrowVault.toLowerCase()] = {
       ...EMPTY_USED_ASSET,
       isBorrowed: true,
-      borrowed: isInUSD ? '' : borrowed,
-      borrowedUsd: isInUSD ? borrowed : '',
+      borrowed: borrowedInAsset,
+      borrowedUsd: isInUSD ? borrowedInUnit : new Dec(borrowedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
       vaultAddr: loanData.borrowVault,
     };
 
@@ -224,13 +236,14 @@ export const getEulerV2AccountData = async (
       const collInfo = assetsData[key];
       if (!collInfo) return; // this is a token supplied but not being used as a collateral for the market
 
-      const supplied = getEthAmountForDecimals(loanData.collateralAmountsInUnit[i], parsingDecimals);
+      const suppliedInUnit = getEthAmountForDecimals(loanData.collateralAmountsInUnit[i], parsingDecimals);
+      const suppliedInAsset = getEthAmountForDecimals(loanData.collateralAmountsInAsset[i], collInfo.decimals);
       usedAssets[key] = {
         ...EMPTY_USED_ASSET,
         collateral: true,
         isSupplied: true,
-        supplied: isInUSD ? '' : supplied,
-        suppliedUsd: isInUSD ? supplied : '',
+        supplied: suppliedInAsset,
+        suppliedUsd: isInUSD ? suppliedInUnit : new Dec(suppliedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
         vaultAddr: collateral,
       };
     });
