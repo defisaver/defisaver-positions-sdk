@@ -3,7 +3,9 @@ import Web3 from 'web3';
 import {
   EthAddress, NetworkNumber,
 } from '../../types/common';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS,
+} from '../../moneymarket';
 import { calculateInterestEarned } from '../../staking';
 import {
   EulerV2AggregatedPositionData,
@@ -12,6 +14,64 @@ import {
   EulerV2UsedAssets,
 } from '../../types';
 import { EulerV2ViewContract } from '../../contracts';
+
+export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => {
+  let borrowUnstable = 0;
+  let supplyStable = 0;
+  let borrowStable = 0;
+  let supplyUnstable = 0;
+  let longAsset = '';
+  let shortAsset = '';
+  let leverageAssetVault = '';
+  Object.values(usedAssets).forEach(({
+    symbol, suppliedUsd, borrowedUsd, collateral, vaultAddr,
+  }) => {
+    const isSupplied = (+suppliedUsd) > dustLimit; // ignore dust like <limit leftover supply
+    const isBorrowed = (+borrowedUsd) > dustLimit; // ignore dust like <limit leftover supply
+    if (isSupplied && STABLE_ASSETS.includes(symbol) && collateral) supplyStable += 1;
+    if (isBorrowed && STABLE_ASSETS.includes(symbol)) borrowStable += 1;
+    if (isBorrowed && !STABLE_ASSETS.includes(symbol)) {
+      borrowUnstable += 1;
+      shortAsset = symbol;
+      leverageAssetVault = vaultAddr;
+    }
+    if (isSupplied && !STABLE_ASSETS.includes(symbol) && collateral) {
+      supplyUnstable += 1;
+      longAsset = symbol;
+      leverageAssetVault = vaultAddr;
+    }
+  });
+  const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
+  const isShort = supplyStable > 0 && supplyUnstable === 0 && borrowUnstable === 1 && borrowStable === 0;
+  // lsd -> liquid staking derivative
+  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH'].includes(longAsset);
+  if (isLong) {
+    return {
+      leveragedType: 'long',
+      leveragedAsset: longAsset,
+      leveragedVault: leverageAssetVault,
+    };
+  }
+  if (isShort) {
+    return {
+      leveragedType: 'short',
+      leveragedAsset: shortAsset,
+      leveragedVault: leverageAssetVault,
+    };
+  }
+  if (isLsdLeveraged) {
+    return {
+      leveragedType: 'lsd-leverage',
+      leveragedAsset: longAsset,
+      leveragedVault: leverageAssetVault,
+    };
+  }
+  return {
+    leveragedType: '',
+    leveragedAsset: '',
+    leveragedVault: '',
+  };
+};
 
 export const getEulerV2AggregatedData = ({
   usedAssets, assetsData, network, ...rest
@@ -33,14 +93,17 @@ export const getEulerV2AggregatedData = ({
   payload.minRatio = '100';
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
-  const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
+  const { leveragedType, leveragedAsset, leveragedVault } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
-    let assetPrice = assetsData[leveragedAsset].price;
+    let assetPrice = assetsData[leveragedVault.toLowerCase()].price;
     if (leveragedType === 'lsd-leverage') {
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+      const ethAsset = Object.values(assetsData).find((asset) => ['WETH', 'ETH'].includes(asset.symbol));
+      if (ethAsset) {
+        payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedVault.toLowerCase()].price).div(ethAsset.price).toString();
+        assetPrice = new Dec(assetPrice).div(ethAsset.price).toString();
+      }
     }
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
