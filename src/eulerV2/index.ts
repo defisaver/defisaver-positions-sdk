@@ -52,8 +52,8 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       symbol: assetInfo.symbol,
       vaultSymbol: collateral.vaultSymbol,
       decimals,
-      liquidationRatio: new Dec(collateral.liquidationLTV).div(100).toString(),
-      collateralFactor: new Dec(collateral.borrowLTV).div(100).toString(),
+      liquidationRatio: new Dec(collateral.liquidationLTV).div(10_000).toString(),
+      collateralFactor: new Dec(collateral.borrowLTV).div(10_000).toString(),
       totalBorrow: getEthAmountForDecimals(collateral.totalBorrows, decimals), // parse
       cash: getEthAmountForDecimals(collateral.cash, decimals),
       supplyCap: isMaxuint(collateral.supplyCap) ? collateral.supplyCap : getEthAmountForDecimals(collateral.supplyCap, decimals),
@@ -97,7 +97,7 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   const marketAsset = {
     assetAddr: data.assetAddr,
     vaultAddr: data.vaultAddr,
-    symbol: data.symbol,
+    symbol: selectedMarket.asset,
     vaultSymbol: selectedMarket.shortLabel,
     decimals,
     totalBorrow: getEthAmountForDecimals(data.totalBorrows, decimals), // parse
@@ -223,12 +223,14 @@ export const getEulerV2AccountData = async (
   const borrowedInAsset = getEthAmountForDecimals(loanData.borrowAmountInAsset, marketData.decimals);
   const borrowVault = loanData.borrowVault;
   if (borrowVault && borrowedInUnit) {
+    const borrowInfo = assetsData[borrowVault.toLowerCase()];
     usedAssets[borrowVault.toLowerCase()] = {
       ...EMPTY_USED_ASSET,
       isBorrowed: true,
       borrowed: borrowedInAsset,
       borrowedUsd: isInUSD ? borrowedInUnit : new Dec(borrowedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
       vaultAddr: loanData.borrowVault,
+      symbol: borrowInfo.symbol,
     };
 
     loanData.collaterals.forEach((collateral, i) => {
@@ -245,6 +247,7 @@ export const getEulerV2AccountData = async (
         supplied: suppliedInAsset,
         suppliedUsd: isInUSD ? suppliedInUnit : new Dec(suppliedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
         vaultAddr: collateral,
+        symbol: collInfo.symbol,
       };
     });
   }
