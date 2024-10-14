@@ -222,7 +222,7 @@ export const getEulerV2AccountData = async (
   const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
   const borrowedInAsset = getEthAmountForDecimals(loanData.borrowAmountInAsset, marketData.decimals);
   const borrowVault = loanData.borrowVault;
-  if (borrowVault && borrowedInUnit) {
+  if (borrowVault && !compareAddresses(ZERO_ADDRESS, borrowVault) && borrowedInUnit) {
     const borrowInfo = assetsData[borrowVault.toLowerCase()];
     usedAssets[borrowVault.toLowerCase()] = {
       ...EMPTY_USED_ASSET,
