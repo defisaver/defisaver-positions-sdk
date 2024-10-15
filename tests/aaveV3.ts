@@ -27,7 +27,7 @@ describe('Aave v3', () => {
   });
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, version = sdk.AaveVersions.AaveV3) => {
-    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version], web3);
+    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version] as sdk.AaveMarketInfo, web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
