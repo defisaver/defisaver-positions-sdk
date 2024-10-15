@@ -1,22 +1,27 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../src');
-const { NetworkNumber } = require('../src/types/common');
+import * as sdk from '../src';
+
+import { Blockish, NetworkNumber } from '../src/types/common';
+
+const { assert } = require('chai');
 
 describe('Spark', () => {
-  let web3;
+  let web3: Web3;
   before(async () => {
+    if (!process.env.RPC) {
+      throw new Error('RPC environment variable is not defined.');
+    }
     web3 = new Web3(process.env.RPC);
   });
 
-  const fetchMarketData = async (network, _web3) => {
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3) => {
     const marketData = await sdk.spark.getSparkMarketsData(_web3, network, sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
+      const keys: (keyof typeof tokenData)[] = [
         'symbol', 'supplyRate', 'borrowRate', 'price', // ...
       ];
       assert.containsAllKeys(tokenData, keys);
@@ -25,15 +30,15 @@ describe('Spark', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData) => {
-    const accountData = await sdk.spark.getSparkAccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { assetsData: marketData.assetsData, selectedMarket: sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1] });
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.SparkMarketsData) => {
+    const accountData = await sdk.spark.getSparkAccountData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { assetsData: marketData.assetsData, selectedMarket: sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1] });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network, _web3) => {
+  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3) => {
     const positionData = await sdk.spark.getSparkFullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1], web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
@@ -41,7 +46,7 @@ describe('Spark', () => {
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber) => {
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
     const balances = await sdk.spark.getSparkAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
