@@ -47,8 +47,8 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     const decimals = collateral.decimals;
     const assetInfo = getAssetInfoByAddress(collateral.assetAddr);
     return ({
-      vaultAddr: collateral.vaultAddr,
-      assetAddr: collateral.assetAddr,
+      vaultAddress: collateral.vaultAddr,
+      assetAddress: collateral.assetAddr,
       symbol: assetInfo.symbol,
       vaultSymbol: collateral.vaultSymbol,
       decimals,
@@ -95,8 +95,8 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   const supplyRate = new Dec(borrowRate).mul(utilizationRate).mul(fee).toString();
 
   const marketAsset = {
-    assetAddr: data.assetAddr,
-    vaultAddr: data.vaultAddr,
+    assetAddress: data.assetAddr,
+    vaultAddress: data.vaultAddr,
     symbol: selectedMarket.asset,
     vaultSymbol: selectedMarket.shortLabel,
     decimals,
@@ -126,7 +126,7 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       return new Dec(bMarket).minus(aMarket).toNumber();
     })
     .forEach((market, i) => {
-      assetsData[market.vaultAddr.toLowerCase()] = { ...market, sortIndex: i + 1 };
+      assetsData[market.vaultAddress.toLowerCase()] = { ...market, sortIndex: i + 1 };
     });
 
   const marketData: EulerV2MarketInfoData = {
@@ -144,7 +144,7 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     isEscrow,
     isGoverned,
     vaultType,
-    vaultAddr: data.vaultAddr,
+    vaultAddress: data.vaultAddr,
   };
 
   return {
@@ -229,7 +229,7 @@ export const getEulerV2AccountData = async (
       isBorrowed: true,
       borrowed: borrowedInAsset,
       borrowedUsd: isInUSD ? borrowedInUnit : new Dec(borrowedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
-      vaultAddr: loanData.borrowVault,
+      vaultAddress: loanData.borrowVault,
       symbol: borrowInfo.symbol,
     };
 
@@ -246,7 +246,7 @@ export const getEulerV2AccountData = async (
         isSupplied: true,
         supplied: suppliedInAsset,
         suppliedUsd: isInUSD ? suppliedInUnit : new Dec(suppliedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
-        vaultAddr: collateral,
+        vaultAddress: collateral,
         symbol: collInfo.symbol,
       };
     });

@@ -24,7 +24,7 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
   let shortAsset = '';
   let leverageAssetVault = '';
   Object.values(usedAssets).forEach(({
-    symbol, suppliedUsd, borrowedUsd, collateral, vaultAddr,
+    symbol, suppliedUsd, borrowedUsd, collateral, vaultAddress,
   }) => {
     const isSupplied = (+suppliedUsd) > dustLimit; // ignore dust like <limit leftover supply
     const isBorrowed = (+borrowedUsd) > dustLimit; // ignore dust like <limit leftover supply
@@ -33,12 +33,12 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
     if (isBorrowed && !STABLE_ASSETS.includes(symbol)) {
       borrowUnstable += 1;
       shortAsset = symbol;
-      leverageAssetVault = vaultAddr;
+      leverageAssetVault = vaultAddress;
     }
     if (isSupplied && !STABLE_ASSETS.includes(symbol) && collateral) {
       supplyUnstable += 1;
       longAsset = symbol;
-      leverageAssetVault = vaultAddr;
+      leverageAssetVault = vaultAddress;
     }
   });
   const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
@@ -80,8 +80,8 @@ export const getEulerV2AggregatedData = ({
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
-  payload.borrowLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddr, suppliedUsd }: { vaultAddr: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddr.toLowerCase()].collateralFactor));
-  payload.liquidationLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddr, suppliedUsd }: { vaultAddr: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddr.toLowerCase()].liquidationRatio));
+  payload.borrowLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].collateralFactor));
+  payload.liquidationLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].liquidationRatio));
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
@@ -113,7 +113,7 @@ export const getEulerV2AggregatedData = ({
 export const calculateNetApy = (usedAssets: EulerV2UsedAssets, assetsData: EulerV2AssetsData) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
-    const assetData = assetsData[usedAsset.vaultAddr.toLowerCase()];
+    const assetData = assetsData[usedAsset.vaultAddress.toLowerCase()];
 
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;

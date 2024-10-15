@@ -37,12 +37,12 @@ export interface EulerV2PositionData extends MMPositionData {
 }
 
 export interface EulerV2AssetData {
-  vaultAddr: string,
+  vaultAddress: string,
   sortIndex?: number
   liquidationRatio: string
   cash: string
   supplyCap: string
-  assetAddr: string
+  assetAddress: string
   decimals: string
   symbol: string
   price: string
@@ -66,14 +66,14 @@ export interface EulerV2UsedAsset {
   borrowedUsd: string
   symbol: string
   collateral: boolean
-  vaultAddr: string
+  vaultAddress: string
 }
 
 export interface EulerV2MarketInfoData {
   name: string,
   symbol: string,
   decimals: string,
-  vaultAddr: string,
+  vaultAddress: string,
   irm: string,
   creator: string,
   governorAdmin: string,
