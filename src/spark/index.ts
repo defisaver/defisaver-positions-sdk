@@ -18,7 +18,7 @@ import {
   createContractWrapper,
 } from '../contracts';
 import {
-  EModeCategoryDataMapping,
+  SparkEModeCategoryDataMapping,
   SparkAssetData,
   SparkAssetsData,
   SparkMarketData,
@@ -36,7 +36,7 @@ export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkA
   const { assetsData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
-  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
+  const categoriesMapping: { [key: number]: SparkEModeCategoryDataMapping } = {};
   Object.values(assetsData).forEach((a) => {
     const borrowingOnlyFromCategory = a.eModeCategory === 0
       ? true

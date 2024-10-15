@@ -1,26 +1,28 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "0.0.135",
+  "version": "0.0.149",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
   "types": "./esm/index.d.ts",
   "scripts": {
-    "build:esm": "rm -rf esm && tsc -p tsconfig.json",
-    "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
-    "build": "npm run generate-contracts && npm run build:cjs && npm run build:esm",
-    "dev": "npm run generate-contracts && tsc -p tsconfig.cjs.json --watch",
+    "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
+    "build:cjs": "rm -rf cjs && tsc -p tsconfig.json",
+    "build": "npm run lint && npm run generate-contracts && npm run build:cjs && npm run build:esm",
+    "dev": "npm run generate-contracts && tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
+    "lint-check": "eslint src/",
     "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*",
+    "test-single": "mocha ./tests/$npm_config_name.js",
     "test:debugger": "mocha --inspect-brk tests/*",
-    "build-test": "npm run build && mocha tests/*"
+    "build-test": "npm run build && npm run test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.5.33",
+    "@defisaver/tokens": "^1.5.37",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "decimal.js": "^10.4.3"
@@ -31,6 +33,7 @@
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
     "mocha": "^10.2.0",
+    "ts-node": "^10.9.2",
     "typechain": "^8.3.1",
     "typechain-target-web3-v1-3mihai3": "^6.0.2",
     "typescript": "^5.2.2"

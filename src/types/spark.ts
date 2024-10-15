@@ -1,10 +1,31 @@
-import { EModeCategoryData, EModeCategoryDataMapping } from './aave';
 import {
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
 export enum SparkVersions {
   SparkV1 = 'v1default',
+}
+
+export interface SparkEModeCategoryData {
+  label: string,
+  liquidationBonus: string,
+  liquidationRatio: string,
+  collateralFactor: string,
+  priceSource: string,
+}
+
+export interface SparkEModeCategoryDataMapping {
+  enteringTerms: boolean[],
+  canEnterCategory: boolean,
+  id: number,
+  data: SparkEModeCategoryData,
+  assets: string[],
+  enabledData: {
+    ratio: string,
+    liqRatio: string,
+    liqPercent: string,
+    collRatio: string,
+  }
 }
 
 export interface SparkMarketData {
@@ -32,7 +53,7 @@ export interface SparkAssetData extends MMAssetData {
   usageAsCollateralEnabled: boolean,
   isIsolated: boolean,
   eModeCategory: number,
-  eModeCategoryData: EModeCategoryData,
+  eModeCategoryData: SparkEModeCategoryData,
   liquidationRatio: string,
 }
 
@@ -103,5 +124,5 @@ export interface SparkPositionData extends MMPositionData {
   eModeCategory: number,
   isInIsolationMode: boolean,
   isInSiloedMode: boolean,
-  eModeCategories: { [key: number]: EModeCategoryDataMapping },
+  eModeCategories: { [key: number]: SparkEModeCategoryDataMapping },
 }

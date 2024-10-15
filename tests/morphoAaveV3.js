@@ -2,8 +2,8 @@ require('dotenv').config();
 const { assert } = require('chai');
 const Web3 = require('web3');
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+const sdk = require('../src');
+const { NetworkNumber } = require('../src/types/common');
 
 describe('Morpho Aave v3', () => {
   let web3;
@@ -26,7 +26,7 @@ describe('Morpho Aave v3', () => {
   };
 
   const fetchAccountData = async (network, web3, marketData) => {
-    const accountData = await sdk.morphoAaveV3.getMorphoAaveV3AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketData.assetsData, '', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.MorphoAaveV3Eth]);
+    const accountData = await sdk.morphoAaveV3.getMorphoAaveV3AccountData(web3, network, '0x4f962BB0EA0785c539f8ab52a17f1f873DDc355f', marketData.assetsData, marketData.eModeCategoriesData, '', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.MorphoAaveV3Eth]);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...

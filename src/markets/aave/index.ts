@@ -127,6 +127,8 @@ export const MORPHO_AAVE_V3_ETH = (networkId: NetworkNumber = NetworkNumber.Eth)
   providerAddress: getConfigContractAddress('AaveV3PoolAddressesProvider', networkId), // TODO - check if used and if value is good?
   protocolData: 'AaveV3ProtocolDataProvider',
   protocolDataAddress: getConfigContractAddress('AaveV3ProtocolDataProvider', networkId),
+  aaveLendingPool: 'AaveV3LendingPool',
+  aaveLendingPoolAddress: getConfigContractAddress('AaveV3LendingPool', networkId),
   lendingPool: 'MorphoAaveV3ProxyEthMarket',
   lendingPoolAddress: getConfigContractAddress('MorphoAaveV3ProxyEthMarket', 1),
   // icon: SvgAdapter(protocolIcons.morpho),

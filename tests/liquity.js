@@ -2,8 +2,8 @@ require('dotenv').config();
 const { assert } = require('chai');
 const Web3 = require('web3');
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+const sdk = require('../src');
+const { NetworkNumber } = require('../src/types/common');
 
 describe('Liquity', () => {
   let web3;
