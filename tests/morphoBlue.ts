@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import * as sdk from '../src';
 
 import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
 
@@ -13,15 +14,8 @@ describe('Morpho Blue', () => {
   let web3Base: Web3;
 
   before(async () => {
-    if (!process.env.RPC) {
-      throw new Error('RPC environment variable is not defined.');
-    }
-    web3 = new Web3(process.env.RPC);
-
-    if (!process.env.RPCBASE) {
-      throw new Error('RPCBASE environment variable is not defined.');
-    }
-    web3Base = new Web3(process.env.RPCBASE);
+    web3 = getWeb3Instance('RPC');
+    web3Base = getWeb3Instance('RPCBASE');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.MorphoBlueMarketData) => {

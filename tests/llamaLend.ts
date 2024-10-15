@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import * as sdk from '../src';
 
 import { NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
 
@@ -11,15 +12,8 @@ describe('LlamaLend', () => {
   let web3Eth: Web3;
   let web3Arb: Web3;
   before(async () => {
-    if (!process.env.RPC) {
-      throw new Error('RPC environment variable is not defined.');
-    }
-    web3Eth = new Web3(process.env.RPC);
-
-    if (!process.env.RPCARB) {
-      throw new Error('RPCARB environment variable is not defined.');
-    }
-    web3Arb = new Web3(process.env.RPCARB);
+    web3Eth = getWeb3Instance('RPC');
+    web3Arb = getWeb3Instance('RPCARB');
   });
 
   // const fetchAccountBalances = async (network, web3, blockNumber) => {

@@ -4,16 +4,14 @@ import Web3 from 'web3';
 import * as sdk from '../src';
 
 import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
 
 describe('Spark', () => {
   let web3: Web3;
   before(async () => {
-    if (!process.env.RPC) {
-      throw new Error('RPC environment variable is not defined.');
-    }
-    web3 = new Web3(process.env.RPC);
+    web3 = getWeb3Instance('RPC');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3) => {

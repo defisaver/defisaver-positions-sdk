@@ -4,6 +4,7 @@ import Web3 from 'web3';
 import * as sdk from '../src';
 
 import { Blockish, EthAddress, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
 
@@ -13,25 +14,10 @@ describe('Compound v3', () => {
   let web3Opt: Web3;
   let web3Arb: Web3;
   before(async () => {
-    if (!process.env.RPC) {
-      throw new Error('RPC environment variable is not defined.');
-    }
-    web3 = new Web3(process.env.RPC);
-
-    if (!process.env.RPCOPT) {
-      throw new Error('RPCOPT environment variable is not defined.');
-    }
-    web3Opt = new Web3(process.env.RPCOPT);
-
-    if (!process.env.RPCBASE) {
-      throw new Error('RPCBASE environment variable is not defined.');
-    }
-    web3Base = new Web3(process.env.RPCBASE);
-
-    if (!process.env.RPCARB) {
-      throw new Error('RPCARB environment variable is not defined.');
-    }
-    web3Arb = new Web3(process.env.RPCARB);
+    web3 = getWeb3Instance('RPC');
+    web3Opt = getWeb3Instance('RPCOPT');
+    web3Base = getWeb3Instance('RPCBASE');
+    web3Arb = getWeb3Instance('RPCARB');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CompoundMarketData) => {
