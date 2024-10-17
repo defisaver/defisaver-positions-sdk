@@ -94,7 +94,7 @@ const getSuperOETHApy = async () => {
   });
 
   const data = await res.json();
-  return data.data.oTokenApies[0].apy.toString();
+  return new Dec(data.data.oTokenApies[0].apy).mul(100).toString();
 };
 
 const getApyFromDfsApi = async (asset: string) => {
