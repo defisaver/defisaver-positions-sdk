@@ -48,6 +48,7 @@ export enum MorphoBlueVersions {
   MorphoBlueREthEth_945_Base = 'morphoblueretheth_945_base',
   MorphoBlueCbBTCEth_915_Base = 'morphobluecbbtceth_915_base',
   MorphoBlueCbBTCUSDC_860_Base = 'morphobluecbbtcusdc_860_base',
+  MorphoBlueWsuperOETHbWETH_915_Base = 'morphobluewsuperoethbweth_915_base',
 }
 
 export enum MorphoBlueOracleType {

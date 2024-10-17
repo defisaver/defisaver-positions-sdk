@@ -628,6 +628,22 @@ export const MORPHO_BLUE_CBBTC_USDC_860_BASE = (networkId: NetworkNumber = Netwo
   protocolName: 'morpho-blue',
 });
 
+export const MORPHO_BLUE_WSUPEROETHB_WETH_915_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Base],
+  label: 'Morpho',
+  shortLabel: 'wsuperOETHb/WETH',
+  value: MorphoBlueVersions.MorphoBlueWsuperOETHbWETH_915_Base,
+  url: 'wsuperoethbweth-144bf18d',
+  loanToken: '0x4200000000000000000000000000000000000006',
+  collateralToken: '0x7FcD174E80f264448ebeE8c88a7C4476AAF58Ea6',
+  oracle: '0x28C964c985fe84736fAdc7Cf0bBd58B54bc7CF93',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
+  lltv: 0.915,
+  marketId: '0x144bf18d6bf4c59602548a825034f73bf1d20177fc5f975fc69d5a5eba929b45',
+  protocolName: 'morpho-blue',
+});
+
 export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueWstEthUSDC]: MORPHO_BLUE_WSTETH_USDC(networkId),
   [MorphoBlueVersions.MorphoBlueSDAIUSDC]: MORPHO_BLUE_SDAI_USDC(networkId),
@@ -679,6 +695,9 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   // wstETH/WETH Base
   [MorphoBlueVersions.MorphoBlueWstEthEth_945_Base]: MORPHO_BLUE_WSTETH_ETH_945_BASE(networkId),
   [MorphoBlueVersions.MorphoBlueWstEthEth_965_Base]: MORPHO_BLUE_WSTETH_ETH_965_BASE(networkId),
+
+  // wsuperOETHb/WETH Base
+  [MorphoBlueVersions.MorphoBlueWsuperOETHbWETH_915_Base]: MORPHO_BLUE_WSUPEROETHB_WETH_915_BASE(networkId),
 }) as const;
 
 export const findMorphoBlueMarket = (collateralToken: string, loanToken: string, lltv: number, oracle: string, irm: string, network = NetworkNumber.Eth) => {
