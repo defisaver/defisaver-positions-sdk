@@ -11,6 +11,7 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
   MorphoBlueWstEthPYUSD = 'morphobluwstethpyusd', // wstETH/PYUSD
   MorphoBlueWeEthEth = 'morphoblueweetheth', // weETH/ETH
+  MorphoBlueREthEth_945 = 'morphoblueretheth_945', // rETH/ETH
   MorphoBlueWBTCPYUSD = 'morphobluewbtcpyusd', // WBTC/PYUSD
   MorphoBlueWBTCEth = 'morphobluewbtceth', // WBTC/ETH
   MorphoBlueUSDeUSDT = 'morphoblueusdeusdt', // USDe/USDT
