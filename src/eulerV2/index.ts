@@ -179,6 +179,7 @@ export const EMPTY_EULER_V2_DATA = {
   inLockDownMode: false,
   inPermitDisabledMode: false,
   lastUpdated: Date.now(),
+  hasBorrowInDifferentVault: false,
 };
 
 export const getEulerV2AccountData = async (
@@ -220,6 +221,7 @@ export const getEulerV2AccountData = async (
       borrowAmountInUnit: '0',
       inLockDownMode: false,
       inPermitDisabledMode: false,
+      hasBorrowInDifferentVault: compareAddresses(loanData.borrowVault, ZERO_ADDRESS),
     };
   } else {
     payload = {
@@ -228,6 +230,7 @@ export const getEulerV2AccountData = async (
       borrowAmountInUnit: loanData.borrowAmountInUnit,
       inLockDownMode: loanData.inLockDownMode,
       inPermitDisabledMode: loanData.inPermitDisabledMode,
+      hasBorrowInDifferentVault: false,
     };
 
     const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
