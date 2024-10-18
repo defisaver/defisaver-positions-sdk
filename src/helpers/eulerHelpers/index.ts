@@ -73,43 +73,6 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
   };
 };
 
-export const getEulerV2AggregatedData = ({
-  usedAssets, assetsData, network, ...rest
-}: { usedAssets: EulerV2UsedAssets, assetsData: EulerV2AssetsData, network: NetworkNumber }) => {
-  const payload = {} as EulerV2AggregatedPositionData;
-  payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
-  payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
-  payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
-  payload.borrowLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].collateralFactor));
-  payload.liquidationLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].liquidationRatio));
-  const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
-  payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
-  payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
-  payload.netApy = netApy;
-  payload.incentiveUsd = incentiveUsd;
-  payload.totalInterestUsd = totalInterestUsd;
-  payload.minRatio = '100';
-  payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
-  payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
-  const { leveragedType, leveragedAsset, leveragedVault } = isLeveragedPos(usedAssets);
-  payload.leveragedType = leveragedType;
-  if (leveragedType !== '') {
-    payload.leveragedAsset = leveragedAsset;
-    let assetPrice = assetsData[leveragedVault.toLowerCase()].price;
-    if (leveragedType === 'lsd-leverage') {
-      const ethAsset = Object.values(assetsData).find((asset) => ['WETH', 'ETH'].includes(asset.symbol));
-      if (ethAsset) {
-        payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedVault.toLowerCase()].price).div(ethAsset.price).toString();
-        assetPrice = new Dec(assetPrice).div(ethAsset.price).toString();
-      }
-    }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
-  }
-  return payload;
-};
-
 export const calculateNetApy = (usedAssets: EulerV2UsedAssets, assetsData: EulerV2AssetsData) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
@@ -145,6 +108,43 @@ export const calculateNetApy = (usedAssets: EulerV2UsedAssets, assetsData: Euler
   const netApy = new Dec(totalInterestUsd).div(balance).times(100).toString();
 
   return { netApy, totalInterestUsd, incentiveUsd };
+};
+
+export const getEulerV2AggregatedData = ({
+  usedAssets, assetsData, network, ...rest
+}: { usedAssets: EulerV2UsedAssets, assetsData: EulerV2AssetsData, network: NetworkNumber }) => {
+  const payload = {} as EulerV2AggregatedPositionData;
+  payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
+  payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
+  payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
+  payload.borrowLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].collateralFactor));
+  payload.liquidationLimitUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ vaultAddress, suppliedUsd }: { vaultAddress: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[vaultAddress.toLowerCase()].liquidationRatio));
+  const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
+  payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
+  payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData);
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
+  payload.minRatio = '100';
+  payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
+  payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  const { leveragedType, leveragedAsset, leveragedVault } = isLeveragedPos(usedAssets);
+  payload.leveragedType = leveragedType;
+  if (leveragedType !== '') {
+    payload.leveragedAsset = leveragedAsset;
+    let assetPrice = assetsData[leveragedVault.toLowerCase()].price;
+    if (leveragedType === 'lsd-leverage') {
+      const ethAsset = Object.values(assetsData).find((asset) => ['WETH', 'ETH'].includes(asset.symbol));
+      if (ethAsset) {
+        payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedVault.toLowerCase()].price).div(ethAsset.price).toString();
+        assetPrice = new Dec(assetPrice).div(ethAsset.price).toString();
+      }
+    }
+    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+  }
+  return payload;
 };
 
 export const getApyAfterValuesEstimationEulerV2 = async (selectedMarket: EulerV2Market, action: string, asset: string, amount: string, account: EthAddress, web3: Web3, network: NetworkNumber) => {

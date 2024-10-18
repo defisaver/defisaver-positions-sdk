@@ -28,7 +28,7 @@ export const EMPTY_USED_ASSET = {
   borrowedUsd: '0',
   symbol: '',
   collateral: false,
-  vaultAddr: '',
+  vaultAddress: '',
 };
 
 const UnitOfAccountUSD = '0x0000000000000000000000000000000000000348';
@@ -82,10 +82,10 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   // (1 + SPY/10**27) ** secondsPerYear - 1
 
   const interestRate = data.interestRate;
-  const a = new Dec(interestRate).div(1e27);
+  const _interestRate = new Dec(interestRate).div(1e27);
 
   const secondsPerYear = 31556953;
-  const borrowRate = new Dec(1).plus(a).pow(secondsPerYear - 1).toString();
+  const borrowRate = new Dec(1).plus(_interestRate).pow(secondsPerYear - 1).toString();
   // totalBorrows / totalAssets
 
   const utilizationRate = new Dec(data.totalBorrows).div(data.totalAssets).toString();
@@ -186,7 +186,7 @@ export const getEulerV2AccountData = async (
   network: NetworkNumber,
   address: string,
   extractedState: ({
-    selectedMarket: EulerV2MarketData,
+    selectedMarket: EulerV2Market,
     assetsData: EulerV2AssetsData,
     marketData: EulerV2MarketInfoData,
   }),
@@ -209,48 +209,63 @@ export const getEulerV2AccountData = async (
   const contract = EulerV2ViewContract(web3, network);
 
   const loanData = await contract.methods.getUserData(address).call();
-
-  payload = {
-    ...payload,
-    borrowVault: loanData.borrowVault,
-    borrowAmountInUnit: loanData.borrowAmountInUnit,
-    inLockDownMode: loanData.inLockDownMode,
-    inPermitDisabledMode: loanData.inPermitDisabledMode,
-  };
-
   const usedAssets: EulerV2UsedAssets = {};
-  const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
-  const borrowedInAsset = getEthAmountForDecimals(loanData.borrowAmountInAsset, marketData.decimals);
-  const borrowVault = loanData.borrowVault;
-  if (borrowVault && !compareAddresses(ZERO_ADDRESS, borrowVault) && borrowedInUnit) {
-    const borrowInfo = assetsData[borrowVault.toLowerCase()];
-    usedAssets[borrowVault.toLowerCase()] = {
-      ...EMPTY_USED_ASSET,
-      isBorrowed: true,
-      borrowed: borrowedInAsset,
-      borrowedUsd: isInUSD ? borrowedInUnit : new Dec(borrowedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
-      vaultAddress: loanData.borrowVault,
-      symbol: borrowInfo.symbol,
+
+  // there is no user position check for a specific market, only global check
+  // but we need to make sure it works for the UI and show position only for the selected market
+  if (!compareAddresses(loanData.borrowVault, selectedMarket.marketAddress)) {
+    payload = {
+      ...payload,
+      borrowVault: ZERO_ADDRESS,
+      borrowAmountInUnit: '0',
+      inLockDownMode: false,
+      inPermitDisabledMode: false,
+    };
+  } else {
+    payload = {
+      ...payload,
+      borrowVault: loanData.borrowVault,
+      borrowAmountInUnit: loanData.borrowAmountInUnit,
+      inLockDownMode: loanData.inLockDownMode,
+      inPermitDisabledMode: loanData.inPermitDisabledMode,
     };
 
-    loanData.collaterals.forEach((collateral, i) => {
-      const key = collateral.toLowerCase();
-      const collInfo = assetsData[key];
-      if (!collInfo) return; // this is a token supplied but not being used as a collateral for the market
+    const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
+    const borrowedInAsset = getEthAmountForDecimals(loanData.borrowAmountInAsset, marketData.decimals);
+    const borrowVault = loanData.borrowVault;
 
-      const suppliedInUnit = getEthAmountForDecimals(loanData.collateralAmountsInUnit[i], parsingDecimals);
-      const suppliedInAsset = getEthAmountForDecimals(loanData.collateralAmountsInAsset[i], collInfo.decimals);
-      usedAssets[key] = {
+    if (borrowVault && !compareAddresses(ZERO_ADDRESS, borrowVault) && borrowedInUnit) {
+      const borrowInfo = assetsData[borrowVault.toLowerCase()];
+      usedAssets[borrowVault.toLowerCase()] = {
         ...EMPTY_USED_ASSET,
-        collateral: true,
-        isSupplied: true,
-        supplied: suppliedInAsset,
-        suppliedUsd: isInUSD ? suppliedInUnit : new Dec(suppliedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
-        vaultAddress: collateral,
-        symbol: collInfo.symbol,
+        isBorrowed: true,
+        borrowed: borrowedInAsset,
+        borrowedUsd: isInUSD ? borrowedInUnit : new Dec(borrowedInUnit).mul(marketData.unitOfAccountUsdPrice).toString(),
+        vaultAddress: loanData.borrowVault,
+        symbol: borrowInfo.symbol,
       };
-    });
+    }
   }
+
+  loanData.collaterals.forEach((collateral, i) => {
+    const key = collateral.collateralVault.toLowerCase();
+    const collInfo = assetsData[key];
+
+    if (!collInfo || !marketData.collaterals.map(a => a.toLowerCase()).includes(key)) return; // this is a token supplied but not being used as a collateral for the market
+
+    const suppliedInUnit = getEthAmountForDecimals(collateral.collateralAmountInUnit, parsingDecimals);
+    const suppliedInAsset = getEthAmountForDecimals(collateral.collateralAmountInAsset, collInfo.decimals);
+    const collateralAmountInUSD = getEthAmountForDecimals(collateral.collateralAmountInUSD, 18);
+    usedAssets[key] = {
+      ...EMPTY_USED_ASSET,
+      collateral: collateral.usedInBorrow,
+      isSupplied: true,
+      supplied: suppliedInAsset,
+      suppliedUsd: collateralAmountInUSD,
+      vaultAddress: collateral.collateralVault,
+      symbol: collInfo.symbol,
+    };
+  });
 
   payload = {
     ...payload,
