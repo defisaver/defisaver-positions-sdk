@@ -221,7 +221,7 @@ export const getEulerV2AccountData = async (
       borrowAmountInUnit: '0',
       inLockDownMode: false,
       inPermitDisabledMode: false,
-      hasBorrowInDifferentVault: compareAddresses(loanData.borrowVault, ZERO_ADDRESS),
+      hasBorrowInDifferentVault: !compareAddresses(loanData.borrowVault, ZERO_ADDRESS),
     };
   } else {
     payload = {
