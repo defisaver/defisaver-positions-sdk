@@ -15,7 +15,7 @@ import {
   EulerV2UsedAssets,
   EulerV2VaultType,
 } from '../types';
-import { getEulerV2AggregatedData } from '../helpers/eulerHelpers';
+import { getEulerV2AggregatedData, getEulerV2BorrowRate, getEulerV2SupplyRate } from '../helpers/eulerHelpers';
 import { ZERO_ADDRESS } from '../constants';
 import { EulerV2ViewContract } from '../contracts';
 
@@ -82,17 +82,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   // (1 + SPY/10**27) ** secondsPerYear - 1
 
   const interestRate = data.interestRate;
-  const _interestRate = new Dec(interestRate).div(1e27);
 
-  const secondsPerYear = 31556953;
-  const borrowRate = new Dec(1).plus(_interestRate).pow(secondsPerYear - 1).toString();
-  // totalBorrows / totalAssets
-
-  const utilizationRate = new Dec(data.totalBorrows).div(data.totalAssets).toString();
-
-  const interestFee = new Dec(data.interestFee).div(1000);
-  const fee = new Dec(1).minus(interestFee);
-  const supplyRate = new Dec(borrowRate).mul(utilizationRate).mul(fee).toString();
+  const borrowRate = getEulerV2BorrowRate(interestRate);
+  const supplyRate = getEulerV2SupplyRate(borrowRate, data.totalBorrows, data.totalAssets, data.interestFee);
 
   const marketAsset = {
     assetAddress: data.assetAddr,

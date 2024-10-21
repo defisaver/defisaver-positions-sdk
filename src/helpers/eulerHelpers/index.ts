@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import Web3 from 'web3';
+import { assetAmountInWei } from '@defisaver/tokens';
 import {
   EthAddress, NetworkNumber,
 } from '../../types/common';
@@ -14,6 +15,8 @@ import {
   EulerV2UsedAssets,
 } from '../../types';
 import { EulerV2ViewContract } from '../../contracts';
+import { borrowOperations } from '../../constants';
+import { multicall } from '../../multicall';
 
 export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => {
   let borrowUnstable = 0;
@@ -147,6 +150,65 @@ export const getEulerV2AggregatedData = ({
   return payload;
 };
 
-export const getApyAfterValuesEstimationEulerV2 = async (selectedMarket: EulerV2Market, action: string, asset: string, amount: string, account: EthAddress, web3: Web3, network: NetworkNumber) => {
+export const getEulerV2BorrowRate = (interestRate: string) => {
+  const _interestRate = new Dec(interestRate).div(1e27);
+  const secondsPerYear = 31556953;
+  return new Dec(1).plus(_interestRate).pow(secondsPerYear - 1).toString();
+};
+
+export const getEulerV2SupplyRate = (borrowRate: string, totalBorrows: string, totalAssets: string, _interestFee: string) => {
+  const utilizationRate = new Dec(totalBorrows).div(totalAssets).toString();
+
+  const interestFee = new Dec(_interestFee).div(1000);
+  const fee = new Dec(1).minus(interestFee);
+  return new Dec(borrowRate).mul(utilizationRate).mul(fee).toString();
+};
+export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: string, amount: string, asset: string, vaultAddress: EthAddress }[], web3: Web3, network: NetworkNumber) => {
   const eulerV2ViewContract = EulerV2ViewContract(web3, network);
+  const multicallData: any[] = [];
+  const apyAfterValuesEstimationParams: any[] = [];
+  actions.forEach(({
+    action, amount, asset, vaultAddress,
+  }) => {
+    const isBorrowOperation = borrowOperations.includes(action);
+    const amountInWei = assetAmountInWei(amount, asset);
+    let liquidityAdded;
+    let liquidityRemoved;
+    if (isBorrowOperation) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityRemoved = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
+    }
+    apyAfterValuesEstimationParams.push([
+      vaultAddress,
+      isBorrowOperation,
+      liquidityAdded,
+      liquidityRemoved,
+    ]);
+    multicallData.push({
+      target: eulerV2ViewContract.options.address,
+      abiItem: eulerV2ViewContract.options.jsonInterface.find(({ name }) => name === 'getVaultInfoFull'),
+      params: [vaultAddress],
+    });
+  });
+  multicallData.push({
+    target: eulerV2ViewContract.options.address,
+    abiItem: eulerV2ViewContract.options.jsonInterface.find(({ name }) => name === 'getApyAfterValuesEstimation'),
+    params: [apyAfterValuesEstimationParams],
+  });
+  const multicallRes = await multicall(multicallData, web3, network);
+  const numOfActions = actions.length;
+  const data: any = {};
+  for (let i = 0; i < numOfActions; i += 1) {
+    const _interestRate = multicallRes[numOfActions].estimatedBorrowRates[i];
+    const vaultInfo = multicallRes[i][0];
+    const borrowRate = getEulerV2BorrowRate(_interestRate);
+    data[vaultInfo.vaultAddr.toLowerCase()] = {
+      borrowRate,
+      supplyRate: getEulerV2SupplyRate(borrowRate, vaultInfo.totalBorrows, vaultInfo.totalAssets, vaultInfo.interestFee),
+    };
+  }
+  return data;
 };
