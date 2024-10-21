@@ -214,7 +214,7 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
     const decimals = vaultInfo.decimals;
     const borrowRate = getEulerV2BorrowRate(_interestRate);
 
-    const amount = assetAmountInWei(actions[i].amount, decimals);
+    const amount = new Dec(actions[i].amount).mul(10 ** decimals).toString();
     const action = actions[i].action;
     const isBorrowOperation = borrowOperations.includes(action);
     const { liquidityAdded, liquidityRemoved } = getLiquidityChanges(action, amount, isBorrowOperation);
