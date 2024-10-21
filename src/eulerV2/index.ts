@@ -119,9 +119,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   };
 
   colls
-    .sort((a, b) => {
-      const aMarket = new Dec(a.price).times(a.totalBorrow).toString();
-      const bMarket = new Dec(b.price).times(b.totalBorrow).toString();
+    .sort((coll1, coll2) => {
+      const aMarket = new Dec(coll1.price).times(coll1.totalBorrow).toString();
+      const bMarket = new Dec(coll2.price).times(coll2.totalBorrow).toString();
 
       return new Dec(bMarket).minus(aMarket).toNumber();
     })

@@ -38,6 +38,7 @@ export interface EulerV2PositionData extends MMPositionData {
 
 export interface EulerV2AssetData {
   vaultAddress: string,
+  vaultSymbol: string
   sortIndex?: number
   liquidationRatio: string
   cash: string
