@@ -9,13 +9,12 @@ const { EulerV2Versions } = require('../cjs/types/euler');
 describe('Euler v2', () => {
   let web3;
   before(async () => {
-    web3 = new Web3('https://rpc.tenderly.co/fork/6307fa38-d82a-4870-88dd-5feb7c0b2d15');
+    web3 = new Web3(process.env.RPC);
   });
 
   const fetchMarketData = async (network, _web3) => {
     const marketData = await sdk.eulerV2.getEulerV2MarketsData(_web3, network, sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], web3);
 
-    console.log('test: \n', marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys = [
@@ -29,7 +28,7 @@ describe('Euler v2', () => {
 
   const fetchAccountData = async (network, web3, marketInfo) => {
     const accountData = await sdk.eulerV2.getEulerV2AccountData(web3, network, '0xe39b916a35d28d27741B46e1B49614AC6E966d33', { selectedMarket: sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], assetsData: marketInfo.assetsData, marketData: marketInfo.marketData });
-    console.log(accountData);
+
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);

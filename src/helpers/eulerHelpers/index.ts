@@ -151,15 +151,16 @@ export const getEulerV2AggregatedData = ({
 };
 
 export const getEulerV2BorrowRate = (interestRate: string) => {
-  const _interestRate = new Dec(interestRate).div(1e27);
+  const _interestRate = new Dec(interestRate).div(1e27).toString();
   const secondsPerYear = 31556953;
-  return new Dec(1).plus(_interestRate).pow(secondsPerYear - 1).toString();
+  const a = new Dec(1).plus(_interestRate).pow(secondsPerYear - 1).toString();
+  return new Dec(new Dec(a).minus(1)).mul(100).toString();
 };
 
-export const getEulerV2SupplyRate = (borrowRate: string, totalBorrows: string, totalAssets: string, _interestFee: string) => {
-  const utilizationRate = new Dec(totalBorrows).div(totalAssets).toString();
+export const getUtilizationRate = (totalBorrows: string, totalAssets: string) => new Dec(totalBorrows).div(totalAssets).toString();
 
-  const interestFee = new Dec(_interestFee).div(1000);
+export const getEulerV2SupplyRate = (borrowRate: string, utilizationRate: string, _interestFee: string) => {
+  const interestFee = new Dec(_interestFee).div(10000);
   const fee = new Dec(1).minus(interestFee);
   return new Dec(borrowRate).mul(utilizationRate).mul(fee).toString();
 };
@@ -220,9 +221,10 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
 
     const totalBorrows = new Dec(vaultInfo.totalBorrows).add(isBorrowOperation ? liquidityRemoved : '0').sub(isBorrowOperation ? liquidityAdded : '0').toString();
     const totalAssets = new Dec(vaultInfo.totalAssets).add(isBorrowOperation ? '0' : liquidityAdded).sub(isBorrowOperation ? '0' : liquidityRemoved).toString();
+    const utilizationRate = getUtilizationRate(totalBorrows, totalAssets);
     data[vaultInfo.vaultAddr.toLowerCase()] = {
       borrowRate,
-      supplyRate: getEulerV2SupplyRate(borrowRate, totalBorrows, totalAssets, vaultInfo.interestFee),
+      supplyRate: getEulerV2SupplyRate(borrowRate, utilizationRate, vaultInfo.interestFee),
     };
   }
   return data;

@@ -56,6 +56,7 @@ export interface EulerV2AssetData {
   collateralFactor: string
   borrowRate: string
   supplyRate: string
+  utilization: string
 }
 
 export interface EulerV2UsedAsset {

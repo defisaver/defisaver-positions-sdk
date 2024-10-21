@@ -9,13 +9,17 @@ import {
   EulerV2AssetsData,
   EulerV2FullMarketData,
   EulerV2Market,
-  EulerV2MarketData,
   EulerV2MarketInfoData,
   EulerV2PositionData,
   EulerV2UsedAssets,
   EulerV2VaultType,
 } from '../types';
-import { getEulerV2AggregatedData, getEulerV2BorrowRate, getEulerV2SupplyRate } from '../helpers/eulerHelpers';
+import {
+  getEulerV2AggregatedData,
+  getEulerV2BorrowRate,
+  getEulerV2SupplyRate,
+  getUtilizationRate,
+} from '../helpers/eulerHelpers';
 import { ZERO_ADDRESS } from '../constants';
 import { EulerV2ViewContract } from '../contracts';
 
@@ -46,6 +50,10 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   const colls: EulerV2AssetData[] = data.collaterals.map((collateral) => {
     const decimals = collateral.decimals;
     const assetInfo = getAssetInfoByAddress(collateral.assetAddr);
+    const borrowRate = getEulerV2BorrowRate(collateral.interestRate);
+    const utilizationRate = getUtilizationRate(collateral.totalBorrows, new Dec(collateral.totalBorrows).plus(collateral.cash).toString());
+
+    const supplyRate = getEulerV2SupplyRate(borrowRate, utilizationRate, collateral.interestFee);
     return ({
       vaultAddress: collateral.vaultAddr,
       assetAddress: collateral.assetAddr,
@@ -61,8 +69,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       price: isInUSD ? assetAmountInEth(collateral.assetPriceInUnit) : new Dec(assetAmountInEth(collateral.assetPriceInUnit)).mul(usdPrice).toString(), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
       canBeBorrowed: false,
       canBeSupplied: true,
-      borrowRate: '0',
-      supplyRate: '0',
+      borrowRate,
+      supplyRate,
+      utilization: new Dec(utilizationRate).mul(100).toString(),
     });
   });
   for (const coll of colls) {
@@ -84,7 +93,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
   const interestRate = data.interestRate;
 
   const borrowRate = getEulerV2BorrowRate(interestRate);
-  const supplyRate = getEulerV2SupplyRate(borrowRate, data.totalBorrows, data.totalAssets, data.interestFee);
+
+  const utilizationRate = getUtilizationRate(data.totalBorrows, data.totalAssets);
+  const supplyRate = getEulerV2SupplyRate(borrowRate, utilizationRate, data.interestFee);
 
   const marketAsset = {
     assetAddress: data.assetAddr,
@@ -104,6 +115,7 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     supplyRate,
     collateralFactor: '0',
     liquidationRatio: '0',
+    utilization: new Dec(utilizationRate).mul(100).toString(),
   };
 
   const assetsData: EulerV2AssetsData = {
@@ -253,7 +265,7 @@ export const getEulerV2AccountData = async (
     const collateralAmountInUSD = getEthAmountForDecimals(collateral.collateralAmountInUSD, 18);
     usedAssets[key] = {
       ...EMPTY_USED_ASSET,
-      collateral: collateral.usedInBorrow,
+      collateral: true,
       isSupplied: true,
       supplied: suppliedInAsset,
       suppliedUsd: collateralAmountInUSD,
