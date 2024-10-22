@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "0.0.161",
+  "version": "0.0.165",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -16,7 +16,8 @@
     "test": "mocha tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
-    "build-test": "npm run build && npm run test"
+    "build-test": "npm run build && npm run test",
+    "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
   },
   "keywords": [],
   "author": "",
