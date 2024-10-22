@@ -3,6 +3,7 @@ export * from './compound';
 export * from './spark';
 export * from './curveUsd';
 export * from './liquity';
+export * from './liquityV2';
 export * from './maker';
 export * from './chickenBonds';
 export * from './morphoBlue';
