@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "0.0.165",
+  "version": "0.0.166",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -36,6 +36,7 @@
     "chai": "^4.3.8",
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
+    "eslint-plugin-import": "^2.31.0",
     "mocha": "^10.2.0",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.1",

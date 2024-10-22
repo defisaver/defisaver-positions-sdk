@@ -77,6 +77,12 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
     .toString();
 };
 
+export const getSsrApy = async () => {
+  const res = await fetch('https://app.defisaver.com/api/sky/data');
+  const data = await res.json();
+  return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
+};
+
 const getSuperOETHApy = async () => {
   console.log('getSuperOETHApy');
   const res = await fetch('https://origin.squids.live/origin-squid/graphql', {
@@ -103,7 +109,7 @@ const getApyFromDfsApi = async (asset: string) => {
   return data.apy;
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   console.log('getStakingApy', asset, blockNumber, fromBlock);
@@ -120,6 +126,7 @@ export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' |
     if (asset === 'rsETH' || asset === 'wrsETH') return getApyFromDfsApi('rsETH');
     if (asset === 'pufETH') return getApyFromDfsApi('pufETH');
     if (asset === 'wsuperOETHb') return getSuperOETHApy();
+    if (asset === 'sUSDS') return getSsrApy();
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
     return '0';
