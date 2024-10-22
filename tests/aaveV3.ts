@@ -1,20 +1,23 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../src');
-const { NetworkNumber } = require('../src/types/common');
+import * as sdk from '../src';
+
+import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
+const { assert } = require('chai');
 
 describe('Aave v3', () => {
-  let web3;
-  let web3Base;
-  let web3Opt;
-  let web3Arb;
+  let web3: Web3;
+  let web3Base: Web3;
+  let web3Opt: Web3;
+  let web3Arb: Web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
-    web3Opt = new Web3(process.env.RPCOPT);
-    web3Base = new Web3(process.env.RPCBASE);
-    web3Arb = new Web3(process.env.RPCARB);
+    web3 = getWeb3Instance('RPC');
+    web3Opt = getWeb3Instance('RPCOPT');
+    web3Base = getWeb3Instance('RPCBASE');
+    web3Arb = getWeb3Instance('RPCARB');
   });
 
   it('has working contract', async () => {
@@ -23,14 +26,13 @@ describe('Aave v3', () => {
     assert.equal(res, '64');
   });
 
-  const fetchMarketData = async (network, _web3, version = sdk.AaveVersions.AaveV3) => {
-    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version], web3);
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, version = sdk.AaveVersions.AaveV3) => {
+    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version] as sdk.AaveMarketInfo, web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
-        'symbol', 'supplyRate', 'borrowRate', 'price', // ...
-        'isSiloed', // ...
+      const keys: (keyof typeof tokenData)[] = [
+        'symbol', 'supplyRate', 'borrowRate', 'price', 'isSiloed', // ...
       ];
       assert.containsAllKeys(tokenData, keys);
       for (const key of keys) assert.isDefined(tokenData[key], `${key} is undefined for ${tokenData.symbol}`);
@@ -38,15 +40,15 @@ describe('Aave v3', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData, version = sdk.AaveVersions.AaveV3) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(web3, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(_web3, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network, _web3) => {
+  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3) => {
     const positionData = await sdk.aaveV3.getAaveV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
@@ -54,8 +56,8 @@ describe('Aave v3', () => {
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.aaveV3.getAaveV3AccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
+    const balances = await sdk.aaveV3.getAaveV3AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

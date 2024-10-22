@@ -4,5 +4,8 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "outDir": "./esm/"
-  }
+  },
+  "exclude": [
+    "tests/**/*"
+  ]
 }

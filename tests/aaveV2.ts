@@ -1,22 +1,25 @@
-require('dotenv').config();
+import 'dotenv/config';
+import Web3 from 'web3';
+
+import * as sdk from '../src';
+import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
 const { assert } = require('chai');
-const Web3 = require('web3');
 
-const sdk = require('../src');
-const { NetworkNumber } = require('../src/types/common');
+describe('Aave v2', () => {
+  let web3: Web3;
 
-describe('Compound v2', () => {
-  let web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
+    web3 = getWeb3Instance('RPC');
   });
 
-  const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.compoundV2.getCompoundV2MarketsData(_web3, network);
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3) => {
+    const marketData = await sdk.aaveV2.getAaveV2MarketsData(_web3, network, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV2], web3);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
+      const keys: (keyof typeof tokenData)[] = [
         'symbol', 'supplyRate', 'borrowRate', 'price', // ...
       ];
       assert.containsAllKeys(tokenData, keys);
@@ -25,24 +28,24 @@ describe('Compound v2', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData) => {
-    const accountData = await sdk.compoundV2.getCompoundV2AccountData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketData.assetsData);
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.AaveV2MarketData) => {
+    const accountData = await sdk.aaveV2.getAaveV2AccountData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketData.assetsData, sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV2]);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network, web3) => {
-    const positionData = await sdk.compoundV2.getCompoundV2FullPositionData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3) => {
+    const positionData = await sdk.aaveV2.getAaveV2FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV2], web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.compoundV2.getCompoundV2AccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
+    const balances = await sdk.aaveV2.getAaveV2AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -72,7 +75,7 @@ describe('Compound v2', () => {
   });
 
   it('can fetch past account balances for Ethereum', async function () {
-    this.timeout(10000);
+    this.timeout(100000);
     const network = NetworkNumber.Eth;
 
     await fetchAccountBalances(network, web3, 18000000);
