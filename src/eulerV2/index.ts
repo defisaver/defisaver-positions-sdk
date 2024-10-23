@@ -54,11 +54,22 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     const utilizationRate = getUtilizationRate(collateral.totalBorrows, new Dec(collateral.totalBorrows).plus(collateral.cash).toString());
 
     const supplyRate = getEulerV2SupplyRate(borrowRate, utilizationRate, collateral.interestFee);
+
+    const isEscrow = collateral.isEscrowed;
+    const isGoverned = !compareAddresses(collateral.governorAdmin, ZERO_ADDRESS);
+
+    const vaultType = isEscrow
+      ? EulerV2VaultType.Escrow
+      : (
+        isGoverned ? EulerV2VaultType.Governed : EulerV2VaultType.Ungoverned
+      );
     return ({
       vaultAddress: collateral.vaultAddr,
       assetAddress: collateral.assetAddr,
       symbol: assetInfo.symbol,
       vaultSymbol: collateral.vaultSymbol,
+      name: collateral.name,
+      vaultType,
       decimals,
       liquidationRatio: new Dec(collateral.liquidationLTV).div(10_000).toString(),
       collateralFactor: new Dec(collateral.borrowLTV).div(10_000).toString(),
@@ -184,6 +195,7 @@ export const EMPTY_EULER_V2_DATA = {
   inPermitDisabledMode: false,
   lastUpdated: Date.now(),
   hasBorrowInDifferentVault: false,
+  addressSpaceTakenByAnotherAccount: false,
 };
 
 export const getEulerV2AccountData = async (
@@ -209,13 +221,11 @@ export const getEulerV2AccountData = async (
 
   const isInUSD = marketData.isInUSD;
 
-  // TODO: maybe not the best practice to get decimals from tokens package
   const parsingDecimals = isInUSD ? 18 : getAssetInfoByAddress(marketData.unitOfAccount).decimals;
   const contract = EulerV2ViewContract(web3, network);
 
   const loanData = await contract.methods.getUserData(address).call();
   const usedAssets: EulerV2UsedAssets = {};
-
   // there is no user position check for a specific market, only global check
   // but we need to make sure it works for the UI and show position only for the selected market
   if (!compareAddresses(loanData.borrowVault, selectedMarket.marketAddress)) {
@@ -226,6 +236,7 @@ export const getEulerV2AccountData = async (
       inLockDownMode: false,
       inPermitDisabledMode: false,
       hasBorrowInDifferentVault: !compareAddresses(loanData.borrowVault, ZERO_ADDRESS),
+      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, address) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
     };
   } else {
     payload = {
@@ -234,7 +245,7 @@ export const getEulerV2AccountData = async (
       borrowAmountInUnit: loanData.borrowAmountInUnit,
       inLockDownMode: loanData.inLockDownMode,
       inPermitDisabledMode: loanData.inPermitDisabledMode,
-      hasBorrowInDifferentVault: false,
+      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, address) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
     };
 
     const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);

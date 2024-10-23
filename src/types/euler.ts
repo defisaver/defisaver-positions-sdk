@@ -4,7 +4,6 @@ import {
 
 export enum EulerV2Versions {
   eUSDC2 = 'eUSDC-2',
-  eUSDC8 = 'eUSDC-8',
   eWETH2 = 'eWETH-2',
 }
 
