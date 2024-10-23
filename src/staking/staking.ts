@@ -78,7 +78,6 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
 };
 
 const getSuperOETHApy = async () => {
-  console.log('getSuperOETHApy');
   const res = await fetch('https://origin.squids.live/origin-squid/graphql', {
     method: 'POST',
     headers: {
@@ -106,7 +105,6 @@ const getApyFromDfsApi = async (asset: string) => {
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb'];
 
 export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
-  console.log('getStakingApy', asset, blockNumber, fromBlock);
   try {
     if (asset === 'stETH' || asset === 'wstETH') return getStETHApr(web3, fromBlock, blockNumber);
     if (asset === 'cbETH') return getCbETHApr(web3, blockNumber);

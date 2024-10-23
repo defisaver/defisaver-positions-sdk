@@ -84,6 +84,11 @@ export interface AaveV2AssetData extends AaveAssetData {
 export interface MorphoAaveV2AssetData extends AaveV2AssetData {
 }
 
+export interface IncentiveData {
+  token: string,
+  apy: string,
+}
+
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
@@ -99,6 +104,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isPaused: boolean,
   isFlashLoanEnabled: boolean,
   assetId: string | null,
+  supplyIncentives?: IncentiveData[];
+  borrowIncentives?: IncentiveData[];
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
