@@ -48,6 +48,8 @@ export interface LiquityV2UsedAsset {
   suppliedUsd: string,
   borrowed: string,
   borrowedUsd: string,
+  isSupplied: boolean,
+  isBorrowed: boolean,
 }
 
 export type LiquityV2UsedAssets = { [key: string]: LiquityV2UsedAsset };
@@ -60,6 +62,9 @@ export interface LiquityV2AggregatedTroveData {
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
+  leveragedType: string,
+  leveragedAsset: string,
+  liquidationPrice: string,
 }
 
 export interface LiquityV2TroveData {
@@ -76,4 +81,7 @@ export interface LiquityV2TroveData {
   totalInterestUsd: string,
   interestBatchManager: EthAddress,
   troveStatus: string,
+  leveragedType: string,
+  leveragedAsset: string,
+  liquidationPrice: string,
 }

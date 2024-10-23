@@ -77,6 +77,8 @@ export const getLiquityV2TroveData = async (
     suppliedUsd: '0',
     borrowed,
     borrowedUsd: new Dec(borrowed).mul(debtAssetData.price).toString(),
+    isBorrowed: true,
+    isSupplied: false,
   };
 
   const collAssetData = assetsData[collateralToken];
@@ -89,6 +91,8 @@ export const getLiquityV2TroveData = async (
     suppliedUsd: new Dec(suppliedColl).mul(collAssetData.price).toString(),
     borrowed: '0',
     borrowedUsd: '0',
+    isBorrowed: false,
+    isSupplied: true,
   };
 
   const ratio = new Dec(data.TCRatio).div(1e16).toString();

@@ -1,5 +1,5 @@
 import Dec from 'decimal.js';
-import { getAssetsTotal } from '../../moneymarket';
+import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import {
   LiquityV2AggregatedTroveData, LiquityV2AssetsData, LiquityV2UsedAsset, LiquityV2UsedAssets,
 } from '../../types';
@@ -64,6 +64,15 @@ export const getLiquityV2AggregatedPositionData = ({
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
+
+  const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
+  payload.leveragedType = leveragedType;
+  payload.leveragedAsset = leveragedAsset;
+  payload.liquidationPrice = '';
+  if (leveragedType !== '') {
+    const assetPrice = assetsData[leveragedAsset].price;
+    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.borrowLimitUsd);
+  }
 
   return payload;
 };
