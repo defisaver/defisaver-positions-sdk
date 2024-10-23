@@ -16,12 +16,14 @@ describe('Liquity V2', () => {
 
   const fetchMarketData = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo) => {
     const marketData = await sdk.liquityV2.getLiquityV2MarketData(_web3, network, market, web3);
-    // console.log(marketData);
+    console.log(marketData);
     return marketData;
   };
 
   const fetchTroveData = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData, troveId: string) => {
-    const troveData = await sdk.liquityV2.getLiquityV2TroveData(_web3, network, market, marketData, troveId);
+    const troveData = await sdk.liquityV2.getLiquityV2TroveData(_web3, network, {
+      selectedMarket: market, assetsData: marketData.assetsData, marketData: marketData.marketData, troveId,
+    });
     // console.log(troveData);
   };
 
@@ -32,7 +34,7 @@ describe('Liquity V2', () => {
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
 
     const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, '28330600537984211306099040369902083180178695710251787024222071149278533694438');
+    await fetchTroveData(web3, network, market, marketData, '71810214906374185731654292089929598901308110473187727225692166795279417034813');
   });
 
 
@@ -42,6 +44,6 @@ describe('Liquity V2', () => {
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2WstEth];
 
     const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, '28330600537984211306099040369902083180178695710251787024222071149278533694438');
+    await fetchTroveData(web3, network, market, marketData, '71810214906374185731654292089929598901308110473187727225692166795279417034813');
   });
 });

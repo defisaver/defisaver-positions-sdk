@@ -31,9 +31,13 @@ export interface LiquityV2AssetData {
 
 export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
 
+export interface InnerLiquityV2MarketData {
+  minRatio: string,
+}
+
 export interface LiquityV2MarketData {
   assetsData: LiquityV2AssetsData,
-  minRatio: string,
+  marketData: InnerLiquityV2MarketData,
 }
 
 export interface LiquityV2UsedAsset {

@@ -3,7 +3,7 @@ import { LiquityV2MarketInfo, LiquityV2Versions } from '../../types/liquityV2';
 
 export const LIQUITY_V2_ETH_MARKET = (networkId: NetworkNumber = NetworkNumber.Eth): LiquityV2MarketInfo => ({
   chainIds: [1],
-  label: 'Liquity V2',
+  label: 'Liquity V2 ETH',
   shortLabel: 'ETH',
   value: LiquityV2Versions.LiquityV2Eth,
   url: 'eth',
@@ -15,7 +15,7 @@ export const LIQUITY_V2_ETH_MARKET = (networkId: NetworkNumber = NetworkNumber.E
 
 export const LIQUITY_V2_WSTETH_MARKET = (networkId: NetworkNumber = NetworkNumber.Eth): LiquityV2MarketInfo => ({
   chainIds: [1],
-  label: 'Liquity V2',
+  label: 'Liquity V2 wstETH',
   shortLabel: 'wstETH',
   value: LiquityV2Versions.LiquityV2WstEth,
   url: 'wsteth',

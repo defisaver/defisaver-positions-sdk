@@ -1,15 +1,16 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { LiquityV2ViewContract } from '../contracts';
 import { NetworkNumber } from '../types/common';
 import {
+  InnerLiquityV2MarketData,
   LIQUITY_TROVE_STATUS_ENUM,
   LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2TroveData, LiquityV2UsedAssets,
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
-import { wethToEth } from '../services/utils';
+import { ethToWeth } from '../services/utils';
 
 
 export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, mainnetWeb3: Web3): Promise<LiquityV2MarketData> => {
@@ -28,7 +29,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   };
   assetsData[collateralToken] = {
     symbol: collateralToken,
-    address: getAssetInfo(collateralToken, network).address,
+    address: getAssetInfo(ethToWeth(collateralToken), network).address,
     price: assetAmountInEth(data.collPrice),
     totalSupply: assetAmountInEth(data.entireSystemColl),
     totalBorrow: '0',
@@ -41,12 +42,27 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   }
 
   const minRatio = new Dec(data.MCR).div(1e16).toString();
-  return { assetsData, minRatio };
+  return { assetsData, marketData: { minRatio } };
 };
 
-export const getLiquityV2TroveData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, marketData: LiquityV2MarketData, troveId: string): Promise<LiquityV2TroveData> => {
+export const getLiquityV2TroveData = async (
+  web3: Web3,
+  network: NetworkNumber,
+  {
+    selectedMarket,
+    assetsData,
+    marketData,
+    troveId,
+  }:
+  {
+    selectedMarket: LiquityV2MarketInfo,
+    assetsData: LiquityV2AssetsData,
+    marketData: InnerLiquityV2MarketData,
+    troveId: string
+  },
+): Promise<LiquityV2TroveData> => {
   const viewContract = LiquityV2ViewContract(web3, network);
-  const { assetsData, minRatio } = marketData;
+  const { minRatio } = marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
   const data = await viewContract.methods.getTroveInfo(marketAddress, troveId).call();
   const usedAssets: LiquityV2UsedAssets = {};
@@ -75,7 +91,7 @@ export const getLiquityV2TroveData = async (web3: Web3, network: NetworkNumber, 
     borrowedUsd: '0',
   };
 
-  const ratio = new Dec(data.TCRRatio).div(1e16).toString();
+  const ratio = new Dec(data.TCRatio).div(1e16).toString();
   const interestRate = new Dec(data.annualInterestRate).div(1e16).toString();
   const interestBatchManager = data.interestBatchManager;
 
