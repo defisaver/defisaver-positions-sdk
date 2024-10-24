@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { LiquityV2ViewContract } from '../contracts';
-import { NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber } from '../types/common';
 import {
   InnerLiquityV2MarketData,
   LIQUITY_TROVE_STATUS_ENUM,
@@ -11,6 +11,7 @@ import {
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
 import { ethToWeth } from '../services/utils';
+import { ZERO_ADDRESS } from '../constants';
 
 
 export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, mainnetWeb3: Web3): Promise<LiquityV2MarketData> => {
@@ -45,6 +46,14 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   return { assetsData, marketData: { minCollRatio } };
 };
 
+const _getDebtInFront = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
+
+export const getDebtInFrontLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
+  const { debt, next } = await _getDebtInFront(viewContract, marketAddress, troveId, accumulatedSum, iterations);
+  if (next === '0') return assetAmountInEth(debt);
+  return getDebtInFrontLiquityV2(viewContract, marketAddress, next, debt, iterations);
+};
+
 export const getLiquityV2TroveData = async (
   web3: Web3,
   network: NetworkNumber,
@@ -64,15 +73,16 @@ export const getLiquityV2TroveData = async (
   const viewContract = LiquityV2ViewContract(web3, network);
   const { minCollRatio } = marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
-  const data = await viewContract.methods.getTroveInfo(marketAddress, troveId).call();
+  const [data, debtInFront] = await Promise.all([
+    viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
+    getDebtInFrontLiquityV2(viewContract, marketAddress, troveId),
+  ]);
   const usedAssets: LiquityV2UsedAssets = {};
 
   const debtAssetData = assetsData[debtToken];
   const borrowed = assetAmountInEth(data.debtAmount);
   usedAssets[debtToken] = {
     symbol: debtToken,
-    address: debtAssetData.address,
-    price: debtAssetData.price,
     supplied: '0',
     suppliedUsd: '0',
     borrowed,
@@ -85,8 +95,6 @@ export const getLiquityV2TroveData = async (
   const suppliedColl = assetAmountInEth(data.collAmount);
   usedAssets[collateralToken] = {
     symbol: collateralToken,
-    address: collAssetData.address,
-    price: collAssetData.price,
     supplied: suppliedColl,
     suppliedUsd: new Dec(suppliedColl).mul(collAssetData.price).toString(),
     borrowed: '0',
@@ -106,6 +114,7 @@ export const getLiquityV2TroveData = async (
     collRatio,
     interestRate,
     interestBatchManager,
+    debtInFront,
     troveStatus: LIQUITY_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
       usedAssets, assetsData, minCollRatio, interestRate,
