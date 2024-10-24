@@ -32,7 +32,7 @@ export interface LiquityV2AssetData {
 export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
 
 export interface InnerLiquityV2MarketData {
-  minRatio: string,
+  minCollRatio: string,
 }
 
 export interface LiquityV2MarketData {
@@ -65,12 +65,14 @@ export interface LiquityV2AggregatedTroveData {
   leveragedType: string,
   leveragedAsset: string,
   liquidationPrice: string,
+  ratio: string,
 }
 
 export interface LiquityV2TroveData {
   usedAssets: LiquityV2UsedAssets,
   troveId: string,
   ratio: string,
+  collRatio: string,
   interestRate: string,
   leftToBorrowUsd: string,
   borrowLimitUsd: string,

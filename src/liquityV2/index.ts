@@ -41,8 +41,8 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
     assetsData[collateralToken].incentiveSupplyToken = collateralToken;
   }
 
-  const minRatio = new Dec(data.MCR).div(1e16).toString();
-  return { assetsData, marketData: { minRatio } };
+  const minCollRatio = new Dec(data.MCR).div(1e16).toString();
+  return { assetsData, marketData: { minCollRatio } };
 };
 
 export const getLiquityV2TroveData = async (
@@ -62,7 +62,7 @@ export const getLiquityV2TroveData = async (
   },
 ): Promise<LiquityV2TroveData> => {
   const viewContract = LiquityV2ViewContract(web3, network);
-  const { minRatio } = marketData;
+  const { minCollRatio } = marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
   const data = await viewContract.methods.getTroveInfo(marketAddress, troveId).call();
   const usedAssets: LiquityV2UsedAssets = {};
@@ -95,19 +95,19 @@ export const getLiquityV2TroveData = async (
     isSupplied: true,
   };
 
-  const ratio = new Dec(data.TCRatio).div(1e16).toString();
+  const collRatio = new Dec(data.TCRatio).div(1e16).toString();
   const interestRate = new Dec(data.annualInterestRate).div(1e16).toString();
   const interestBatchManager = data.interestBatchManager;
 
   const payload: LiquityV2TroveData = {
     usedAssets,
     troveId,
-    ratio,
+    collRatio,
     interestRate,
     interestBatchManager,
     troveStatus: LIQUITY_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
-      usedAssets, assetsData, minRatio, interestRate,
+      usedAssets, assetsData, minCollRatio, interestRate,
     }),
   };
 
