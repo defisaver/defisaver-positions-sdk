@@ -44,6 +44,7 @@ export interface LiquityV2UsedAsset {
   symbol: string,
   address: string,
   price: string,
+  collateral?: boolean,
   supplied: string,
   suppliedUsd: string,
   borrowed: string,

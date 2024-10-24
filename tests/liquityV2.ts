@@ -16,7 +16,7 @@ describe('Liquity V2', () => {
 
   const fetchMarketData = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo) => {
     const marketData = await sdk.liquityV2.getLiquityV2MarketData(_web3, network, market, web3);
-    console.log(marketData);
+    // console.log(marketData);
     return marketData;
   };
 
@@ -24,7 +24,7 @@ describe('Liquity V2', () => {
     const troveData = await sdk.liquityV2.getLiquityV2TroveData(_web3, network, {
       selectedMarket: market, assetsData: marketData.assetsData, marketData: marketData.marketData, troveId,
     });
-    // console.log(troveData);
+    console.log(troveData);
   };
 
 

@@ -93,6 +93,7 @@ export const getLiquityV2TroveData = async (
     borrowedUsd: '0',
     isBorrowed: false,
     isSupplied: true,
+    collateral: true,
   };
 
   const collRatio = new Dec(data.TCRatio).div(1e16).toString();
