@@ -33,6 +33,7 @@ export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
 
 export interface InnerLiquityV2MarketData {
   minCollRatio: string,
+  hintHelperAddress: EthAddress,
 }
 
 export interface LiquityV2MarketData {

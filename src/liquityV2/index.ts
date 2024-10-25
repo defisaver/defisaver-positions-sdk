@@ -18,6 +18,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   const viewContract = LiquityV2ViewContract(web3, network);
   const { marketAddress, debtToken, collateralToken } = selectedMarket;
   const data = await viewContract.methods.getMarketData(marketAddress).call();
+  const hintHelperAddress = data.hintHelpers;
   const assetsData: LiquityV2AssetsData = {};
   assetsData[debtToken] = {
     symbol: debtToken,
@@ -43,7 +44,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   }
 
   const minCollRatio = new Dec(data.MCR).div(1e16).toString();
-  return { assetsData, marketData: { minCollRatio } };
+  return { assetsData, marketData: { minCollRatio, hintHelperAddress } };
 };
 
 const _getDebtInFront = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
