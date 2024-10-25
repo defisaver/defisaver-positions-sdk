@@ -83,6 +83,7 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       borrowRate,
       supplyRate,
       utilization: new Dec(utilizationRate).mul(100).toString(),
+      governorAdmin: collateral.governorAdmin,
     });
   });
   for (const coll of colls) {
@@ -127,6 +128,9 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     collateralFactor: '0',
     liquidationRatio: '0',
     utilization: new Dec(utilizationRate).mul(100).toString(),
+    governorAdmin: data.governorAdmin,
+    vaultType,
+    name: data.name,
   };
 
   const assetsData: EulerV2AssetsData = {

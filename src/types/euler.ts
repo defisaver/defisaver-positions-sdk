@@ -56,6 +56,8 @@ export interface EulerV2AssetData {
   borrowRate: string
   supplyRate: string
   utilization: string
+  governorAdmin: string
+  vaultType: EulerV2VaultType
 }
 
 export interface EulerV2UsedAsset {
