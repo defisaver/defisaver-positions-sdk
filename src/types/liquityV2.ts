@@ -66,6 +66,7 @@ export interface LiquityV2AggregatedTroveData {
   leveragedAsset: string,
   liquidationPrice: string,
   ratio: string,
+  collRatio: string,
 }
 
 export interface LiquityV2TroveData {

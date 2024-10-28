@@ -61,6 +61,7 @@ export const getLiquityV2AggregatedPositionData = ({
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApyLiquityV2(usedAssets, assetsData, interestRate);
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;

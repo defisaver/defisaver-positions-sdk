@@ -112,7 +112,6 @@ export const getLiquityV2TroveData = async (
   const payload: LiquityV2TroveData = {
     usedAssets,
     troveId,
-    collRatio,
     interestRate,
     interestBatchManager,
     debtInFront,
@@ -120,6 +119,7 @@ export const getLiquityV2TroveData = async (
     ...getLiquityV2AggregatedPositionData({
       usedAssets, assetsData, minCollRatio, interestRate,
     }),
+    collRatio,
   };
 
   return payload;
