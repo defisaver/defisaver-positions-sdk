@@ -198,6 +198,8 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
       target: eulerV2ViewContract.options.address,
       abiItem: eulerV2ViewContract.options.jsonInterface.find(({ name }) => name === 'getVaultInfoFull'),
       params: [vaultAddress],
+      // @DEV gas usage is HUGE if vault has a lot of collaterals, so be careful, this can break if they add more collaterals
+      gasLimit: 10_000_000,
     });
   });
   multicallData.push({
