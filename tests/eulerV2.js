@@ -27,7 +27,7 @@ describe('Euler v2', () => {
   };
 
   const fetchAccountData = async (network, web3, marketInfo) => {
-    const accountData = await sdk.eulerV2.getEulerV2AccountData(web3, network, '0xe39b916a35d28d27741B46e1B49614AC6E966d33', { selectedMarket: sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], assetsData: marketInfo.assetsData, marketData: marketInfo.marketData });
+    const accountData = await sdk.eulerV2.getEulerV2AccountData(web3, network, '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', { selectedMarket: sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], assetsData: marketInfo.assetsData, marketData: marketInfo.marketData });
 
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...

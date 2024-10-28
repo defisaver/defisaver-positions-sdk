@@ -205,14 +205,15 @@ export const EMPTY_EULER_V2_DATA = {
 export const getEulerV2AccountData = async (
   web3: Web3,
   network: NetworkNumber,
-  address: string,
+  addressForPosition: string,
+  ownerAddress: string,
   extractedState: ({
     selectedMarket: EulerV2Market,
     assetsData: EulerV2AssetsData,
     marketData: EulerV2MarketInfoData,
   }),
 ): Promise<EulerV2PositionData> => {
-  if (!address) throw new Error('No address provided');
+  if (!addressForPosition) throw new Error('No address provided');
 
   const {
     selectedMarket, assetsData, marketData,
@@ -228,7 +229,7 @@ export const getEulerV2AccountData = async (
   const parsingDecimals = isInUSD ? 18 : getAssetInfoByAddress(marketData.unitOfAccount).decimals;
   const contract = EulerV2ViewContract(web3, network);
 
-  const loanData = await contract.methods.getUserData(address).call();
+  const loanData = await contract.methods.getUserData(addressForPosition).call();
   const usedAssets: EulerV2UsedAssets = {};
   // there is no user position check for a specific market, only global check
   // but we need to make sure it works for the UI and show position only for the selected market
@@ -240,7 +241,7 @@ export const getEulerV2AccountData = async (
       inLockDownMode: false,
       inPermitDisabledMode: false,
       hasBorrowInDifferentVault: !compareAddresses(loanData.borrowVault, ZERO_ADDRESS),
-      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, address) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
+      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, ownerAddress) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
     };
   } else {
     payload = {
@@ -249,7 +250,7 @@ export const getEulerV2AccountData = async (
       borrowAmountInUnit: loanData.borrowAmountInUnit,
       inLockDownMode: loanData.inLockDownMode,
       inPermitDisabledMode: loanData.inPermitDisabledMode,
-      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, address) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
+      addressSpaceTakenByAnotherAccount: !compareAddresses(loanData.owner, ownerAddress) && !compareAddresses(loanData.owner, ZERO_ADDRESS),
     };
 
     const borrowedInUnit = getEthAmountForDecimals(loanData.borrowAmountInUnit, parsingDecimals);
@@ -281,7 +282,7 @@ export const getEulerV2AccountData = async (
     usedAssets[key] = {
       ...EMPTY_USED_ASSET,
       collateral: true,
-      isSupplied: true,
+      isSupplied: !new Dec(suppliedInAsset).eq(0),
       supplied: suppliedInAsset,
       suppliedUsd: collateralAmountInUSD,
       vaultAddress: collateral.collateralVault,
