@@ -12,6 +12,7 @@ import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
 import { ethToWeth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
+import { LiquityV2View } from '../types/contracts/generated';
 
 
 export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, mainnetWeb3: Web3): Promise<LiquityV2MarketData> => {
@@ -45,6 +46,23 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
 
   const minCollRatio = new Dec(data.MCR).div(1e16).toString();
   return { assetsData, marketData: { minCollRatio, hintHelperAddress } };
+};
+
+const _getUserTroves = async (viewContract: any, account: EthAddress, marketAddress: EthAddress, startIndex = 0, endIndex = 100) => viewContract.methods.getUserTroves(account, marketAddress, startIndex, endIndex).call();
+
+const getUserTroves = async (viewContract: any, account: EthAddress, marketAddress: EthAddress, startIndex = 0, endIndex = 100, troves: LiquityV2View.ExistingTroveStructOutput[] = []): Promise<{ troves: LiquityV2View.ExistingTroveStructOutput[], nextFreeTroveIndex: string }> => {
+  const result = await _getUserTroves(viewContract, account, marketAddress, startIndex, endIndex);
+  const newStartIndex = endIndex + 1;
+  const nextFreeTroveIndex = result.nextFreeTroveIndex;
+  const existingTroves = [...troves, ...result.troves];
+  if (nextFreeTroveIndex !== '-1') return { troves: existingTroves.filter((trove) => trove.ownedByUser), nextFreeTroveIndex };
+  return getUserTroves(viewContract, account, marketAddress, newStartIndex, newStartIndex + 100, existingTroves);
+};
+
+export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, account: EthAddress): Promise<{ troves: LiquityV2View.ExistingTroveStructOutput[], nextFreeTroveIndex: string }> => {
+  const viewContract = LiquityV2ViewContract(web3, network);
+  const { troves, nextFreeTroveIndex } = await getUserTroves(viewContract, account, selectedMarket.marketAddress);
+  return { troves, nextFreeTroveIndex };
 };
 
 const _getDebtInFront = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
