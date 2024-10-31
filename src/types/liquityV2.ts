@@ -34,6 +34,11 @@ export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
 export interface InnerLiquityV2MarketData {
   minCollRatio: string,
   hintHelperAddress: EthAddress,
+  troveNFTAddress: EthAddress,
+  borrowerOperationsAddress: EthAddress,
+  troveManagerAddress: EthAddress,
+  stabilityPoolAddress: EthAddress,
+  collSurplusPoolAddress: EthAddress,
 }
 
 export interface LiquityV2MarketData {

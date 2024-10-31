@@ -20,6 +20,11 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   const { marketAddress, debtToken, collateralToken } = selectedMarket;
   const data = await viewContract.methods.getMarketData(marketAddress).call();
   const hintHelperAddress = data.hintHelpers;
+  const troveNFTAddress = data.troveNFT;
+  const borrowerOperationsAddress = data.borrowerOperations;
+  const troveManagerAddress = data.troveManager;
+  const stabilityPoolAddress = data.stabilityPool;
+  const collSurplusPoolAddress = data.collSurplusPool;
   const assetsData: LiquityV2AssetsData = {};
   assetsData[debtToken] = {
     symbol: debtToken,
@@ -45,7 +50,18 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   }
 
   const minCollRatio = new Dec(data.MCR).div(1e16).toString();
-  return { assetsData, marketData: { minCollRatio, hintHelperAddress } };
+  return {
+    assetsData,
+    marketData: {
+      minCollRatio,
+      hintHelperAddress,
+      troveNFTAddress,
+      borrowerOperationsAddress,
+      troveManagerAddress,
+      stabilityPoolAddress,
+      collSurplusPoolAddress,
+    },
+  };
 };
 
 const _getUserTroves = async (viewContract: any, account: EthAddress, marketAddress: EthAddress, startIndex = 0, endIndex = 100) => viewContract.methods.getUserTroves(account, marketAddress, startIndex, endIndex).call();
