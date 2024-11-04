@@ -3,7 +3,9 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { NetworkNumber } from '../types/common';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { compareAddresses, getEthAmountForDecimals, isMaxuint } from '../services/utils';
+import {
+  compareAddresses, getEthAmountForDecimals, isMaxuint, wethToEth, wethToEthByAddress,
+} from '../services/utils';
 import {
   EulerV2AssetData,
   EulerV2AssetsData,
@@ -65,8 +67,8 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
       );
     return ({
       vaultAddress: collateral.vaultAddr,
-      assetAddress: collateral.assetAddr,
-      symbol: assetInfo.symbol,
+      assetAddress: wethToEthByAddress(collateral.assetAddr),
+      symbol: wethToEth(assetInfo.symbol),
       vaultSymbol: collateral.vaultSymbol,
       name: collateral.name,
       vaultType,
