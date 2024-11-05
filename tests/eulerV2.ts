@@ -1,23 +1,24 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
+import * as sdk from '../src';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+import { NetworkNumber } from '../src/types/common';
+import { EulerV2FullMarketData } from '../src';
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
-const { EulerV2Versions } = require('../cjs/types/euler');
+const { assert } = require('chai');
 
 describe('Euler v2', () => {
-  let web3;
+  let web3: Web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
+    web3 = getWeb3Instance('RPC');
   });
 
-  const fetchMarketData = async (network, _web3) => {
-    const marketData = await sdk.eulerV2.getEulerV2MarketsData(_web3, network, sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], web3);
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3) => {
+    const marketData = await sdk.eulerV2.getEulerV2MarketsData(_web3, network, sdk.markets.EulerV2Markets(network)[sdk.EulerV2Versions.eUSDC2], web3);
 
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
+      const keys: (keyof typeof tokenData)[] = [
         'symbol', 'price', // ...
       ];
       assert.containsAllKeys(tokenData, keys);
@@ -26,8 +27,8 @@ describe('Euler v2', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketInfo) => {
-    const accountData = await sdk.eulerV2.getEulerV2AccountData(web3, network, '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', { selectedMarket: sdk.markets.EulerV2Markets(network)[EulerV2Versions.eUSDC2], assetsData: marketInfo.assetsData, marketData: marketInfo.marketData });
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketInfo: EulerV2FullMarketData) => {
+    const accountData = await sdk.eulerV2.getEulerV2AccountData(_web3, network, '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', '0x2f86a98a2c67e9767554d29c687a2f8663aa785b', { selectedMarket: sdk.markets.EulerV2Markets(network)[sdk.EulerV2Versions.eUSDC2], assetsData: marketInfo.assetsData, marketData: marketInfo.marketData });
 
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
@@ -39,7 +40,6 @@ describe('Euler v2', () => {
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchMarketData(network, web3);
-
     const accountData = await fetchAccountData(network, web3, marketData);
   });
 });
