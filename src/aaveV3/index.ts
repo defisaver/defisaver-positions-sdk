@@ -276,6 +276,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     }));
 
 
+  // Get incentives data
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
     /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
@@ -283,48 +284,81 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     if (isStakingAsset) {
       _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
       _market.incentiveSupplyToken = _market.symbol;
+      if (!_market.supplyIncentives) {
+        _market.supplyIncentives = [];
+      }
+      _market.supplyIncentives.push({
+        apy: _market.incentiveSupplyApy || '0',
+        token: _market.symbol,
+      });
     }
 
     if (_market.canBeBorrowed && _market.incentiveSupplyApy) {
-      _market.incentiveBorrowApy = `-${_market.incentiveSupplyApy}`;
+      _market.incentiveBorrowApy = _market.incentiveSupplyApy;
       _market.incentiveBorrowToken = _market.incentiveSupplyToken;
+      if (!_market.borrowIncentives) {
+        _market.borrowIncentives = [];
+      }
+      _market.borrowIncentives.push({
+        apy: _market.incentiveBorrowApy,
+        token: _market.incentiveBorrowToken!!,
+      });
     }
 
     if (!rewardForMarket) return;
-    const supplyRewardData = rewardForMarket.aIncentiveData.rewardsTokenInformation[0];
-    if (supplyRewardData) {
-      if (isStakingAsset && _market.incentiveSupplyToken !== supplyRewardData.rewardTokenSymbol) return;
-      if (+supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-      _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
-      // reward token is aave asset
-      if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveSupplyToken = _market.symbol;
-      const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
-      const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** +supplyRewardData.priceFeedDecimals).toString();
-      const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** +supplyRewardData.rewardTokenDecimals) / 100)
-        .mul(365 * 24 * 3600)
-        .mul(supplyRewardPrice)
-        .div(_market.price)
-        .div(_market.totalSupply)
-        .toString();
-      _market.incentiveSupplyApy = new Dec(_market.incentiveSupplyApy || '0').add(rewardApy).toString();
-    }
-    const borrowRewardData = rewardForMarket.vIncentiveData.rewardsTokenInformation[0];
-    if (borrowRewardData) {
-      if (isStakingAsset && _market.incentiveSupplyToken !== borrowRewardData.rewardTokenSymbol) return;
-      if (+borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-      _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
-      if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveBorrowToken = _market.symbol;
-      const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
-      const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** +borrowRewardData.priceFeedDecimals).toString();
-      const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** +borrowRewardData.rewardTokenDecimals) / 100)
-        .mul(365 * 24 * 3600)
-        .mul(supplyRewardPrice)
-        .div(_market.price)
-        .div(_market.totalBorrowVar)
-        .toString();
-      _market.incentiveBorrowApy = new Dec(_market.incentiveSupplyApy || '0').add(rewardApy).toString();
-    }
-    /* eslint-enable no-param-reassign */
+    rewardForMarket.aIncentiveData.rewardsTokenInformation.forEach(supplyRewardData => {
+      if (supplyRewardData) {
+        if (+supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
+        // reward token is aave asset
+        if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveSupplyToken = _market.symbol;
+        const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
+        const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** +supplyRewardData.priceFeedDecimals)
+          .toString();
+        const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** +supplyRewardData.rewardTokenDecimals) / 100)
+          .mul(365 * 24 * 3600)
+          .mul(supplyRewardPrice)
+          .div(_market.price)
+          .div(_market.totalSupply)
+          .toString();
+        _market.incentiveSupplyApy = new Dec(_market.incentiveSupplyApy || '0').add(rewardApy)
+          .toString();
+
+        if (!_market.supplyIncentives) {
+          _market.supplyIncentives = [];
+        }
+        _market.supplyIncentives.push({
+          token: supplyRewardData.rewardTokenSymbol,
+          apy: rewardApy,
+        });
+      }
+    });
+    rewardForMarket.vIncentiveData.rewardsTokenInformation.forEach(borrowRewardData => {
+      if (borrowRewardData) {
+        if (+borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
+        if (borrowRewardData.rewardTokenSymbol.startsWith('a') && borrowRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveBorrowToken = _market.symbol;
+        const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
+        const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** +borrowRewardData.priceFeedDecimals)
+          .toString();
+        const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** +borrowRewardData.rewardTokenDecimals) / 100)
+          .mul(365 * 24 * 3600)
+          .mul(supplyRewardPrice)
+          .div(_market.price)
+          .div(_market.totalBorrowVar)
+          .toString();
+        _market.incentiveBorrowApy = new Dec(_market.incentiveBorrowApy || '0').add(rewardApy)
+          .toString();
+
+        if (!_market.borrowIncentives) {
+          _market.borrowIncentives = [];
+        }
+        _market.borrowIncentives.push({
+          token: borrowRewardData.rewardTokenSymbol,
+          apy: rewardApy,
+        });
+      }
+    });
   }));
 
   const payload: AaveV3AssetsData = {};

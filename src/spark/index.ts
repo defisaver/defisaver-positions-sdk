@@ -151,6 +151,14 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     if (STAKING_ASSETS.includes(market.symbol)) {
       market.incentiveSupplyApy = await getStakingApy(market.symbol, mainnetWeb3);
       market.incentiveSupplyToken = market.symbol;
+      if (!market.supplyIncentives) {
+        market.supplyIncentives = [];
+      }
+
+      market.supplyIncentives.push({
+        apy: market.incentiveSupplyApy || '0',
+        token: market.symbol,
+      });
     }
 
     if (market.symbol === 'sDAI') {
@@ -159,37 +167,66 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     }
 
     if (market.canBeBorrowed && market.incentiveSupplyApy) {
-      market.incentiveBorrowApy = `-${market.incentiveSupplyApy}`;
+      market.incentiveBorrowApy = market.incentiveSupplyApy;
       market.incentiveBorrowToken = market.incentiveSupplyToken;
+      if (!market.borrowIncentives) {
+        market.borrowIncentives = [];
+      }
+      market.borrowIncentives.push({
+        apy: market.incentiveBorrowApy,
+        token: market.incentiveBorrowToken!!,
+      });
     }
 
     if (!rewardForMarket) return;
-    const supplyRewardData = rewardForMarket.aIncentiveData.rewardsTokenInformation[0];
-    if (supplyRewardData) {
-      if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-      market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
-      const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
-      const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals).toString();
-      market.incentiveSupplyApy = new Dec(supplyEmissionPerSecond).div((10 ** supplyRewardData.rewardTokenDecimals) / 100)
-        .mul(365 * 24 * 3600)
-        .mul(supplyRewardPrice)
-        .div(market.price)
-        .div(market.totalSupply)
-        .toString();
-    }
-    const borrowRewardData = rewardForMarket.vIncentiveData.rewardsTokenInformation[0];
-    if (borrowRewardData) {
-      if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-      market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
-      const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
-      const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals).toString();
-      market.incentiveBorrowApy = new Dec(supplyEmissionPerSecond).div((10 ** borrowRewardData.rewardTokenDecimals) / 100)
-        .mul(365 * 24 * 3600)
-        .mul(supplyRewardPrice)
-        .div(market.price)
-        .div(market.totalBorrowVar)
-        .toString();
-    }
+    (rewardForMarket.aIncentiveData.rewardsTokenInformation as any[]).forEach(supplyRewardData => {
+      if (supplyRewardData) {
+        if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
+        const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
+        const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals)
+          .toString();
+        const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** supplyRewardData.rewardTokenDecimals) / 100)
+          .mul(365 * 24 * 3600)
+          .mul(supplyRewardPrice)
+          .div(market.price)
+          .div(market.totalSupply)
+          .toString();
+        market.incentiveSupplyApy = new Dec(market.incentiveSupplyApy || '0').add(rewardApy).toString();
+
+        if (!market.supplyIncentives) {
+          market.supplyIncentives = [];
+        }
+        market.supplyIncentives.push({
+          token: supplyRewardData.rewardTokenSymbol,
+          apy: rewardApy,
+        });
+      }
+    });
+    (rewardForMarket.vIncentiveData.rewardsTokenInformation as any[]).forEach(borrowRewardData => {
+      if (borrowRewardData) {
+        if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
+        const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
+        const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals)
+          .toString();
+        const rewardApy = new Dec(supplyEmissionPerSecond).div((10 ** borrowRewardData.rewardTokenDecimals) / 100)
+          .mul(365 * 24 * 3600)
+          .mul(supplyRewardPrice)
+          .div(market.price)
+          .div(market.totalBorrowVar)
+          .toString();
+        market.incentiveBorrowApy = new Dec(market.incentiveBorrowApy || '0').add(rewardApy).toString();
+
+        if (!market.borrowIncentives) {
+          market.borrowIncentives = [];
+        }
+        market.borrowIncentives.push({
+          token: borrowRewardData.rewardTokenSymbol,
+          apy: rewardApy,
+        });
+      }
+    });
     /* eslint-enable no-param-reassign */
   }));
 

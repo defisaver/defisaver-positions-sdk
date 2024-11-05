@@ -1,6 +1,7 @@
 import {
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
+import { IncentiveData } from './aave';
 
 export enum SparkVersions {
   SparkV1 = 'v1default',
@@ -55,6 +56,8 @@ export interface SparkAssetData extends MMAssetData {
   eModeCategory: number,
   eModeCategoryData: SparkEModeCategoryData,
   liquidationRatio: string,
+  supplyIncentives?: IncentiveData[];
+  borrowIncentives?: IncentiveData[];
 }
 
 export interface SparkAssetsData {
