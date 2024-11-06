@@ -11,7 +11,6 @@ import {
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
 import { ethToWeth } from '../services/utils';
-import { ZERO_ADDRESS } from '../constants';
 import { LiquityV2View } from '../types/contracts/generated';
 
 
