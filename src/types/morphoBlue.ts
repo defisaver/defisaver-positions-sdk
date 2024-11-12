@@ -39,7 +39,9 @@ export enum MorphoBlueVersions {
 
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
+  MorphoBlueCbEthUSDC_860_Base_1c21c59d = 'morphobluecbethusdc_860_base_1c21c59d',
   MorphoBlueWstEthUSDC_860_Base = 'morphobluewstethusdc_860_base',
+  MorphoBlueWstEthUSDC_860_Base_13c42741 = 'morphobluewstethusdc_860_base_13c42741',
   MorphoBlueEthUSDC_860_Base = 'morphoblueethusdc_860_base',
   MorphoBlueCbEthEth_945_Base = 'morphobluecbetheth_945_base',
   MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
