@@ -52,3 +52,6 @@ export const mapRange = (input: number | string, minInput: number | string, maxI
 // eslint-disable-next-line no-bitwise
 export const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bitmap) >> BigInt(assetId)) & BigInt(1);
 
+export const MAXUINT:string = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+
+export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
