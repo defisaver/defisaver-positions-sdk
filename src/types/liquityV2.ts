@@ -5,6 +5,22 @@ export enum LiquityV2Versions {
   LiquityV2WstEth = 'liquityv2wsteth',
 }
 
+export enum LIQUITY_V2_TROVE_STATUS_ENUM {
+  nonExistent,
+  active,
+  closedByOwner,
+  closedByLiquidation,
+  zombie,
+}
+
+export const LIQUITY_V2_STATUS_MAPPING = {
+  nonExistent: 'Non existent',
+  active: 'Active',
+  closedByOwner: 'Closed',
+  closedByLiquidation: 'Liquidated',
+  zombie: 'Zombie',
+};
+
 export interface LiquityV2MarketInfo {
   chainIds: NetworkNumber[],
   label: string,

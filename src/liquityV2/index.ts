@@ -5,7 +5,7 @@ import { LiquityV2ViewContract } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
 import {
   InnerLiquityV2MarketData,
-  LIQUITY_TROVE_STATUS_ENUM,
+  LIQUITY_V2_TROVE_STATUS_ENUM,
   LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2TroveData, LiquityV2UsedAssets,
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
@@ -148,7 +148,7 @@ export const getLiquityV2TroveData = async (
     interestRate,
     interestBatchManager,
     debtInFront,
-    troveStatus: LIQUITY_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
+    troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
       usedAssets, assetsData, minCollRatio, interestRate,
     }),
