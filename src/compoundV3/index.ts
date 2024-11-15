@@ -42,6 +42,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       target: CompV3ViewAddress,
       abiItem: contract.options.jsonInterface.find((props) => props.name === 'getFullCollInfos'),
       params: [selectedMarket.baseMarketAddress],
+      gasLimit: 3000000,
     },
   ];
   const data = await multicall(calls, web3, network);
