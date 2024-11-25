@@ -239,6 +239,15 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, web3, marketData, selectedMarket);
   });
 
+  it('can fetch sUSDe/USDC market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueSUSDeUSDC_915];
+
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+    await fetchAccountData(network, web3, marketData, selectedMarket);
+  });
+
   // wstETH/WETH
 
   it('can fetch wstETH/ETH 94.5% market and account data for Ethereum', async function () {
