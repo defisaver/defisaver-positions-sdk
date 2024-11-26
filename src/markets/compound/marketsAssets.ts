@@ -52,7 +52,7 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
 };
 
-export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC'];
+export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX'];
 export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
