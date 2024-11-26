@@ -29,7 +29,7 @@ import {
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../staking';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 import { getAssetsBalances } from '../assets';

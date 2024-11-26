@@ -3,7 +3,7 @@ import { assetAmountInWei } from '@defisaver/tokens';
 import Web3 from 'web3';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { MMUsedAssets, NetworkNumber } from '../../types/common';
+import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
 } from '../../types';
@@ -37,7 +37,7 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   payload.leftToBorrow = new Dec(usedAssets[collateralToken]?.supplied || 0).mul(oracle).mul(lltv).sub(usedAssets[loanToken]?.borrowed || 0)
     .toString();
 
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData as any);
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
