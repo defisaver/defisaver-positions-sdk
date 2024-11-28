@@ -151,9 +151,7 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const calculateNetApy = ({
-  usedAssets, assetsData, isMorpho = false, network = 1,
-}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean, network?: NetworkNumber }) => {
+export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
     const assetData = assetsData[usedAsset.symbol];
@@ -178,7 +176,7 @@ export const calculateNetApy = ({
       acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
       const rate = isMorpho
         ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
-        : (usedAsset.symbol === 'GHO' && network === NetworkNumber.Eth)
+        : (usedAsset.symbol === 'GHO' && assetsData.nativeAsset)
           ? usedAsset.discountedBorrowRate
           : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
