@@ -8,7 +8,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { CompoundLoanInfoContract, ComptrollerContract } from '../contracts';
-import { compoundV2CollateralAssets } from '../markets/compound/marketsAssets';
+import { compoundV2CollateralAssets } from '../markets';
 import {
   CompoundV2AssetsData, CompoundV2MarketsData, CompoundV2PositionData, CompoundV2UsedAsset, CompoundV2UsedAssets,
 } from '../types';

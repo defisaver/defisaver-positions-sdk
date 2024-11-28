@@ -61,3 +61,9 @@ const userData = await getCompoundV3AccountData(
 ```
 
 More examples found [here](https://github.com/defisaver/defisaver-positions-sdk/tree/main/tests)
+
+## Testing
+
+`npm run test` - Run all tests
+
+`npm run test-single --name=your_test_name` - Run single test for specified name e.g. for MyTest.js test name is MyTest

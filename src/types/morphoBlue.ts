@@ -11,6 +11,7 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
   MorphoBlueWstEthPYUSD = 'morphobluwstethpyusd', // wstETH/PYUSD
   MorphoBlueWeEthEth = 'morphoblueweetheth', // weETH/ETH
+  MorphoBlueREthEth_945 = 'morphoblueretheth_945', // rETH/ETH
   MorphoBlueWBTCPYUSD = 'morphobluewbtcpyusd', // WBTC/PYUSD
   MorphoBlueWBTCEth = 'morphobluewbtceth', // WBTC/ETH
   MorphoBlueUSDeUSDT = 'morphoblueusdeusdt', // USDe/USDT
@@ -19,6 +20,9 @@ export enum MorphoBlueVersions {
   MorphoBlueEzEthEth = 'morphoblueezetheth', // ezETH/ETH
   MorphoBlueMKRUSDC = 'morphobluemkrusdc', // MKR/USDC
   MorphoBlueTBTCUSDC = 'morphobluetbtcusdc', // tBTC/USDC
+  MorphoBlueCbBTCEth_915 = 'morphobluecbbtceth', // cbBTC/Eth
+  MorphoBlueCbBTCUSDC_860 = 'morphobluecbbtcusdc', // cbBTC/USDC
+  MorphoBlueSUSDeUSDC_915 = 'morphobluesusdeusdc_915', // sUSDe/USDC
   // wstETH/WETH
   MorphoBlueWstEthEth_945 = 'morphobluewstetheth_945',
   MorphoBlueWstEthEth_945_Exchange_Rate = 'morphobluewstetheth_945_exchange_rate',
@@ -36,7 +40,9 @@ export enum MorphoBlueVersions {
 
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
+  MorphoBlueCbEthUSDC_860_Base_1c21c59d = 'morphobluecbethusdc_860_base_1c21c59d',
   MorphoBlueWstEthUSDC_860_Base = 'morphobluewstethusdc_860_base',
+  MorphoBlueWstEthUSDC_860_Base_13c42741 = 'morphobluewstethusdc_860_base_13c42741',
   MorphoBlueEthUSDC_860_Base = 'morphoblueethusdc_860_base',
   MorphoBlueCbEthEth_945_Base = 'morphobluecbetheth_945_base',
   MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
@@ -44,6 +50,9 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthEth_965_Base = 'morphobluewstetheth_965_base',
   MorphoBlueREthUSDC_860_Base = 'morphobluerethusdc_860_base',
   MorphoBlueREthEth_945_Base = 'morphoblueretheth_945_base',
+  MorphoBlueCbBTCEth_915_Base = 'morphobluecbbtceth_915_base',
+  MorphoBlueCbBTCUSDC_860_Base = 'morphobluecbbtcusdc_860_base',
+  MorphoBlueWsuperOETHbWETH_915_Base = 'morphobluewsuperoethbweth_915_base',
 }
 
 export enum MorphoBlueOracleType {

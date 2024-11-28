@@ -1,16 +1,19 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+import * as sdk from '../src';
+
+import { NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
+const { assert } = require('chai');
 
 describe('LlamaLend', () => {
-  let web3Eth;
-  let web3Arb;
+  let web3Eth: Web3;
+  let web3Arb: Web3;
   before(async () => {
-    web3Eth = new Web3(process.env.RPC);
-    web3Arb = new Web3(process.env.RPCARB);
+    web3Eth = getWeb3Instance('RPC');
+    web3Arb = getWeb3Instance('RPCARB');
   });
 
   // const fetchAccountBalances = async (network, web3, blockNumber) => {
@@ -21,24 +24,24 @@ describe('LlamaLend', () => {
   //   ]);
   // };
 
-  const getWeb3ByNetwork = (network) => {
-    if (network === NetworkNumber.Eth) return web3Eth;
+  const getWeb3ByNetwork = (network: NetworkNumber) => {
     if (network === NetworkNumber.Arb) return web3Arb;
+    return web3Eth;
   };
-  const fetchMarketData = async (network, web3, selectedMarket) => {
-    const marketData = await sdk.llamaLend.getLlamaLendGlobalData(web3, network, selectedMarket, web3Eth);
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.LlamaLendMarketData) => {
+    const marketData = await sdk.llamaLend.getLlamaLendGlobalData(_web3, network, selectedMarket, web3Eth);
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData, selectedMarket) => {
-    const accountData = await sdk.llamaLend.getLlamaLendUserData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData);
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.LlamaLendGlobalMarketData, selectedMarket: sdk.LlamaLendMarketData) => {
+    const accountData = await sdk.llamaLend.getLlamaLendUserData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
     ]);
   };
 
 
-  const getMarketsByNetwork = (network) => {
+  const getMarketsByNetwork = (network: NetworkNumber) => {
     const markets = sdk.markets.LlamaLendMarkets(network);
     return Object.values(markets).filter(({ chainIds }) => chainIds.includes(network));
   };

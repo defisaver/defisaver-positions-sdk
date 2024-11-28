@@ -14,8 +14,10 @@ import { EthAddress, NetworkNumber } from '../../types/common';
 import { AaveLoanInfoV2Contract, AaveV3ViewContract } from '../../contracts';
 import { BaseContract } from '../../types/contracts/generated/types';
 
+export const AAVE_V3_MARKETS = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi];
+
 export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
-export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV3 || selectedMarket.value === AaveVersions.AaveV3Lido;
+export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => AAVE_V3_MARKETS.includes(selectedMarket.value as AaveVersions);
 export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
 export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
 export const isMorphoAave = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
@@ -27,10 +29,10 @@ export const aaveAnyGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: AaveV
   .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral);
 
 export const aaveAnyGetSuppliableAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: AaveHelperCommon) => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
   };
 
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
@@ -52,43 +54,44 @@ export const aaveAnyGetSuppliableAssets = ({
 };
 
 export const aaveAnyGetSuppliableAsCollAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: AaveHelperCommon) => aaveAnyGetSuppliableAssets({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
 }).filter(({ canBeCollateral }) => canBeCollateral);
 
 export const aaveAnyGetEmodeMutableProps = (
   {
     eModeCategory,
+    eModeCategoriesData,
     assetsData,
   }: AaveHelperCommon, _asset: string) => {
   const asset = wethToEth(_asset);
 
   const assetData = assetsData[asset];
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
 
   if (
     eModeCategory === 0
-    || assetData.eModeCategory !== eModeCategory
-    || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
+    || !eModeCategoryData.collateralAssets.includes(asset)
+    || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
   }
-  const { liquidationRatio, collateralFactor } = assetData.eModeCategoryData;
+  const { liquidationRatio, collateralFactor } = eModeCategoryData;
   return ({ liquidationRatio, collateralFactor });
 };
 
 export const aaveAnyGetAggregatedPositionData = ({
   usedAssets,
   eModeCategory,
-  eModeCategories,
   assetsData,
   selectedMarket,
   network,
   ...rest
 }: AaveHelperCommon): AaveV3AggregatedPositionData => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
   };
   const payload = {} as AaveV3AggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
@@ -122,7 +125,12 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData, isMorphoAave({ selectedMarket }));
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
+    usedAssets,
+    assetsData,
+    isMorpho: isMorphoAave({ selectedMarket }),
+    network,
+  });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
@@ -130,8 +138,9 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
+  payload.leveragedAsset = leveragedAsset;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
-    payload.leveragedAsset = leveragedAsset;
     let assetPrice = data.assetsData[leveragedAsset].price;
     if (leveragedType === 'lsd-leverage') {
       // Treat ETH like a stablecoin in a long stETH position

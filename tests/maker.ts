@@ -1,18 +1,21 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+import * as sdk from '../src';
+
+import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
+const { assert } = require('chai');
 
 describe('Maker', () => {
-  let web3;
+  let web3: Web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
+    web3 = getWeb3Instance('RPC');
   });
 
-  const fetchAccountBalances = async (network, web3, blockNumber) => {
-    const balances = await sdk.maker.getMakerAccountBalances(web3, network, blockNumber, false, '30126');
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
+    const balances = await sdk.maker.getMakerAccountBalances(_web3, network, blockNumber, false, '30126');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

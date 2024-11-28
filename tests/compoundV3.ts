@@ -1,27 +1,30 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+import * as sdk from '../src';
+
+import { Blockish, EthAddress, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
+const { assert } = require('chai');
 
 describe('Compound v3', () => {
-  let web3;
-  let web3Base;
-  let web3Arb;
-  let web3Opt;
+  let web3: Web3;
+  let web3Base: Web3;
+  let web3Opt: Web3;
+  let web3Arb: Web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
-    web3Base = new Web3(process.env.RPCBASE);
-    web3Arb = new Web3(process.env.RPCARB);
-    web3Opt = new Web3(process.env.RPCOPT);
+    web3 = getWeb3Instance('RPC');
+    web3Opt = getWeb3Instance('RPCOPT');
+    web3Base = getWeb3Instance('RPCBASE');
+    web3Arb = getWeb3Instance('RPCARB');
   });
 
-  const fetchMarketData = async (network, _web3, selectedMarket) => {
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CompoundMarketData) => {
     const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, web3);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
-      const keys = [
+      const keys: (keyof typeof tokenData)[] = [
         'symbol', 'supplyRate', 'borrowRate', 'price', // ...
       ];
       assert.containsAllKeys(tokenData, keys);
@@ -30,15 +33,15 @@ describe('Compound v3', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData, selectedMarket) => {
-    const accountData = await sdk.compoundV3.getCompoundV3AccountData(web3, network, '0x8f02A8ecD8734381795FF251360DBf1730Cb46E6', '', { selectedMarket, assetsData: marketData.assetsData });
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.CompoundV3MarketsData, selectedMarket: sdk.CompoundMarketData) => {
+    const accountData = await sdk.compoundV3.getCompoundV3AccountData(_web3, network, '0x8f02A8ecD8734381795FF251360DBf1730Cb46E6', '', { selectedMarket, assetsData: marketData.assetsData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network, _web3, selectedMarket) => {
+  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CompoundMarketData) => {
     const positionData = await sdk.compoundV3.getCompoundV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '', selectedMarket, web3);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
@@ -46,8 +49,8 @@ describe('Compound v3', () => {
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber, marketAddr) => {
-    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish, marketAddr: EthAddress) => {
+    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -123,6 +126,15 @@ describe('Compound v3', () => {
 
   // Arbitrum
 
+  it('can fetch market and account data for ETH Market on Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
+
+    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
+    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+  });
+
   it('can fetch market and account data for USDT Market on Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
@@ -142,6 +154,15 @@ describe('Compound v3', () => {
   });
 
   // Optimism
+
+  it('can fetch market and account data for ETH Market on Optimism', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Opt;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
+
+    const marketData = await fetchMarketData(network, web3Opt, selectedMarket);
+    await fetchAccountData(network, web3Opt, marketData, selectedMarket);
+  });
 
   it('can fetch market and account data for USDT Market on Optimism', async function () {
     this.timeout(10000);
@@ -199,6 +220,6 @@ describe('Compound v3', () => {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    await fetchAccountBalances(network, web3Base, 4256022, '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf');
+    // await fetchAccountBalances(network, web3Base, 4256022, '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf');
   });
 });

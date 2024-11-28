@@ -11,7 +11,7 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  ethToWeth, ethToWethByAddress, getAbiItem, isLayer2Network, wethToEthByAddress,
+  ethToWeth, ethToWethByAddress, getAbiItem, isEnabledOnBitmap, isLayer2Network, wethToEthByAddress,
 } from '../services/utils';
 import {
   createContractWrapper,
@@ -21,6 +21,8 @@ import {
 import { multicall } from '../multicall';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
+  EModeCategoriesData,
+  EModeCategoryData,
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
 import { getDsrApy } from '../services/dsrService';
@@ -139,11 +141,12 @@ const computeMorphoMarketData = (
 export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3MarketData> => {
   // @ts-ignore
   const lendingPoolContract = createContractWrapper(web3, network, selectedMarket.lendingPool, selectedMarket.lendingPoolAddress);
+  const aaveLendingPoolContract = createContractWrapper(web3, network, selectedMarket.aaveLendingPool, selectedMarket.aaveLendingPoolAddress);
 
   const _addresses = selectedMarket.assets.map((a: string) => getAssetInfo(ethToWeth(a)).address);
 
   const splitStart = Math.floor(_addresses.length / 2);
-  const loanInfoCallsToSkip = 2; // skipping getFullTokensInfo calls at the start of multicallArray
+  const loanInfoCallsToSkip = 3; // skipping getFullTokensInfo calls at the start of multicallArray
 
   const AaveV3ViewAddress = getConfigContractAddress('AaveV3View', network);
   const AaveV3ViewAbi = getConfigContractAbi('AaveV3View');
@@ -159,6 +162,11 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       abiItem: getAbiItem(AaveV3ViewAbi, 'getFullTokensInfo'),
       params: [selectedMarket.providerAddress, _addresses.slice(splitStart, _addresses.length)],
     },
+    {
+      target: AaveV3ViewAddress,
+      abiItem: getAbiItem(AaveV3ViewAbi, 'getAllEmodes'),
+      params: [selectedMarket.providerAddress],
+    },
     ...(_addresses.map((underlyingAddress: string) => (
       [{
         target: lendingPoolContract.options.address,
@@ -166,9 +174,9 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
         params: [underlyingAddress],
       },
       {
-        target: selectedMarket.protocolDataAddress, // TODO: aave refactor add to Aave view
+        target: aaveLendingPoolContract.options.address, // TODO: aave refactor add to Aave view
         // @ts-ignore
-        abiItem: getAbiItem(getConfigContractAbi(selectedMarket.protocolData), 'getReserveData'),
+        abiItem: getAbiItem(getConfigContractAbi(selectedMarket.aaveLendingPool), 'getReserveData'),
         params: [underlyingAddress],
       }]
     ))).flat(),
@@ -176,6 +184,18 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
 
   const multicallResponse = await multicall(multicallArray, web3, network);
   const loanInfo = [...multicallResponse[0][0], ...multicallResponse[1][0]];
+  // Morpho Aave V3 ETH optimizer is hardcoded to use e mode category 1
+  const eModeCategoryData: EModeCategoryData = {
+    label: multicallResponse[2][0][0].label,
+    id: 1,
+    liquidationBonus: new Dec(multicallResponse[2][0][0].liquidationBonus).div(10000).toString(),
+    liquidationRatio: new Dec(multicallResponse[2][0][0].liquidationThreshold).div(10000).toString(),
+    collateralFactor: new Dec(multicallResponse[2][0][0].ltv).div(10000).toString(),
+    borrowableBitmap: multicallResponse[2][0][0].borrowableBitmap,
+    collateralBitmap: multicallResponse[2][0][0].collateralBitmap,
+    borrowAssets: [],
+    collateralAssets: [],
+  };
 
   const IVariableDebtTokenAbi = getConfigContractAbi('IVariableDebtToken');
   const IATokenAbi = getConfigContractAbi('IAToken');
@@ -204,7 +224,10 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     throw new Error('Failed to fetch market data.');
   }
 
-  const morphoRewardsData = morphoRewards.status === 'fulfilled' ? await morphoRewards.value.json() : null;
+  let morphoRewardsData: any = null;
+  if (morphoRewards.status === 'fulfilled') {
+    morphoRewardsData = morphoRewards.value.ok ? await morphoRewards.value.json() : null;
+  }
 
   const assetsData: MorphoAaveV3AssetData[] = await Promise.all(loanInfo.map(async (info, i: number) => {
     const morphoMarketData = {
@@ -215,16 +238,19 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     const marketData = computeMorphoMarketData(
       info,
       morphoMarketData,
-      multicallResponse[(2 * i) + (loanInfoCallsToSkip + 1)],
+      multicallResponse[(2 * i) + (loanInfoCallsToSkip + 1)][0],
     );
 
     const { symbol, address } = getAssetInfoByAddress(wethToEthByAddress(marketData.underlyingTokenAddress));
+
+
+    if (isEnabledOnBitmap(Number(eModeCategoryData.collateralBitmap), Number(info.assetId)) && marketData.isCollateral) eModeCategoryData.collateralAssets.push(symbol);
+    if (isEnabledOnBitmap(Number(eModeCategoryData.borrowableBitmap), Number(info.assetId))) eModeCategoryData.borrowAssets.push(symbol);
 
     const data = {
       symbol,
       morphoMarketData,
       hasDelta: new Dec(marketData.p2pSupplyAPY).minus(marketData.p2pBorrowAPY).gte(0.3),
-      eModeCategory: +marketData.emodeCategory,
       aTokenAddress: marketData.aTokenAddress,
       underlyingTokenAddress: address,
       price: new Dec(marketData.price.toString()).div(1e8).toString(), // is actually price in USD
@@ -278,19 +304,10 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
         .div(new Dec(marketData.totalSupply.toString()))
         .times(100)
         .toString(),
-
-      eModeCategoryData: {
-        label: marketData.label,
-        liquidationBonus: new Dec(marketData.liquidationBonus).div(10000).toString(),
-        liquidationRatio: new Dec(marketData.liquidationThreshold).div(10000).toString(),
-        collateralFactor: new Dec(marketData.ltv).div(10000).toString(),
-        priceSource: marketData.priceSource,
-      },
-
       incentiveSupplyToken: 'MORPHO',
       incentiveBorrowToken: 'MORPHO',
       incentiveSupplyApy: morphoRewardsData?.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondSupplySide || '0',
-      incentiveBorrowApy: morphoRewardsData.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondBorrowSide || '0',
+      incentiveBorrowApy: morphoRewardsData?.markets?.[marketData.underlyingTokenAddress?.toLowerCase()]?.morphoRatePerSecondBorrowSide || '0',
 
       totalBorrowVar: '0', // Morpho doesn't have all these, keeping it for compatability
       borrowRateStable: '0',
@@ -329,7 +346,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       payload[assetData.symbol] = { ...assetData, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  return { assetsData: payload, eModeCategoriesData: { 1: eModeCategoryData } };
 };
 
 export const getMorphoAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
@@ -442,6 +459,7 @@ export const getMorphoAaveV3AccountData = async (
   network: NetworkNumber,
   address: string,
   assetsData: MorphoAaveV3AssetsData,
+  eModeCategoriesData: EModeCategoriesData,
   delegator: string,
   selectedMarket: MorphoAaveV3MarketInfo,
 ): Promise<MorphoAaveV3PositionData> => {
@@ -551,7 +569,6 @@ export const getMorphoAaveV3AccountData = async (
     if (new Dec(supplied).gt(0) || new Dec(borrowed).gt(0)) {
       payload.usedAssets[symbol] = {
         symbol,
-        eModeCategory: market.eModeCategory,
         supplied,
         suppliedP2P,
         suppliedPool,
@@ -587,10 +604,11 @@ export const getMorphoAaveV3AccountData = async (
     }
   });
 
+  payload.eModeCategory = eModeCategory;
   payload = {
     ...payload,
     ...aaveAnyGetAggregatedPositionData({
-      usedAssets: payload.usedAssets, assetsData, eModeCategory, selectedMarket,
+      usedAssets: payload.usedAssets, assetsData, eModeCategory, selectedMarket, eModeCategoriesData,
     }),
   };
 
@@ -607,6 +625,6 @@ export const getMorphoAaveV3AccountData = async (
 
 export const getMorphoAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, delegator: string, market: MorphoAaveV3MarketInfo, mainnetWeb3: Web3): Promise<MorphoAaveV3PositionData> => {
   const marketData = await getMorphoAaveV3MarketsData(web3, network, market, mainnetWeb3);
-  const positionData = await getMorphoAaveV3AccountData(web3, network, address, marketData.assetsData, delegator, market);
+  const positionData = await getMorphoAaveV3AccountData(web3, network, address, marketData.assetsData, marketData.eModeCategoriesData, delegator, market);
   return positionData;
 };

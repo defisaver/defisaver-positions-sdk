@@ -20,7 +20,9 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
-import { COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC } from '../markets/compound';
+import {
+  COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC, COMPOUND_V3_USDCe, COMPOUND_V3_USDT,
+} from '../markets/compound';
 import { getEthPrice, getCompPrice, getUSDCPrice } from '../services/priceService';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
@@ -40,6 +42,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       target: CompV3ViewAddress,
       abiItem: contract.options.jsonInterface.find((props) => props.name === 'getFullCollInfos'),
       params: [selectedMarket.baseMarketAddress],
+      gasLimit: 3000000,
     },
   ];
   const data = await multicall(calls, web3, network);
@@ -134,6 +137,8 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
     [COMPOUND_V3_ETH(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_ETH(network),
     [COMPOUND_V3_USDC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDC(network),
     [COMPOUND_V3_USDBC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDBC(network),
+    [COMPOUND_V3_USDT(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDT(network),
+    [COMPOUND_V3_USDCe(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDCe(network),
   })[marketAddress.toLowerCase()];
 
   const loanInfoContract = CompV3ViewContract(web3, network, block);

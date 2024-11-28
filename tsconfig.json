@@ -1,19 +1,20 @@
 {
   "compilerOptions": {
+    "module": "node16",
+    "moduleResolution": "node16",
+    "outDir": "./cjs/",
     "target": "ES2015",
-    "module": "ESNext",
     "allowJs": true,
     "declaration": true,
-    "outDir": "./esm/",
     "strict": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "./src/*"
+    "./src/*",
+    "./tests/**/*.ts"
   ],
   "typedocOptions": {
     "entryPoints": [

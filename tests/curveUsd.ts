@@ -1,41 +1,44 @@
-require('dotenv').config();
-const { assert } = require('chai');
-const Web3 = require('web3');
+import 'dotenv/config';
+import Web3 from 'web3';
 
-const sdk = require('../cjs');
-const { NetworkNumber } = require('../cjs/types/common');
+import * as sdk from '../src';
+
+import { Blockish, NetworkNumber } from '../src/types/common';
+import { getWeb3Instance } from './utils/getWeb3Instance';
+
+const { assert } = require('chai');
 
 describe('CurveUsd', () => {
-  let web3;
+  let web3: Web3;
   before(async () => {
-    web3 = new Web3(process.env.RPC);
+    web3 = getWeb3Instance('RPC');
   });
 
-  const fetchMarketData = async (network, _web3, selectedMarket) => {
+  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CrvUSDMarketData) => {
     const marketData = await sdk.curveUsd.getCurveUsdGlobalData(_web3, network, selectedMarket);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['collateral', 'oraclePrice', 'ammPrice', 'totalDebt', 'bands']);
     return marketData;
   };
 
-  const fetchAccountData = async (network, web3, marketData, selectedMarket) => {
-    const accountData = await sdk.curveUsd.getCurveUsdUserData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand);
+  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.CrvUSDGlobalMarketData, selectedMarket: sdk.CrvUSDMarketData) => {
+    const accountData = await sdk.curveUsd.getCurveUsdUserData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network, web3, selectedMarket) => {
-    const positionData = await sdk.curveUsd.getCurveUsdFullPositionData(web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
+  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CrvUSDMarketData) => {
+    const positionData = await sdk.curveUsd.getCurveUsdFullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
     ]);
   };
 
-  const fetchAccountBalances = async (network, web3, blockNumber, controllerAddress) => {
-    const balances = await sdk.curveUsd.getCrvUsdAccountBalances(web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', controllerAddress);
+  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish, controllerAddress: string) => {
+    const balances = await sdk.curveUsd.getCrvUsdAccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', controllerAddress);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',

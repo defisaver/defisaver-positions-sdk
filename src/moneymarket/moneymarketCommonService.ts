@@ -48,7 +48,7 @@ export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
   const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
   const isShort = supplyStable > 0 && supplyUnstable === 0 && borrowUnstable === 1 && borrowStable === 0;
   // lsd -> liquid staking derivative
-  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH'].includes(longAsset);
+  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH', 'ezETH', 'weETH'].includes(longAsset);
   if (isLong) {
     return {
       leveragedType: 'long',
@@ -73,4 +73,8 @@ export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
   };
 };
 
-export const aprToApy = (interest:string | number, frequency = BLOCKS_IN_A_YEAR) => new Dec(interest).div(100).div(frequency).plus(1).pow(frequency).minus(1).times(100).toString();
+export const aprToApy = (interest:string | number, frequency = BLOCKS_IN_A_YEAR) => new Dec(interest).div(100).div(frequency).plus(1)
+  .pow(frequency)
+  .minus(1)
+  .times(100)
+  .toString();
