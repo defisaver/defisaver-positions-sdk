@@ -10,19 +10,23 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt', // wstETH/USDT
   MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
   MorphoBlueWstEthPYUSD = 'morphobluwstethpyusd', // wstETH/PYUSD
-  MorphoBlueWeEthEth = 'morphoblueweetheth', // weETH/ETH
   MorphoBlueREthEth_945 = 'morphoblueretheth_945', // rETH/ETH
   MorphoBlueWBTCPYUSD = 'morphobluewbtcpyusd', // WBTC/PYUSD
   MorphoBlueWBTCEth = 'morphobluewbtceth', // WBTC/ETH
   MorphoBlueUSDeUSDT = 'morphoblueusdeusdt', // USDe/USDT
   MorphoBlueSUSDeUSDT = 'morphobluesusdeusdt', // sUSDe/USDT
   MorphoBlueSDAIEth = 'morphobluesdaieth', // sDAI/ETH
-  MorphoBlueEzEthEth = 'morphoblueezetheth', // ezETH/ETH
   MorphoBlueMKRUSDC = 'morphobluemkrusdc', // MKR/USDC
   MorphoBlueTBTCUSDC = 'morphobluetbtcusdc', // tBTC/USDC
   MorphoBlueCbBTCEth_915 = 'morphobluecbbtceth', // cbBTC/Eth
   MorphoBlueCbBTCUSDC_860 = 'morphobluecbbtcusdc', // cbBTC/USDC
   MorphoBlueSUSDeUSDC_915 = 'morphobluesusdeusdc_915', // sUSDe/USDC
+  // ezETH/ETH
+  MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
+  MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
+  // weETH/ETH
+  MorphoBlueWeEthEth_860 = 'morphoblueweetheth_860',
+  MorphoBlueWeEthEth_945 = 'morphoblueweetheth_945',
   // wstETH/WETH
   MorphoBlueWstEthEth_945 = 'morphobluewstetheth_945',
   MorphoBlueWstEthEth_945_Exchange_Rate = 'morphobluewstetheth_945_exchange_rate',
