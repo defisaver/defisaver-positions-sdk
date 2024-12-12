@@ -290,6 +290,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       _market.supplyIncentives.push({
         apy: _market.incentiveSupplyApy || '0',
         token: _market.symbol,
+        incentiveKind: 'staking',
       });
     }
 
@@ -302,6 +303,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       _market.borrowIncentives.push({
         apy: _market.incentiveBorrowApy,
         token: _market.incentiveBorrowToken!!,
+        incentiveKind: 'reward',
       });
     }
 
@@ -330,6 +332,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         _market.supplyIncentives.push({
           token: supplyRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: 'reward',
         });
       }
     });
@@ -356,6 +359,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         _market.borrowIncentives.push({
           token: borrowRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: 'reward',
         });
       }
     });
