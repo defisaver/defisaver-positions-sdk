@@ -312,6 +312,9 @@ module.exports = {
     "networks": {
       "1": {
         "address": "0x40d16fc0246ad3160ccc09b8d0d3a2cd28ae6c2f"
+      },
+      "42161": {
+        "address": "0x7dfF72693f6A4149b17e7C6314655f6A9F7c8B33"
       }
     }
   },

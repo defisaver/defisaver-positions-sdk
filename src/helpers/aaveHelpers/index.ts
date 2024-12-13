@@ -129,7 +129,6 @@ export const aaveAnyGetAggregatedPositionData = ({
     usedAssets,
     assetsData,
     isMorpho: isMorphoAave({ selectedMarket }),
-    network,
   });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;

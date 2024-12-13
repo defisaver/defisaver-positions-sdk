@@ -34,11 +34,7 @@ import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 import { getAssetsBalances } from '../assets';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
-import {
-  aaveAnyGetAggregatedPositionData,
-  aaveV3IsInIsolationMode,
-  aaveV3IsInSiloedMode,
-} from '../helpers/aaveHelpers';
+import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
@@ -137,7 +133,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       params: [],
     },
     {
-      target: getAssetInfo('GHO').address,
+      target: getAssetInfo('GHO', network).address,
       abiItem: getAbiItem(GhoTokenAbi, 'getFacilitatorsList'),
       params: [],
     },
@@ -191,7 +187,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
-      const nativeAsset = symbol === 'GHO';
+      const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth;
 
       // eslint-disable-next-line guard-for-in
       for (const eModeIndex in eModeCategoriesData) {
@@ -547,7 +543,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       interestMode = 'both';
     }
     if (!usedAssets[asset]) usedAssets[asset] = {} as AaveV3UsedAsset;
-    const nativeAsset = asset === 'GHO';
+    const nativeAsset = asset === 'GHO' && network === NetworkNumber.Eth;
 
     let discountRateOnBorrow = '0';
     const borrowed = new Dec(borrowedStable).add(borrowedVariable).toString();
