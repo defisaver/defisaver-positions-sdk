@@ -1,15 +1,18 @@
 import Dec from 'decimal.js';
-import { assetAmountInWei } from '@defisaver/tokens';
+import { assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
 import Web3 from 'web3';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
+  MorphoBluePublicAllocatorItem,
+  MorphoBlueRealloactionMarketData,
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
 import { MorphoBlueViewContract } from '../../contracts';
 import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
+import { compareAddresses } from '../../services/utils';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
@@ -113,4 +116,142 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
   const borrowRate = getBorrowRate(data.borrowRate, data.market.totalBorrowShares);
   const supplyRate = getSupplyRate(data.market.totalSupplyAssets, data.market.totalBorrowAssets, data.borrowRate, data.market.fee);
   return { borrowRate, supplyRate };
+};
+
+const API_URL = 'https://blue-api.morpho.org/graphql';
+const MARKET_QUERY = `
+  query MarketByUniqueKey($uniqueKey: String!, $chainId: Int!) {
+      marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
+        reallocatableLiquidityAssets
+        loanAsset {
+          address
+          decimals
+          priceUsd
+        }
+        state {
+          liquidityAssets
+        }
+        publicAllocatorSharedLiquidity {
+          assets
+          vault {
+            address
+            name
+          }
+          allocationMarket {
+            uniqueKey
+            loanAsset {
+              address
+            }
+            collateralAsset {
+              address
+            }
+            irmAddress
+            oracle {
+              address
+            }
+            lltv
+          }
+        }
+        loanAsset {
+          address
+        }
+        collateralAsset {
+          address
+        }
+        oracle {
+          address
+        }
+        irmAddress
+        lltv  
+      }
+    }
+`;
+
+export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<string> => {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: MARKET_QUERY,
+      variables: { uniqueKey: marketId, chainId: network },
+    }),
+  });
+
+  const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
+  const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+
+  if (!marketData) throw new Error('Market data not found');
+
+  return marketData.reallocatableLiquidityAssets;
+};
+
+export const getReallocation = async (marketId: string, liquidityToAllocate: string, network: NetworkNumber = NetworkNumber.Eth) => {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: MARKET_QUERY,
+      variables: { uniqueKey: marketId, chainId: network },
+    }),
+  });
+
+  const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
+  const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+
+  if (!marketData) throw new Error('Market data not found');
+
+  if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
+
+  const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
+    (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
+      const vaultAddress = item.vault.address;
+      acc[vaultAddress] = new Dec(acc[vaultAddress] || '0').add(item.assets).toString();
+      return acc;
+    },
+    {},
+  );
+
+  const sortedVaults = Object.entries(vaultTotalAssets).sort(
+    ([, a]: [string, string], [, b]: [string, string]) => new Dec(b || '0').sub(a || '0').toNumber(),
+  );
+
+  const withdrawalsPerVault: Record<string, [string[], string][]> = {};
+  let totalReallocated = '0';
+  for (const [vaultAddress] of sortedVaults) {
+    if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
+
+    const vaultAllocations = marketData.publicAllocatorSharedLiquidity.filter(
+      (item: MorphoBluePublicAllocatorItem) => compareAddresses(item.vault.address, vaultAddress),
+    );
+    for (const item of vaultAllocations) {
+      if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
+      const itemAmount = item.assets;
+      const leftToAllocate = new Dec(liquidityToAllocate).sub(totalReallocated).toString();
+      const amountToTake = new Dec(itemAmount).lt(leftToAllocate) ? itemAmount : leftToAllocate;
+      totalReallocated = new Dec(totalReallocated).add(amountToTake).toString();
+      const withdrawal: [string[], string] = [
+        [
+          item.allocationMarket.loanAsset.address,
+          item.allocationMarket.collateralAsset?.address,
+          item.allocationMarket.oracle?.address,
+          item.allocationMarket.irmAddress,
+          item.allocationMarket.lltv,
+        ],
+        amountToTake.toString(),
+      ];
+      if (!withdrawalsPerVault[vaultAddress]) {
+        withdrawalsPerVault[vaultAddress] = [];
+      }
+      withdrawalsPerVault[vaultAddress].push(withdrawal);
+    }
+  }
+
+  const vaults = Object.keys(withdrawalsPerVault);
+  const withdrawals = vaults.map(
+    (vaultAddress) => withdrawalsPerVault[vaultAddress],
+  );
+  return {
+    vaults,
+    withdrawals,
+  };
 };
