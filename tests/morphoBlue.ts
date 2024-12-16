@@ -55,6 +55,25 @@ describe('Morpho Blue', () => {
     return balances;
   };
 
+  // Allocator
+
+  it('can fetch reallocatable liquidity for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+  });
+
+  it('can fetch vaults for reallocation for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const liquidityToAllocate = '2375842896566685798032';
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    await sdk.helpers.morphoBlueHelpers.getReallocation(selectedMarket.marketId, liquidityToAllocate, network);
+  });
+
   // Balances
 
   it('can fetch wstETH/ETH balance for position for Ethereum', async function () {
