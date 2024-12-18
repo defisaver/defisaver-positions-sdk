@@ -55,6 +55,34 @@ describe('Morpho Blue', () => {
     return balances;
   };
 
+  // APY
+
+  it('can fetch apy afters for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    const { borrowRate, supplyRate } = await sdk.helpers.morphoBlueHelpers.getApyAfterValuesEstimation(
+      selectedMarket,
+      [
+        {
+          action: 'borrow',
+          amount: '100',
+          asset: 'ETH',
+        },
+        {
+          action: 'supply',
+          amount: '300',
+          asset: 'ETH',
+        },
+      ],
+      web3,
+      network,
+    );
+    // console.log('borrowRate', borrowRate);
+    // console.log('supplyRate', supplyRate);
+  });
+
   // Allocator
 
   it('can fetch reallocatable liquidity for wstETH/ETH market on Ethereum', async function () {
@@ -68,7 +96,7 @@ describe('Morpho Blue', () => {
   it('can fetch vaults for reallocation for wstETH/ETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const liquidityToAllocate = '2375842896566685798032';
+    const liquidityToAllocate = '375842896566685798032';
     const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
 
     await sdk.helpers.morphoBlueHelpers.getReallocation(selectedMarket.marketId, liquidityToAllocate, network);

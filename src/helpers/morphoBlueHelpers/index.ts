@@ -92,27 +92,33 @@ export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => 
   return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
 };
 
-export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, action: string, amount: string, asset: string, web3: Web3, network: NetworkNumber) => {
+export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, actions: { action: string, amount: string, asset: string }[], web3: Web3, network: NetworkNumber) => {
   const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
   const lltvInWei = assetAmountInWei(selectedMarket.lltv, 'ETH');
   const marketData: MarketParamsStruct = [selectedMarket.loanToken, selectedMarket.collateralToken, selectedMarket.oracle, selectedMarket.irm, lltvInWei];
-  const isBorrowOperation = borrowOperations.includes(action);
-  const amountInWei = assetAmountInWei(amount, asset);
-  let liquidityAdded;
-  let liquidityRemoved;
-  if (isBorrowOperation) {
-    liquidityAdded = action === 'payback' ? amountInWei : '0';
-    liquidityRemoved = action === 'borrow' ? amountInWei : '0';
-  } else {
-    liquidityAdded = action === 'collateral' ? amountInWei : '0';
-    liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
-  }
-  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation([
+
+  const params = actions.map(({ action, asset, amount }) => {
+    const isBorrowOperation = borrowOperations.includes(action);
+    const amountInWei = assetAmountInWei(amount, asset);
+    let liquidityAdded;
+    let liquidityRemoved;
+    if (isBorrowOperation) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityRemoved = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
+    }
+    return {
+      liquidityAdded,
+      liquidityRemoved,
+      isBorrowOperation,
+    };
+  });
+  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation(
     marketData,
-    isBorrowOperation,
-    liquidityAdded,
-    liquidityRemoved,
-  ]).call();
+    params,
+  ).call();
   const borrowRate = getBorrowRate(data.borrowRate, data.market.totalBorrowShares);
   const supplyRate = getSupplyRate(data.market.totalSupplyAssets, data.market.totalBorrowAssets, data.borrowRate, data.market.fee);
   return { borrowRate, supplyRate };
@@ -170,7 +176,7 @@ const MARKET_QUERY = `
     }
 `;
 
-export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<string> => {
+export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ reallocatableLiquidity: string, targetBorrowUtilization: string }> => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -185,7 +191,22 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
 
   if (!marketData) throw new Error('Market data not found');
 
-  return marketData.reallocatableLiquidityAssets;
+  return { reallocatableLiquidity: marketData.reallocatableLiquidityAssets, targetBorrowUtilization: marketData.targetBorrowUtilization };
+};
+
+export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: string, totalSupply: string, targetBorrowUtilization: string, reallocatableLiquidityAssets: string) => {
+  const newTotalBorrowAssets = new Dec(totalBorrow).add(amountToBorrow).toString();
+  const leftToBorrow = new Dec(totalSupply).sub(totalBorrow).toString();
+  let liquidityToAllocate = new Dec(newTotalBorrowAssets).div(targetBorrowUtilization).mul(1e18).sub(totalSupply)
+    .toFixed(0)
+    .toString();
+
+  if (new Dec(reallocatableLiquidityAssets).lt(liquidityToAllocate)) {
+    liquidityToAllocate = new Dec(amountToBorrow).sub(leftToBorrow).toString();
+    if (new Dec(reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
+  }
+
+  return liquidityToAllocate;
 };
 
 export const getReallocation = async (marketId: string, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
@@ -204,21 +225,13 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
   if (!marketData) throw new Error('Market data not found');
 
   const newTotalBorrowAssets = new Dec(marketData.state.borrowAssets).add(amountToBorrow).toString();
-  const leftToBorrow = new Dec(marketData.state.supplyAssets).sub(marketData.state.borrowAssets).toString();
 
   const newUtil = new Dec(newTotalBorrowAssets).div(marketData.state.supplyAssets).toString();
   const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
 
   if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
 
-  let liquidityToAllocate = new Dec(newTotalBorrowAssets).div(marketData.targetBorrowUtilization).mul(1e18).sub(marketData.state.supplyAssets)
-    .toFixed(0)
-    .toString();
-
-  if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) {
-    liquidityToAllocate = new Dec(amountToBorrow).sub(leftToBorrow).toString();
-    if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
-  }
+  const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, marketData.state.borrowAssets, marketData.state.supplyAssets, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
 
   const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
     (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
