@@ -123,6 +123,7 @@ const MARKET_QUERY = `
   query MarketByUniqueKey($uniqueKey: String!, $chainId: Int!) {
       marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
         reallocatableLiquidityAssets
+        targetBorrowUtilization
         loanAsset {
           address
           decimals
@@ -130,6 +131,8 @@ const MARKET_QUERY = `
         }
         state {
           liquidityAssets
+          borrowAssets
+          supplyAssets
         }
         publicAllocatorSharedLiquidity {
           assets
@@ -185,7 +188,7 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
   return marketData.reallocatableLiquidityAssets;
 };
 
-export const getReallocation = async (marketId: string, liquidityToAllocate: string, network: NetworkNumber = NetworkNumber.Eth) => {
+export const getReallocation = async (marketId: string, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -200,7 +203,22 @@ export const getReallocation = async (marketId: string, liquidityToAllocate: str
 
   if (!marketData) throw new Error('Market data not found');
 
-  if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
+  const newTotalBorrowAssets = new Dec(marketData.state.borrowAssets).add(amountToBorrow).toString();
+  const leftToBorrow = new Dec(marketData.state.supplyAssets).sub(marketData.state.borrowAssets).toString();
+
+  const newUtil = new Dec(newTotalBorrowAssets).div(marketData.state.supplyAssets).toString();
+  const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
+
+  if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
+
+  let liquidityToAllocate = new Dec(newTotalBorrowAssets).div(marketData.targetBorrowUtilization).mul(1e18).sub(marketData.state.supplyAssets)
+    .toFixed(0)
+    .toString();
+
+  if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) {
+    liquidityToAllocate = new Dec(amountToBorrow).sub(leftToBorrow).toString();
+    if (new Dec(marketData.reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
+  }
 
   const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
     (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {

@@ -171,7 +171,14 @@ export interface MorphoBluePublicAllocatorItem {
   allocationMarket: MorphoBlueAllocationMarket,
 }
 
+export interface MorphoBlueAllocatorMarketState {
+  borrowAssets: string,
+  supplyAssets: string,
+}
+
 export interface MorphoBlueRealloactionMarketData {
   reallocatableLiquidityAssets: string,
+  targetBorrowUtilization: string,
   publicAllocatorSharedLiquidity: MorphoBluePublicAllocatorItem[],
+  state: MorphoBlueAllocatorMarketState,
 }
