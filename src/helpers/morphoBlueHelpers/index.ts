@@ -233,7 +233,7 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
     ([, a]: [string, string], [, b]: [string, string]) => new Dec(b || '0').sub(a || '0').toNumber(),
   );
 
-  const withdrawalsPerVault: Record<string, [string[], string][]> = {};
+  const withdrawalsPerVault: Record<string, [string[], string, string][]> = {};
   let totalReallocated = '0';
   for (const [vaultAddress] of sortedVaults) {
     if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
@@ -247,7 +247,7 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
       const leftToAllocate = new Dec(liquidityToAllocate).sub(totalReallocated).toString();
       const amountToTake = new Dec(itemAmount).lt(leftToAllocate) ? itemAmount : leftToAllocate;
       totalReallocated = new Dec(totalReallocated).add(amountToTake).toString();
-      const withdrawal: [string[], string] = [
+      const withdrawal: [string[], string, string] = [
         [
           item.allocationMarket.loanAsset.address,
           item.allocationMarket.collateralAsset?.address,
@@ -256,6 +256,7 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
           item.allocationMarket.lltv,
         ],
         amountToTake.toString(),
+        item.allocationMarket.uniqueKey,
       ];
       if (!withdrawalsPerVault[vaultAddress]) {
         withdrawalsPerVault[vaultAddress] = [];
@@ -266,7 +267,9 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
 
   const vaults = Object.keys(withdrawalsPerVault);
   const withdrawals = vaults.map(
-    (vaultAddress) => withdrawalsPerVault[vaultAddress],
+    (vaultAddress) => withdrawalsPerVault[vaultAddress].sort(
+      (a, b) => a[2].localeCompare(b[2]),
+    ).map(w => [w[0], w[1]]),
   );
   return {
     vaults,

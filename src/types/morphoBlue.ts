@@ -163,6 +163,7 @@ export interface MorphoBlueAllocationMarket {
   oracle: { address: string },
   irmAddress: string,
   lltv: string,
+  uniqueKey: string,
 }
 
 export interface MorphoBluePublicAllocatorItem {
