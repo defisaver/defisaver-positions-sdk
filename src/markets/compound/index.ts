@@ -6,8 +6,8 @@ import {
   v3ETHCollAssets,
   v3USDbCCollAssets,
   v3USDCCollAssets,
-  v3USDCeCollAssets,
-  v3USDTCollAssets,
+  v3USDCeCollAssets, v3USDSCollAssets,
+  v3USDTCollAssets, v3wstETHCollAssets,
 } from './marketsAssets';
 
 export {
@@ -31,6 +31,8 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDC]: { supply: 2, withdraw: 5 },
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDT]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: STANDARD_BULKER_OPTIONS,
 
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
@@ -46,6 +48,8 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Base]: {
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
@@ -56,6 +60,8 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Opt]: {
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
@@ -65,6 +71,8 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
 };
 
@@ -164,6 +172,36 @@ export const COMPOUND_V3_USDT = (networkId: NetworkNumber): CompoundMarketData =
   // icon: SvgAdapter(protocolIcons.compoundv3),
 });
 
+export const COMPOUND_V3_WSTETH = (networkId: NetworkNumber): CompoundMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Compound V3 - wstETH',
+  shortLabel: 'v3',
+  value: CompoundVersions.CompoundV3wstETH,
+  baseAsset: 'wstETH',
+  collAssets: networkId ? v3wstETHCollAssets[networkId] : [],
+  baseMarket: 'cWstETHv3',
+  baseMarketAddress: getConfigContractAddress('cWstETHv3', networkId),
+  secondLabel: 'Market',
+  bulkerName: networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2',
+  bulkerAddress: getConfigContractAddress(networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2', networkId),
+  bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3wstETH],
+});
+
+export const COMPOUND_V3_USDS = (networkId: NetworkNumber): CompoundMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Compound V3 - USDS',
+  shortLabel: 'v3',
+  value: CompoundVersions.CompoundV3USDS,
+  baseAsset: 'USDS',
+  collAssets: networkId ? v3USDSCollAssets[networkId] : [],
+  baseMarket: 'cUSDSv3',
+  baseMarketAddress: getConfigContractAddress('cUSDSv3', networkId),
+  secondLabel: 'Market',
+  bulkerName: networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2',
+  bulkerAddress: getConfigContractAddress(networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2', networkId),
+  bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3USDS],
+});
+
 export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV2]: COMPOUND_V2,
   [CompoundVersions.CompoundV3ETH]: COMPOUND_V3_ETH(networkId),
@@ -171,4 +209,6 @@ export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV3USDbC]: COMPOUND_V3_USDBC(networkId),
   [CompoundVersions.CompoundV3USDCe]: COMPOUND_V3_USDCe(networkId),
   [CompoundVersions.CompoundV3USDT]: COMPOUND_V3_USDT(networkId),
+  [CompoundVersions.CompoundV3wstETH]: COMPOUND_V3_WSTETH(networkId),
+  [CompoundVersions.CompoundV3USDS]: COMPOUND_V3_USDS(networkId),
 }) as const;

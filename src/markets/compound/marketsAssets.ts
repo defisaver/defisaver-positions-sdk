@@ -63,3 +63,21 @@ export const v3USDTCollAssets = {
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
   [NetworkNumber.Base]: [],
 };
+
+export const v3USDSCollAssetsEth = ['wstETH', 'ETH', 'sUSDS', 'cbETH', 'tBTC', 'USDe'];
+
+export const v3USDSCollAssets = {
+  [NetworkNumber.Eth]: v3USDSCollAssetsEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [],
+};
+
+export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
+
+export const v3wstETHCollAssets = {
+  [NetworkNumber.Eth]: v3wstETHCollAssetsEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [],
+};
