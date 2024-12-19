@@ -201,8 +201,8 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
     .toFixed(0)
     .toString();
 
-  if (new Dec(reallocatableLiquidityAssets).lt(liquidityToAllocate)) {
-    liquidityToAllocate = new Dec(amountToBorrow).sub(leftToBorrow).toString();
+  if (new Dec(reallocatableLiquidityAssets).lt(liquidityToAllocate) || new Dec(liquidityToAllocate).lt('0')) {
+    liquidityToAllocate = new Dec(amountToBorrow).lt(leftToBorrow) ? '0' : new Dec(amountToBorrow).sub(leftToBorrow).toString();
     if (new Dec(reallocatableLiquidityAssets).lt(liquidityToAllocate)) throw new Error('Not enough liquidity available to allocate');
   }
 
