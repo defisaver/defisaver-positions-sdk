@@ -176,6 +176,12 @@ const MARKET_QUERY = `
     }
 `;
 
+/**
+*Get reallocatable liquidity and target borrow utilization for a given market
+*@param marketId - The unique key of the market
+*@param network - The network number
+*@returns The reallocatable liquidity and target borrow utilization
+*/
 export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ reallocatableLiquidity: string, targetBorrowUtilization: string }> => {
   const response = await fetch(API_URL, {
     method: 'POST',
@@ -194,6 +200,16 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
   return { reallocatableLiquidity: marketData.reallocatableLiquidityAssets, targetBorrowUtilization: marketData.targetBorrowUtilization };
 };
 
+/**
+*Get liquidity to allocate for a given amount to borrow. First, the function will try to calculate the amount of liquidity to allocate to be able to hit the target utilization.
+* If it is not possible to allocate enough liquidity to hit the target utilization, the function will allocate the amount of liquidity needed to be able to borrow the selected amount.
+* @param amountToBorrow - The amount to borrow
+* @param totalBorrow - The total amount borrowed
+* @param totalSupply - The total amount supplied
+* @param targetBorrowUtilization - The target borrow utilization
+* @param reallocatableLiquidityAssets - The amount of liquidity that can be reallocated
+* @returns The amount of liquidity to allocate
+*/
 export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: string, totalSupply: string, targetBorrowUtilization: string, reallocatableLiquidityAssets: string) => {
   const newTotalBorrowAssets = new Dec(totalBorrow).add(amountToBorrow).toString();
   const leftToBorrow = new Dec(totalSupply).sub(totalBorrow).toString();
@@ -209,6 +225,13 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
   return liquidityToAllocate;
 };
 
+/**
+ * Get the vaults and withdrawals needed to reallocate liquidity for a given amount to borrow
+ * @param marketId - The unique key of the market
+ * @param amountToBorrow - The amount to borrow
+ * @param network - The network number
+ * @returns The vaults and withdrawals needed to reallocate liquidity
+ */
 export const getReallocation = async (marketId: string, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
   const response = await fetch(API_URL, {
     method: 'POST',
