@@ -177,8 +177,8 @@ const MARKET_QUERY = `
 `;
 
 /**
- * Get reallocatable liquidity and target borrow utilization for a given market
- * @param marketId - The unique key of the market
+ * Get reallocatable liquidity to a given market and target borrow utilization
+ * @param marketId - Unique key of the market liquidity is reallocated to
  * @param network - The network number
  * @returns The reallocatable liquidity and target borrow utilization
 */
@@ -201,13 +201,16 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
 };
 
 /**
- * Get liquidity to allocate for a given amount to borrow. First, the function will try to calculate the amount of liquidity to allocate to be able to hit the target utilization.
- * If it is not possible to allocate enough liquidity to hit the target utilization, the function will allocate the amount of liquidity needed to be able to borrow the selected amount.
+ * Get liquidity to allocate for a given amount to borrow.
+ * First, the function will try to calculate the amount of liquidity to allocate to be able to
+ * hit the target utilization. If it is not possible to allocate enough liquidity to hit the
+ * target utilization, the function will allocate the amount of liquidity needed to be able to
+ * borrow the selected amount.
  * @param amountToBorrow - The amount to borrow
- * @param totalBorrow - The total amount borrowed
- * @param totalSupply - The total amount supplied
- * @param targetBorrowUtilization - The target borrow utilization
- * @param reallocatableLiquidityAssets - The amount of liquidity that can be reallocated
+ * @param totalBorrow - The total amount borrowed from market
+ * @param totalSupply - The total amount supplied to market
+ * @param targetBorrowUtilization - The target borrow utilization of market
+ * @param reallocatableLiquidityAssets - The amount of liquidity that can be reallocated from other markets
  * @returns The amount of liquidity to allocate
 */
 export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: string, totalSupply: string, targetBorrowUtilization: string, reallocatableLiquidityAssets: string) => {
@@ -226,9 +229,10 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
 };
 
 /**
- * Get the vaults and withdrawals needed to reallocate liquidity for a given amount to borrow
- * @param marketId - The unique key of the market
- * @param amountToBorrow - The amount to borrow
+ * Get the vaults and withdrawals needed to reallocate liquidity for a given amount to borrow.
+ * Amount to be reallocated is calculated in `getLiquidityToAllocate`
+ * @param marketId - Unique key of the market liquidity is reallocated to
+ * @param amountToBorrow - Amount being borrowed (not the amount being reallocated)
  * @param network - The network number
  * @returns The vaults and withdrawals needed to reallocate liquidity
  */
