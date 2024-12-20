@@ -187,7 +187,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
-      const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.shortLabel === 'v3default';
+      const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
 
       // eslint-disable-next-line guard-for-in
       for (const eModeIndex in eModeCategoriesData) {
