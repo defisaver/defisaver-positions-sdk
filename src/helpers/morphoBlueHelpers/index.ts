@@ -231,12 +231,14 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
 /**
  * Get the vaults and withdrawals needed to reallocate liquidity for a given amount to borrow.
  * Amount to be reallocated is calculated in `getLiquidityToAllocate`
- * @param marketId - Unique key of the market liquidity is reallocated to
+ * @param market - The market data
+ * @param assetsData - The assets data
  * @param amountToBorrow - Amount being borrowed (not the amount being reallocated)
  * @param network - The network number
  * @returns The vaults and withdrawals needed to reallocate liquidity
  */
-export const getReallocation = async (marketId: string, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
+export const getReallocation = async (market: MorphoBlueMarketData, assetsData: MorphoBlueAssetsData, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
+  const { marketId, loanToken } = market;
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -251,14 +253,19 @@ export const getReallocation = async (marketId: string, amountToBorrow: string, 
 
   if (!marketData) throw new Error('Market data not found');
 
-  const newTotalBorrowAssets = new Dec(marketData.state.borrowAssets).add(amountToBorrow).toString();
+  const loanAssetInfo = getAssetInfoByAddress(loanToken, network);
+  const { totalBorrow, totalSupply } = assetsData[loanAssetInfo.symbol] || { totalBorrow: '0', totalSupply: '0' };
+  const totalBorrowWei = assetAmountInWei(totalBorrow!, loanAssetInfo.symbol);
+  const totalSupplyWei = assetAmountInWei(totalSupply!, loanAssetInfo.symbol);
 
-  const newUtil = new Dec(newTotalBorrowAssets).div(marketData.state.supplyAssets).toString();
+  const newTotalBorrowAssets = new Dec(totalBorrowWei).add(amountToBorrow).toString();
+
+  const newUtil = new Dec(newTotalBorrowAssets).div(totalSupplyWei).toString();
   const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
 
   if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
 
-  const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, marketData.state.borrowAssets, marketData.state.supplyAssets, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
+  const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, totalBorrowWei, totalSupplyWei, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
 
   const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
     (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
