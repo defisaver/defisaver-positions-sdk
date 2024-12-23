@@ -152,3 +152,34 @@ export interface MorphoBluePositionData {
   supplyShares: string,
   borrowShares: string,
 }
+
+export interface MorphoBlueVault {
+  address: string,
+}
+
+export interface MorphoBlueAllocationMarket {
+  loanAsset: { address: string },
+  collateralAsset: { address: string },
+  oracle: { address: string },
+  irmAddress: string,
+  lltv: string,
+  uniqueKey: string,
+}
+
+export interface MorphoBluePublicAllocatorItem {
+  vault: MorphoBlueVault,
+  assets: string,
+  allocationMarket: MorphoBlueAllocationMarket,
+}
+
+export interface MorphoBlueAllocatorMarketState {
+  borrowAssets: string,
+  supplyAssets: string,
+}
+
+export interface MorphoBlueRealloactionMarketData {
+  reallocatableLiquidityAssets: string,
+  targetBorrowUtilization: string,
+  publicAllocatorSharedLiquidity: MorphoBluePublicAllocatorItem[],
+  state: MorphoBlueAllocatorMarketState,
+}

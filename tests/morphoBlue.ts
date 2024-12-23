@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import Dec from 'decimal.js';
 import Web3 from 'web3';
 
 import * as sdk from '../src';
@@ -54,6 +55,61 @@ describe('Morpho Blue', () => {
     ]);
     return balances;
   };
+
+  // APY
+
+  it('can fetch apy afters for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    const { borrowRate, supplyRate } = await sdk.helpers.morphoBlueHelpers.getApyAfterValuesEstimation(
+      selectedMarket,
+      [
+        {
+          action: 'borrow',
+          amount: '100',
+          asset: 'ETH',
+        },
+        {
+          action: 'supply',
+          amount: '300',
+          asset: 'ETH',
+        },
+      ],
+      web3,
+      network,
+    );
+    // console.log('borrowRate', borrowRate);
+    // console.log('supplyRate', supplyRate);
+  });
+
+  // Allocator
+
+  it('can fetch reallocatable liquidity for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    const { reallocatableLiquidity, targetBorrowUtilization } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+    assert.isTrue(new Dec(reallocatableLiquidity).gt(0), 'No reallocatable liquidity found');
+    assert.isTrue(new Dec(targetBorrowUtilization).gt(0), 'No target borrow utilization found');
+  });
+
+  it('can fetch vaults for reallocation for wstETH/ETH market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+
+    const { reallocatableLiquidity } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+    const liquidityToAllocate = new Dec(reallocatableLiquidity).div(2).toString();
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+
+    const { vaults, withdrawals } = await sdk.helpers.morphoBlueHelpers.getReallocation(selectedMarket, marketData.assetsData, liquidityToAllocate, network);
+    const numOfVaults = vaults.length;
+    assert.isAbove(numOfVaults, 0, 'No vaults found');
+    assert.equal(vaults.length, withdrawals.length, 'Vaults and withdrawals length mismatch');
+  });
 
   // Balances
 
