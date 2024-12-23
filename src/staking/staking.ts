@@ -78,7 +78,7 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
 };
 
 export const getSsrApy = async () => {
-  const res = await fetch('https://app.defisaver.com/api/sky/data');
+  const res = await fetch('https://fe.defisaver.com/api/sky/data');
   const data = await res.json();
   return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
 };
@@ -103,7 +103,7 @@ const getSuperOETHApy = async () => {
 };
 
 const getApyFromDfsApi = async (asset: string) => {
-  const res = await fetch(`https://app.defisaver.com/api/staking/apy?asset=${asset}`);
+  const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`);
   const data = await res.json();
   // if our server returns apr, transform it into apy
   if (['weETH'].includes(asset)) {
