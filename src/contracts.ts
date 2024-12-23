@@ -120,8 +120,10 @@ export const ChickenBondsManagerContract = createContractFromConfigFunc<Contract
 export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
 export const COMPPriceFeedContract = createContractFromConfigFunc<ContractTypes.COMPPriceFeed>('COMPPriceFeed');
 export const USDCPriceFeedContract = createContractFromConfigFunc<ContractTypes.USDCPriceFeed>('USDCPriceFeed');
+export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
 
 export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
+export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');
 
 export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
 
