@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import Dec from 'decimal.js';
 import Web3 from 'web3';
 
 import * as sdk from '../src';
@@ -90,17 +91,24 @@ describe('Morpho Blue', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
 
-    await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+    const { reallocatableLiquidity, targetBorrowUtilization } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+    assert.isTrue(new Dec(reallocatableLiquidity).gt(0), 'No reallocatable liquidity found');
+    assert.isTrue(new Dec(targetBorrowUtilization).gt(0), 'No target borrow utilization found');
   });
 
   it('can fetch vaults for reallocation for wstETH/ETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const liquidityToAllocate = '50000000000';
-    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWBTCUSDC];
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
 
-    // @ts-ignore
-    await sdk.helpers.morphoBlueHelpers.getReallocation(selectedMarket, { USDC: { totalBorrow: '47999002.330445', totalSupply: '48547209.253414' } }, liquidityToAllocate, network);
+    const { reallocatableLiquidity } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
+    const liquidityToAllocate = new Dec(reallocatableLiquidity).div(2).toString();
+    const marketData = await fetchMarketData(network, web3, selectedMarket);
+
+    const { vaults, withdrawals } = await sdk.helpers.morphoBlueHelpers.getReallocation(selectedMarket, marketData.assetsData, liquidityToAllocate, network);
+    const numOfVaults = vaults.length;
+    assert.isAbove(numOfVaults, 0, 'No vaults found');
+    assert.equal(vaults.length, withdrawals.length, 'Vaults and withdrawals length mismatch');
   });
 
   // Balances

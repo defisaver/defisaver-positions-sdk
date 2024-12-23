@@ -237,7 +237,7 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
  * @param network - The network number
  * @returns The vaults and withdrawals needed to reallocate liquidity
  */
-export const getReallocation = async (market: MorphoBlueMarketData, assetsData: MorphoBlueAssetsData, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth) => {
+export const getReallocation = async (market: MorphoBlueMarketData, assetsData: MorphoBlueAssetsData, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ vaults: string[], withdrawals: (string | string[])[][][] }> => {
   const { marketId, loanToken } = market;
   const response = await fetch(API_URL, {
     method: 'POST',
