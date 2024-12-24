@@ -42,7 +42,7 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   let morphoSupplyApy = '0';
   let morphoBorrowApy = '0';
   try {
-    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId);
+    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
     morphoSupplyApy = _morphoSupplyApy;
     morphoBorrowApy = _morphoBorrowApy;
   } catch (e) {

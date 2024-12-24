@@ -179,8 +179,8 @@ const MARKET_QUERY = `
 `;
 
 const REWARDS_QUERY = `
-  query MarketByUniqueKey($uniqueKey: String!) {
-      marketByUniqueKey(uniqueKey: $uniqueKey) {
+  query MarketByUniqueKey($uniqueKey: String!, $chainId: Int!) {
+      marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
       uniqueKey
       state {
         rewards {
@@ -345,13 +345,13 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
   };
 };
 
-export const getRewardsForMarket = async (marketId: string) => {
+export const getRewardsForMarket = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth) => {
   const response = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query: REWARDS_QUERY,
-      variables: { uniqueKey: marketId },
+      variables: { uniqueKey: marketId, chainId: network },
     }),
   });
 
@@ -359,7 +359,7 @@ export const getRewardsForMarket = async (marketId: string) => {
   const marketData = data?.data?.marketByUniqueKey;
   if (!marketData) throw new Error('Market data not found');
   const morphoAssetInfo = getAssetInfo('MORPHO');
-  const { supplyApr, borrowApr } = marketData.state.rewards.find((reward: any) => compareAddresses(reward.asset.address, morphoAssetInfo.address)) || { supplyApr: '0', borrowApr: '0' };
+  const { supplyApr, borrowApr } = marketData.state.rewards.find((reward: any) => compareAddresses(reward.asset.address, morphoAssetInfo.addresses[network])) || { supplyApr: '0', borrowApr: '0' };
   const supplyAprPercent = new Dec(supplyApr).mul(100).toString();
   const borrowAprPercent = new Dec(borrowApr).mul(100).toString();
   return { supplyApy: aprToApy(supplyAprPercent), borrowApy: aprToApy(borrowAprPercent) };
