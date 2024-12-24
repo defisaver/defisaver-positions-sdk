@@ -1,7 +1,9 @@
 import Dec from 'decimal.js';
-import { assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import Web3 from 'web3';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+} from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
@@ -176,6 +178,25 @@ const MARKET_QUERY = `
     }
 `;
 
+const REWARDS_QUERY = `
+  query MarketByUniqueKey($uniqueKey: String!) {
+      marketByUniqueKey(uniqueKey: $uniqueKey) {
+      uniqueKey
+      state {
+        rewards {
+          amountPerSuppliedToken
+          supplyApr
+          amountPerBorrowedToken
+          borrowApr
+          asset {
+            address
+          }
+        }
+      }
+    }
+    }
+`;
+
 /**
  * Get reallocatable liquidity to a given market and target borrow utilization
  * @param marketId - Unique key of the market liquidity is reallocated to
@@ -322,4 +343,24 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
     vaults,
     withdrawals,
   };
+};
+
+export const getRewardsForMarket = async (marketId: string) => {
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: REWARDS_QUERY,
+      variables: { uniqueKey: marketId },
+    }),
+  });
+
+  const data = await response.json();
+  const marketData = data?.data?.marketByUniqueKey;
+  if (!marketData) throw new Error('Market data not found');
+  const morphoAssetInfo = getAssetInfo('MORPHO');
+  const { supplyApr, borrowApr } = marketData.state.rewards.find((reward: any) => compareAddresses(reward.asset.address, morphoAssetInfo.address)) || { supplyApr: '0', borrowApr: '0' };
+  const supplyAprPercent = new Dec(supplyApr).mul(100).toString();
+  const borrowAprPercent = new Dec(borrowApr).mul(100).toString();
+  return { supplyApy: aprToApy(supplyAprPercent), borrowApy: aprToApy(borrowAprPercent) };
 };
