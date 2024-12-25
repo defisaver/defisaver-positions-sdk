@@ -272,6 +272,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       usageAsCollateralEnabled: marketData.isCollateral,
       collateralFactor: marketData.isCollateral ? new Dec(marketData.collateralFactor).div(10000).toString() : '0',
       liquidationRatio: new Dec(marketData.liquidationRatio).div(10000).toString(),
+      liquidationBonus: new Dec(marketData.liquidationBonus).div(10000).toString(),
       isInactive: !marketData.isActive,
       isFrozen: marketData.isFrozen,
       isPaused: marketData.isPaused,
