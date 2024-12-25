@@ -55,6 +55,7 @@ export const getWstETHPrice = async (web3: Web3) => {
 
 // chainlink price feed available only on mainnet
 export const getChainlinkAssetAddress = (symbol: string, network: NetworkNumber) => {
+  // Chainlink only has BTC/USD feed so we use that for BTC derivatives
   if (['WBTC', 'RENBTC'].includes(symbol?.toUpperCase())) return '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB';
   if (symbol?.toUpperCase() === 'WETH') return getAssetInfo('ETH').addresses[network];
   return getAssetInfo(symbol).addresses[network];
