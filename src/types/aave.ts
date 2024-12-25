@@ -105,6 +105,7 @@ export interface AaveV3AssetData extends AaveAssetData {
   isPaused: boolean,
   isFlashLoanEnabled: boolean,
   assetId: string | null,
+  liquidationBonus: string,
   supplyIncentives?: IncentiveData[];
   borrowIncentives?: IncentiveData[];
 }
