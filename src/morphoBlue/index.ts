@@ -11,7 +11,9 @@ import {
 import { USD_QUOTE, WAD } from '../constants';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { wethToEth } from '../services/utils';
-import { getBorrowRate, getMorphoBlueAggregatedPositionData, getSupplyRate } from '../helpers/morphoBlueHelpers';
+import {
+  getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
+} from '../helpers/morphoBlueHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
 
 const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
@@ -54,6 +56,16 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     loanTokenPrice = loanTokenPriceRound.answer;
   }
 
+  let morphoSupplyApy = '0';
+  let morphoBorrowApy = '0';
+  try {
+    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
+    morphoSupplyApy = _morphoSupplyApy;
+    morphoBorrowApy = _morphoBorrowApy;
+  } catch (e) {
+    console.error(e);
+  }
+
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
   const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate, marketInfo.totalBorrowShares);
   const utillization = new Dec(marketInfo.totalBorrowAssets).div(marketInfo.totalSupplyAssets).mul(100).toString();
@@ -75,6 +87,10 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
     canBeSupplied: true,
     canBeBorrowed: true,
+    incentiveSupplyApy: morphoSupplyApy,
+    incentiveBorrowApy: morphoBorrowApy,
+    incentiveSupplyToken: 'MORPHO',
+    incentiveBorrowToken: 'MORPHO',
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {

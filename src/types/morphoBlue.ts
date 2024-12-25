@@ -95,6 +95,8 @@ export interface MorphoBlueAssetData {
   borrowRate: string,
   incentiveSupplyApy?: string,
   incentiveSupplyToken?: string,
+  incentiveBorrowApy?: string,
+  incentiveBorrowToken?: string,
   totalSupply?: string,
   totalBorrow?: string,
   canBeSupplied?: boolean,
