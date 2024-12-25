@@ -247,6 +247,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         borrowRateDiscounted: aprToApy(nativeAsset ? new Dec(tokenMarket.borrowRateVariable.toString()).div(1e25).mul(1 - parseFloat(discountRateOnBorrow)).toString() : '0'),
         borrowRateStable: aprToApy(new Dec(tokenMarket.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(tokenMarket.collateralFactor.toString()).div(10000).toString(),
+        liquidationBonus: new Dec(tokenMarket.liquidationBonus.toString()).div(10000).toString(),
         liquidationRatio: new Dec(tokenMarket.liquidationRatio.toString()).div(10000).toString(),
         marketLiquidity,
         utilization: new Dec(tokenMarket.totalBorrow.toString()).times(100).div(new Dec(tokenMarket.totalSupply.toString())).toString(),
