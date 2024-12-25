@@ -54,7 +54,7 @@ export const AAVE_V2: AaveMarketInfo = {
 
 export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base],
-  label: 'Aave v3',
+  label: networkId === 1 ? 'Aave v3 Core' : 'Aave v3',
   shortLabel: 'v3',
   value: AaveVersions.AaveV3,
   url: 'default',
@@ -71,7 +71,7 @@ export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
 
 export const AAVE_V3_LIDO = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Aave v3 Lido',
+  label: 'Aave v3 Prime',
   shortLabel: 'v3',
   value: AaveVersions.AaveV3Lido,
   url: 'lido',
