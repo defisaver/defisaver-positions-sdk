@@ -22,6 +22,8 @@ export enum MorphoBlueVersions {
   MorphoBlueCbBTCUSDC_860 = 'morphobluecbbtcusdc', // cbBTC/USDC
   MorphoBlueSUSDeUSDC_915 = 'morphobluesusdeusdc_915', // sUSDe/USDC
   MorphoBlueLBTCWBTC_945 = 'morphobluelbtcwbtc_945', // LBTC/WBTC
+  MorphoBlueUSRUSDC_915 = 'morphoblueusrusdc_915', // USR/USDC
+  MorphoBlueRLPUSDC_860 = 'morphobluerlpusdc_860', // RLP/USDC
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
