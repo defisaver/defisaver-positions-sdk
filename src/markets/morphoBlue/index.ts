@@ -522,7 +522,23 @@ export const MORPHO_BLUE_RETH_ETH_945 = (networkId: NetworkNumber = NetworkNumbe
   protocolName: 'morpho-blue',
 });
 
-// BASE
+export const MORPHO_BLUE_USR_USDC_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho',
+  shortLabel: 'USR/USDC',
+  value: MorphoBlueVersions.MorphoBlueUSRUSDC_915,
+  url: 'usrusdc-8e7cc042',
+  loanToken: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+  collateralToken: '0x66a1E37c9b0eAddca17d3662D6c05F4DECf3e110',
+  oracle: '0x8875ceb24E656FCA062759BDCF870F59A2B0187b',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.915,
+  marketId: '0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77',
+  protocolName: 'morpho-blue',
+});
+
+// ###### BASE ########
 
 export const MORPHO_BLUE_CBETH_USDC_860_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
@@ -825,6 +841,7 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueREthEth_945]: MORPHO_BLUE_RETH_ETH_945(networkId),
   [MorphoBlueVersions.MorphoBlueSUSDeUSDC_915]: MORPHO_BLUE_SUSDE_USDC_915(networkId),
   [MorphoBlueVersions.MorphoBlueLBTCWBTC_945]: MORPHO_BLUE_LBTC_WBTC_945(networkId),
+  [MorphoBlueVersions.MorphoBlueUSRUSDC_915]: MORPHO_BLUE_USR_USDC_915(networkId),
 
   // wstETH/WETH
   [MorphoBlueVersions.MorphoBlueWstEthEth_945]: MORPHO_BLUE_WSTETH_ETH_945(networkId),
