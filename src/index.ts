@@ -21,6 +21,7 @@ import * as chickenBonds from './chickenBonds';
 import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
 import * as llamaLend from './llamaLend';
+import * as eulerV2 from './eulerV2';
 
 export * from './types';
 
@@ -45,4 +46,5 @@ export {
   helpers,
   morphoBlue,
   llamaLend,
+  eulerV2,
 };

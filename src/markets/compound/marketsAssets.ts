@@ -7,7 +7,7 @@ export const compoundV2CollateralAssets = [
 ].map((symbol) => getAssetInfo(symbol));
 
 export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC'];
-export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH'];
+export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH', 'wUSDM'];
 export const v3USDCCollAssetsBase = ['ETH', 'cbETH', 'wstETH', 'cbBTC'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
 
@@ -29,7 +29,7 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Base]: [],
 } as const;
 
-export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC'];
+export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC', 'ETHx'];
 export const v3ETHCollAssetsBase = ['cbETH', 'ezETH', 'wstETH', 'USDC', 'weETH', 'wrsETH', 'cbBTC'];
 export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC', 'rsETH', 'ezETH', 'USDC', 'USDT'];
 export const v3ETHCollAssetsOpt = ['rETH', 'wstETH', 'WBTC', 'ezETH', 'USDC', 'USDT', 'weETH', 'wrsETH'];
@@ -52,7 +52,7 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
 };
 
-export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC'];
+export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH'];
 export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
@@ -61,5 +61,23 @@ export const v3USDTCollAssets = {
   [NetworkNumber.Eth]: v3USDTCollAssetsEth,
   [NetworkNumber.Opt]: v3USDTCollAssetsOpt,
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
+  [NetworkNumber.Base]: [],
+};
+
+export const v3USDSCollAssetsEth = ['wstETH', 'ETH', 'sUSDS', 'cbETH', 'tBTC', 'USDe'];
+
+export const v3USDSCollAssets = {
+  [NetworkNumber.Eth]: v3USDSCollAssetsEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [],
+};
+
+export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
+
+export const v3wstETHCollAssets = {
+  [NetworkNumber.Eth]: v3wstETHCollAssetsEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
 };

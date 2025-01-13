@@ -21,3 +21,4 @@ export { CrvUsdMarkets } from './curveUsd';
 export { MorphoBlueMarkets, findMorphoBlueMarket } from './morphoBlue';
 export { LlamaLendMarkets } from './llamaLend';
 export { LiquityV2Markets } from './liquityV2';
+export { EulerV2Markets } from './euler';

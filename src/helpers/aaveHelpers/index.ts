@@ -125,7 +125,11 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData, isMorphoAave({ selectedMarket }));
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
+    usedAssets,
+    assetsData,
+    isMorpho: isMorphoAave({ selectedMarket }),
+  });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;

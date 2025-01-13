@@ -7,3 +7,4 @@ export * as chickenBondsHelpers from './chickenBondsHelpers';
 export * as morphoBlueHelpers from './morphoBlueHelpers';
 export * as llamaLendHelpers from './llamaLendHelpers';
 export * as liquityV2Helpers from './liquityV2Helpers';
+export * as eulerV2Helpers from './eulerHelpers';

@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import {
   LlamaLendAggregatedPositionData, LlamaLendAssetsData, LlamaLendMarketData, LlamaLendUsedAssets,
 } from '../../types';
-import { MMUsedAssets, NetworkNumber } from '../../types/common';
+import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { mapRange } from '../../services/utils';
 import { calculateNetApy } from '../../staking';
@@ -22,7 +22,7 @@ export const getLlamaLendAggregatedData = ({
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   payload.suppliedForYieldUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedForYield }: { suppliedForYield?: string }) => suppliedForYield || '0');
 
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy(usedAssets, assetsData as any);
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;

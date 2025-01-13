@@ -23,12 +23,25 @@ import {
 import {
   COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC, COMPOUND_V3_USDCe, COMPOUND_V3_USDT,
 } from '../markets/compound';
-import { getEthPrice, getCompPrice, getUSDCPrice } from '../services/priceService';
+import {
+  getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
+} from '../services/priceService';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
 
+const getBaseAssetPriceFunction = (asset: string) => {
+  switch (asset) {
+    case 'wstETH':
+      return getWstETHPrice;
+    case 'ETH':
+      return getEthPrice;
+    default:
+      return getUSDCPrice;
+  }
+};
+
 export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
-  const baseAssetPrice = selectedMarket.baseAsset === 'ETH' ? await getEthPrice(defaultWeb3) : await getUSDCPrice(defaultWeb3);
+  const baseAssetPrice = await getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultWeb3);
   const compPrice = await getCompPrice(defaultWeb3);
   const contract = CompV3ViewContract(web3, network);
   const CompV3ViewAddress = contract.options.address;
@@ -42,6 +55,7 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       target: CompV3ViewAddress,
       abiItem: contract.options.jsonInterface.find((props) => props.name === 'getFullCollInfos'),
       params: [selectedMarket.baseMarketAddress],
+      gasLimit: 3000000,
     },
   ];
   const data = await multicall(calls, web3, network);
@@ -220,15 +234,11 @@ export const getCompoundV3AccountData = async (
   if (loanData.borrowAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isBorrowed = true;
     usedAssets[baseAssetSymbol].borrowed = assetAmountInEth(loanData.borrowAmount, baseAssetInfo.symbol);
-    if (selectedMarket.value === COMPOUND_V3_ETH(network).value) {
-      usedAssets[baseAssetSymbol].borrowedUsd = new Dec(
-        assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol),
-      )
-        .mul(assetsData[baseAssetSymbol].price)
-        .toString();
-    } else {
-      usedAssets[baseAssetSymbol].borrowedUsd = assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol);
-    }
+    usedAssets[baseAssetSymbol].borrowedUsd = new Dec(
+      assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol),
+    )
+      .mul(assetsData[baseAssetSymbol].price)
+      .toString();
   }
   const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
 
