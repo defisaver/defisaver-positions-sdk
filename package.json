@@ -23,7 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.5.53",
+    "@defisaver/tokens": "^1.5.52-dev-1",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "decimal.js": "^10.4.3"
