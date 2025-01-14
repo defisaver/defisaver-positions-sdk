@@ -3,6 +3,7 @@ import { EthAddress, NetworkNumber } from './common';
 export enum LiquityV2Versions {
   LiquityV2Eth = 'liquityv2eth',
   LiquityV2WstEth = 'liquityv2wsteth',
+  LiquityV2REth = 'liquityv2reth',
 }
 
 export enum LIQUITY_V2_TROVE_STATUS_ENUM {
