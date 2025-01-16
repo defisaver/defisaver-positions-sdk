@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import { LiquityV2ViewContract } from '../contracts';
+import { createContractWrapper, LiquityV2ViewContract } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
 import {
   InnerLiquityV2MarketData,
@@ -156,4 +156,10 @@ export const getLiquityV2TroveData = async (
   };
 
   return payload;
+};
+
+export const getLiquityV2ClaimableCollateral = async (collSurplusPoolAddress: EthAddress, account: EthAddress, web3: Web3, network: NetworkNumber): Promise<string> => {
+  const collSurplusPoolContract = createContractWrapper(web3, network, 'LiquityV2CollSurplusPool', collSurplusPoolAddress);
+  const claimableCollateral = await collSurplusPoolContract.methods.getCollateral(account).call();
+  return claimableCollateral;
 };

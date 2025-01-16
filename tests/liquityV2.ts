@@ -69,4 +69,13 @@ describe('Liquity V2', () => {
     const marketData = await fetchMarketData(web3, network, market);
     await fetchTroveData(web3, network, market, marketData, '71810214906374185731654292089929598901308110473187727225692166795279417034813');
   });
+
+  it('can fetch claimable coll on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
+
+    const marketData = await fetchMarketData(web3, network, market);
+    const claimableCollateral = await sdk.liquityV2.getLiquityV2ClaimableCollateral(marketData.marketData.collSurplusPoolAddress, '0x9768F31bd299fA1cA98EDd7Aa15Fc84d94C33f7C', web3, network);
+  });
 });
