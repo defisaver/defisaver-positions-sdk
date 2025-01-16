@@ -2,7 +2,7 @@ name: Update markets
 on:
   workflow_dispatch:
   schedule:
-    - cron: 0 12 * * *
+    - cron: 0 9 * * *
 jobs:
   update-markets:
     runs-on: ubuntu-latest
