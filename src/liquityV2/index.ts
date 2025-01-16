@@ -24,6 +24,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   const troveManagerAddress = data.troveManager;
   const stabilityPoolAddress = data.stabilityPool;
   const collSurplusPoolAddress = data.collSurplusPool;
+  const activePoolAddress = data.activePool;
   const assetsData: LiquityV2AssetsData = {};
   assetsData[debtToken] = {
     symbol: debtToken,
@@ -59,6 +60,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
       troveManagerAddress,
       stabilityPoolAddress,
       collSurplusPoolAddress,
+      activePoolAddress,
     },
   };
 };

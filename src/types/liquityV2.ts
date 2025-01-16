@@ -56,6 +56,7 @@ export interface InnerLiquityV2MarketData {
   troveManagerAddress: EthAddress,
   stabilityPoolAddress: EthAddress,
   collSurplusPoolAddress: EthAddress,
+  activePoolAddress: EthAddress,
 }
 
 export interface LiquityV2MarketData {
