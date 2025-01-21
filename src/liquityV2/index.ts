@@ -89,7 +89,15 @@ const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFT
     },
   );
   const userTransferredTroves = events.filter((event) => !compareAddresses(event.returnValues.from, ZERO_ADDRESS) && compareAddresses(event.returnValues.to, account));
-  return userTransferredTroves.map((event) => ({ troveId: event.returnValues.tokenId }));
+
+  // check if the last know transfer address is the user
+  userTransferredTroves.forEach((event, index) => {
+    const otherTransfers = events.filter((e) => event.blockNumber < e.blockNumber && e.returnValues.tokenId === event.returnValues.tokenId);
+    // @ts-ignore
+    userTransferredTroves[index].invalid = !!otherTransfers.length;
+  });
+  // @ts-ignore
+  return userTransferredTroves.filter((event) => !event.invalid).map((event) => ({ troveId: event.returnValues.tokenId }));
 };
 
 export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
