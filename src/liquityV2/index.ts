@@ -26,35 +26,55 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
   const stabilityPoolAddress = data.stabilityPool;
   const collSurplusPoolAddress = data.collSurplusPool;
   const activePoolAddress = data.activePool;
+
+  const minCollRatio = new Dec(data.MCR).div(1e16).toString();
+  const criticalCollRatio = new Dec(data.CCR).div(1e18).toString();
+
+  const totalMarketBorrow = assetAmountInEth(data.entireSystemDebt);
+  const totalMarketSupply = assetAmountInEth(data.entireSystemColl);
+  const collPrice = assetAmountInEth(data.collPrice);
+
+  const totalCollRatio = new Dec(totalMarketSupply).mul(collPrice).div(totalMarketBorrow).toString();
+  const leftToBorrowGlobal = new Dec(totalMarketSupply).mul(collPrice).div(criticalCollRatio).sub(totalMarketBorrow)
+    .toString();
+  const minCollAmountForCurrentBorrow = new Dec(totalMarketBorrow).mul(criticalCollRatio).div(collPrice).toString();
+  const leftToWithdrawGlobal = new Dec(totalMarketSupply).sub(minCollAmountForCurrentBorrow).toString();
+
   const assetsData: LiquityV2AssetsData = {};
   assetsData[debtToken] = {
     symbol: debtToken,
     address: getAssetInfo(debtToken, network).address,
     price: '1',
     totalSupply: '0',
-    totalBorrow: assetAmountInEth(data.entireSystemDebt),
+    totalBorrow: totalMarketBorrow,
     canBeSupplied: false,
     canBeBorrowed: true,
+    leftToBorrowGlobal,
+    leftToWithdrawGlobal: '0',
   };
   assetsData[collateralToken] = {
     symbol: collateralToken,
     address: getAssetInfo(ethToWeth(collateralToken), network).address,
-    price: assetAmountInEth(data.collPrice),
-    totalSupply: assetAmountInEth(data.entireSystemColl),
+    price: collPrice,
+    totalSupply: totalMarketSupply,
     totalBorrow: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
+    leftToBorrowGlobal: '0',
+    leftToWithdrawGlobal,
   };
   if (STAKING_ASSETS.includes(collateralToken)) {
     assetsData[collateralToken].incentiveSupplyApy = await getStakingApy(collateralToken, mainnetWeb3);
     assetsData[collateralToken].incentiveSupplyToken = collateralToken;
   }
 
-  const minCollRatio = new Dec(data.MCR).div(1e16).toString();
   return {
     assetsData,
     marketData: {
       minCollRatio,
+      totalCollRatio: new Dec(totalCollRatio).mul(100).toString(),
+      criticalCollRatio: new Dec(criticalCollRatio).mul(100).toString(),
+      isUnderCollateralized: new Dec(totalCollRatio).lt(criticalCollRatio),
       hintHelperAddress,
       troveNFTAddress,
       borrowerOperationsAddress,

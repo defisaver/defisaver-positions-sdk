@@ -44,12 +44,17 @@ export interface LiquityV2AssetData {
   totalBorrow: string,
   canBeSupplied: boolean,
   canBeBorrowed: boolean,
+  leftToBorrowGlobal: string,
+  leftToWithdrawGlobal: string,
 }
 
 export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
 
 export interface InnerLiquityV2MarketData {
   minCollRatio: string,
+  totalCollRatio: string,
+  criticalCollRatio: string,
+  isUnderCollateralized: boolean,
   hintHelperAddress: EthAddress,
   troveNFTAddress: EthAddress,
   borrowerOperationsAddress: EthAddress,
