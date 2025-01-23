@@ -21,7 +21,7 @@ describe('Liquity V2', () => {
   };
 
   const fetchUserTroves = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData) => {
-    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, '0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF');
+    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, true, '0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF');
     // console.log(troves);
     // console.log(nextFreeTroveIndex);
   };

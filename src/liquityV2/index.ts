@@ -10,7 +10,7 @@ import {
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
-import { compareAddresses, ethToWeth } from '../services/utils';
+import { addToObjectIf, compareAddresses, ethToWeth } from '../services/utils';
 import { LiquityV2View } from '../types/contracts/generated';
 import { ZERO_ADDRESS } from '../constants';
 
@@ -99,13 +99,14 @@ const getUserTroves = async (viewContract: any, account: EthAddress, marketAddre
 
 const TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, account: EthAddress): Promise<{ troveId: string }[]> => {
+const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troveId: string }[]> => {
   const nftContract = createContractWrapper(web3, network, 'LiquityV2TroveNFT', troveNFTAddress);
   const currentBlock = await web3.eth.getBlockNumber();
   const events = await nftContract.getPastEvents(
     TransferEventSig,
     {
-      fromBlock: currentBlock - 1000,
+      filter: { to: account },
+      ...addToObjectIf(limitBlocksForEventFetching, { fromBlock: currentBlock - 1000 }),
     },
   );
   const userTransferredTroves = events.filter((event) => !compareAddresses(event.returnValues.from, ZERO_ADDRESS) && compareAddresses(event.returnValues.to, account));
@@ -120,11 +121,11 @@ const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFT
   return userTransferredTroves.filter((event) => !event.invalid).map((event) => ({ troveId: event.returnValues.tokenId }));
 };
 
-export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
+export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
   const viewContract = LiquityV2ViewContract(web3, network);
   const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
     getUserTroves(viewContract, account, selectedMarket.marketAddress),
-    getTransferredTroves(web3, network, troveNFTAddress, account),
+    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, account),
   ]);
   const troves = [...userTroves.map(({ troveId }) => ({ troveId })), ...userTransferredTroves];
   const filteredTroves = troves.filter((value, index, self) => index === self.findIndex((t) => (
