@@ -99,14 +99,22 @@ const getUserTroves = async (viewContract: any, account: EthAddress, marketAddre
 
 const TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troveId: string }[]> => {
+const nftContractCreationBlockMapping = {
+  ETH: 21686215,
+  wstETH: 21686238,
+  rETH: 21686257,
+};
+
+const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, collAsset: string, account: EthAddress): Promise<{ troveId: string }[]> => {
   const nftContract = createContractWrapper(web3, network, 'LiquityV2TroveNFT', troveNFTAddress);
+  // @ts-ignore
+  const nftContractCreationBlock = nftContractCreationBlockMapping[collAsset];
   const currentBlock = await web3.eth.getBlockNumber();
   const events = await nftContract.getPastEvents(
     TransferEventSig,
     {
       filter: { to: account },
-      ...addToObjectIf(limitBlocksForEventFetching, { fromBlock: currentBlock - 1000 }),
+      fromBlock: limitBlocksForEventFetching ? (currentBlock - 1000) : nftContractCreationBlock,
     },
   );
   const userTransferredTroves = events.filter((event) => !compareAddresses(event.returnValues.from, ZERO_ADDRESS) && compareAddresses(event.returnValues.to, account));
@@ -125,7 +133,7 @@ export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumbe
   const viewContract = LiquityV2ViewContract(web3, network);
   const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
     getUserTroves(viewContract, account, selectedMarket.marketAddress),
-    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, account),
+    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.collateralToken, account),
   ]);
   const troves = [...userTroves.map(({ troveId }) => ({ troveId })), ...userTransferredTroves];
   const filteredTroves = troves.filter((value, index, self) => index === self.findIndex((t) => (
