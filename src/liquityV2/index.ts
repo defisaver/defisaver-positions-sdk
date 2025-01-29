@@ -147,7 +147,7 @@ export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumbe
 
 const _getDebtInFrontForSingleMarket = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
 
-export const getDebtInFrontForSingleMarketLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000): Promise<string> => { // getDebtInFrontForSingleMarket
+export const getDebtInFrontForSingleMarketLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
   const { debt, next } = await _getDebtInFrontForSingleMarket(viewContract, marketAddress, troveId, accumulatedSum, iterations);
   if (next === '0') return assetAmountInEth(debt);
   return getDebtInFrontForSingleMarketLiquityV2(viewContract, marketAddress, next, debt, iterations);
