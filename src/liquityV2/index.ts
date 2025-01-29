@@ -205,20 +205,18 @@ export const getLiquityV2TroveData = async (
   {
     selectedMarket,
     assetsData,
-    marketData,
     troveId,
     allMarketsData,
   }:
   {
     selectedMarket: LiquityV2MarketInfo,
     assetsData: LiquityV2AssetsData,
-    marketData: InnerLiquityV2MarketData,
     troveId: string,
     allMarketsData: Record<LiquityV2Versions, LiquityV2MarketData>,
   },
 ): Promise<LiquityV2TroveData> => {
   const viewContract = LiquityV2ViewContract(web3, network);
-  const { minCollRatio } = marketData;
+  const { minCollRatio } = allMarketsData[selectedMarket.value].marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
   const [data, debtInFront] = await Promise.all([
     viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
