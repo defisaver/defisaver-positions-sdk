@@ -190,7 +190,7 @@ export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions,
   return res.toString();
 };
 
-export const getDebtInFrontLiquityV2ForInterestRate = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
+export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
   const sumOfAllMarketsUnbackedDebt = new Dec(await getAllMarketsUnbackedDebtSum(markets, web3, network));
   const selectedMarketUnbackedDebt = new Dec(await getUnbackedDebtForSingleMarket(markets[selectedMarket].assetsData.BOLD.totalBorrow, web3, network, markets[selectedMarket].marketData.stabilityPoolAddress));
   const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
