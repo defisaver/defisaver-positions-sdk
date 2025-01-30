@@ -169,7 +169,7 @@ const getUnbackedDebtForSingleMarket = async (totalBorrowed: string, web3: Web3,
   const totalBoldDeposits = await stabilityPoolContract.methods.getTotalBoldDeposits().call();
   const totalBoldDepositsInEth = assetAmountInEth(totalBoldDeposits);
 
-  return new Dec(totalBorrowed).sub(totalBoldDepositsInEth).toString();
+  return Dec.max(new Dec(totalBorrowed).sub(totalBoldDepositsInEth), 0).toString();
 };
 
 const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, web3: Web3, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
