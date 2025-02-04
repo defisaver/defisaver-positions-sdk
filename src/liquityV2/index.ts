@@ -185,23 +185,37 @@ const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, Liq
 export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, troveId: string) => {
   const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
 
-  const sumOfAllMarketsUnbackedDebt = new Dec(Object.values(allMarketsUnbackedDebts).reduce((acc, debt) => acc.plus(debt), new Dec(0)));
   const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
+  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
   const interestRateDebtInFront = new Dec(await getDebtInFrontForSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, troveId));
 
-  const res = interestRateDebtInFront.div((selectedMarketUnbackedDebt.div(sumOfAllMarketsUnbackedDebt)));
-  return res.toString();
+  const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
+    if (version === selectedMarket) return interestRateDebtInFront;
+    const { assetsData } = market;
+    const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
+    const totalBorrow = new Dec(assetsData.BOLD.totalBorrow);
+    return Dec.min(interestRateDebtInFront.mul(unbackedDebt).div(selectedMarketUnbackedDebt), totalBorrow);
+  });
+
+  return amountBeingReedemedOnEachMarket.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
 export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
   const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
 
-  const sumOfAllMarketsUnbackedDebt = new Dec(Object.values(allMarketsUnbackedDebts).reduce((acc, debt) => acc.plus(debt), new Dec(0)));
   const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
+  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
   const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
 
-  const res = interestRateDebtInFront.div((selectedMarketUnbackedDebt.div(sumOfAllMarketsUnbackedDebt)));
-  return res.toString();
+  const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
+    if (version === selectedMarket) return interestRateDebtInFront;
+    const { assetsData } = market;
+    const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
+    const totalBorrow = new Dec(assetsData.BOLD.totalBorrow);
+    return Dec.min(interestRateDebtInFront.mul(unbackedDebt).div(selectedMarketUnbackedDebt), totalBorrow);
+  });
+
+  return amountBeingReedemedOnEachMarket.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
 export const getLiquityV2TroveData = async (
