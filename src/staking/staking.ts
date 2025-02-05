@@ -104,36 +104,35 @@ const getSuperOETHApy = async () => {
 
 const getApyFromDfsApi = async (asset: string) => {
   const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`);
-  if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
   const data = await res.json();
   // if our server returns apr, transform it into apy
   if (['weETH'].includes(asset)) {
     return aprToApy(data.apy);
   }
-  return String(data.apy);
+  return data.apy;
 };
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS'];
 
-export const getStakingApy = async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
-    if (asset === 'stETH' || asset === 'wstETH') return await getStETHApy(web3, fromBlock, blockNumber);
-    if (asset === 'cbETH') return await getCbETHApy(web3, blockNumber);
-    if (asset === 'rETH') return await getREthApy(web3, blockNumber);
-    if (asset === 'sDAI') return await getDsrApy(web3);
-    if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
-    if (asset === 'weETH') return await getApyFromDfsApi('weETH');
-    if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
-    if (asset === 'osETH') return await getApyFromDfsApi('osETH');
-    if (asset === 'ETHx') return await getApyFromDfsApi('ETHx');
-    if (asset === 'rsETH' || asset === 'wrsETH') return await getApyFromDfsApi('rsETH');
-    if (asset === 'pufETH') return await getApyFromDfsApi('pufETH');
-    if (asset === 'wsuperOETHb') return await getSuperOETHApy();
-    if (asset === 'sUSDS') return await getSsrApy();
+    if (asset === 'stETH' || asset === 'wstETH') return getStETHApy(web3, fromBlock, blockNumber);
+    if (asset === 'cbETH') return getCbETHApy(web3, blockNumber);
+    if (asset === 'rETH') return getREthApy(web3, blockNumber);
+    if (asset === 'sDAI') return getDsrApy(web3);
+    if (asset === 'sUSDe') return getApyFromDfsApi('sUSDe');
+    if (asset === 'weETH') return getApyFromDfsApi('weETH');
+    if (asset === 'ezETH') return getApyFromDfsApi('ezETH');
+    if (asset === 'osETH') return getApyFromDfsApi('osETH');
+    if (asset === 'ETHx') return getApyFromDfsApi('ETHx');
+    if (asset === 'rsETH' || asset === 'wrsETH') return getApyFromDfsApi('rsETH');
+    if (asset === 'pufETH') return getApyFromDfsApi('pufETH');
+    if (asset === 'wsuperOETHb') return getSuperOETHApy();
+    if (asset === 'sUSDS') return getSsrApy();
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
+    return '0';
   }
-  return '0';
 };
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {
