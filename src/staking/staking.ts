@@ -9,8 +9,7 @@ import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants
 import { multicall } from '../multicall';
 import { aprToApy } from '../moneymarket';
 
-
-export const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
+const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
   try {
     const tokenRebasedEvents: ContractEventLog<{ [key: string]: any }>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
     tokenRebasedEvents.sort((a, b) => b.blockNumber - a.blockNumber); // sort from highest to lowest block number
@@ -31,7 +30,7 @@ export const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber:
   }
 };
 
-export const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   let currentBlock = blockNumber;
   if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
   const blockDiff = 6 * 24 * 60 * 60 / AVG_BLOCK_TIME;
@@ -49,7 +48,7 @@ export const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = '
 };
 
 
-export const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   let currentBlock = blockNumber;
   if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
   const blockDiff = 8 * 24 * 60 * 60 / AVG_BLOCK_TIME;
@@ -67,7 +66,7 @@ export const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'l
   return aprToApy(apr);
 };
 
-export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   const potContract = PotContract(web3, NetworkNumber.Eth);
   return new Dec(await potContract.methods.dsr().call())
     .div(new Dec(1e27))
@@ -77,7 +76,7 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
     .toString();
 };
 
-export const getSsrApy = async () => {
+const getSsrApy = async () => {
   const res = await fetch('https://fe.defisaver.com/api/sky/data');
   const data = await res.json();
   return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
