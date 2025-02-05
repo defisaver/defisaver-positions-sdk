@@ -9,8 +9,7 @@ import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants
 import { multicall } from '../multicall';
 import { aprToApy } from '../moneymarket';
 
-
-export const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
+const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
   try {
     const tokenRebasedEvents: ContractEventLog<{ [key: string]: any }>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
     tokenRebasedEvents.sort((a, b) => b.blockNumber - a.blockNumber); // sort from highest to lowest block number
@@ -31,7 +30,7 @@ export const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber:
   }
 };
 
-export const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   let currentBlock = blockNumber;
   if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
   const blockDiff = 6 * 24 * 60 * 60 / AVG_BLOCK_TIME;
@@ -49,7 +48,7 @@ export const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = '
 };
 
 
-export const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   let currentBlock = blockNumber;
   if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
   const blockDiff = 8 * 24 * 60 * 60 / AVG_BLOCK_TIME;
@@ -67,7 +66,7 @@ export const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'l
   return aprToApy(apr);
 };
 
-export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
+const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
   const potContract = PotContract(web3, NetworkNumber.Eth);
   return new Dec(await potContract.methods.dsr().call())
     .div(new Dec(1e27))
@@ -77,7 +76,7 @@ export const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'la
     .toString();
 };
 
-export const getSsrApy = async () => {
+const getSsrApy = async () => {
   const res = await fetch('https://fe.defisaver.com/api/sky/data');
   const data = await res.json();
   return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
@@ -104,35 +103,36 @@ const getSuperOETHApy = async () => {
 
 const getApyFromDfsApi = async (asset: string) => {
   const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`);
+  if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
   const data = await res.json();
   // if our server returns apr, transform it into apy
   if (['weETH'].includes(asset)) {
     return aprToApy(data.apy);
   }
-  return data.apy;
+  return String(data.apy);
 };
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS'];
 
-export const getStakingApy = (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
-    if (asset === 'stETH' || asset === 'wstETH') return getStETHApy(web3, fromBlock, blockNumber);
-    if (asset === 'cbETH') return getCbETHApy(web3, blockNumber);
-    if (asset === 'rETH') return getREthApy(web3, blockNumber);
-    if (asset === 'sDAI') return getDsrApy(web3);
-    if (asset === 'sUSDe') return getApyFromDfsApi('sUSDe');
-    if (asset === 'weETH') return getApyFromDfsApi('weETH');
-    if (asset === 'ezETH') return getApyFromDfsApi('ezETH');
-    if (asset === 'osETH') return getApyFromDfsApi('osETH');
-    if (asset === 'ETHx') return getApyFromDfsApi('ETHx');
-    if (asset === 'rsETH' || asset === 'wrsETH') return getApyFromDfsApi('rsETH');
-    if (asset === 'pufETH') return getApyFromDfsApi('pufETH');
-    if (asset === 'wsuperOETHb') return getSuperOETHApy();
-    if (asset === 'sUSDS') return getSsrApy();
+    if (asset === 'stETH' || asset === 'wstETH') return await getStETHApy(web3, fromBlock, blockNumber);
+    if (asset === 'cbETH') return await getCbETHApy(web3, blockNumber);
+    if (asset === 'rETH') return await getREthApy(web3, blockNumber);
+    if (asset === 'sDAI') return await getDsrApy(web3);
+    if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
+    if (asset === 'weETH') return await getApyFromDfsApi('weETH');
+    if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
+    if (asset === 'osETH') return await getApyFromDfsApi('osETH');
+    if (asset === 'ETHx') return await getApyFromDfsApi('ETHx');
+    if (asset === 'rsETH' || asset === 'wrsETH') return await getApyFromDfsApi('rsETH');
+    if (asset === 'pufETH') return await getApyFromDfsApi('pufETH');
+    if (asset === 'wsuperOETHb') return await getSuperOETHApy();
+    if (asset === 'sUSDS') return await getSsrApy();
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
-    return '0';
   }
+  return '0';
 };
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {

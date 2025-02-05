@@ -25,7 +25,6 @@ import {
   EModeCategoryData,
   MorphoAaveV3AssetData, MorphoAaveV3AssetsData, MorphoAaveV3MarketData, MorphoAaveV3MarketInfo, MorphoAaveV3PositionData,
 } from '../types';
-import { getDsrApy } from '../services/dsrService';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
@@ -327,7 +326,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
       data.incentiveSupplyToken = data.symbol;
     }
     if (data.symbol === 'sDAI') {
-      data.incentiveSupplyApy = await getDsrApy(web3, network);
+      data.incentiveSupplyApy = await getStakingApy('sDAI', mainnetWeb3);
       data.incentiveSupplyToken = 'sDAI';
     }
 

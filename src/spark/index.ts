@@ -10,7 +10,6 @@ import {
 import {
   calculateNetApy, getStakingApy, STAKING_ASSETS,
 } from '../staking';
-import { getDsrApy } from '../services/dsrService';
 import {
   SparkIncentiveDataProviderContract,
   SparkViewContract,
@@ -162,7 +161,7 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     }
 
     if (market.symbol === 'sDAI') {
-      market.incentiveSupplyApy = await getDsrApy(web3, network);
+      market.incentiveSupplyApy = await getStakingApy('sDAI', mainnetWeb3);
       market.incentiveSupplyToken = 'sDAI';
     }
 

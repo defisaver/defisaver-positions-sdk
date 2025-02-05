@@ -4,7 +4,7 @@ import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { calculateNetApy, getStETHApy } from '../staking';
+import { calculateNetApy, getStakingApy } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
 import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
@@ -60,7 +60,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
 
   const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStETHApy(mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 

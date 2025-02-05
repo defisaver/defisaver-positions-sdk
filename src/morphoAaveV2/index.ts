@@ -5,7 +5,7 @@ import { wethToEthByAddress } from '../services/utils';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { getStETHApy } from '../staking';
+import { getStakingApy } from '../staking';
 import { MorphoAaveV2ViewContract } from '../contracts';
 import {
   AavePositionData,
@@ -103,7 +103,7 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
 
   const stEthMarket = assetsData.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStETHApy(mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 
