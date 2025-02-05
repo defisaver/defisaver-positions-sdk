@@ -271,6 +271,7 @@ export const getLiquityV2TroveData = async (
   const collRatio = new Dec(data.TCRatio).div(1e16).toString();
   const interestRate = new Dec(data.annualInterestRate).div(1e16).toString();
   const interestBatchManager = data.interestBatchManager;
+  const lastInterestRateAdjTime = data.lastInterestRateAdjTime;
 
   const payload: LiquityV2TroveData = {
     usedAssets,
@@ -278,6 +279,7 @@ export const getLiquityV2TroveData = async (
     interestRate,
     interestBatchManager,
     debtInFront,
+    lastInterestRateAdjTime,
     troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
       usedAssets, assetsData, minCollRatio, interestRate,

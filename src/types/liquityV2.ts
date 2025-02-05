@@ -116,4 +116,5 @@ export interface LiquityV2TroveData {
   leveragedAsset: string,
   liquidationPrice: string,
   debtInFront: string,
+  lastInterestRateAdjTime: string,
 }
