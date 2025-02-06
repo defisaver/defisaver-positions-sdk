@@ -131,3 +131,4 @@ export const LlamaLendViewContract = createContractFromConfigFunc<ContractTypes.
 
 export const LiquityV2ViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2View>('LiquityV2View');
 export const EulerV2ViewContract = createContractFromConfigFunc<ContractTypes.EulerV2View>('EulerV2View');
+export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
