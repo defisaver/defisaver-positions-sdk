@@ -12,6 +12,10 @@ export interface FluidMarketInfo {
   hasSmartDebt: boolean
   collateralAsset: string
   debtAsset: string
+  ethBased?: boolean,
+  btcBased?: boolean,
+  wstETHBased?: boolean,
+  type: FluidVaultType
 }
 
 export enum FluidMainnetVersion {
@@ -169,6 +173,7 @@ export interface InnerFluidMarketData {
   isSmartDebt: boolean,
   marketAddress: string,
   vaultType: FluidVaultType,
+  vaultValue?: FluidVersions
   oracle: string,
   liquidationPenaltyPercent: string,
   collFactor: string,
@@ -190,6 +195,8 @@ export interface InnerFluidMarketData {
   maxBorrowLimit: string,
   baseBorrowLimit: string,
   minimumBorrowing: string,
+  supplyRate: string,
+  borrowRate: string,
 }
 
 export interface FluidMarketData {

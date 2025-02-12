@@ -16,6 +16,8 @@ import { FluidViewContract } from '../contracts';
 import { getEthAmountForDecimals } from '../services/utils';
 import { getFluidAggregatedData } from '../helpers/fluidHelpers';
 import { FluidView } from '../types/contracts/generated';
+import { chunkAndMulticall } from '../multicall';
+import { getFluidMarketInfoById, getFluidVersionsDataForNetwork } from '../markets/fluid';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -38,9 +40,12 @@ const parseVaultType = (vaultType: number) => {
   }
 };
 
-const parseMarketData = (data: FluidView.VaultDataStructOutputStruct) => {
+const parseMarketData = (data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0);
+
+  const supplyRate = new Dec(data.supplyRateVault).div(100).toString();
+  const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
 
   const collAssetData: FluidAssetData = {
     symbol: collAsset.symbol,
@@ -50,7 +55,7 @@ const parseMarketData = (data: FluidView.VaultDataStructOutputStruct) => {
     totalBorrow: data.totalBorrowVault,
     canBeSupplied: true,
     canBeBorrowed: false,
-    supplyRate: new Dec(data.supplyRateVault).div(100).toString(),
+    supplyRate,
     borrowRate: '0',
   };
 
@@ -63,16 +68,18 @@ const parseMarketData = (data: FluidView.VaultDataStructOutputStruct) => {
     canBeSupplied: false,
     canBeBorrowed: true,
     supplyRate: '0',
-    borrowRate: new Dec(data.borrowRateVault).div(100).toString(),
+    borrowRate,
   };
 
   const assetsData = {
     [collAsset.symbol]: collAssetData,
     [debtAsset.symbol]: debtAssetData,
   };
+  const marketInfo = getFluidMarketInfoById(+data.vaultId, network);
 
   const marketData = {
     vaultId: +data.vaultId,
+    vaultValue: marketInfo?.value,
     isSmartColl: data.isSmartColl,
     isSmartDebt: data.isSmartDebt,
     marketAddress: data.vault,
@@ -177,7 +184,7 @@ export const getFluidMarketData = async (web3: Web3, network: NetworkNumber, mar
 
   const data = await view.methods.getVaultData(market.marketAddress).call();
 
-  return parseMarketData(data);
+  return parseMarketData(data, network);
 };
 
 export const getFluidVaultIdsForUser = async (web3: Web3,
@@ -210,11 +217,28 @@ export const getFluidPosition = async (
 export const getFluidPositionWithMarket = async (web3: Web3, network: NetworkNumber, vaultId: string) => {
   const view = FluidViewContract(web3, network);
   const data = await view.methods.getPositionByNftId(vaultId).call();
-  const marketData = parseMarketData(data.vault);
+  const marketData = parseMarketData(data.vault, network);
   const userData = parseUserData(data.position, marketData);
 
   return {
     userData,
     marketData,
   };
+};
+
+export const getAllFluidMarketDataChunked = async (network: NetworkNumber, web3: Web3) => {
+  const versions = getFluidVersionsDataForNetwork(network);
+  const view = FluidViewContract(web3, network);
+
+  const calls = versions.map((version) => ({
+    target: view.options.address,
+    abiItem: view.options.jsonInterface.find((item) => item.name === 'getVaultData'),
+    params: [version.marketAddress],
+  }));
+
+  const data = await chunkAndMulticall(calls, 10, 'latest', web3, network);
+
+  console.log(data);
+
+  return data.map((item) => parseMarketData(item.vaultData, network));
 };
