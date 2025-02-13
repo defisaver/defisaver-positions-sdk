@@ -10,13 +10,11 @@ import {
 } from '../types';
 import { USD_QUOTE, WAD } from '../constants';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { wethToEth } from '../services/utils';
+import { isMainnetNetwork, wethToEth } from '../services/utils';
 import {
   getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
 } from '../helpers/morphoBlueHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
-
-const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
 
 export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
   const {

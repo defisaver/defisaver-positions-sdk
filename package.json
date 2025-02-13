@@ -24,7 +24,7 @@
   "license": "ISC",
   "dependencies": {
     "@types/lodash": "^4.17.15",
-    "@defisaver/tokens": "^1.5.54",
+    "@defisaver/tokens": "^1.5.55",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "decimal.js": "^10.4.3",
