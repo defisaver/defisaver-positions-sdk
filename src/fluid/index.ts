@@ -17,7 +17,7 @@ import { getEthAmountForDecimals, isMainnetNetwork } from '../services/utils';
 import { getFluidAggregatedData } from '../helpers/fluidHelpers';
 import { FluidView } from '../types/contracts/generated';
 import { chunkAndMulticall } from '../multicall';
-import { getFluidMarketInfoById, getFluidVersionsDataForNetwork } from '../markets/fluid';
+import { getFluidMarketInfoById, getFluidVersionsDataForNetwork } from '../markets';
 import { USD_QUOTE } from '../constants';
 import { getChainlinkAssetAddress, getWstETHPrice } from '../services/priceService';
 
@@ -128,7 +128,7 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
     totalSupplyVault,
     totalBorrowVault,
     totalSupplyVaultUsd: new Dec(totalSupplyVault).mul(collAssetData.price).toString(),
-    totalBorrowVaultUsd: new Dec(totalSupplyVault).mul(debtAssetData.price).toString(),
+    totalBorrowVaultUsd: new Dec(totalBorrowVault).mul(debtAssetData.price).toString(),
     withdrawalLimit: getEthAmountForDecimals(data.withdrawalLimit, collAsset.decimals),
     withdrawableUntilLimit: getEthAmountForDecimals(data.withdrawableUntilLimit, collAsset.decimals),
     withdrawable: getEthAmountForDecimals(data.withdrawable, collAsset.decimals),
