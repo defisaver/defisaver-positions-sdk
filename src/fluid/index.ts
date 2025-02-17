@@ -106,6 +106,7 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
   const totalBorrowVault = getEthAmountForDecimals(data.totalBorrowVault, debtAsset.decimals);
 
   const liqRatio = new Dec(data.liquidationThreshold).div(100).toString();
+  const liquidationMaxLimit = new Dec(data.liquidationMaxLimit).div(100).toString();
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
   const marketData = {
@@ -138,6 +139,7 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
     maxBorrowLimit: getEthAmountForDecimals(data.maxBorrowLimit, debtAsset.decimals),
     baseBorrowLimit: getEthAmountForDecimals(data.baseBorrowLimit, debtAsset.decimals),
     minimumBorrowing: getEthAmountForDecimals(data.minimumBorrowing, debtAsset.decimals),
+    liquidationMaxLimit,
     borrowRate,
     supplyRate,
   };

@@ -205,6 +205,7 @@ export interface InnerFluidMarketData {
   minimumBorrowing: string,
   supplyRate: string,
   borrowRate: string,
+  liquidationMaxLimit: string,
 }
 
 export interface FluidMarketData {
