@@ -10,6 +10,8 @@ import {
 export const ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
   wstETHBased: false,
+  stableBased: true,
+  ethBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'ETH / USDC Market 1',
   shortLabel: 'ETH/USDC',
@@ -22,12 +24,13 @@ export const ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidM
   collateralAsset: 'ETH',
   debtAsset: 'USDC',
   type: FluidVaultType.T1,
-  ethBased: true,
 });
 
 export const ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
   wstETHBased: false,
+  stableBased: true,
+  ethBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'ETH / USDT Market 2',
   shortLabel: 'ETH/USDT',
@@ -40,11 +43,13 @@ export const ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidM
   collateralAsset: 'ETH',
   debtAsset: 'USDT',
   type: FluidVaultType.T1,
-  ethBased: true,
 });
 
 export const WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
+  ethBased: true,
+  wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / ETH Market 3',
   shortLabel: 'wstETH/ETH',
@@ -57,13 +62,13 @@ export const WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
   collateralAsset: 'wstETH',
   debtAsset: 'ETH',
   type: FluidVaultType.T1,
-  ethBased: false,
-  wstETHBased: true,
 });
 
 export const WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
-  ethBased: false,
+  ethBased: true,
+  stableBased: true,
+  wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / USDC Market 4',
   shortLabel: 'wstETH/USDC',
@@ -76,12 +81,13 @@ export const WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   collateralAsset: 'wstETH',
   debtAsset: 'USDC',
   type: FluidVaultType.T1,
-  wstETHBased: true,
 });
 
 export const WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
-  ethBased: false,
+  ethBased: true,
+  stableBased: true,
+  wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / USDT Market 5',
   shortLabel: 'wstETH/USDT',
@@ -94,12 +100,13 @@ export const WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   collateralAsset: 'wstETH',
   debtAsset: 'USDT',
   type: FluidVaultType.T1,
-  wstETHBased: true,
 });
 
 export const WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
   ethBased: true,
+  wstETHBased: true,
+  stableBased: false,
   chainIds: [NetworkNumber.Eth],
   label: 'weETH / wstETH Market 6',
   shortLabel: 'weETH/wstETH',
@@ -112,48 +119,13 @@ export const WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
   collateralAsset: 'weETH',
   debtAsset: 'wstETH',
   type: FluidVaultType.T1,
-  wstETHBased: false,
 });
 
-export const SUSDE_USDC_7 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
-  ethBased: false,
-  chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / USDC Market 7',
-  shortLabel: 'sUSDe/USDC',
-  value: FluidMainnetVersion.SUSDE_USDC_7,
-  url: 'susde-usdc-7',
-  marketAddress: '0x4045720a33193b4Fe66c94DFbc8D37B0b4D9B469',
-  id: 7,
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDC',
-  type: FluidVaultType.T1,
-  wstETHBased: false,
-});
-
-export const SUSDE_USDT_8 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
-  ethBased: false,
-  chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / USDT Market 8',
-  shortLabel: 'sUSDe/USDT',
-  value: FluidMainnetVersion.SUSDE_USDT_8,
-  url: 'susde-usdt-8',
-  marketAddress: '0xBFADEA65591235f38809076e14803Ac84AcF3F97',
-  id: 8,
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDT',
-  type: FluidVaultType.T1,
-  wstETHBased: false,
-});
 
 export const WEETH_USDC_9 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
   ethBased: true,
+  stableBased: true,
   chainIds: [NetworkNumber.Eth],
   label: 'weETH / USDC Market 9',
   shortLabel: 'weETH/USDC',
@@ -173,6 +145,7 @@ export const WEETH_USDT_10 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
+  stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'weETH / USDT Market 10',
@@ -191,6 +164,7 @@ export const ETH_USDC_11 = (networkId: NetworkNumber = NetworkNumber.Eth): Fluid
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
+  stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'ETH / USDC Market 11',
@@ -209,6 +183,7 @@ export const ETH_USDT_12 = (networkId: NetworkNumber = NetworkNumber.Eth): Fluid
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
+  stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'ETH / USDT Market 12',
@@ -224,9 +199,10 @@ export const ETH_USDT_12 = (networkId: NetworkNumber = NetworkNumber.Eth): Fluid
 });
 
 export const WSTETH_ETH_13 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / ETH Market 13',
@@ -242,9 +218,10 @@ export const WSTETH_ETH_13 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const WSTETH_USDC_14 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / USDC Market 14',
@@ -260,9 +237,10 @@ export const WSTETH_USDC_14 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
 });
 
 export const WSTETH_USDT_15 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / USDT Market 15',
@@ -278,8 +256,9 @@ export const WSTETH_USDT_15 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
 });
 
 export const WEETH_WSTETH_16 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
@@ -296,6 +275,7 @@ export const WEETH_WSTETH_16 = (networkId: NetworkNumber = NetworkNumber.Eth): F
 });
 
 export const SUSDE_USDC_17 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -314,6 +294,7 @@ export const SUSDE_USDC_17 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const SUSDE_USDT_18 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -332,6 +313,7 @@ export const SUSDE_USDT_18 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const WEETH_USDC_19 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -350,6 +332,7 @@ export const WEETH_USDC_19 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const WEETH_USDT_20 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -368,6 +351,7 @@ export const WEETH_USDT_20 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const WBTC_USDC_21 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -386,6 +370,7 @@ export const WBTC_USDC_21 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const WBTC_USDT_22 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -404,9 +389,10 @@ export const WBTC_USDT_22 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const WBTC_ETH_23 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: true,
   wstETHBased: false,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'WBTC / ETH Market 23',
@@ -422,7 +408,8 @@ export const WBTC_ETH_23 = (networkId: NetworkNumber = NetworkNumber.Eth): Fluid
 });
 
 export const ETH_WBTC_24 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -440,9 +427,10 @@ export const ETH_WBTC_24 = (networkId: NetworkNumber = NetworkNumber.Eth): Fluid
 });
 
 export const WSTETH_WBTC_25 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / WBTC Market 25',
@@ -458,7 +446,8 @@ export const WSTETH_WBTC_25 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
 });
 
 export const WEETH_WBTC_26 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -476,8 +465,9 @@ export const WEETH_WBTC_26 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const WEETHS_WSTETH_27 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
@@ -494,9 +484,10 @@ export const WEETHS_WSTETH_27 = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const CBBTC_ETH_28 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: true,
   wstETHBased: false,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
   label: 'cbBTC / ETH Market 28',
@@ -512,6 +503,7 @@ export const CBBTC_ETH_28 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const CBBTC_USDC_29 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -530,6 +522,7 @@ export const CBBTC_USDC_29 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const CBBTC_USDT_30 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -548,7 +541,8 @@ export const CBBTC_USDT_30 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const ETH_CBBTC_31 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -566,7 +560,8 @@ export const ETH_CBBTC_31 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const WEETH_CBBTC_32 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -583,28 +578,12 @@ export const WEETH_CBBTC_32 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
   debtAsset: 'cbBTC',
 });
 
-export const WSTETH_CBBTC_33 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
-  wstETHBased: true,
-  ethBased: false,
-  type: FluidVaultType.T1,
-  chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / cbBTC Market 33',
-  shortLabel: 'wstETH/cbBTC',
-  value: FluidMainnetVersion.WSTETH_CBBTC_33,
-  url: 'wsteth-cbbtc-33',
-  id: 33,
-  marketAddress: '0x6E0cDB09eb33cD3894C905E0DFF9289b95a86FFF',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'cbBTC',
-});
 
 export const WSTETH_ETH_WSTETH_ETH_44 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T4,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / ETH Market 44',
@@ -620,6 +599,7 @@ export const WSTETH_ETH_WSTETH_ETH_44 = (networkId: NetworkNumber = NetworkNumbe
 });
 
 export const ETH_USDC_USDT_45 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -638,9 +618,10 @@ export const ETH_USDC_USDT_45 = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const WSTETH_USDC_USDT_46 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
   label: 'wstETH / USDC Market 46',
@@ -656,6 +637,7 @@ export const WSTETH_USDC_USDT_46 = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const WEETH_USDC_USDT_47 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -674,6 +656,7 @@ export const WEETH_USDC_USDT_47 = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WBTC_USDC_USDT_48 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -692,6 +675,7 @@ export const WBTC_USDC_USDT_48 = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const CBBTC_USDC_USDT_49 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -710,6 +694,7 @@ export const CBBTC_USDC_USDT_49 = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const SUSDE_USDC_USDT_50 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -728,6 +713,7 @@ export const SUSDE_USDC_USDT_50 = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WBTC_CBBTC_WBTC_CBBTC_51 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -746,6 +732,7 @@ export const WBTC_CBBTC_WBTC_CBBTC_51 = (networkId: NetworkNumber = NetworkNumbe
 });
 
 export const WBTC_CBBTC_USDC_52 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -764,6 +751,7 @@ export const WBTC_CBBTC_USDC_52 = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WBTC_CBBTC_USDT_53 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -782,6 +770,7 @@ export const WBTC_CBBTC_USDT_53 = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const ETH_GHO_54 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -800,9 +789,10 @@ export const ETH_GHO_54 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidM
 });
 
 export const WSTETH_GHO_55 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 55,
   chainIds: [NetworkNumber.Eth],
@@ -818,6 +808,7 @@ export const WSTETH_GHO_55 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const SUSDE_GHO_56 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -836,6 +827,7 @@ export const SUSDE_GHO_56 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const WEETH_GHO_57 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -854,6 +846,7 @@ export const WEETH_GHO_57 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
 });
 
 export const SUSDS_GHO_58 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -871,43 +864,9 @@ export const SUSDS_GHO_58 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
   debtAsset: 'GHO',
 });
 
-export const WBTC_GHO_59 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: true,
-  wstETHBased: false,
-  ethBased: false,
-  type: FluidVaultType.T1,
-  id: 59,
-  chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / GHO Market 59',
-  shortLabel: 'WBTC/GHO',
-  value: FluidMainnetVersion.WBTC_GHO_59,
-  url: 'wbtc-gho-59',
-  marketAddress: '',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'GHO',
-});
-
-export const CBBTC_GHO_60 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: true,
-  wstETHBased: false,
-  ethBased: false,
-  type: FluidVaultType.T1,
-  id: 60,
-  chainIds: [NetworkNumber.Eth],
-  label: 'cbBTC / GHO Market 60',
-  shortLabel: 'cbBTC/GHO',
-  value: FluidMainnetVersion.CBBTC_GHO_60,
-  url: 'cbbtc-gho-60',
-  marketAddress: '',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'GHO',
-});
 
 export const GHO_USDC_GHO_USDC_61 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -926,8 +885,9 @@ export const GHO_USDC_GHO_USDC_61 = (networkId: NetworkNumber = NetworkNumber.Et
 });
 
 export const WEETH_ETH_WSTETH_74 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T2,
   id: 74,
@@ -944,9 +904,10 @@ export const WEETH_ETH_WSTETH_74 = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const USDC_ETH_USDC_ETH_77 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T4,
   id: 77,
   chainIds: [NetworkNumber.Eth],
@@ -962,8 +923,9 @@ export const USDC_ETH_USDC_ETH_77 = (networkId: NetworkNumber = NetworkNumber.Et
 });
 
 export const RSETH_ETH_WSTETH_78 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T2,
   id: 78,
@@ -980,8 +942,9 @@ export const RSETH_ETH_WSTETH_78 = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const RSETH_WSTETH_79 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   id: 79,
@@ -998,8 +961,9 @@ export const RSETH_WSTETH_79 = (networkId: NetworkNumber = NetworkNumber.Eth): F
 });
 
 export const WEETHS_ETH_WSTETH_80 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T2,
   id: 80,
@@ -1015,7 +979,65 @@ export const WEETHS_ETH_WSTETH_80 = (networkId: NetworkNumber = NetworkNumber.Et
   debtAsset: 'ETH',
 });
 
+export const SUSDE_USDT_USDT_92 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 92,
+  chainIds: [NetworkNumber.Eth],
+  label: 'sUSDe-USDT / USDT Market 92',
+  shortLabel: 'sUSDe-USDT/USDT',
+  value: FluidMainnetVersion.SUSDE_USDT_USDT_92,
+  url: 'susde-usdt-usdt-92',
+  marketAddress: '',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset: 'sUSDe',
+  debtAsset: 'USDT',
+});
+
+export const USDE_USDT_USDT_93 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 93,
+  chainIds: [NetworkNumber.Eth],
+  label: 'sUSDe-USDT / USDT Market 93',
+  shortLabel: 'weETHs/ETH',
+  value: FluidMainnetVersion.USDE_USDT_USDT_93,
+  url: 'susde-usdt-usdt-93',
+  marketAddress: '',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset: 'sUSDe',
+  debtAsset: 'USDT',
+});
+
+export const LBTC_CBBTC_WBTC_97 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 97,
+  chainIds: [NetworkNumber.Eth],
+  label: 'LBTC-cbBTC / WBTC Market 97',
+  shortLabel: 'weETHs/ETH',
+  value: FluidMainnetVersion.LBTC_CBBTC_WBTC_97,
+  url: 'lbtc-cbbtc-wbtc-97',
+  marketAddress: '',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset: 'LBTC',
+  debtAsset: 'WBTC',
+});
+
 export const ETH_USDC_1_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1034,6 +1056,7 @@ export const ETH_USDC_1_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
 });
 
 export const ETH_USDT_2_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1052,9 +1075,10 @@ export const ETH_USDT_2_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
 });
 
 export const WSTETH_USDC_3_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 3,
   chainIds: [NetworkNumber.Arb],
@@ -1070,9 +1094,10 @@ export const WSTETH_USDC_3_ARB = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const WSTETH_USDT_4_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 4,
   chainIds: [NetworkNumber.Arb],
@@ -1088,9 +1113,10 @@ export const WSTETH_USDT_4_ARB = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const WSTETH_ETH_5_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 5,
   chainIds: [NetworkNumber.Arb],
@@ -1106,8 +1132,9 @@ export const WSTETH_ETH_5_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const WEETH_WSTETH_6_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   id: 6,
@@ -1124,6 +1151,7 @@ export const WEETH_WSTETH_6_ARB = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WEETH_USDC_7_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1142,6 +1170,7 @@ export const WEETH_USDC_7_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const WEETH_USDT_8_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1160,6 +1189,7 @@ export const WEETH_USDT_8_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const ETH_ARB_9_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1178,6 +1208,7 @@ export const ETH_ARB_9_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
 });
 
 export const ARB_USDC_10_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -1196,6 +1227,7 @@ export const ARB_USDC_10_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): F
 });
 
 export const ARB_USDT_11_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: false,
@@ -1214,10 +1246,11 @@ export const ARB_USDT_11_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): F
 });
 
 export const WSTETH_ETH_WSTETH_ETH_16_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
-  type: FluidVaultType.T1,
+  ethBased: true,
+  type: FluidVaultType.T4,
   id: 16,
   chainIds: [NetworkNumber.Arb],
   label: 'wstETH / ETH Market 16',
@@ -1232,8 +1265,9 @@ export const WSTETH_ETH_WSTETH_ETH_16_ARB = (networkId: NetworkNumber = NetworkN
 });
 
 export const WEETH_ETH_WSTETH_17_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   id: 17,
@@ -1250,6 +1284,7 @@ export const WEETH_ETH_WSTETH_17_ARB = (networkId: NetworkNumber = NetworkNumber
 });
 
 export const ETH_USDC_1_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1268,9 +1303,10 @@ export const ETH_USDC_1_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): F
 });
 
 export const WSTETH_USDC_2_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 2,
   chainIds: [NetworkNumber.Base],
@@ -1286,9 +1322,10 @@ export const WSTETH_USDC_2_BASE = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WSTETH_ETH_3_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 3,
   chainIds: [NetworkNumber.Base],
@@ -1304,8 +1341,9 @@ export const WSTETH_ETH_3_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const WEETH_WSTETH_4_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: false,
-  wstETHBased: false,
+  wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T1,
   id: 4,
@@ -1322,6 +1360,7 @@ export const WEETH_WSTETH_4_BASE = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const WEETH_USDC_5_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1340,6 +1379,7 @@ export const WEETH_USDC_5_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const CBETH_USDC_6_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1358,6 +1398,7 @@ export const CBETH_USDC_6_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const CBBTC_USDC_7_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -1376,6 +1417,7 @@ export const CBBTC_USDC_7_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const CBBTC_EURC_8_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: true,
   wstETHBased: false,
   ethBased: false,
@@ -1394,6 +1436,7 @@ export const CBBTC_EURC_8_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const CBETH_EURC_9_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1412,6 +1455,7 @@ export const CBETH_EURC_9_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const ETH_EURC_10_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1430,6 +1474,7 @@ export const ETH_EURC_10_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): 
 });
 
 export const WEETH_EURC_11_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: false,
   ethBased: true,
@@ -1448,9 +1493,10 @@ export const WEETH_EURC_11_BASE = (networkId: NetworkNumber = NetworkNumber.Eth)
 });
 
 export const WSTETH_EURC_12_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
   btcBased: false,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 12,
   chainIds: [NetworkNumber.Base],
@@ -1466,9 +1512,10 @@ export const WSTETH_EURC_12_BASE = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const CBBTC_ETH_13_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
   btcBased: true,
   wstETHBased: false,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 13,
   chainIds: [NetworkNumber.Base],
@@ -1484,7 +1531,8 @@ export const CBBTC_ETH_13_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const ETH_CBBTC_14_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -1502,7 +1550,8 @@ export const ETH_CBBTC_14_BASE = (networkId: NetworkNumber = NetworkNumber.Eth):
 });
 
 export const WEETH_CBBTC_15_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: false,
   ethBased: true,
   type: FluidVaultType.T1,
@@ -1520,9 +1569,10 @@ export const WEETH_CBBTC_15_BASE = (networkId: NetworkNumber = NetworkNumber.Eth
 });
 
 export const WSTETH_CBBTC_16_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  btcBased: false,
+  stableBased: false,
+  btcBased: true,
   wstETHBased: true,
-  ethBased: false,
+  ethBased: true,
   type: FluidVaultType.T1,
   id: 16,
   chainIds: [NetworkNumber.Base],

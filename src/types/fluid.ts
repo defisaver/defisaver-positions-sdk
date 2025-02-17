@@ -15,6 +15,7 @@ export interface FluidMarketInfo {
   ethBased?: boolean,
   btcBased?: boolean,
   wstETHBased?: boolean,
+  stableBased?: boolean,
   type: FluidVaultType
 }
 
@@ -75,6 +76,9 @@ export enum FluidMainnetVersion {
   RSETH_ETH_WSTETH_78 = 'RSETH_ETH_WSTETH_78',
   RSETH_WSTETH_79 = 'RSETH_WSTETH_79',
   WEETHS_ETH_WSTETH_80 = 'WEETHS_ETH_WSTETH_80',
+  SUSDE_USDT_USDT_92 = 'SUSDE_USDT_USDT_92',
+  USDE_USDT_USDT_93 = 'USDE_USDT_USDT_93',
+  LBTC_CBBTC_WBTC_97 = 'LBTC_CBBTC_WBTC_97',
 }
 
 export enum FluidArbitrumVersion {
