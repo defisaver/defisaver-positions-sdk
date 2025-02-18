@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { EthAddress, NetworkNumber } from '../types/common';
 import {
   FluidAggregatedVaultData,
@@ -17,7 +17,7 @@ import { getEthAmountForDecimals, isMainnetNetwork } from '../services/utils';
 import { getFluidAggregatedData } from '../helpers/fluidHelpers';
 import { FluidView } from '../types/contracts/generated';
 import { chunkAndMulticall } from '../multicall';
-import { getFluidMarketInfoById, getFluidVersionsDataForNetwork } from '../markets';
+import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddress } from '../markets';
 import { USD_QUOTE } from '../constants';
 import { getChainlinkAssetAddress, getWstETHPrice } from '../services/priceService';
 
@@ -275,5 +275,24 @@ export const getAllFluidMarketDataChunked = async (network: NetworkNumber, web3:
   }));
 
   const data = await chunkAndMulticall(calls, 10, 'latest', web3, network);
+  // @ts-ignore
   return Promise.all(data.map(async (item, i) => parseMarketData(web3, item.vaultData, network)));
 };
+
+export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, token: string) => {
+  const view = FluidViewContract(web3, network);
+  const fTokenAddress = getFTokenAddress(token, network);
+  const data = await view.methods.getFTokenData(fTokenAddress).call();
+  const supplyRate = new Dec(data.supplyRate).div(100).toString();
+  const decimals = data.decimals;
+  const rewardsRate = new Dec(assetAmountInEth(data.rewardsRate)).div(100).toString();
+  return {
+    fTokenAddress,
+    fTokenSymbol: data.symbol,
+    decimals,
+    totalDeposited: getEthAmountForDecimals(data.totalAssets, decimals),
+    withdrawable: getEthAmountForDecimals(data.withdrawable, decimals),
+    apy: new Dec(supplyRate).add(rewardsRate).toString(),
+  };
+};
+

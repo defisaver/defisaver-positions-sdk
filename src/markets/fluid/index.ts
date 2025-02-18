@@ -1,7 +1,10 @@
 import { NetworkNumber } from '../../types/common';
 import {
+  FluidArbitrumDepositToken,
   FluidArbitrumVersion,
+  FluidBaseDepositToken,
   FluidBaseVersions,
+  FluidMainnetDepositToken,
   FluidMainnetVersion,
   FluidMarketInfo, FluidVaultType,
   FluidVersions,
@@ -1959,3 +1962,44 @@ export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (
   Object.values(FluidMarkets(network)).filter(({ chainIds, marketAddress, type }) => !!marketAddress && chainIds.includes(network) && type === FluidVaultType.T1)
 );
 export const getFluidMarketInfoById = (vaultId: number, network: NetworkNumber = 1) => getFluidVersionsDataForNetwork(network).find(({ id }) => id === vaultId);
+
+const FluidMainnetFTokenAddresses = {
+  [FluidMainnetDepositToken.ETH]: '0x90551c1795392094FE6D29B758EcCD233cFAa260',
+  [FluidMainnetDepositToken.USDC]: '0x9Fb7b4477576Fe5B32be4C1843aFB1e55F251B33',
+  [FluidMainnetDepositToken.USDT]: '0x5C20B550819128074FD538Edf79791733ccEdd18',
+  [FluidMainnetDepositToken.wstETH]: '0x2411802D8BEA09be0aF8fD8D08314a63e706b29C',
+  [FluidMainnetDepositToken.GHO]: '0x6A29A46E21C730DcA1d8b23d637c101cec605C5B',
+  [FluidMainnetDepositToken.sUSDS]: '0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11',
+};
+
+const FluidArbitrumFTokenAddresses = {
+  [FluidArbitrumDepositToken.ETH]: '0x45Df0656F8aDf017590009d2f1898eeca4F0a205',
+  [FluidArbitrumDepositToken.USDC]: '0x1A996cb54bb95462040408C06122D45D6Cdb6096',
+  [FluidArbitrumDepositToken.USDT]: '0x4A03F37e7d3fC243e3f99341d36f4b829BEe5E03',
+  [FluidArbitrumDepositToken.wstETH]: '0x66C25Cd75EBdAA7E04816F643d8E46cecd3183c9',
+  [FluidArbitrumDepositToken.ARB]: '0xbE3860FD4c3facDf8ad57Aa8c1A36D6dc4390a49',
+};
+
+const FluidBaseFTokenAddresses = {
+  [FluidBaseDepositToken.ETH]: '0x9272D6153133175175Bc276512B2336BE3931CE9',
+  [FluidBaseDepositToken.USDC]: '0xf42f5795D9ac7e9D757dB633D693cD548Cfd9169',
+  [FluidBaseDepositToken.EURC]: '0x1943FA26360f038230442525Cf1B9125b5DCB401',
+  [FluidBaseDepositToken.wstETH]: '0x896E39f0E9af61ECA9dD2938E14543506ef2c2b5',
+  [FluidBaseDepositToken.sUSDS]: '0xf62e339f21d8018940f188F6987Bcdf02A849619',
+};
+
+export const FluidFTokens = (networkId: NetworkNumber) => {
+  switch (networkId) {
+    case NetworkNumber.Eth:
+      return FluidMainnetFTokenAddresses;
+    case NetworkNumber.Arb:
+      return FluidArbitrumFTokenAddresses;
+    case NetworkNumber.Base:
+      return FluidBaseFTokenAddresses;
+    default:
+      throw new Error('Invalid network id');
+  }
+};
+
+// @ts-ignore
+export const getFTokenAddress = (token: string, networkId: NetworkNumber) => FluidFTokens(networkId)[token];

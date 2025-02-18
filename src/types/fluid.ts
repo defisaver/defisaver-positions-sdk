@@ -138,6 +138,7 @@ export enum FluidMainnetDepositToken {
   USDC = 'USDC',
   USDT = 'USDT',
   GHO = 'GHO',
+  sUSDS = 'sUSDS',
 }
 
 export enum FluidArbitrumDepositToken {
@@ -153,6 +154,7 @@ export enum FluidBaseDepositToken {
   USDC = 'USDC',
   wstETH = 'wstETH',
   EURC = 'EURC',
+  sUSDS = 'sUSDS',
 }
 
 export type FluidDepositTokenByNetwork = {

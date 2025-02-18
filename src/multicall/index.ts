@@ -26,6 +26,7 @@ export const multicall = async (calls: any[], web3: Web3, network: NetworkNumber
 export const chunkAndMulticall = async (calls: any[], chunkSize: number, blockNumber: 'latest' | number = 'latest', web3: Web3, network: NetworkNumber = NetworkNumber.Eth) => {
   const chunkedCalls = chunk(calls, chunkSize);
 
+  // @ts-ignore
   const results = await Promise.all(chunkedCalls.map((cnk) => multicall(cnk, web3, network, blockNumber)));
 
   return results.flat(1);
