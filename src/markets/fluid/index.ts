@@ -1797,62 +1797,62 @@ export const WSTETH_CBBTC_16_BASE = (networkId: NetworkNumber = NetworkNumber.Et
   debtAsset: 'cbBTC',
 });
 
-export const ETH_SUSDS_17_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  stableBased: true,
-  btcBased: false,
-  wstETHBased: false,
-  ethBased: true,
-  type: FluidVaultType.T1,
-  id: 17,
-  chainIds: [NetworkNumber.Base],
-  label: 'ETH / sUSDS Market 17',
-  shortLabel: 'ETH/sUSDS',
-  value: FluidBaseVersions.ETH_SUSDS_17_BASE,
-  url: 'eth-susds-17-base',
-  marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'sSUDS',
-});
-
-export const WSTETH_SUSDS_18_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  stableBased: true,
-  btcBased: false,
-  wstETHBased: true,
-  ethBased: true,
-  type: FluidVaultType.T1,
-  id: 18,
-  chainIds: [NetworkNumber.Base],
-  label: 'wstETH / sUSDS Market 18',
-  shortLabel: 'wstETH/sUSDS',
-  value: FluidBaseVersions.WSTETH_SUSDS_18_BASE,
-  url: 'wsteth-susds-18-base',
-  marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'sUSDS',
-});
-
-export const CBBTC_SUSDS_19_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-  stableBased: true,
-  btcBased: false,
-  wstETHBased: false,
-  ethBased: false,
-  type: FluidVaultType.T1,
-  id: 19,
-  chainIds: [NetworkNumber.Base],
-  label: 'cbBTC / sUSDS Market 19',
-  shortLabel: 'cbBTC/sUSDS',
-  value: FluidBaseVersions.CBBTC_SUSDS_19_BASE,
-  url: 'cbbtc-susds-19-base',
-  marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'sUSDS',
-});
+// export const ETH_SUSDS_17_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+//   stableBased: true,
+//   btcBased: false,
+//   wstETHBased: false,
+//   ethBased: true,
+//   type: FluidVaultType.T1,
+//   id: 17,
+//   chainIds: [NetworkNumber.Base],
+//   label: 'ETH / sUSDS Market 17',
+//   shortLabel: 'ETH/sUSDS',
+//   value: FluidBaseVersions.ETH_SUSDS_17_BASE,
+//   url: 'eth-susds-17-base',
+//   marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
+//   hasSmartCollateral: false,
+//   hasSmartDebt: false,
+//   collateralAsset: 'ETH',
+//   debtAsset: 'sSUDS',
+// });
+//
+// export const WSTETH_SUSDS_18_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+//   stableBased: true,
+//   btcBased: false,
+//   wstETHBased: true,
+//   ethBased: true,
+//   type: FluidVaultType.T1,
+//   id: 18,
+//   chainIds: [NetworkNumber.Base],
+//   label: 'wstETH / sUSDS Market 18',
+//   shortLabel: 'wstETH/sUSDS',
+//   value: FluidBaseVersions.WSTETH_SUSDS_18_BASE,
+//   url: 'wsteth-susds-18-base',
+//   marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
+//   hasSmartCollateral: false,
+//   hasSmartDebt: false,
+//   collateralAsset: 'wstETH',
+//   debtAsset: 'sUSDS',
+// });
+//
+// export const CBBTC_SUSDS_19_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+//   stableBased: true,
+//   btcBased: false,
+//   wstETHBased: false,
+//   ethBased: false,
+//   type: FluidVaultType.T1,
+//   id: 19,
+//   chainIds: [NetworkNumber.Base],
+//   label: 'cbBTC / sUSDS Market 19',
+//   shortLabel: 'cbBTC/sUSDS',
+//   value: FluidBaseVersions.CBBTC_SUSDS_19_BASE,
+//   url: 'cbbtc-susds-19-base',
+//   marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
+//   hasSmartCollateral: false,
+//   hasSmartDebt: false,
+//   collateralAsset: 'cbBTC',
+//   debtAsset: 'sUSDS',
+// });
 
 export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.ETH_USDC_1]: ETH_USDC_1(networkId),
@@ -1953,9 +1953,6 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidBaseVersions.ETH_CBBTC_14_BASE]: ETH_CBBTC_14_BASE(networkId),
   [FluidBaseVersions.WEETH_CBBTC_15_BASE]: WEETH_CBBTC_15_BASE(networkId),
   [FluidBaseVersions.WSTETH_CBBTC_16_BASE]: WSTETH_CBBTC_16_BASE(networkId),
-  [FluidBaseVersions.ETH_SUSDS_17_BASE]: ETH_SUSDS_17_BASE(networkId),
-  [FluidBaseVersions.WSTETH_SUSDS_18_BASE]: WSTETH_SUSDS_18_BASE(networkId),
-  [FluidBaseVersions.CBBTC_SUSDS_19_BASE]: CBBTC_SUSDS_19_BASE(networkId),
 });
 
 export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (

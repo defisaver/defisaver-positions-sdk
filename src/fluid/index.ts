@@ -19,7 +19,7 @@ import { FluidView } from '../types/contracts/generated';
 import { chunkAndMulticall } from '../multicall';
 import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddress } from '../markets';
 import { USD_QUOTE } from '../constants';
-import { getChainlinkAssetAddress, getWstETHPrice } from '../services/priceService';
+import { getChainlinkAssetAddress, getWstETHPriceFluid } from '../services/priceService';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -43,8 +43,8 @@ const parseVaultType = (vaultType: number) => {
 };
 
 const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber) => {
-  const collAsset = getAssetInfoByAddress(data.supplyToken0);
-  const debtAsset = getAssetInfoByAddress(data.borrowToken0);
+  const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
+  const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
 
   const supplyRate = new Dec(data.supplyRateVault).div(100).toString();
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
@@ -60,7 +60,7 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
   let loanTokenPrice;
   if (debtAsset.symbol === 'wstETH') {
     // need to handle wstETH for l2s inside getWstETHPrice
-    loanTokenPrice = await getWstETHPrice(web3);
+    loanTokenPrice = await getWstETHPriceFluid(web3, network);
   } else if (isMainnet) {
     const feedRegistryContract = FeedRegistryContract(web3, NetworkNumber.Eth);
     loanTokenPrice = isTokenUSDA ? '100000000' : await feedRegistryContract.methods.latestAnswer(loanTokenFeedAddress, USD_QUOTE).call();
