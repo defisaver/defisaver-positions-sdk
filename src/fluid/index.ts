@@ -335,7 +335,7 @@ export const getUserPositions = async (web3: Web3, network: NetworkNumber, user:
 
   const parsedMarketData = await Promise.all(data.vaults.map(async (vaultData) => parseMarketData(web3, vaultData, network)));
 
-  const userData = data.positions.map((position, i) => parseUserData(position, parsedMarketData[i]));
+  const userData = data.positions.map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]), nftId: position.nftId }));
 
   return parsedMarketData.map((market, i) => ({
     marketData: market,

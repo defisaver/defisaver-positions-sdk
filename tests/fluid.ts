@@ -1,9 +1,10 @@
+import 'dotenv/config';
 import Web3 from 'web3';
 import { getWeb3Instance } from './utils/getWeb3Instance';
 import * as sdk from '../src';
 import { EthAddress, NetworkNumber } from '../src/types/common';
 import { FluidMarketData } from '../src';
-import { getFluidPositionWithMarket } from '../src/fluid';
+import { getFluidPositionWithMarket, getUserPositions } from '../src/fluid';
 
 const { assert } = require('chai');
 const util = require('util');
@@ -58,6 +59,13 @@ describe('Fluid', () => {
 
     console.log(util.inspect(data, { showHidden: false, depth: null, colors: true }));
   };
+
+  it('can fetch all user positions on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const allUserPositions = await getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
+  });
 
   it('can fetch user nft ids on Ethereum', async function () {
     this.timeout(10000);
