@@ -16,7 +16,8 @@ export interface FluidMarketInfo {
   btcBased?: boolean,
   wstETHBased?: boolean,
   stableBased?: boolean,
-  type: FluidVaultType
+  type: FluidVaultType,
+  isDeprecatingSoon?: boolean,
 }
 
 export enum FluidMainnetVersion {

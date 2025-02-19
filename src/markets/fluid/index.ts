@@ -27,6 +27,7 @@ export const ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidM
   collateralAsset: 'ETH',
   debtAsset: 'USDC',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 export const ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -46,6 +47,7 @@ export const ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidM
   collateralAsset: 'ETH',
   debtAsset: 'USDT',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 export const WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -65,6 +67,7 @@ export const WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
   collateralAsset: 'wstETH',
   debtAsset: 'ETH',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 export const WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -84,6 +87,7 @@ export const WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   collateralAsset: 'wstETH',
   debtAsset: 'USDC',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 export const WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -103,6 +107,7 @@ export const WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   collateralAsset: 'wstETH',
   debtAsset: 'USDT',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 export const WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -122,6 +127,7 @@ export const WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Eth): Fl
   collateralAsset: 'weETH',
   debtAsset: 'wstETH',
   type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
 });
 
 
@@ -142,6 +148,7 @@ export const WEETH_USDC_9 = (networkId: NetworkNumber = NetworkNumber.Eth): Flui
   debtAsset: 'USDC',
   type: FluidVaultType.T1,
   wstETHBased: false,
+  isDeprecatingSoon: true,
 });
 
 export const WEETH_USDT_10 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -161,6 +168,7 @@ export const WEETH_USDT_10 = (networkId: NetworkNumber = NetworkNumber.Eth): Flu
   hasSmartDebt: false,
   collateralAsset: 'weETH',
   debtAsset: 'USDT',
+  isDeprecatingSoon: true,
 });
 
 export const ETH_USDC_11 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
