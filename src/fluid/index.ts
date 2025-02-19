@@ -284,8 +284,8 @@ export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, toke
   const fTokenAddress = getFTokenAddress(token, network);
   const data = await view.methods.getFTokenData(fTokenAddress).call();
   const supplyRate = new Dec(data.supplyRate).div(100).toString();
+  const rewardsRate = new Dec(data.rewardsRate).div(1e12).toString();
   const decimals = data.decimals;
-  const rewardsRate = new Dec(assetAmountInEth(data.rewardsRate)).div(100).toString();
 
   const depositRate = new Dec(getEthAmountForDecimals(data.convertToShares, decimals)).toString();
   const withdrawRate = new Dec(getEthAmountForDecimals(data.convertToAssets, decimals)).toString();
@@ -308,8 +308,8 @@ export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, to
   const { fTokenData, userPosition } = await view.methods.getUserEarnPositionWithFToken(fTokenAddress, address).call();
 
   const supplyRate = new Dec(fTokenData.supplyRate).div(100).toString();
+  const rewardsRate = new Dec(fTokenData.rewardsRate).div(1e12).toString();
   const decimals = fTokenData.decimals;
-  const rewardsRate = new Dec(assetAmountInEth(fTokenData.rewardsRate)).div(100).toString();
 
   const depositRate = new Dec(getEthAmountForDecimals(fTokenData.convertToShares, decimals)).toString();
   const withdrawRate = new Dec(getEthAmountForDecimals(fTokenData.convertToAssets, decimals)).toString();
