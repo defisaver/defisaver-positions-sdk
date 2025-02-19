@@ -11,7 +11,7 @@ import {
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
-import { addToObjectIf, compareAddresses, ethToWeth } from '../services/utils';
+import { compareAddresses, ethToWeth, MAXUINT } from '../services/utils';
 import { LiquityV2View } from '../types/contracts/generated';
 import { ZERO_ADDRESS } from '../constants';
 import { LiquityV2Markets } from '../markets';
@@ -231,10 +231,14 @@ export const getLiquityV2TroveData = async (
   const viewContract = LiquityV2ViewContract(web3, network);
   const { minCollRatio } = allMarketsData[selectedMarket.value].marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
-  const [data, debtInFront] = await Promise.all([
+  const [_data, debtInFront] = await Promise.all([
     viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
     getDebtInFrontLiquityV2(allMarketsData, selectedMarket.value, web3, network, viewContract, troveId),
   ]);
+  const data = {
+    ..._data,
+    TCRatio: _data.TCRatio === MAXUINT ? '0' : _data.TCRatio, // mistake on contract side when debt is 0
+  };
   const usedAssets: LiquityV2UsedAssets = {};
 
   const debtAssetData = assetsData[debtToken];
