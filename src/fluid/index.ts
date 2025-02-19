@@ -296,3 +296,17 @@ export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, toke
   };
 };
 
+export const getUserPositions = async (web3: Web3, network: NetworkNumber, user: EthAddress) => {
+  const view = FluidViewContract(web3, network);
+
+  const data = await view.methods.getUserPositions(user).call();
+
+  const parsedMarketData = await Promise.all(data.vaults.map(async (vaultData) => parseMarketData(web3, vaultData, network)));
+
+  const userData = data.positions.map((position, i) => parseUserData(position, parsedMarketData[i]));
+
+  return parsedMarketData.map((market, i) => ({
+    marketData: market,
+    userData: userData[i],
+  }));
+};
