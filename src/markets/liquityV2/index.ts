@@ -1,4 +1,5 @@
-import { NetworkNumber } from '../../types/common';
+import { compareAddresses } from '../../services/utils';
+import { EthAddress, NetworkNumber } from '../../types/common';
 import { LiquityV2MarketInfo, LiquityV2Versions } from '../../types/liquityV2';
 
 export const LIQUITY_V2_ETH_MARKET = (networkId: NetworkNumber = NetworkNumber.Eth): LiquityV2MarketInfo => ({
@@ -42,3 +43,13 @@ export const LiquityV2Markets = (networkId: NetworkNumber) => ({
   [LiquityV2Versions.LiquityV2WstEth]: LIQUITY_V2_WSTETH_MARKET(networkId),
   [LiquityV2Versions.LiquityV2REth]: LIQUITY_V2_RETH_MARKET(networkId),
 }) as const;
+
+export const findLiquityV2MarketByAddress = (marketAddress: EthAddress) => {
+  const markets = LiquityV2Markets(NetworkNumber.Eth);
+  for (const market of Object.values(markets)) {
+    if (compareAddresses(market.marketAddress, marketAddress)) {
+      return market;
+    }
+  }
+  return null;
+};

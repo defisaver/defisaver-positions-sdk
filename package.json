@@ -40,6 +40,7 @@
     "eslint": "^8.49.0",
     "eslint-plugin-import": "^2.31.0",
     "mocha": "^10.2.0",
+    "nock": "^14.0.0",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.1",
     "typechain-target-web3-v1-3mihai3": "^6.0.2",

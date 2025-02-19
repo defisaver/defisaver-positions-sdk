@@ -7,12 +7,14 @@ import {
   InnerLiquityV2MarketData,
   LIQUITY_V2_TROVE_STATUS_ENUM,
   LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2TroveData, LiquityV2UsedAssets,
+  LiquityV2Versions,
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
-import { addToObjectIf, compareAddresses, ethToWeth } from '../services/utils';
+import { compareAddresses, ethToWeth, MAXUINT } from '../services/utils';
 import { LiquityV2View } from '../types/contracts/generated';
 import { ZERO_ADDRESS } from '../constants';
+import { LiquityV2Markets } from '../markets';
 
 
 export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, mainnetWeb3: Web3): Promise<LiquityV2MarketData> => {
@@ -143,12 +145,71 @@ export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumbe
   return { troves: filteredTroves, nextFreeTroveIndex };
 };
 
-const _getDebtInFront = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
+const _getDebtInFrontForSingleMarket = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
 
-export const getDebtInFrontLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
-  const { debt, next } = await _getDebtInFront(viewContract, marketAddress, troveId, accumulatedSum, iterations);
+export const getDebtInFrontForSingleMarketLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
+  const { debt, next } = await _getDebtInFrontForSingleMarket(viewContract, marketAddress, troveId, accumulatedSum, iterations);
   if (next === '0') return assetAmountInEth(debt);
-  return getDebtInFrontLiquityV2(viewContract, marketAddress, next, debt, iterations);
+  return getDebtInFrontForSingleMarketLiquityV2(viewContract, marketAddress, next, debt, iterations);
+};
+
+const _getDebtInFrontForInterestRateSingleMarketLiquityV2 = async (viewContract: any, marketAddress: EthAddress, troveId = '0', accumulatedSum = '0', iterations = 2000, interestRate: string) => viewContract.methods.getDebtInFrontByInterestRate(marketAddress, troveId, accumulatedSum, iterations, interestRate).call();
+
+export const getDebtInFrontForInterestRateSingleMarketLiquityV2 = async (viewContract: any, marketAddress: EthAddress, interestRate: string, troveId = '0', accumulatedSum = '0', iterations = 2000): Promise<string> => {
+  if (+interestRate === 0 || !interestRate) return '0';
+  const interestRateWei = new Dec(interestRate).times(1e16).toFixed(0).toString();
+  const res = await _getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, marketAddress, troveId, accumulatedSum, iterations, interestRateWei);
+  const { debt, next } = res;
+  if (next === '0') return assetAmountInEth(debt);
+  return getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, marketAddress, interestRate, next, debt, iterations);
+};
+
+const getUnbackedDebtForSingleMarket = async (totalBorrowed: string, web3: Web3, network: NetworkNumber, stabilityPoolAddress: EthAddress) => {
+  const stabilityPoolContract = createContractWrapper(web3, network, 'LiquityV2StabilityPool', stabilityPoolAddress);
+  const totalBoldDeposits = await stabilityPoolContract.methods.getTotalBoldDeposits().call();
+  const totalBoldDepositsInEth = assetAmountInEth(totalBoldDeposits);
+
+  return Dec.max(new Dec(totalBorrowed).sub(totalBoldDepositsInEth), 0).toString();
+};
+
+export const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, web3: Web3, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
+  const allMarketsUnbackedDebt = await Promise.all(Object.entries(markets).map(async ([version, market]) => {
+    const { assetsData, marketData } = market;
+    const unbackedDebt = await getUnbackedDebtForSingleMarket(assetsData.BOLD.totalBorrow, web3, network, marketData.stabilityPoolAddress);
+    return [version, unbackedDebt];
+  }));
+
+  return Object.fromEntries(allMarketsUnbackedDebt) as Record<LiquityV2Versions, string>;
+};
+
+export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, allMarketsUnbackedDebts: Record<LiquityV2Versions, string>, interestRateDebtInFront: string): string => {
+  const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
+  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
+
+  const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
+    if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+    const { assetsData } = market;
+    const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
+    const totalBorrow = new Dec(assetsData.BOLD.totalBorrow);
+    const amountToReedem = new Dec(interestRateDebtInFront).mul(unbackedDebt).div(selectedMarketUnbackedDebt);
+    return Dec.min(amountToReedem, totalBorrow);
+  });
+
+  return amountBeingReedemedOnEachMarket.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
+};
+
+export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, troveId: string) => {
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
+  const interestRateDebtInFront = await getDebtInFrontForSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, troveId);
+
+  return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
+};
+
+export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
+  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
+
+  return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };
 
 export const getLiquityV2TroveData = async (
@@ -157,23 +218,27 @@ export const getLiquityV2TroveData = async (
   {
     selectedMarket,
     assetsData,
-    marketData,
     troveId,
+    allMarketsData,
   }:
   {
     selectedMarket: LiquityV2MarketInfo,
     assetsData: LiquityV2AssetsData,
-    marketData: InnerLiquityV2MarketData,
-    troveId: string
+    troveId: string,
+    allMarketsData: Record<LiquityV2Versions, LiquityV2MarketData>,
   },
 ): Promise<LiquityV2TroveData> => {
   const viewContract = LiquityV2ViewContract(web3, network);
-  const { minCollRatio } = marketData;
+  const { minCollRatio } = allMarketsData[selectedMarket.value].marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
-  const [data, debtInFront] = await Promise.all([
+  const [_data, debtInFront] = await Promise.all([
     viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
-    getDebtInFrontLiquityV2(viewContract, marketAddress, troveId),
+    getDebtInFrontLiquityV2(allMarketsData, selectedMarket.value, web3, network, viewContract, troveId),
   ]);
+  const data = {
+    ..._data,
+    TCRatio: _data.TCRatio === MAXUINT ? '0' : _data.TCRatio, // mistake on contract side when debt is 0
+  };
   const usedAssets: LiquityV2UsedAssets = {};
 
   const debtAssetData = assetsData[debtToken];
@@ -204,6 +269,7 @@ export const getLiquityV2TroveData = async (
   const collRatio = new Dec(data.TCRatio).div(1e16).toString();
   const interestRate = new Dec(data.annualInterestRate).div(1e16).toString();
   const interestBatchManager = data.interestBatchManager;
+  const lastInterestRateAdjTime = data.lastInterestRateAdjTime;
 
   const payload: LiquityV2TroveData = {
     usedAssets,
@@ -211,6 +277,7 @@ export const getLiquityV2TroveData = async (
     interestRate,
     interestBatchManager,
     debtInFront,
+    lastInterestRateAdjTime,
     troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
       usedAssets, assetsData, minCollRatio, interestRate,
