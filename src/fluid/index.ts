@@ -284,8 +284,12 @@ export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, toke
   const fTokenAddress = getFTokenAddress(token, network);
   const data = await view.methods.getFTokenData(fTokenAddress).call();
   const supplyRate = new Dec(data.supplyRate).div(100).toString();
+  const rewardsRate = new Dec(data.rewardsRate).div(1e12).toString();
   const decimals = data.decimals;
-  const rewardsRate = new Dec(assetAmountInEth(data.rewardsRate)).div(100).toString();
+
+  const depositRate = new Dec(getEthAmountForDecimals(data.convertToShares, decimals)).toString();
+  const withdrawRate = new Dec(getEthAmountForDecimals(data.convertToAssets, decimals)).toString();
+
   return {
     fTokenAddress,
     fTokenSymbol: data.symbol,
@@ -293,6 +297,34 @@ export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, toke
     totalDeposited: getEthAmountForDecimals(data.totalAssets, decimals),
     withdrawable: getEthAmountForDecimals(data.withdrawable, decimals),
     apy: new Dec(supplyRate).add(rewardsRate).toString(),
+    depositRate,
+    withdrawRate,
+  };
+};
+
+export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, token: string, address: EthAddress) => {
+  const view = FluidViewContract(web3, network);
+  const fTokenAddress = getFTokenAddress(token, network);
+  const { fTokenData, userPosition } = await view.methods.getUserEarnPositionWithFToken(fTokenAddress, address).call();
+
+  const supplyRate = new Dec(fTokenData.supplyRate).div(100).toString();
+  const rewardsRate = new Dec(fTokenData.rewardsRate).div(1e12).toString();
+  const decimals = fTokenData.decimals;
+
+  const depositRate = new Dec(getEthAmountForDecimals(fTokenData.convertToShares, decimals)).toString();
+  const withdrawRate = new Dec(getEthAmountForDecimals(fTokenData.convertToAssets, decimals)).toString();
+
+  return {
+    fTokenAddress,
+    fTokenSymbol: fTokenData.symbol,
+    decimals,
+    totalDeposited: getEthAmountForDecimals(fTokenData.totalAssets, decimals),
+    withdrawable: getEthAmountForDecimals(fTokenData.withdrawable, decimals),
+    apy: new Dec(supplyRate).add(rewardsRate).toString(),
+    depositRate,
+    withdrawRate,
+    deposited: getEthAmountForDecimals(userPosition.underlyingAssets, decimals),
+    depositedShares: getEthAmountForDecimals(userPosition.fTokenShares, decimals),
   };
 };
 
