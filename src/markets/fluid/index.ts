@@ -1964,7 +1964,7 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
 });
 
 export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (
-  Object.values(FluidMarkets(network)).filter(({ chainIds, marketAddress, type }) => !!marketAddress && chainIds.includes(network) && type === FluidVaultType.T1)
+  Object.values(FluidMarkets(network)).filter(({ chainIds, marketAddress }) => !!marketAddress && chainIds.includes(network))
 );
 export const getFluidMarketInfoById = (vaultId: number, network: NetworkNumber = 1) => getFluidVersionsDataForNetwork(network).find(({ id }) => id === vaultId);
 
