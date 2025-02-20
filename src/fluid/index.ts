@@ -20,6 +20,7 @@ import { chunkAndMulticall } from '../multicall';
 import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddress } from '../markets';
 import { USD_QUOTE } from '../constants';
 import { getChainlinkAssetAddress, getWstETHPriceFluid } from '../services/priceService';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -42,7 +43,7 @@ const parseVaultType = (vaultType: number) => {
   }
 };
 
-const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
 
@@ -84,6 +85,11 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
     supplyRate,
     borrowRate: '0',
   };
+
+  if (STAKING_ASSETS.includes(collAsset.symbol)) {
+    collAssetData.incentiveSupplyApy = await getStakingApy(collAsset.symbol, mainnetWeb3);
+    collAssetData.incentiveSupplyToken = collAsset.symbol;
+  }
 
   const debtAssetData: FluidAssetData = {
     symbol: debtAsset.symbol,
@@ -218,12 +224,12 @@ const parseUserData = (userPositionData: FluidView.UserPositionStructOutputStruc
   };
 };
 
-export const getFluidMarketData = async (web3: Web3, network: NetworkNumber, market: FluidMarketInfo) => {
+export const getFluidMarketData = async (web3: Web3, network: NetworkNumber, market: FluidMarketInfo, mainnetWeb3: Web3) => {
   const view = FluidViewContract(web3, network);
 
   const data = await view.methods.getVaultData(market.marketAddress).call();
 
-  return parseMarketData(web3, data, network);
+  return parseMarketData(web3, data, network, mainnetWeb3);
 };
 
 export const getFluidVaultIdsForUser = async (web3: Web3,
@@ -253,10 +259,10 @@ export const getFluidPosition = async (
   return parseUserData(userPositionData, extractedState);
 };
 
-export const getFluidPositionWithMarket = async (web3: Web3, network: NetworkNumber, vaultId: string) => {
+export const getFluidPositionWithMarket = async (web3: Web3, network: NetworkNumber, vaultId: string, mainnetWeb3: Web3) => {
   const view = FluidViewContract(web3, network);
   const data = await view.methods.getPositionByNftId(vaultId).call();
-  const marketData = await parseMarketData(web3, data.vault, network);
+  const marketData = await parseMarketData(web3, data.vault, network, mainnetWeb3);
   const userData = parseUserData(data.position, marketData);
 
   return {
@@ -265,7 +271,7 @@ export const getFluidPositionWithMarket = async (web3: Web3, network: NetworkNum
   };
 };
 
-export const getAllFluidMarketDataChunked = async (network: NetworkNumber, web3: Web3) => {
+export const getAllFluidMarketDataChunked = async (network: NetworkNumber, web3: Web3, mainnetWeb3: Web3) => {
   const versions = getFluidVersionsDataForNetwork(network);
   const view = FluidViewContract(web3, network);
   const calls = versions.map((version) => ({
@@ -276,7 +282,7 @@ export const getAllFluidMarketDataChunked = async (network: NetworkNumber, web3:
 
   const data = await chunkAndMulticall(calls, 10, 'latest', web3, network);
   // @ts-ignore
-  return Promise.all(data.map(async (item, i) => parseMarketData(web3, item.vaultData, network)));
+  return Promise.all(data.map(async (item, i) => parseMarketData(web3, item.vaultData, network, mainnetWeb3)));
 };
 
 export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, token: string) => {
@@ -328,12 +334,12 @@ export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, to
   };
 };
 
-export const getUserPositions = async (web3: Web3, network: NetworkNumber, user: EthAddress) => {
+export const getUserPositions = async (web3: Web3, network: NetworkNumber, user: EthAddress, mainnetWeb3: Web3) => {
   const view = FluidViewContract(web3, network);
 
   const data = await view.methods.getUserPositions(user).call();
 
-  const parsedMarketData = await Promise.all(data.vaults.map(async (vaultData) => parseMarketData(web3, vaultData, network)));
+  const parsedMarketData = await Promise.all(data.vaults.map(async (vaultData) => parseMarketData(web3, vaultData, network, mainnetWeb3)));
 
   const userData = data.positions.map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]), nftId: position.nftId }));
 

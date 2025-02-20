@@ -25,7 +25,7 @@ describe('Fluid', () => {
   const fetchUserNftIds = async (user: EthAddress, network: NetworkNumber, _web3: Web3) => sdk.fluid.getFluidVaultIdsForUser(_web3, network, user);
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, marketVersion: FluidVersions) => {
-    const marketData = await sdk.fluid.getFluidMarketData(_web3, network, sdk.markets.FluidMarkets(network)[marketVersion]);
+    const marketData = await sdk.fluid.getFluidMarketData(_web3, network, sdk.markets.FluidMarkets(network)[marketVersion], web3);
     console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -40,7 +40,7 @@ describe('Fluid', () => {
   };
 
   const fetchAllMarketData = async (network: NetworkNumber, _web3: Web3) => {
-    const marketData = await sdk.fluid.getAllFluidMarketDataChunked(network, _web3);
+    const marketData = await sdk.fluid.getAllFluidMarketDataChunked(network, _web3, web3);
     console.log(marketData);
 
     return marketData;
@@ -55,7 +55,7 @@ describe('Fluid', () => {
   };
 
   const fetchUserPositionWithMarket = async (vaultId: string) => {
-    const data = await getFluidPositionWithMarket(web3, NetworkNumber.Eth, vaultId);
+    const data = await getFluidPositionWithMarket(web3, NetworkNumber.Eth, vaultId, web3);
 
     console.log(util.inspect(data, { showHidden: false, depth: null, colors: true }));
   };
@@ -64,7 +64,7 @@ describe('Fluid', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const allUserPositions = await getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
+    const allUserPositions = await getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf', web3);
   });
 
   it('can fetch user nft ids on Ethereum', async function () {
@@ -111,6 +111,6 @@ describe('Fluid', () => {
   it('get all user positions', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const allUserPositions = await sdk.fluid.getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
+    const allUserPositions = await sdk.fluid.getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf', web3);
   });
 });
