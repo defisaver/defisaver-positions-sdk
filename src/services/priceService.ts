@@ -9,6 +9,7 @@ import {
 } from '../contracts';
 import { NetworkNumber } from '../types/common';
 import { multicall } from '../multicall';
+import { getEthAmountForDecimals } from './utils';
 
 export const getEthPrice = async (web3: Web3) => {
   const contract = ETHPriceFeedContract(web3, NetworkNumber.Eth);
@@ -49,6 +50,34 @@ export const getWstETHPrice = async (web3: Web3) => {
   const ethPrice = new Dec(multicallRes[0][0]).div(1e8);
 
   const wstETHRate = new Dec(multicallRes[1].answer).div(1e8);
+
+  return new Dec(ethPrice).mul(wstETHRate).toString();
+};
+// this is a fixed version, the original version is above but requires to refactor comp v3 function, so it's easier to just copy the function for now
+export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) => {
+  const wstETHFeedContract = WstETHPriceFeedContract(web3, network);
+  const ethFeedContract = ETHPriceFeedContract(web3, network);
+  const calls = [
+    {
+      target: ethFeedContract.options.address,
+      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
+      params: [],
+    },
+    {
+      target: wstETHFeedContract.options.address,
+      abiItem: wstETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
+      params: [],
+    },
+    {
+      target: wstETHFeedContract.options.address,
+      abiItem: wstETHFeedContract.options.jsonInterface.find(({ name }) => name === 'decimals'),
+      params: [],
+    },
+  ];
+  const multicallRes = await multicall(calls, web3, network);
+
+  const ethPrice = new Dec(multicallRes[0][0]).div(1e8);
+  const wstETHRate = getEthAmountForDecimals(multicallRes[1].answer, multicallRes[2][0]);
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
 };

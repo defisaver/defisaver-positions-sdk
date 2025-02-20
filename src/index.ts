@@ -1,5 +1,6 @@
 import './setup';
 
+import * as fluid from './fluid';
 import * as aaveV3 from './aaveV3';
 import * as morphoAaveV3 from './morphoAaveV3';
 import * as aaveV2 from './aaveV2';
@@ -47,4 +48,5 @@ export {
   morphoBlue,
   llamaLend,
   eulerV2,
+  fluid,
 };

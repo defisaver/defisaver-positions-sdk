@@ -9,3 +9,4 @@ export * from './chickenBonds';
 export * from './morphoBlue';
 export * from './llamaLend';
 export * from './euler';
+export * from './fluid';

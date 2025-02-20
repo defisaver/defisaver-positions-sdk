@@ -55,3 +55,5 @@ export const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bi
 export const MAXUINT:string = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
 export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
+
+export const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
