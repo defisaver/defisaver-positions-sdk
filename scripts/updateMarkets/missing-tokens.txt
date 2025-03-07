@@ -1,0 +1,4 @@
+"File: aave/marketAssets.ts; Variable: aaveV3AssetsDefaultMarketBase; Chain ID: 8453
+ - Missing addresses: GHO,0x6Bb7a212910682DCFdbd5BCBb3e28FB4E8da10Ee
+
+"
