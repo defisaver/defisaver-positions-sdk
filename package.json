@@ -23,10 +23,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/lodash": "^4.17.15",
-    "@defisaver/tokens": "^1.5.55",
+    "@defisaver/tokens": "^1.5.57",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
+    "@types/lodash": "^4.17.15",
     "decimal.js": "^10.4.3",
     "lodash": "^4.17.21"
   },
