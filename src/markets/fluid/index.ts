@@ -1,4 +1,4 @@
-import { NetworkNumber } from '../../types/common';
+import { EthAddress, NetworkNumber } from '../../types/common';
 import {
   FluidArbitrumDepositToken,
   FluidArbitrumVersion,
@@ -9,6 +9,7 @@ import {
   FluidMarketInfo, FluidVaultType,
   FluidVersions,
 } from '../../types';
+import { compareAddresses } from '../../services/utils';
 
 export const FLUID_ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
@@ -1967,6 +1968,7 @@ export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (
   Object.values(FluidMarkets(network)).filter(({ chainIds, marketAddress }) => !!marketAddress && chainIds.includes(network))
 );
 export const getFluidMarketInfoById = (vaultId: number, network: NetworkNumber = 1) => getFluidVersionsDataForNetwork(network).find(({ id }) => id === vaultId);
+export const getFluidMarketInfoByAddress = (address: EthAddress, network: NetworkNumber = 1) => getFluidVersionsDataForNetwork(network).find(({ marketAddress }) => compareAddresses(marketAddress, address));
 
 const FluidMainnetFTokenAddresses = {
   [FluidMainnetDepositToken.ETH]: '0x90551c1795392094FE6D29B758EcCD233cFAa260',
