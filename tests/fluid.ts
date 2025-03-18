@@ -26,7 +26,7 @@ describe('Fluid', () => {
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, marketVersion: FluidVersions) => {
     const marketData = await sdk.fluid.getFluidMarketData(_web3, network, sdk.markets.FluidMarkets(network)[marketVersion], web3);
-    console.log(marketData);
+    // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys: (keyof typeof tokenData)[] = [
@@ -35,13 +35,13 @@ describe('Fluid', () => {
       assert.containsAllKeys(tokenData, keys);
       for (const key of keys) assert.isDefined(tokenData[key], `${key} is undefined for ${tokenData.symbol}`);
     }
-    console.log(marketData);
+    // console.log(marketData);
     return marketData;
   };
 
   const fetchAllMarketData = async (network: NetworkNumber, _web3: Web3) => {
     const marketData = await sdk.fluid.getAllFluidMarketDataChunked(network, _web3, web3);
-    console.log(marketData);
+    // console.log(marketData);
 
     return marketData;
   };
@@ -57,7 +57,7 @@ describe('Fluid', () => {
   const fetchUserPositionWithMarket = async (vaultId: string) => {
     const data = await getFluidPositionWithMarket(web3, NetworkNumber.Eth, vaultId, web3);
 
-    console.log(util.inspect(data, { showHidden: false, depth: null, colors: true }));
+    // console.log(util.inspect(data, { showHidden: false, depth: null, colors: true }));
   };
 
   it('can fetch all user positions on Ethereum', async function () {
@@ -70,7 +70,7 @@ describe('Fluid', () => {
   it('can fetch user nft ids on Ethereum', async function () {
     this.timeout(10000);
     const nftIds = await fetchUserNftIds(testWhaleAddress, NetworkNumber.Eth, web3);
-    console.log(nftIds);
+    // console.log(nftIds);
   });
 
   it('can fetch market and for ETH_USDC_11 market on Ethereum', async function () {
