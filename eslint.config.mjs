@@ -5,7 +5,7 @@ export default defineConfig(
   {
     extends: typescriptConfig,
     files: ['src/**/*.{js,ts}', 'tests/**/*.{js,ts}', 'scripts/**/*.{js,ts}'],
-    ignores: [],
+    ignores: ['src/types/contracts/generated/*'],
     rules: {
       '@typescript-eslint/no-unused-vars': 'off',
     }
