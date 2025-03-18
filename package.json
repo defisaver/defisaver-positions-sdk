@@ -31,15 +31,14 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@defisaver/eslint-config": "^1.0.1",
+    "@defisaver/eslint-config": "^2.0.0-rc3",
     "@types/chai": "^5.0.0",
     "@types/mocha": "^10.0.9",
     "@types/web3": "^1.0.20",
     "chai": "^4.3.8",
     "dotenv": "^16.3.1",
-    "eslint": "^8.49.0",
-    "eslint-plugin-import": "^2.31.0",
-    "mocha": "^10.2.0",
+    "eslint": "^9.22.0",
+    "mocha": "^11.1.0",
     "nock": "^14.0.0",
     "ts-node": "^10.9.2",
     "typechain": "^8.3.1",
