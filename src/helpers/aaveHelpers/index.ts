@@ -176,7 +176,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
     selectedMarket.providerAddress,
     params,
   ).call();
-  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  const rates: Record<string, { supplyRate: string, borrowRate: string }> = {};
   data.forEach((d: { reserveAddress: EthAddress, supplyRate: string, variableBorrowRate: string }) => {
     const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
     rates[asset] = {

@@ -203,11 +203,8 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.stableLimit = calculateBorrowingAssetLimit(item.borrowedUsdStable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.variableLimit = calculateBorrowingAssetLimit(item.borrowedUsdVariable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

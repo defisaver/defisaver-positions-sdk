@@ -35,7 +35,7 @@ export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkA
   const { assetsData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
-  const categoriesMapping: { [key: number]: SparkEModeCategoryDataMapping } = {};
+  const categoriesMapping: Record<number, SparkEModeCategoryDataMapping> = {};
   Object.values(assetsData).forEach((a) => {
     const borrowingOnlyFromCategory = a.eModeCategory === 0
       ? true
@@ -71,7 +71,6 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     const sparkIncentivesContract = SparkIncentiveDataProviderContract(web3, network);
     rewardInfo = await sparkIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all, market) => {
-      // eslint-disable-next-line no-param-reassign
       all[market.underlyingAsset] = market;
       return all;
     }, {});
@@ -91,11 +90,11 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       const borrowCapInWei = new Dec(assetAmountInWei(market.borrowCap.toString(), symbol));
       let marketLiquidity = borrowCapInWei.lt(new Dec(market.totalSupply))
         ? assetAmountInEth(borrowCapInWei
-          .sub(market.totalBorrow.toString())
-          .toString(), symbol)
+            .sub(market.totalBorrow.toString())
+            .toString(), symbol)
         : assetAmountInEth(new Dec(market.totalSupply.toString())
-          .sub(market.totalBorrow.toString())
-          .toString(), symbol);
+            .sub(market.totalBorrow.toString())
+            .toString(), symbol);
 
       if (new Dec(marketLiquidity).lt(0)) {
         marketLiquidity = '0';
@@ -145,7 +144,6 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
     }));
 
   await Promise.all(assetsData.map(async (market) => {
-    /* eslint-disable no-param-reassign */
     const rewardForMarket = (rewardInfo as any)[market.underlyingTokenAddress];
     if (STAKING_ASSETS.includes(market.symbol)) {
       market.incentiveSupplyApy = await getStakingApy(market.symbol, mainnetWeb3);
@@ -173,7 +171,7 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
       }
       market.borrowIncentives.push({
         apy: market.incentiveBorrowApy,
-        token: market.incentiveBorrowToken!!,
+        token: market.incentiveBorrowToken!,
       });
     }
 
@@ -226,7 +224,6 @@ export const getSparkMarketsData = async (web3: Web3, network: NetworkNumber, se
         });
       }
     });
-    /* eslint-enable no-param-reassign */
   }));
 
   const payload: SparkAssetsData = {};
@@ -436,11 +433,8 @@ export const getSparkAccountData = async (web3: Web3, network: NetworkNumber, ad
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.stableLimit = calculateBorrowingAssetLimit(item.borrowedUsdStable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.variableLimit = calculateBorrowingAssetLimit(item.borrowedUsdVariable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

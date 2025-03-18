@@ -137,5 +137,3 @@ export const getLLamaLendAddresses = (networkId: NetworkNumber, version: LlamaLe
   }
   return addresses;
 };
-
-

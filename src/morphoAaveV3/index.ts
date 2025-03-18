@@ -49,32 +49,32 @@ const computeMorphoMarketData = (
   const proportionIdle = new Dec(morphoMarketData.idleSupply).eq(0)
     ? '0'
     : Dec.min(
-      morphoAaveMath.INDEX_ONE.toString(),
-      morphoAaveMath.indexDiv(
-        morphoMarketData.idleSupply,
-        morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledP2PTotal, morphoMarketData.indexes.supply.p2pIndex).toString(),
-      ).toString(),
-    ).toString();
+        morphoAaveMath.INDEX_ONE.toString(),
+        morphoAaveMath.indexDiv(
+          morphoMarketData.idleSupply,
+          morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledP2PTotal, morphoMarketData.indexes.supply.p2pIndex).toString(),
+        ).toString(),
+      ).toString();
 
   const supplyProportionDelta = new Dec(morphoMarketData.idleSupply).eq(0)
     ? '0'
     : Dec.min(
-      new Dec(morphoAaveMath.INDEX_ONE.toString()).sub(proportionIdle).toString(),
-      morphoAaveMath.indexDiv(
-        morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledDelta, newPoolSupplyIndex),
-        morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledP2PTotal, morphoMarketData.indexes.supply.p2pIndex),
-      ).toString(),
-    ).toString();
+        new Dec(morphoAaveMath.INDEX_ONE.toString()).sub(proportionIdle).toString(),
+        morphoAaveMath.indexDiv(
+          morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledDelta, newPoolSupplyIndex),
+          morphoAaveMath.indexMul(morphoMarketData.deltas.supply.scaledP2PTotal, morphoMarketData.indexes.supply.p2pIndex),
+        ).toString(),
+      ).toString();
 
   const borrowProportionDelta = new Dec(morphoMarketData.idleSupply).eq(0)
     ? '0'
     : Dec.min(
-      morphoAaveMath.INDEX_ONE.toString(),
-      morphoAaveMath.indexDiv(
-        morphoAaveMath.indexMul(morphoMarketData.deltas.borrow.scaledDelta, newPoolBorrowIndex),
-        morphoAaveMath.indexMul(morphoMarketData.deltas.borrow.scaledP2PTotal, morphoMarketData.indexes.borrow.p2pIndex),
-      ).toString(),
-    ).toString();
+        morphoAaveMath.INDEX_ONE.toString(),
+        morphoAaveMath.indexDiv(
+          morphoAaveMath.indexMul(morphoMarketData.deltas.borrow.scaledDelta, newPoolBorrowIndex),
+          morphoAaveMath.indexMul(morphoMarketData.deltas.borrow.scaledP2PTotal, morphoMarketData.indexes.borrow.p2pIndex),
+        ).toString(),
+      ).toString();
 
   const apys = morphoAaveMath.computeApysFromRates(
     BigNumber.from(loanInfo.supplyRate),
@@ -280,8 +280,8 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
         && !marketData.pauseStatuses.isBorrowPaused
         && !marketData.pauseStatuses.isDeprecated,
       canBeSupplied: !marketData.isFrozen
-        && marketData.isCollateral ? !marketData.pauseStatuses.isSupplyCollateralPaused : !marketData.pauseStatuses.isSupplyPaused
-      && !marketData.pauseStatuses.isDeprecated,
+        && (marketData.isCollateral ? !marketData.pauseStatuses.isSupplyCollateralPaused : !marketData.pauseStatuses.isSupplyPaused)
+        && !marketData.pauseStatuses.isDeprecated,
       canBeWithdrawn: marketData.isActive
         && !marketData.isPaused
         && marketData.isCollateral ? !marketData.pauseStatuses.isWithdrawCollateralPaused : !marketData.pauseStatuses.isWithdrawPaused,
@@ -541,9 +541,9 @@ export const getMorphoAaveV3AccountData = async (
     const suppliedMatched = new Dec(suppliedTotal).eq(0)
       ? '0'
       : morphoAaveMath.percentDiv(
-        assetAmountInWei(suppliedP2P, symbol),
-        assetAmountInWei(suppliedTotal, symbol),
-      ).div(100).toString();
+          assetAmountInWei(suppliedP2P, symbol),
+          assetAmountInWei(suppliedTotal, symbol),
+        ).div(100).toString();
 
     const borrowedP2P = assetAmountInEth(morphoAaveMath.indexMul(
       multicallResponse[(i * 5) + 3][0],
@@ -557,9 +557,9 @@ export const getMorphoAaveV3AccountData = async (
     const borrowedMatched = new Dec(borrowed).eq(0)
       ? '0'
       : morphoAaveMath.percentDiv(
-        assetAmountInWei(borrowedP2P, symbol),
-        assetAmountInWei(borrowed, symbol),
-      ).div(100).toString();
+          assetAmountInWei(borrowedP2P, symbol),
+          assetAmountInWei(borrowed, symbol),
+        ).div(100).toString();
 
     const supplyRate = new Dec(new Dec(market.supplyRateP2P).mul(suppliedMatched))
       .add(new Dec(market.supplyRate).mul(100 - +suppliedMatched)).div(100).toString();
@@ -615,7 +615,6 @@ export const getMorphoAaveV3AccountData = async (
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

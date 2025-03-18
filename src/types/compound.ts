@@ -3,14 +3,14 @@ import {
 } from './common';
 
 export enum CompoundVersions {
-  'CompoundV2' = 'v2',
-  'CompoundV3USDC' = 'v3-USDC',
-  'CompoundV3USDCe' = 'v3-USDC.e',
-  'CompoundV3ETH' = 'v3-ETH',
-  'CompoundV3USDbC' = 'v3-USDbC',
-  'CompoundV3USDT' = 'v3-USDT',
-  'CompoundV3USDS' = 'v3-USDS',
-  'CompoundV3wstETH' = 'v3-wstETH',
+  CompoundV2 = 'v2',
+  CompoundV3USDC = 'v3-USDC',
+  CompoundV3USDCe = 'v3-USDC.e',
+  CompoundV3ETH = 'v3-ETH',
+  CompoundV3USDbC = 'v3-USDbC',
+  CompoundV3USDT = 'v3-USDT',
+  CompoundV3USDS = 'v3-USDS',
+  CompoundV3wstETH = 'v3-wstETH',
 }
 
 export interface CompoundBulkerOptions {
@@ -39,16 +39,14 @@ export interface CompoundUsedAsset extends MMUsedAsset {
   limit?: string,
 }
 
-export interface CompoundV2UsedAsset extends CompoundUsedAsset {
-}
-export interface CompoundV3UsedAsset extends CompoundUsedAsset {
-}
+export type CompoundV2UsedAsset = CompoundUsedAsset;
 
-export interface CompoundUsedAssets<T> {
-  [token: string]: T,
-}
+export type CompoundV3UsedAsset = CompoundUsedAsset;
+
+export type CompoundUsedAssets<T> = Record<string, T>;
 
 export type CompoundV2UsedAssets = CompoundUsedAssets<CompoundV2UsedAsset>;
+
 export type CompoundV3UsedAssets = CompoundUsedAssets<CompoundV3UsedAsset>;
 
 export interface CompoundAssetData extends MMAssetData {
@@ -58,8 +56,8 @@ export interface CompoundAssetData extends MMAssetData {
   sortIndex?: number,
 }
 
-export interface CompoundV2AssetData extends CompoundAssetData {
-}
+export type CompoundV2AssetData = CompoundAssetData;
+
 export interface CompoundV3AssetData extends CompoundAssetData {
   borrowCollateralFactor: string,
   liquidateCollateralFactor: string,
@@ -69,9 +67,7 @@ export interface CompoundV3AssetData extends CompoundAssetData {
   priceInBaseAsset: string,
 }
 
-export interface CompoundAssetsData<T> {
-  [token: string]: T
-}
+export type CompoundAssetsData<T> = Record<string, T>;
 export type CompoundV2AssetsData = CompoundAssetsData<CompoundV2AssetData>;
 export type CompoundV3AssetsData = CompoundAssetsData<CompoundV3AssetData>;
 

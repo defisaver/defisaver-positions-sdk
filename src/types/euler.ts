@@ -90,8 +90,8 @@ export interface EulerV2MarketInfoData {
   vaultType: EulerV2VaultType,
 }
 
-export type EulerV2AssetsData = { [key: string]: EulerV2AssetData };
-export type EulerV2UsedAssets = { [key: string]: EulerV2UsedAsset };
+export type EulerV2AssetsData = Record<string, EulerV2AssetData>;
+export type EulerV2UsedAssets = Record<string, EulerV2UsedAsset>;
 
 
 export interface EulerV2CollateralInfo {

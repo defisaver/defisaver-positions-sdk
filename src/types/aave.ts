@@ -81,8 +81,7 @@ export interface AaveV2AssetData extends AaveAssetData {
   isFrozen: boolean,
 }
 
-export interface MorphoAaveV2AssetData extends AaveV2AssetData {
-}
+export type MorphoAaveV2AssetData = AaveV2AssetData;
 
 export interface IncentiveData {
   token: string,
@@ -112,10 +111,9 @@ export interface AaveV3AssetData extends AaveAssetData {
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
 
-export interface MorphoAaveV3AssetData extends Omit<AaveV3AssetData, 'nativeAsset' | 'discountData' | 'borrowRateDiscounted'> {
-}
+export type MorphoAaveV3AssetData = Omit<AaveV3AssetData, 'nativeAsset' | 'discountData' | 'borrowRateDiscounted'>;
 
-export type AaveAssetsData<T> = { [key: string]: T };
+export type AaveAssetsData<T> = Record<string, T>;
 
 export type AaveV2AssetsData = AaveAssetsData<AaveV2AssetData>;
 
@@ -144,8 +142,7 @@ export interface AaveUsedAsset extends MMUsedAsset {
   limit: string,
 }
 
-export interface AaveV2UsedAsset extends AaveUsedAsset {
-}
+export type AaveV2UsedAsset = AaveUsedAsset;
 
 export interface MorphoAaveV2UsedAsset extends Omit<AaveV2UsedAsset, 'debt'> {
   suppliedP2P: string,
@@ -181,7 +178,7 @@ export interface MorphoAaveV3UsedAsset extends Omit<AaveV3UsedAsset, 'discounted
   borrowedPoolUsd: string,
 }
 
-export type AaveUsedAssets<T> = { [key: string]: T };
+export type AaveUsedAssets<T> = Record<string, T>;
 
 export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
 
@@ -214,7 +211,7 @@ export interface AaveV3PositionData extends AavePositionData {
   eModeCategory: number,
   isInIsolationMode: boolean,
   isInSiloedMode: boolean,
-  eModeCategories: { [key: number]: EModeCategoryDataMapping },
+  eModeCategories: Record<number, EModeCategoryDataMapping>,
 }
 
 export interface MorphoAaveV3PositionData extends AavePositionData {
@@ -257,7 +254,7 @@ export interface AaveV3AggregatedPositionData {
 export interface AaveHelperCommon {
   usedAssets: any,
   eModeCategory: number,
-  eModeCategories?: { [key: number]: EModeCategoryDataMapping },
+  eModeCategories?: Record<number, EModeCategoryDataMapping>,
   eModeCategoriesData?: EModeCategoriesData,
   assetsData: any,
   selectedMarket: Partial<AaveMarketInfo>,

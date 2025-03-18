@@ -67,7 +67,6 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
 
   for (const coll of colls) {
     if (coll.symbol === 'wstETH') {
-      // eslint-disable-next-line no-await-in-loop
       const [[totalSupplyAlternative, supplyCapAlternative], priceAlternative] = await Promise.all([
         getStETHByWstETHMultiple([
           assetAmountInWei(coll.totalSupply, 'wstETH'),
@@ -79,7 +78,6 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
       coll.supplyCapAlternative = assetAmountInEth(supplyCapAlternative, 'stETH');
       coll.priceAlternative = assetAmountInEth(priceAlternative, 'wstETH');
       // const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
-      // eslint-disable-next-line no-await-in-loop
     }
     if (STAKING_ASSETS.includes(coll.symbol)) {
       coll.incentiveSupplyApy = await getStakingApy(coll.symbol, defaultWeb3);
@@ -276,7 +274,6 @@ export const getCompoundV3AccountData = async (
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item: any) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

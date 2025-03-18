@@ -1,11 +1,11 @@
 import { NetworkNumber } from './common';
 
 export enum CrvUSDVersions {
-  'crvUSDwstETH' = 'wstETH',
-  'crvUSDWBTC' = 'WBTC',
-  'crvUSDETH' = 'ETH',
-  'crvUSDtBTC' = 'tBTC',
-  'crvUSDsfrxETH' = 'sfrxETH',
+  crvUSDwstETH = 'wstETH',
+  crvUSDWBTC = 'WBTC',
+  crvUSDETH = 'ETH',
+  crvUSDtBTC = 'tBTC',
+  crvUSDsfrxETH = 'sfrxETH',
 }
 
 export enum CrvUSDStatus {
@@ -95,9 +95,7 @@ export interface CrvUSDUsedAsset {
   interestRate?: string,
 }
 
-export interface CrvUSDUsedAssets {
-  [key: string]: CrvUSDUsedAsset,
-}
+export type CrvUSDUsedAssets = Record<string, CrvUSDUsedAsset>;
 
 export interface CrvUSDUserData {
   debtAmount: string,

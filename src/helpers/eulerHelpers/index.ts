@@ -178,7 +178,9 @@ const getLiquidityChanges = (action: string, amount: string, isBorrowOperation: 
   return { liquidityAdded, liquidityRemoved };
 };
 
-export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: string, amount: string, asset: string, vaultAddress: EthAddress }[], web3: Web3, network: NetworkNumber) => {
+export const getApyAfterValuesEstimationEulerV2 = async (actions: {
+  action: string, amount: string, asset: string, vaultAddress: EthAddress
+}[], web3: Web3, network: NetworkNumber) => {
   const eulerV2ViewContract = EulerV2ViewContract(web3, network);
   const multicallData: any[] = [];
   const apyAfterValuesEstimationParams: any[] = [];

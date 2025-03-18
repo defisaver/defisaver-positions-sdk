@@ -15,7 +15,7 @@ declare type Network = {
   address: string,
   oldVersions?: Record<string, { address: EthAddress, abi: any[] }>,
 };
-const contractConfig:Record<ConfigKey, ContractConfig> = configRaw;
+const contractConfig: Record<ConfigKey, ContractConfig> = configRaw;
 
 export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): string => {
   const networkData = contractConfig[name].networks[network];

@@ -9,7 +9,7 @@ import { calculateNetApy } from '../../staking';
 
 export const getLlamaLendAggregatedData = ({
   loanExists, usedAssets, network, selectedMarket, numOfBands, assetsData, ...rest
-}:{
+}: {
   loanExists: boolean, usedAssets: LlamaLendUsedAssets, network: NetworkNumber, selectedMarket: LlamaLendMarketData, numOfBands: number | string, assetsData: LlamaLendAssetsData,
 }): LlamaLendAggregatedPositionData => {
   const collAsset = selectedMarket.collAsset;
@@ -29,9 +29,9 @@ export const getLlamaLendAggregatedData = ({
 
   payload.ratio = loanExists
     ? new Dec(payload.suppliedUsd)
-      .dividedBy(payload.borrowedUsd)
-      .times(100)
-      .toString()
+        .dividedBy(payload.borrowedUsd)
+        .times(100)
+        .toString()
     : '0';
 
   // this is all approximation

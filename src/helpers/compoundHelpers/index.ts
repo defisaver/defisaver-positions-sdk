@@ -108,7 +108,6 @@ export const getCompoundV2AggregatedData = ({
   // Calculate borrow limits per asset
   Object.values(usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });
@@ -131,7 +130,9 @@ export const getCompoundV2AggregatedData = ({
 
 export const getCompoundV3AggregatedData = ({
   usedAssets, assetsData, network, selectedMarket, ...rest
-}: { usedAssets: CompoundV3UsedAssets, assetsData: CompoundV3AssetsData, network: NetworkNumber, selectedMarket: CompoundMarketData }) => {
+}: {
+  usedAssets: CompoundV3UsedAssets, assetsData: CompoundV3AssetsData, network: NetworkNumber, selectedMarket: CompoundMarketData
+}) => {
   const payload = {} as CompoundAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.suppliedCollateralUsd = getAssetsTotal(usedAssets, ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
@@ -208,7 +209,7 @@ export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: 
   const data = await compViewContract.methods.getApyAfterValuesEstimation(
     params,
   ).call();
-  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  const rates: Record<string, { supplyRate: string, borrowRate: string }> = {};
   data.forEach((d) => {
     const asset = wethToEth(getAssetInfoByAddress(d.cTokenAddr).underlyingAsset);
     rates[asset] = {

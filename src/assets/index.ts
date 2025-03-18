@@ -21,7 +21,7 @@ export const getAssetBalance = async (
 
   if (
     !isOptimism
-      && (asset === 'ETH' || compareAddresses(asset, '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'))
+    && (asset === 'ETH' || compareAddresses(asset, '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'))
   ) {
     data = await web3.eth.getBalance(address);
   } else {

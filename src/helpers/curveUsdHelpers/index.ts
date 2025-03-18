@@ -6,7 +6,7 @@ import { mapRange } from '../../services/utils';
 
 export const getCrvUsdAggregatedData = ({
   loanExists, usedAssets, network, selectedMarket, numOfBands, ...rest
-}:{
+}: {
   loanExists: boolean, usedAssets: CrvUSDUsedAssets, network: NetworkNumber, selectedMarket: CrvUSDMarketData, numOfBands: number | string
 }): CrvUSDAggregatedPositionData => {
   const payload = {} as CrvUSDAggregatedPositionData;
@@ -17,9 +17,9 @@ export const getCrvUsdAggregatedData = ({
 
   payload.ratio = loanExists
     ? new Dec(payload.suppliedUsd)
-      .dividedBy(payload.borrowedUsd)
-      .times(100)
-      .toString()
+        .dividedBy(payload.borrowedUsd)
+        .times(100)
+        .toString()
     : '0';
 
   // this is all approximation

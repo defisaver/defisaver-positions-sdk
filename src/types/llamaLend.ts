@@ -73,15 +73,15 @@ export interface LlamaLendAssetData {
   shares?: string,
 }
 
-export type LlamaLendAssetsData = { [key: string]: LlamaLendAssetData };
+export type LlamaLendAssetsData = Record<string, LlamaLendAssetData>;
 
 export interface LlamaLendGlobalMarketData {
-  A:string,
+  A: string,
   loanDiscount: string,
   activeBand: string,
   totalDebt: string,
-  totalDebtSupplied:string,
-  utilization:string,
+  totalDebtSupplied: string,
+  utilization: string,
   ammPrice: string,
   basePrice: string,
   oraclePrice: string,
@@ -132,9 +132,7 @@ export interface LlamaLendUsedAsset {
   shares?: string,
 }
 
-export interface LlamaLendUsedAssets {
-  [key: string]: LlamaLendUsedAsset,
-}
+export type LlamaLendUsedAssets = Record<string, LlamaLendUsedAsset>;
 
 export interface LlamaLendUserData {
   debtAmount: string,
