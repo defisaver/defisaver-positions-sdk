@@ -63,8 +63,8 @@ export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, 
     const vaultType = isEscrow
       ? EulerV2VaultType.Escrow
       : (
-        isGoverned ? EulerV2VaultType.Governed : EulerV2VaultType.Ungoverned
-      );
+          isGoverned ? EulerV2VaultType.Governed : EulerV2VaultType.Ungoverned
+        );
     return ({
       vaultAddress: collateral.vaultAddr,
       assetAddress: wethToEthByAddress(collateral.assetAddr),

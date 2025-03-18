@@ -48,7 +48,7 @@ export interface LiquityV2AssetData {
   leftToWithdrawGlobal: string,
 }
 
-export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };
+export type LiquityV2AssetsData = Record<string, LiquityV2AssetData>;
 
 export interface InnerLiquityV2MarketData {
   minCollRatio: string,
@@ -80,7 +80,7 @@ export interface LiquityV2UsedAsset {
   isBorrowed: boolean,
 }
 
-export type LiquityV2UsedAssets = { [key: string]: LiquityV2UsedAsset };
+export type LiquityV2UsedAssets = Record<string, LiquityV2UsedAsset>;
 
 export interface LiquityV2AggregatedTroveData {
   suppliedUsd: string,

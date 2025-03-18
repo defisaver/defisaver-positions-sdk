@@ -72,7 +72,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   const { assetsData, eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
-  const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
+  const categoriesMapping: Record<number, EModeCategoryDataMapping> = {};
 
   Object.values(eModeCategoriesData).forEach((e: EModeCategoryData) => {
     const borrowingOnlyFromCategory = e.id === 0
@@ -178,7 +178,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   if (networksWithIncentives.includes(network)) {
     rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
     rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
-      // eslint-disable-next-line no-param-reassign
       all[_market.underlyingAsset] = _market;
       return all;
     }, {});
@@ -189,7 +188,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
 
-      // eslint-disable-next-line guard-for-in
       for (const eModeIndex in eModeCategoriesData) {
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].collateralBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
@@ -216,11 +214,11 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       const borrowCapInWei = new Dec(assetAmountInWei(borrowCap.toString(), symbol));
       let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply)) || nativeAsset
         ? assetAmountInEth(borrowCapInWei
-          .sub(tokenMarket.totalBorrow.toString())
-          .toString(), symbol)
+            .sub(tokenMarket.totalBorrow.toString())
+            .toString(), symbol)
         : assetAmountInEth(new Dec(tokenMarket.totalSupply.toString())
-          .sub(tokenMarket.totalBorrow.toString())
-          .toString(), symbol);
+            .sub(tokenMarket.totalBorrow.toString())
+            .toString(), symbol);
 
       if (new Dec(marketLiquidity).lt(0)) {
         marketLiquidity = '0';
@@ -275,7 +273,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
 
   // Get incentives data
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
-    /* eslint-disable no-param-reassign */
     const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
     if (isStakingAsset) {
@@ -299,7 +296,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       }
       _market.borrowIncentives.push({
         apy: _market.incentiveBorrowApy,
-        token: _market.incentiveBorrowToken!!,
+        token: _market.incentiveBorrowToken!,
         incentiveKind: 'reward',
       });
     }
@@ -524,7 +521,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   const loanInfo = [...multicallRes[1][0], ...multicallRes[2][0]];
 
   const usedAssets = {} as AaveV3UsedAssets;
-  loanInfo.map(async (tokenInfo, i) => {
+  loanInfo.forEach((tokenInfo, i) => {
     const asset = market.assets[i];
     const isSupplied = tokenInfo.balance.toString() !== '0';
     const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
@@ -603,11 +600,8 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.stableLimit = calculateBorrowingAssetLimit(item.borrowedUsdStable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.variableLimit = calculateBorrowingAssetLimit(item.borrowedUsdVariable, payload.borrowLimitUsd);
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

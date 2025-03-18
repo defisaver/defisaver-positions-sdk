@@ -1,7 +1,7 @@
-import Decimal from 'decimal.js';
+import Dec from 'decimal.js';
 
-Decimal.set({
-  rounding: Decimal.ROUND_DOWN,
+Dec.set({
+  rounding: Dec.ROUND_DOWN,
   toExpPos: 9e15,
   toExpNeg: -9e15,
   precision: 50,

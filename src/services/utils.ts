@@ -39,7 +39,7 @@ export const bytesToString = (hex: string) => Buffer.from(hex.replace(/^0x/, '')
 /**
  * Map an input value from one range (minInput, maxInput) to a value in another range (minOutput, maxOutput)
  */
-export const mapRange = (input: number | string, minInput: number | string, maxInput: number | string, minOutput:number | string, maxOutput: number | string) => {
+export const mapRange = (input: number | string, minInput: number | string, maxInput: number | string, minOutput: number | string, maxOutput: number | string) => {
   // slope = 1.0 * (output_end - output_start) / (input_end - input_start)
   const inputDiff = new Dec(maxInput).minus(minInput);
   const outputDiff = new Dec(maxOutput).minus(minOutput);
@@ -49,10 +49,9 @@ export const mapRange = (input: number | string, minInput: number | string, maxI
   return new Dec(minOutput).plus(new Dec(slope).mul(new Dec(input).minus(minInput))).toDP(2).toNumber();
 };
 
-// eslint-disable-next-line no-bitwise
 export const isEnabledOnBitmap = (bitmap: number, assetId: number) => (BigInt(bitmap) >> BigInt(assetId)) & BigInt(1);
 
-export const MAXUINT:string = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
+export const MAXUINT = '115792089237316195423570985008687907853269984665640564039457584007913129639935';
 
 export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
 

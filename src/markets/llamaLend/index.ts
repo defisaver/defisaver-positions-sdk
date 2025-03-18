@@ -80,7 +80,7 @@ export const LLAMALEND_TBTC_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLTbtcCrvusd),
 });
 
-export const LLAMALEND_CRVUSD_TBTC_MARKET = (networkId:NetworkNumber): LlamaLendMarketData => ({
+export const LLAMALEND_CRVUSD_TBTC_MARKET = (networkId: NetworkNumber): LlamaLendMarketData => ({
   chainIds: [NetworkNumber.Eth],
   label: 'LlamaLend - crvUSD/tBTC',
   shortLabel: 'crvUSD/tBTC',
@@ -202,7 +202,7 @@ export const LLAMALEND_USDE_CRVUSD_MARKET = (networkId: NetworkNumber): LlamaLen
 //   ...getLLamaLendAddresses(networkId, LlamaLendVersions.LLPufethCrvusd),
 // });
 
-export const LlamaLendMarkets = (networkId: NetworkNumber):Record<LlamaLendVersionsType, LlamaLendMarketData> => ({
+export const LlamaLendMarkets = (networkId: NetworkNumber): Record<LlamaLendVersionsType, LlamaLendMarketData> => ({
   [LlamaLendVersions.LLWstethCrvusd]: LLAMALEND_WSTETH_CRVUSD_MARKET(networkId),
   [LlamaLendVersions.LLWstethCrvusd2]: LLAMALEND_WSTETH_CRVUSD_MARKET_2(networkId),
   [LlamaLendVersions.LLCrvusdCrv]: LLAMALEND_CRVUSD_CRV_MARKET(networkId),

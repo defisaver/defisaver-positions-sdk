@@ -177,7 +177,7 @@ export interface FluidAssetData {
   supplyRate: string,
   borrowRate: string,
 }
-export type FluidAssetsData = { [key: string]: FluidAssetData };
+export type FluidAssetsData = Record<string, FluidAssetData>;
 
 export interface InnerFluidMarketData {
   // Market specific data
@@ -233,7 +233,7 @@ export interface FluidUsedAsset {
   isBorrowed: boolean,
 }
 
-export type FluidUsedAssets = { [key: string]: FluidUsedAsset };
+export type FluidUsedAssets = Record<string, FluidUsedAsset>;
 
 export interface FluidAggregatedVaultData {
   suppliedUsd: string,

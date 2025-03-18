@@ -241,7 +241,6 @@ export const getMorphoAaveV2AccountData = async (web3: Web3, network: NetworkNum
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {
     if (item.isBorrowed) {
-      // eslint-disable-next-line no-param-reassign
       item.limit = calculateBorrowingAssetLimit(item.borrowedUsd, payload.borrowLimitUsd);
     }
   });

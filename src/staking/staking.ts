@@ -11,7 +11,7 @@ import { aprToApy } from '../moneymarket';
 
 const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
   try {
-    const tokenRebasedEvents: ContractEventLog<{ [key: string]: any }>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
+    const tokenRebasedEvents: ContractEventLog<Record<string, any>>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
     tokenRebasedEvents.sort((a, b) => b.blockNumber - a.blockNumber); // sort from highest to lowest block number
     const movingAverage = 7;
     const aprs = tokenRebasedEvents.slice(0, movingAverage).map(({ returnValues: event }) => {
@@ -148,7 +148,7 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
     return (+principal * (1 + (+interest / 100 * interval))) - +principal;
   }
 
-  return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
+  return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal;
 };
 
 export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean }) => {
@@ -177,8 +177,8 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
       const rate = isMorpho
         ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
         : (usedAsset.symbol === 'GHO' && assetsData.nativeAsset)
-          ? usedAsset.discountedBorrowRate
-          : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
+            ? usedAsset.discountedBorrowRate
+            : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
       if (assetData.incentiveBorrowApy) {

@@ -104,7 +104,7 @@ export interface MorphoBlueAssetData {
   canBeBorrowed?: boolean,
 }
 
-export type MorphoBlueAssetsData = { [key: string]: MorphoBlueAssetData };
+export type MorphoBlueAssetsData = Record<string, MorphoBlueAssetData>;
 
 export interface MorphoBlueMarketInfo {
   id: string,

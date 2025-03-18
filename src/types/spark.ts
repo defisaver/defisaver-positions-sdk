@@ -60,9 +60,7 @@ export interface SparkAssetData extends MMAssetData {
   borrowIncentives?: IncentiveData[];
 }
 
-export interface SparkAssetsData {
-  [token: string]: SparkAssetData,
-}
+export type SparkAssetsData = Record<string, SparkAssetData>;
 
 export type SparkMarketsData = { assetsData: SparkAssetsData };
 
@@ -78,9 +76,7 @@ export interface SparkUsedAsset extends MMUsedAsset {
   eModeCategory: number,
 }
 
-export interface SparkUsedAssets {
-  [token: string]: SparkUsedAsset,
-}
+export type SparkUsedAssets = Record<string, SparkUsedAsset>;
 
 export interface SparkHelperCommon {
   usedAssets: SparkUsedAssets,
@@ -127,5 +123,5 @@ export interface SparkPositionData extends MMPositionData {
   eModeCategory: number,
   isInIsolationMode: boolean,
   isInSiloedMode: boolean,
-  eModeCategories: { [key: number]: SparkEModeCategoryDataMapping },
+  eModeCategories: Record<number, SparkEModeCategoryDataMapping>,
 }

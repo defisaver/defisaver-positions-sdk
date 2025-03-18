@@ -90,7 +90,7 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const debtInAYearBN = new Dec(totalDebt).mul(new Dec(2.718281828459).pow(exponentRate).toNumber());
   const lendRate = debtInAYearBN.minus(totalDebt).div(cap).mul(100).toString();
 
-  const assetsData:any = {};
+  const assetsData: any = {};
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,

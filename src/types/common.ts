@@ -35,9 +35,7 @@ export interface MMAssetData {
   supplyRateP2P?: string,
 }
 
-export interface MMAssetsData {
-  [token: string]: MMAssetData,
-}
+export type MMAssetsData = Record<string, MMAssetData>;
 export interface MMMarketData {
   assetsData: MMAssetData[],
 }
@@ -57,9 +55,7 @@ export interface MMUsedAsset {
   interestMode?: string,
   collateral?: boolean,
 }
-export interface MMUsedAssets {
-  [token: string]: MMUsedAsset,
-}
+export type MMUsedAssets = Record<string, MMUsedAsset>;
 export interface MMUsedAssetWStableB extends MMUsedAsset {
   stableBorrowRate: string,
   borrowedStable: string,
