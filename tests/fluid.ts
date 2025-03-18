@@ -77,7 +77,7 @@ describe('Fluid', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3, FluidMainnetVersion.ETH_USDC_1);
+    const marketData = await fetchMarketData(network, web3, FluidMainnetVersion.FLUID_ETH_USDC_1);
   });
 
   it('can fetch all market data on Ethereum', async function () {
