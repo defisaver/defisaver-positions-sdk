@@ -73,6 +73,13 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
       abiItem: contract.options.jsonInterface.find(({ name }) => name === 'globalData'),
       params: [selectedMarket.controllerAddress],
     },
+    {
+      target: selectedMarket.controllerAddress,
+      abiItem: {
+        stateMutability: 'view', type: 'function', name: 'loan_discount', inputs: [], outputs: [{ name: '', type: 'uint256' }],
+      },
+      params: [],
+    },
   ];
   const multiRes = await multicall(multicallData, web3, network);
   const data = multiRes[2][0];
@@ -95,6 +102,9 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
   const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
 
   const leftToBorrow = new Dec(debtCeiling).minus(totalDebt).toString();
+
+  const loanDiscount = assetAmountInEth(multiRes[3][0], debtAsset);
+
   return {
     ...data,
     debtCeiling,
@@ -108,6 +118,7 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
     futureBorrowRate,
     bands: bandsData,
     leftToBorrow,
+    loanDiscount,
   };
 };
 
