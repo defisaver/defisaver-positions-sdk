@@ -8,10 +8,10 @@ import { multicall } from '../multicall';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
+import { CrvUSDFactoryContract, CrvUSDViewContract, getConfigContractAbi } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
-import { wethToEth } from '../services/utils';
+import { getAbiItem, wethToEth } from '../services/utils';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContract(web3, network);
@@ -75,9 +75,7 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
     },
     {
       target: selectedMarket.controllerAddress,
-      abiItem: {
-        stateMutability: 'view', type: 'function', name: 'loan_discount', inputs: [], outputs: [{ name: '', type: 'uint256' }],
-      },
+      abiItem: getAbiItem(getConfigContractAbi('crvUSDwstETHController'), 'loan_discount'),
       params: [],
     },
   ];
