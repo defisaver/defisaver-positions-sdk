@@ -103,6 +103,11 @@ const parseMarketData = async (web3: Web3, data: FluidView.VaultDataStructOutput
     borrowRate,
   };
 
+  if (STAKING_ASSETS.includes(debtAssetData.symbol)) {
+    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol, mainnetWeb3);
+    debtAssetData.incentiveBorrowToken = debtAsset.symbol;
+  }
+
   const assetsData = {
     [collAsset.symbol]: collAssetData,
     [debtAsset.symbol]: debtAssetData,
