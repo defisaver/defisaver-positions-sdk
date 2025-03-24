@@ -170,6 +170,8 @@ export interface FluidAssetData {
   price: string,
   incentiveSupplyApy?: string,
   incentiveSupplyToken?: string,
+  incentiveBorrowApy?: string,
+  incentiveBorrowToken?: string,
   totalSupply: string,
   totalBorrow: string,
   canBeSupplied: boolean,
