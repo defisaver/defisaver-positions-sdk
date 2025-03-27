@@ -1,5 +1,6 @@
 import Dec from 'decimal.js';
 import Web3 from 'web3';
+import memoize from 'memoizee';
 import {
   CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
 } from '../contracts';
@@ -114,7 +115,7 @@ const getApyFromDfsApi = async (asset: string) => {
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS'];
 
-export const getStakingApy = async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
     if (asset === 'stETH' || asset === 'wstETH') return await getStETHApy(web3, fromBlock, blockNumber);
     if (asset === 'cbETH') return await getCbETHApy(web3, blockNumber);
@@ -133,7 +134,7 @@ export const getStakingApy = async (asset: string, web3: Web3, blockNumber: 'lat
     console.error(`Failed to fetch APY for ${asset}`);
   }
   return '0';
-};
+}, { promise: true, maxAge: 2 * 60 * 1000 });
 
 export const calculateInterestEarned = (principal: string, interest: string, type: string, apy = false) => {
   let interval = 1;
