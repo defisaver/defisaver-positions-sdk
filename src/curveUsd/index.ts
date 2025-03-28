@@ -8,10 +8,10 @@ import { multicall } from '../multicall';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { CrvUSDFactoryContract, CrvUSDViewContract } from '../contracts';
+import { CrvUSDFactoryContract, CrvUSDViewContract, getConfigContractAbi } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
-import { wethToEth } from '../services/utils';
+import { getAbiItem, wethToEth } from '../services/utils';
 
 const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContract(web3, network);
@@ -73,6 +73,11 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
       abiItem: contract.options.jsonInterface.find(({ name }) => name === 'globalData'),
       params: [selectedMarket.controllerAddress],
     },
+    {
+      target: selectedMarket.controllerAddress,
+      abiItem: getAbiItem(getConfigContractAbi('crvUSDwstETHController'), 'loan_discount'),
+      params: [],
+    },
   ];
   const multiRes = await multicall(multicallData, web3, network);
   const data = multiRes[2][0];
@@ -95,6 +100,9 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
   const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
 
   const leftToBorrow = new Dec(debtCeiling).minus(totalDebt).toString();
+
+  const loanDiscount = assetAmountInEth(multiRes[3][0], debtAsset);
+
   return {
     ...data,
     debtCeiling,
@@ -108,6 +116,7 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
     futureBorrowRate,
     bands: bandsData,
     leftToBorrow,
+    loanDiscount,
   };
 };
 

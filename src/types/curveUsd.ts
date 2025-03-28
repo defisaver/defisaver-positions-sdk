@@ -65,6 +65,7 @@ export interface CrvUSDGlobalMarketData {
   futureBorrowRate: string,
   leftToBorrow: string,
   bands: BandData[],
+  loanDiscount: string;
 }
 
 export interface CrvUSDAggregatedPositionData {
