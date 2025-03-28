@@ -253,6 +253,8 @@ export interface FluidAggregatedVaultData {
   leveragedAsset?: string,
   liquidationPrice?: string,
   leveragedLsdAssetRatio?: string,
+  minCollRatio?: string,
+  collLiquidationRatio?: string,
 }
 
 export interface BaseFluidVaultData {

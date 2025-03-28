@@ -110,6 +110,8 @@ export interface CompoundAggregatedPositionData {
   minRatio: string,
   debtTooLow: boolean,
   minDebt: string,
+  minCollRatio: string,
+  collLiquidationRatio: string,
 }
 
 export interface CompoundPositionData extends MMPositionData {
