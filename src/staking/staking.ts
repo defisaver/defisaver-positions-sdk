@@ -106,10 +106,6 @@ const getApyFromDfsApi = async (asset: string) => {
   const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`);
   if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
   const data = await res.json();
-  // if our server returns apr, transform it into apy
-  if (['weETH'].includes(asset)) {
-    return aprToApy(data.apy);
-  }
   return String(data.apy);
 };
 
