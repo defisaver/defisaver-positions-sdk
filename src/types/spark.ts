@@ -109,6 +109,8 @@ export interface SparkAggregatedPositionData {
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
+  minCollRatio: string,
+  collLiquidationRatio: string,
 }
 
 export interface SparkPositionData extends MMPositionData {

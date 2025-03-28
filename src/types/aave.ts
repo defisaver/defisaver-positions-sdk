@@ -252,6 +252,10 @@ export interface AaveV3AggregatedPositionData {
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
+  minCollRatio?: string,
+  collLiquidationRatio?: string,
+  healthRatio?: string,
+  healthLiquidationRatio?: string,
 }
 
 export interface AaveHelperCommon {

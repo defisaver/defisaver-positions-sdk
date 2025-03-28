@@ -169,4 +169,6 @@ export interface EulerV2AggregatedPositionData {
   liquidationPrice?: string,
   minRatio: string,
   minDebt: string,
+  minCollRatio: string,
+  collLiquidationRatio: string,
 }

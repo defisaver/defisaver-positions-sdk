@@ -50,5 +50,8 @@ export const getFluidAggregatedData = ({
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
 
+  payload.minCollRatio = new Dec(payload.suppliedUsd).div(payload.borrowLimitUsd).mul(100).toString();
+  payload.collLiquidationRatio = new Dec(payload.suppliedUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+
   return payload;
 };

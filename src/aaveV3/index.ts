@@ -1,6 +1,7 @@
-import Web3 from 'web3';
-import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
+import Dec from 'decimal.js';
+import Web3 from 'web3';
+import { getAssetsBalances } from '../assets';
 import {
   AaveIncentiveDataProviderV3Contract,
   AaveV3ViewContract,
@@ -9,9 +10,14 @@ import {
   getConfigContractAddress,
   GhoTokenContract,
 } from '../contracts';
+import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
+import { AAVE_V3 } from '../markets/aave';
+import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
+import { multicall } from '../multicall';
 import {
   addToObjectIf, ethToWeth, getAbiItem, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
   AaveMarketInfo,
   AaveV3AssetData,
@@ -21,7 +27,6 @@ import {
   AaveV3PositionData,
   AaveV3UsedAsset,
   AaveV3UsedAssets,
-  AaveVersions,
   EModeCategoriesData,
   EModeCategoryData,
   EModeCategoryDataMapping,
@@ -29,13 +34,7 @@ import {
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { multicall } from '../multicall';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
-import { getAssetsBalances } from '../assets';
-import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
-import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
-import { AAVE_V3 } from '../markets/aave';
 
 export const test = (web3: Web3, network: NetworkNumber) => {
   const contract = AaveV3ViewContract(web3, 1);
