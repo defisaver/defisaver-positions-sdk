@@ -152,7 +152,7 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.healthRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqPercent).div(payload.borrowedUsd).div(100)
     .toString();
-  payload.healthLiquidationRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqPercent).div(payload.borrowLimitUsd).div(100)
+  payload.healthLiquidationRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqRatio).div(payload.borrowLimitUsd)
     .toString();
   return payload;
 };
