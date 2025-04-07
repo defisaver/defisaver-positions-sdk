@@ -255,7 +255,7 @@ export interface AaveV3AggregatedPositionData {
   minCollRatio?: string,
   collLiquidationRatio?: string,
   healthRatio?: string,
-  healthLiquidationRatio?: string,
+  minHealthRatio?: string,
 }
 
 export interface AaveHelperCommon {
