@@ -111,10 +111,8 @@ export const sparkGetAggregatedPositionData = ({
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
-  payload.healthRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqPercent).div(payload.borrowedUsd).div(100)
-    .toString();
-  payload.healthLiquidationRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqRatio).div(payload.borrowLimitUsd)
-    .toString();
+  payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
+  payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
   return payload;
 };
 
