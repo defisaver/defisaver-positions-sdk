@@ -45,8 +45,7 @@ export const sparkGetSuppliableAsCollAssets = ({
 export const sparkGetEmodeMutableProps = ({
   eModeCategory,
   assetsData,
-}: SparkHelperCommon,
-_asset: string) => {
+}: SparkHelperCommon, _asset: string) => {
   const asset = wethToEth(_asset);
 
   const assetData = assetsData[asset];
@@ -112,6 +111,10 @@ export const sparkGetAggregatedPositionData = ({
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.healthRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqPercent).div(payload.borrowedUsd).div(100)
+    .toString();
+  payload.healthLiquidationRatio = new Dec(payload.suppliedCollateralUsd).mul(payload.liqRatio).div(payload.borrowLimitUsd)
+    .toString();
   return payload;
 };
 

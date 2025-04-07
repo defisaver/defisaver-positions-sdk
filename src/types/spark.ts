@@ -111,6 +111,8 @@ export interface SparkAggregatedPositionData {
   liquidationPrice?: string,
   minCollRatio: string,
   collLiquidationRatio: string,
+  healthRatio: string;
+  healthLiquidationRatio: string;
 }
 
 export interface SparkPositionData extends MMPositionData {
