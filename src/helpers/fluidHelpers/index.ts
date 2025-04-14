@@ -1,13 +1,17 @@
 import Dec from 'decimal.js';
+import { assetAmountInEth } from '@defisaver/tokens';
 import {
-  FluidAggregatedVaultData,
-  FluidAssetsData,
+  FluidAggregatedVaultData, FluidAssetData,
+  FluidAssetsData, FluidUsedAsset,
   FluidUsedAssets,
+  FluidVaultType,
   InnerFluidMarketData,
 } from '../../types';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMAssetsData } from '../../types/common';
+import { FluidView } from '../../types/contracts/generated';
+import { getEthAmountForDecimals } from '../../services/utils';
 
 export const getFluidAggregatedData = ({
   usedAssets,
@@ -17,10 +21,18 @@ export const getFluidAggregatedData = ({
   usedAssets: FluidUsedAssets,
   marketData: InnerFluidMarketData,
   assetsData: FluidAssetsData
-}): FluidAggregatedVaultData => {
+},
+supplyShares?: string,
+borrowShares?: string,
+): FluidAggregatedVaultData => {
   const payload = {} as FluidAggregatedVaultData;
-  payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
-  payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
+
+  payload.suppliedUsd = [FluidVaultType.T1, FluidVaultType.T3].includes(marketData.vaultType)
+    ? getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd)
+    : new Dec(marketData.collSharePrice!).mul(supplyShares!).toString();
+  payload.borrowedUsd = [FluidVaultType.T1, FluidVaultType.T2].includes(marketData.vaultType)
+    ? getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd)
+    : new Dec(marketData.debtSharePrice!).mul(borrowShares!).toString();
 
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
   payload.netApy = netApy;
@@ -55,3 +67,212 @@ export const getFluidAggregatedData = ({
 
   return payload;
 };
+
+
+interface DexSupplyData {
+  maxSupplyShares: string
+  supplyDexFee: string
+  token0PerSupplyShare: string
+  token1PerSupplyShare: string
+  withdrawable0: string
+  withdrawable1: string
+  withdrawableShares: string
+  utilizationSupply0: string
+  utilizationSupply1: string
+  supplyRate0: string
+  supplyRate1: string
+  totalSupplyShares: string
+  withdrawableToken0: string
+  withdrawableToken1: string
+  totalSupplyToken0: string
+  totalSupplyToken1: string
+}
+
+export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructOutput, collAsset0: string, collAsset1: string): DexSupplyData => {
+  const {
+    dexPool, // address of the dex pool
+    dexId, // id of the dex pool
+    fee: _fee, // fee of the dex pool TODO videti sa Rajkom
+    lastStoredPrice, // last stored price of the dex pool
+    centerPrice, // center price of the dex pool
+    token0Utilization, // token0 utilization
+    token1Utilization, // token1 utilization
+    // ONLY FOR SUPPLY
+    totalSupplyShares: totalSupplySharesWei, // total supply shares, in 1e18
+    maxSupplyShares: maxSupplySharesWei, // max supply shares, in 1e18
+    token0Supplied, // token0 supplied, in token0 decimals
+    token1Supplied, // token1 supplied, in token1 decimals
+    sharesWithdrawable, // shares withdrawable, in 1e18
+    token0Withdrawable, // token0 withdrawable, in token0 decimals
+    token1Withdrawable, // token1 withdrawable, in token1 decimals
+    token0PerSupplyShare: token0PerSupplyShareWei, // token0 amount per 1e18 supply shares
+    token1PerSupplyShare: token1PerSupplyShareWei, // token1 amount per 1e18 supply shares
+    token0SupplyRate, // token0 supply rate. E.g 320 = 3.2% APR
+    token1SupplyRate, // token1 supply rate. E.g 320 = 3.2% APR
+  } = dexSupplyData;
+
+  const maxSupplyShares = getEthAmountForDecimals(maxSupplySharesWei, 18);
+  const fee = new Dec(_fee).div(100).toString();
+
+  const token0PerSupplyShare = assetAmountInEth(token0PerSupplyShareWei, collAsset0);
+  const token1PerSupplyShare = assetAmountInEth(token1PerSupplyShareWei, collAsset1);
+
+  const withdrawable0 = assetAmountInEth(token0Withdrawable, collAsset0);
+  const withdrawable1 = assetAmountInEth(token1Withdrawable, collAsset1);
+  const utilizationSupply0 = assetAmountInEth(token0Utilization, collAsset0);
+  const utilizationSupply1 = assetAmountInEth(token1Utilization, collAsset1);
+
+  const supplyRate0 = new Dec(token0SupplyRate).div(100).toString();
+  const supplyRate1 = new Dec(token1SupplyRate).div(100).toString();
+
+  const totalSupplyShares = getEthAmountForDecimals(totalSupplySharesWei, 18); // in shares
+
+  const withdrawableShares = getEthAmountForDecimals(sharesWithdrawable, 18);
+  const withdrawableToken0 = new Dec(withdrawableShares).mul(token0PerSupplyShare).div(1e18).toString();
+  const withdrawableToken1 = new Dec(withdrawableShares).mul(token1PerSupplyShare).div(1e18).toString();
+
+  const totalSupplyToken0 = assetAmountInEth(token0Supplied, collAsset0);
+  const totalSupplyToken1 = assetAmountInEth(token1Supplied, collAsset1);
+
+
+  return {
+    maxSupplyShares,
+    withdrawableShares,
+    supplyDexFee: fee,
+    token0PerSupplyShare,
+    token1PerSupplyShare,
+    withdrawable0,
+    withdrawable1,
+    utilizationSupply0,
+    utilizationSupply1,
+    supplyRate0,
+    supplyRate1,
+    totalSupplyShares,
+    withdrawableToken0,
+    withdrawableToken1,
+    totalSupplyToken0,
+    totalSupplyToken1,
+  };
+};
+
+interface DexBorrowData {
+  maxBorrowShares: string
+  borrowDexFee: string
+  token0PerBorrowShare: string
+  token1PerBorrowShare: string
+  borrowable0: string
+  borrowable1: string
+  utilizationBorrow0: string
+  utilizationBorrow1: string
+  borrowRate0: string
+  borrowRate1: string
+  totalBorrowShares: string
+  borrowableToken0: string
+  borrowableToken1: string
+  totalBorrowToken0: string
+  totalBorrowToken1: string
+  borrowableShares: string
+  quoteTokensPerShare: string
+}
+
+export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructOutput, debtAsset0: string, debtAsset1: string): DexBorrowData => {
+  const {
+    dexPool,
+    dexId,
+    fee: _fee,
+    lastStoredPrice,
+    centerPrice,
+    token0Utilization,
+    token1Utilization,
+    totalBorrowShares: totalBorrowSharesWei,
+    maxBorrowShares: maxBorrowSharesWei,
+    token0Borrowed,
+    token1Borrowed,
+    sharesBorrowable,
+    token0Borrowable,
+    token1Borrowable,
+    token0PerBorrowShare: token0PerBorrowShareWei,
+    token1PerBorrowShare: token1PerBorrowShareWei,
+    token0BorrowRate,
+    token1BorrowRate,
+    quoteTokensPerShare,
+  } = dexBorrowData;
+
+  const maxBorrowShares = getEthAmountForDecimals(maxBorrowSharesWei, 18);
+  const fee = new Dec(_fee).div(100).toString();
+
+  const token0PerBorrowShare = assetAmountInEth(token0PerBorrowShareWei, debtAsset0);
+  const token1PerBorrowShare = assetAmountInEth(token1PerBorrowShareWei, debtAsset1);
+
+  const borrowable0 = assetAmountInEth(token0Borrowable, debtAsset0);
+  const borrowable1 = assetAmountInEth(token1Borrowable, debtAsset1);
+  const utilizationBorrow0 = assetAmountInEth(token0Utilization, debtAsset0);
+  const utilizationBorrow1 = assetAmountInEth(token1Utilization, debtAsset1);
+
+  const borrowRate0 = new Dec(token0BorrowRate).div(100).toString();
+  const borrowRate1 = new Dec(token1BorrowRate).div(100).toString();
+
+  const totalBorrowShares = getEthAmountForDecimals(totalBorrowSharesWei, 18); // in shares
+
+  const borrowableShares = getEthAmountForDecimals(sharesBorrowable, 18);
+  const borrowableToken0 = new Dec(borrowableShares).mul(token0PerBorrowShare).div(1e18).toString();
+  const borrowableToken1 = new Dec(borrowableShares).mul(token1PerBorrowShare).div(1e18).toString();
+
+  const totalBorrowToken0 = assetAmountInEth(token0Borrowed, debtAsset0);
+  const totalBorrowToken1 = assetAmountInEth(token1Borrowed, debtAsset1);
+
+  return {
+    borrowableShares,
+    maxBorrowShares,
+    borrowDexFee: fee,
+    token0PerBorrowShare,
+    token1PerBorrowShare,
+    borrowable0,
+    borrowable1,
+    utilizationBorrow0,
+    utilizationBorrow1,
+    borrowRate0,
+    borrowRate1,
+    totalBorrowShares,
+    borrowableToken0,
+    borrowableToken1,
+    totalBorrowToken0,
+    totalBorrowToken1,
+    quoteTokensPerShare: getEthAmountForDecimals(quoteTokensPerShare, 27),
+  };
+};
+
+const EMPTY_ASSET_DATA = {
+  symbol: '',
+  address: '',
+  price: '0',
+  totalSupply: '',
+  totalBorrow: '0',
+  canBeSupplied: false,
+  canBeBorrowed: false,
+  supplyRate: '0',
+  borrowRate: '0',
+};
+
+export const mergeAssetData = (existing: Partial<FluidAssetData> = {}, additional: Partial<FluidAssetData>): FluidAssetData => ({
+  ...EMPTY_ASSET_DATA,
+  ...existing,
+  ...additional,
+});
+
+export const EMPTY_USED_ASSET = {
+  isSupplied: false,
+  isBorrowed: false,
+  supplied: '0',
+  suppliedUsd: '0',
+  borrowed: '0',
+  borrowedUsd: '0',
+  symbol: '',
+  collateral: false,
+};
+
+export const mergeUsedAssets = (existing: Partial<FluidUsedAsset> = {}, additional: Partial<FluidUsedAsset>): FluidUsedAsset => ({
+  ...EMPTY_USED_ASSET,
+  ...existing,
+  ...additional,
+});

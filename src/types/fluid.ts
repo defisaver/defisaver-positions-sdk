@@ -10,8 +10,10 @@ export interface FluidMarketInfo {
   marketAddress: string
   hasSmartCollateral: boolean
   hasSmartDebt: boolean
-  collateralAsset: string
-  debtAsset: string
+  collateralAsset0: string
+  collateralAsset1?: string
+  debtAsset0: string
+  debtAsset1?: string
   ethBased?: boolean,
   btcBased?: boolean,
   wstETHBased?: boolean,
@@ -178,6 +180,11 @@ export interface FluidAssetData {
   canBeBorrowed: boolean,
   supplyRate: string,
   borrowRate: string,
+  utilization?: string,
+  withdrawable?: string,
+  borrowable?: string,
+  tokenPerSupplyShare?: string,
+  tokenPerBorrowShare?: string,
 }
 export type FluidAssetsData = { [key: string]: FluidAssetData };
 
@@ -204,8 +211,8 @@ export interface InnerFluidMarketData {
   totalSupplyVaultUsd: string,
   totalBorrowVault: string,
   totalBorrowVaultUsd: string,
-  withdrawalLimit: string,
-  withdrawableUntilLimit: string,
+  withdrawalLimit?: string,
+  withdrawableUntilLimit?: string,
   withdrawable: string,
   borrowLimit: string,
   borrowableUntilLimit: string,
@@ -217,6 +224,24 @@ export interface InnerFluidMarketData {
   supplyRate: string,
   borrowRate: string,
   liquidationMaxLimit: string,
+  // T2 and T4 vaults
+  collSharePrice?: string,
+  maxSupplyShares?: string,
+  withdrawableUSD?: string,
+  totalSupplyToken0?: string,
+  totalSupplyToken1?: string,
+  withdrawableToken0?: string,
+  withdrawableToken1?: string,
+  collDexFee?: string
+  // T3 and T4 vaults
+  debtSharePrice?: string,
+  maxBorrowShares?: string,
+  borrowableUSD?: string,
+  borrowableToken0?: string,
+  borrowableToken1?: string,
+  totalBorrowToken0?: string,
+  totalBorrowToken1?: string,
+  borrowDexFee?: string,
 }
 
 export interface FluidMarketData {
