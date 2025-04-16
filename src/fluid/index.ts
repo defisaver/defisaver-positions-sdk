@@ -829,11 +829,11 @@ const parseT2UserData = (userPositionData: FluidView.UserPositionStructOutputStr
   const collAsset1 = getAssetInfo(marketData.collAsset1);
   const debtAsset = getAssetInfo(marketData.debtAsset0);
 
-  const suppliedShares = getEthAmountForDecimals(userPositionData.supply, 18); // this is supplied in coll shares
+  const supplyShares = getEthAmountForDecimals(userPositionData.supply, 18); // this is supplied in coll shares
   const borrowed = getEthAmountForDecimals(userPositionData.borrow, debtAsset.decimals); // this is actual token borrow
-  console.log(assetsData[collAsset0.symbol]);
-  const supplied0 = new Dec(suppliedShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
-  const supplied1 = new Dec(suppliedShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
+
+  const supplied0 = new Dec(supplyShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
+  const supplied1 = new Dec(supplyShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
 
   const collUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: collAsset0.symbol,
@@ -872,11 +872,12 @@ const parseT2UserData = (userPositionData: FluidView.UserPositionStructOutputStr
   return {
     ...payload,
     usedAssets,
+    supplyShares,
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
       marketData,
-    }, suppliedShares) as FluidAggregatedVaultData),
+    }, supplyShares) as FluidAggregatedVaultData),
   };
 };
 
@@ -941,6 +942,7 @@ const parseT3UserData = (userPositionData: FluidView.UserPositionStructOutputStr
   return {
     ...payload,
     usedAssets,
+    borrowShares,
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
@@ -967,16 +969,15 @@ const parseT4UserData = (userPositionData: FluidView.UserPositionStructOutputStr
   const debtAsset0 = getAssetInfo(marketData.debtAsset0);
   const debtAsset1 = getAssetInfo(marketData.debtAsset1);
 
-  const suppliedShares = getEthAmountForDecimals(userPositionData.supply, 18); // this is actual token supply
+  const supplyShares = getEthAmountForDecimals(userPositionData.supply, 18); // this is actual token supply
   const borrowShares = getEthAmountForDecimals(userPositionData.borrow, 18); // this is actual token borrow
 
-  const supplied0 = new Dec(suppliedShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
-  const supplied1 = new Dec(suppliedShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
+  const supplied0 = new Dec(supplyShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
+  const supplied1 = new Dec(supplyShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
 
   const borrowed0 = new Dec(borrowShares).mul(assetsData[debtAsset0.symbol].tokenPerBorrowShare!).toString();
   const borrowed1 = new Dec(borrowShares).mul(assetsData[debtAsset1.symbol].tokenPerBorrowShare!).toString();
-  console.log(borrowShares);
-  console.log(assetsData[debtAsset0.symbol]);
+
   const collUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: collAsset0.symbol,
     collateral: true,
@@ -999,7 +1000,6 @@ const parseT4UserData = (userPositionData: FluidView.UserPositionStructOutputStr
     borrowedUsd: new Dec(borrowed0).mul(assetsData[debtAsset0.symbol].price).toString(),
     isBorrowed: new Dec(borrowed0).gt(0),
   };
-
   const debtUsedAsset1: Partial<FluidUsedAsset> = {
     symbol: debtAsset1.symbol,
     collateral: false,
@@ -1019,15 +1019,16 @@ const parseT4UserData = (userPositionData: FluidView.UserPositionStructOutputStr
       return acc;
     }, {} as Record<string, FluidUsedAsset>) as FluidUsedAssets;
 
-
   return {
     ...payload,
     usedAssets,
+    supplyShares,
+    borrowShares,
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
       marketData,
-    }, suppliedShares, borrowShares) as FluidAggregatedVaultData),
+    }, supplyShares, borrowShares) as FluidAggregatedVaultData),
   };
 };
 

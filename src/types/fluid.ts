@@ -289,6 +289,8 @@ export interface BaseFluidVaultData {
   isSubscribedToAutomation: boolean,
   automationResubscribeRequired: boolean,
   lastUpdated: number,
+  supplyShares?: string;
+  borrowShares?: string;
 }
 
 export type FluidVaultData = FluidAggregatedVaultData & BaseFluidVaultData;
