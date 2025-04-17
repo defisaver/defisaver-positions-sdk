@@ -8,7 +8,7 @@
   "scripts": {
     "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
-    "build": "npm run lint && npm run generate-contracts && npm run build:cjs && npm run build:esm",
+    "build": "npm run generate-contracts && npm run lint && npm run build:cjs && npm run build:esm",
     "dev": "npm run generate-contracts && tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
