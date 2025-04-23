@@ -1,7 +1,7 @@
-import { getAssetInfo } from '@defisaver/tokens';
+import { AssetData, getAssetInfo } from '@defisaver/tokens';
 import { NetworkNumber } from '../../types/common';
 
-export const compoundV2CollateralAssets = [
+export const compoundV2CollateralAssets: AssetData[] = [
   'cETH', 'cDAI', 'cBAT', 'cZRX', 'cUSDC', 'cWBTC Legacy', 'cWBTC', 'cUSDT',
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));

@@ -1,7 +1,7 @@
-import { getAssetInfo } from '@defisaver/tokens';
+import { AssetData, getAssetInfo } from '@defisaver/tokens';
 import { NetworkNumber } from '../../types/common';
 
-export const aaveV1AssetsDefaultMarket = [
+export const aaveV1AssetsDefaultMarket: AssetData[] = [
   'aETH', 'aDAI', 'aUSDC', 'aSUSD', 'aTUSD', 'aUSDT', 'aBUSD', 'aBAT', 'aLEND',
   'aLINK', 'aMANA', 'aMKR', 'aREP', 'aSNX', 'aWBTC', 'aZRX', 'aENJ', 'aREN', 'aYFI', 'aUNI', 'aAAVE',
 ].map((symbol) => getAssetInfo(symbol));
