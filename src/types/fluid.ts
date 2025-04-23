@@ -185,6 +185,7 @@ export interface FluidAssetData {
   borrowable?: string,
   tokenPerSupplyShare?: string,
   tokenPerBorrowShare?: string,
+  reserves?: string,
 }
 export type FluidAssetsData = { [key: string]: FluidAssetData };
 

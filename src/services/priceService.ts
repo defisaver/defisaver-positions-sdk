@@ -4,7 +4,7 @@ import { getAssetInfo } from '@defisaver/tokens';
 import {
   COMPPriceFeedContract,
   ETHPriceFeedContract,
-  USDCPriceFeedContract,
+  USDCPriceFeedContract, WeETHPriceFeedContract,
   WstETHPriceFeedContract,
 } from '../contracts';
 import { NetworkNumber } from '../types/common';
@@ -77,10 +77,39 @@ export const getWstETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber)
   return calls;
 };
 
+export const getWeETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber) => {
+  const weETHFeedContract = WeETHPriceFeedContract(web3, network);
+  const ethFeedContract = ETHPriceFeedContract(web3, network);
+  const calls = [
+    {
+      target: ethFeedContract.options.address,
+      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
+      params: [],
+    },
+    {
+      target: weETHFeedContract.options.address,
+      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
+      params: [],
+    },
+    {
+      target: weETHFeedContract.options.address,
+      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'decimals'),
+      params: [],
+    },
+  ];
+  return calls;
+};
+
 export const parseWstETHPriceCalls = (_ethPrice: string, wstETHrate: { answer: string }, decimals: string) => {
   const ethPrice = new Dec(_ethPrice).div(1e8);
   const wstETHRate = getEthAmountForDecimals(wstETHrate.answer, decimals);
   return { ethPrice, wstETHRate };
+};
+
+export const parseWeETHPriceCalls = (_ethPrice: string, weETHrate: { answer: string }, decimals: string) => {
+  const ethPrice = new Dec(_ethPrice).div(1e8);
+  const weETHRate = getEthAmountForDecimals(weETHrate.answer, decimals);
+  return { ethPrice, weETHRate };
 };
 
 // this is a fixed version, the original version is above but requires to refactor comp v3 function, so it's easier to just copy the function for now

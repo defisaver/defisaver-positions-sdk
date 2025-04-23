@@ -1,6 +1,7 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import {
+  assetAmountInEth,
   AssetData, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
 import { EthAddress, NetworkNumber } from '../types/common';
@@ -29,8 +30,10 @@ import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddres
 import { USD_QUOTE } from '../constants';
 import {
   getChainlinkAssetAddress,
+  getWeETHChainLinkPriceCalls,
   getWstETHChainLinkPriceCalls,
   getWstETHPriceFluid,
+  parseWeETHPriceCalls,
   parseWstETHPriceCalls,
 } from '../services/priceService';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
@@ -72,6 +75,7 @@ const getChainLinkPricesForTokens = async (
     const chainLinkFeedAddress = getChainlinkAssetAddress(assetInfo.symbol, network);
 
     if (assetInfo.symbol === 'wstETH') return getWstETHChainLinkPriceCalls(web3, network);
+    if (assetInfo.symbol === 'weETH') return getWeETHChainLinkPriceCalls(web3, network);
 
     if (isMainnet) {
       const feedRegistryContract = FeedRegistryContract(web3, NetworkNumber.Eth);
@@ -107,6 +111,16 @@ const getChainLinkPricesForTokens = async (
         } = parseWstETHPriceCalls(prices[i + offset][0], prices[i + offset + 1], prices[i + offset + 2][0]);
         offset += 2;
         acc[token] = new Dec(ethPrice).mul(wstETHRate).toString();
+        break;
+      }
+
+      case 'weETH': {
+        const {
+          ethPrice,
+          weETHRate,
+        } = parseWeETHPriceCalls(prices[i + offset][0], prices[i + offset + 1], prices[i + offset + 2][0]);
+        offset += 2;
+        acc[token] = new Dec(ethPrice).mul(weETHRate).toString();
         break;
       }
 
@@ -339,8 +353,9 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const liquidationMaxLimit = new Dec(data.liquidationMaxLimit).div(100).toString();
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
+  const totalSupplySharesInVault = assetAmountInEth(data.totalSupplyVault);
   const collSharePrice = new Dec(oraclePrice).mul(prices[debtAsset.address]).toString();
-  const totalSupplyVaultUsd = new Dec(totalSupplyShares).mul(collSharePrice).toString();
+  const totalSupplyVaultUsd = new Dec(totalSupplySharesInVault).mul(collSharePrice).toString();
   const withdrawableUSD = new Dec(withdrawableShares).mul(collSharePrice).toString();
 
   const marketData = {
@@ -413,6 +428,8 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowableToken1,
     totalBorrowToken0,
     totalBorrowToken1,
+    reservesBorrowToken0,
+    reservesBorrowToken1,
   } = parseDexBorrowData(data.dexBorrowData, debtAsset0.symbol, debtAsset1.symbol);
 
   // 18 because debt is represented in shares for which they use 18 decimals
@@ -446,6 +463,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable0,
     utilization: utilizationBorrow0,
     tokenPerBorrowShare: token0PerBorrowShare,
+    reserves: reservesBorrowToken0,
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
     debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol, mainnetWeb3);
@@ -462,6 +480,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable1,
     utilization: utilizationBorrow1,
     tokenPerBorrowShare: token1PerBorrowShare,
+    reserves: reservesBorrowToken1,
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
@@ -487,7 +506,11 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
   const debtSharePrice = new Dec(oraclePrice).mul(prices[collAsset.address]).toString();
-  const totalBorrowVaultUsd = new Dec(totalBorrowShares).mul(debtSharePrice).toString();
+
+  const totalBorrowSharesInVault = assetAmountInEth(data.totalBorrowVault);
+
+  const totalBorrowVaultUsd = new Dec(totalBorrowSharesInVault).mul(debtSharePrice).toString();
+
   const borrowableUSD = new Dec(borrowableShares).mul(debtSharePrice).toString();
 
   const marketData = {
@@ -669,12 +692,14 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const liquidationMaxLimit = new Dec(data.liquidationMaxLimit).div(100).toString();
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
+  const totalBorrowSharesInVault = assetAmountInEth(data.totalBorrowVault);
   const debtSharePrice = new Dec(quoteTokensPerShare).mul(prices[quoteToken.address]).toString();
-  const totalBorrowVaultUsd = new Dec(totalBorrowShares).mul(debtSharePrice).toString();
+  const totalBorrowVaultUsd = new Dec(totalBorrowSharesInVault).mul(debtSharePrice).toString();
   const borrowableUSD = new Dec(borrowableShares).mul(debtSharePrice).toString();
 
+  const totalSupplySharesInVault = assetAmountInEth(data.totalSupplyVault);
   const collSharePrice = new Dec(oraclePrice).mul(debtSharePrice).toString();
-  const totalSupplyVaultUsd = new Dec(totalSupplyShares).mul(collSharePrice).toString();
+  const totalSupplyVaultUsd = new Dec(totalSupplySharesInVault).mul(collSharePrice).toString();
   const withdrawableUSD = new Dec(withdrawableShares).mul(collSharePrice).toString();
 
   const marketData = {

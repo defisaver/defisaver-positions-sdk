@@ -86,6 +86,8 @@ interface DexSupplyData {
   withdrawableToken1: string
   totalSupplyToken0: string
   totalSupplyToken1: string
+  reservesSupplyToken0: string
+  reservesSupplyToken1: string
 }
 
 export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructOutput, collAsset0: string, collAsset1: string): DexSupplyData => {
@@ -109,6 +111,8 @@ export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructO
     token1PerSupplyShare: token1PerSupplyShareWei, // token1 amount per 1e18 supply shares
     token0SupplyRate, // token0 supply rate. E.g 320 = 3.2% APR
     token1SupplyRate, // token1 supply rate. E.g 320 = 3.2% APR
+    supplyToken0Reserves, // token0 reserves in the dex pool
+    supplyToken1Reserves, // token1 reserves in the dex pool
   } = dexSupplyData;
 
   const maxSupplyShares = getEthAmountForDecimals(maxSupplySharesWei, 18);
@@ -134,6 +138,8 @@ export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructO
   const totalSupplyToken0 = assetAmountInEth(token0Supplied, collAsset0);
   const totalSupplyToken1 = assetAmountInEth(token1Supplied, collAsset1);
 
+  const reservesSupplyToken0 = assetAmountInEth(supplyToken0Reserves, collAsset0);
+  const reservesSupplyToken1 = assetAmountInEth(supplyToken1Reserves, collAsset1);
 
   return {
     maxSupplyShares,
@@ -152,6 +158,8 @@ export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructO
     withdrawableToken1,
     totalSupplyToken0,
     totalSupplyToken1,
+    reservesSupplyToken0,
+    reservesSupplyToken1,
   };
 };
 
@@ -173,6 +181,8 @@ interface DexBorrowData {
   totalBorrowToken1: string
   borrowableShares: string
   quoteTokensPerShare: string
+  reservesBorrowToken0: string
+  reservesBorrowToken1: string
 }
 
 export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructOutput, debtAsset0: string, debtAsset1: string): DexBorrowData => {
@@ -196,6 +206,8 @@ export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructO
     token0BorrowRate,
     token1BorrowRate,
     quoteTokensPerShare,
+    borrowToken0Reserves,
+    borrowToken1Reserves,
   } = dexBorrowData;
 
   const maxBorrowShares = getEthAmountForDecimals(maxBorrowSharesWei, 18);
@@ -221,6 +233,9 @@ export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructO
   const totalBorrowToken0 = assetAmountInEth(token0Borrowed, debtAsset0);
   const totalBorrowToken1 = assetAmountInEth(token1Borrowed, debtAsset1);
 
+  const reservesBorrowToken0 = assetAmountInEth(borrowToken0Reserves, debtAsset0);
+  const reservesBorrowToken1 = assetAmountInEth(borrowToken1Reserves, debtAsset1);
+
   return {
     borrowableShares,
     maxBorrowShares,
@@ -239,6 +254,8 @@ export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructO
     totalBorrowToken0,
     totalBorrowToken1,
     quoteTokensPerShare: getEthAmountForDecimals(quoteTokensPerShare, 27),
+    reservesBorrowToken0,
+    reservesBorrowToken1,
   };
 };
 
