@@ -732,6 +732,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalBorrowToken0,
     totalBorrowToken1,
     borrowableUSD,
+    borrowable: borrowableShares,
     maxBorrowShares,
     borrowDexFee,
     totalSupplyToken0,
