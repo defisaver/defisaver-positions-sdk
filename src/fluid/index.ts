@@ -287,6 +287,8 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     utilizationSupply0,
     utilizationSupply1,
     withdrawableShares,
+    reservesSupplyToken0,
+    reservesSupplyToken1,
   } = parseDexSupplyData(data.dexSupplyData, collAsset0.symbol, collAsset1.symbol);
 
   const collFirstAssetData: Partial<FluidAssetData> = {
@@ -299,6 +301,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     utilization: utilizationSupply0,
     withdrawable: withdrawable0,
     tokenPerSupplyShare: token0PerSupplyShare,
+    supplyReserves: reservesSupplyToken0,
   };
   if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
     collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset0.symbol, mainnetWeb3);
@@ -315,6 +318,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawable: withdrawable1,
     utilization: utilizationSupply1,
     tokenPerSupplyShare: token1PerSupplyShare,
+    supplyReserves: reservesSupplyToken1,
   };
   if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
     collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
@@ -396,6 +400,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawableToken1,
     withdrawableUSD,
     withdrawable: withdrawableShares,
+    widthdrawableDex: new Dec(maxSupplyShares).minus(totalSupplyShares).toString(),
     maxSupplyShares,
     collDexFee: supplyDexFee,
   };
@@ -463,7 +468,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable0,
     utilization: utilizationBorrow0,
     tokenPerBorrowShare: token0PerBorrowShare,
-    reserves: reservesBorrowToken0,
+    borrowReserves: reservesBorrowToken0,
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
     debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol, mainnetWeb3);
@@ -480,7 +485,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable1,
     utilization: utilizationBorrow1,
     tokenPerBorrowShare: token1PerBorrowShare,
-    reserves: reservesBorrowToken1,
+    borrowReserves: reservesBorrowToken1,
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
@@ -545,6 +550,8 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalBorrowToken0,
     totalBorrowToken1,
     borrowableUSD,
+    borrowable: borrowableShares,
+    borrowableDex: new Dec(maxBorrowShares).minus(totalBorrowShares).toString(),
     maxBorrowShares,
     borrowDexFee,
     debtSharePrice,
@@ -589,6 +596,8 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     utilizationSupply0,
     utilizationSupply1,
     withdrawableShares,
+    reservesSupplyToken0,
+    reservesSupplyToken1,
   } = parseDexSupplyData(data.dexSupplyData, collAsset0.symbol, collAsset1.symbol);
 
   const {
@@ -609,6 +618,8 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalBorrowToken0,
     totalBorrowToken1,
     quoteTokensPerShare,
+    reservesBorrowToken0,
+    reservesBorrowToken1,
   } = parseDexBorrowData(data.dexBorrowData, debtAsset0.symbol, debtAsset1.symbol);
 
   const collAsset0Data: Partial<FluidAssetData> = {
@@ -621,6 +632,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     utilization: utilizationSupply0,
     withdrawable: withdrawable0,
     tokenPerSupplyShare: token0PerSupplyShare,
+    supplyReserves: reservesSupplyToken0,
   };
   if (STAKING_ASSETS.includes(collAsset0Data.symbol!)) {
     collAsset0Data.incentiveSupplyApy = await getStakingApy(collAsset0.symbol, mainnetWeb3);
@@ -637,6 +649,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawable: withdrawable1,
     utilization: utilizationSupply1,
     tokenPerSupplyShare: token1PerSupplyShare,
+    supplyReserves: reservesSupplyToken1,
   };
   if (STAKING_ASSETS.includes(collAsset1Data.symbol!)) {
     collAsset1Data.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
@@ -653,6 +666,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable0,
     utilization: utilizationBorrow0,
     tokenPerBorrowShare: token0PerBorrowShare,
+    borrowReserves: reservesBorrowToken0,
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
     debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol, mainnetWeb3);
@@ -669,6 +683,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowable1,
     utilization: utilizationBorrow1,
     tokenPerBorrowShare: token1PerBorrowShare,
+    borrowReserves: reservesBorrowToken1,
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
@@ -733,6 +748,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalBorrowToken1,
     borrowableUSD,
     borrowable: borrowableShares,
+    borrowableDex: new Dec(maxBorrowShares).minus(totalBorrowShares).toString(),
     maxBorrowShares,
     borrowDexFee,
     totalSupplyToken0,
@@ -741,6 +757,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawableToken1,
     withdrawableUSD,
     withdrawable: withdrawableShares,
+    widthdrawableDex: new Dec(maxSupplyShares).minus(totalSupplyShares).toString(),
     maxSupplyShares,
     collDexFee: supplyDexFee,
     collSharePrice,
