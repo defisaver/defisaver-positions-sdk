@@ -543,7 +543,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       interestMode = 'both';
     }
     if (!usedAssets[asset]) usedAssets[asset] = {} as AaveV3UsedAsset;
-    const nativeAsset = asset === 'GHO' && network === NetworkNumber.Eth;
+    const nativeAsset = asset === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
 
     let discountRateOnBorrow = '0';
     const borrowed = new Dec(borrowedStable).add(borrowedVariable).toString();
