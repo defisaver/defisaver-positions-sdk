@@ -242,7 +242,7 @@ export const getLiquityV2TroveData = async (
   },
 ): Promise<LiquityV2TroveData> => {
   const viewContract = getLiquityV2ViewContract(web3, network, selectedMarket.isLegacy);
-  const { minCollRatio } = allMarketsData[selectedMarket.value].marketData;
+  const { minCollRatio, batchCollRatio } = allMarketsData[selectedMarket.value].marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
   const [_data, debtInFront] = await Promise.all([
     viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
@@ -284,6 +284,9 @@ export const getLiquityV2TroveData = async (
   const interestBatchManager = data.interestBatchManager;
   const lastInterestRateAdjTime = data.lastInterestRateAdjTime;
 
+  const hasInterestBatchManager = !compareAddresses(interestBatchManager, ZERO_ADDRESS);
+  const liqRatio = hasInterestBatchManager ? new Dec(minCollRatio).add(batchCollRatio).toString() : minCollRatio;
+
   const payload: LiquityV2TroveData = {
     usedAssets,
     troveId,
@@ -291,9 +294,10 @@ export const getLiquityV2TroveData = async (
     interestBatchManager,
     debtInFront,
     lastInterestRateAdjTime,
+    liqRatio,
     troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
-      usedAssets, assetsData, minCollRatio, interestRate,
+      usedAssets, assetsData, minCollRatio: liqRatio, interestRate,
     }),
     collRatio,
   };

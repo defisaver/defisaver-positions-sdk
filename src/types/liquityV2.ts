@@ -108,6 +108,7 @@ export interface LiquityV2TroveData {
   troveId: string,
   ratio: string,
   collRatio: string,
+  liqRatio: string,
   interestRate: string,
   leftToBorrowUsd: string,
   borrowLimitUsd: string,
