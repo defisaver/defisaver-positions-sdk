@@ -4,6 +4,10 @@ export enum LiquityV2Versions {
   LiquityV2Eth = 'liquityv2eth',
   LiquityV2WstEth = 'liquityv2wsteth',
   LiquityV2REth = 'liquityv2reth',
+  // Legacy
+  LiquityV2EthLegacy = 'liquityv2ethlegacy',
+  LiquityV2WstEthLegacy = 'liquityv2wstethlegacy',
+  LiquityV2REthLegacy = 'liquityv2rethlegacy',
 }
 
 export enum LIQUITY_V2_TROVE_STATUS_ENUM {
@@ -32,6 +36,7 @@ export interface LiquityV2MarketInfo {
   collateralToken: string,
   marketAddress: string,
   protocolName: string,
+  isLegacy: boolean,
 }
 
 export interface LiquityV2AssetData {
@@ -54,6 +59,7 @@ export interface InnerLiquityV2MarketData {
   minCollRatio: string,
   totalCollRatio: string,
   criticalCollRatio: string,
+  batchCollRatio: string,
   isUnderCollateralized: boolean,
   hintHelperAddress: EthAddress,
   troveNFTAddress: EthAddress,
