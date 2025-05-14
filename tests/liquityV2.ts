@@ -8,7 +8,7 @@ import { NetworkNumber } from '../src/types/common';
 import { getWeb3Instance } from './utils/getWeb3Instance';
 import { LiquityV2ViewContract } from '../src/contracts';
 
-const TROVE_ID = '71810214906374185731654292089929598901308110473187727225692166795279417034813';
+const TROVE_ID = '70060145442968520127940599527972768745683442224908533738190719306518908292482';
 
 describe('Liquity V2', () => {
   let web3: Web3;
@@ -37,7 +37,7 @@ describe('Liquity V2', () => {
   };
 
   const fetchUserTroves = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData) => {
-    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, false, '0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF');
+    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, false, '0xDc0Ad7a48088f1AA55d26f8b36F7C1E827DdD280');
     // console.log(troves);
     // console.log(nextFreeTroveIndex);
   };
