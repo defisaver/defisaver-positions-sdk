@@ -8,7 +8,7 @@ import { NetworkNumber } from '../src/types/common';
 import { getWeb3Instance } from './utils/getWeb3Instance';
 import { LiquityV2ViewContract } from '../src/contracts';
 
-const TROVE_ID = '71810214906374185731654292089929598901308110473187727225692166795279417034813';
+const TROVE_ID = '70060145442968520127940599527972768745683442224908533738190719306518908292482';
 
 describe('Liquity V2', () => {
   let web3: Web3;
@@ -37,7 +37,7 @@ describe('Liquity V2', () => {
   };
 
   const fetchUserTroves = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData) => {
-    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, false, '0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF');
+    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, false, '0xDc0Ad7a48088f1AA55d26f8b36F7C1E827DdD280');
     // console.log(troves);
     // console.log(nextFreeTroveIndex);
   };
@@ -59,10 +59,28 @@ describe('Liquity V2', () => {
     await fetchUserTroves(web3, network, market, marketData);
   });
 
+  it('can fetch troves for user on ETH Legacy market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2EthLegacy];
+    const marketData = await fetchMarketData(web3, network, market);
+
+    await fetchUserTroves(web3, network, market, marketData);
+  });
+
   it('can fetch trove data for ETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
+
+    const marketData = await fetchMarketData(web3, network, market);
+    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+  });
+
+  it('can fetch trove data for ETH Legacy market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2EthLegacy];
 
     const marketData = await fetchMarketData(web3, network, market);
     await fetchTroveData(web3, network, market, marketData, TROVE_ID);
@@ -78,10 +96,28 @@ describe('Liquity V2', () => {
     await fetchTroveData(web3, network, market, marketData, TROVE_ID);
   });
 
+  it('can fetch trove data for wstETH Legacy market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2WstEthLegacy];
+
+    const marketData = await fetchMarketData(web3, network, market);
+    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+  });
+
   it('can fetch trove data for rETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2REth];
+
+    const marketData = await fetchMarketData(web3, network, market);
+    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+  });
+
+  it('can fetch trove data for rETH Legacy market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2REthLegacy];
 
     const marketData = await fetchMarketData(web3, network, market);
     await fetchTroveData(web3, network, market, marketData, TROVE_ID);

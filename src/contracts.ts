@@ -130,5 +130,7 @@ export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes
 export const LlamaLendViewContract = createContractFromConfigFunc<ContractTypes.LlamaLendView>('LlamaLendView');
 
 export const LiquityV2ViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2View>('LiquityV2View');
+export const LiquityV2LegacyViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2LegacyView>('LiquityV2LegacyView');
+
 export const EulerV2ViewContract = createContractFromConfigFunc<ContractTypes.EulerV2View>('EulerV2View');
 export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
