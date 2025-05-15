@@ -10,7 +10,7 @@ export const LIQUITY_V2_ETH_MARKET = (networkId: NetworkNumber = NetworkNumber.E
   url: 'eth',
   debtToken: 'BOLD',
   collateralToken: 'ETH',
-  marketAddress: '0xde524be191de806011e98c8d36d50d7a88391a3e',
+  marketAddress: '0xc3fe668b43439525f70fe860f89882f0be312504',
   protocolName: 'liquity-v2',
   isLegacy: false,
 });
@@ -23,7 +23,7 @@ export const LIQUITY_V2_WSTETH_MARKET = (networkId: NetworkNumber = NetworkNumbe
   url: 'wsteth',
   debtToken: 'BOLD',
   collateralToken: 'wstETH',
-  marketAddress: '0x1649ccb966c90ff524a15231bc177d77a275fda1',
+  marketAddress: '0x9b27787ff66aa3cea8dbc47772328459a1fa05ac',
   protocolName: 'liquity-v2',
   isLegacy: false,
 });
@@ -36,7 +36,7 @@ export const LIQUITY_V2_RETH_MARKET = (networkId: NetworkNumber = NetworkNumber.
   url: 'reth',
   debtToken: 'BOLD',
   collateralToken: 'rETH',
-  marketAddress: '0x6809ac46fa55e4d86be368c589427684616f91c2',
+  marketAddress: '0xde524be191de806011e98c8d36d50d7a88391a3e',
   protocolName: 'liquity-v2',
   isLegacy: false,
 });
