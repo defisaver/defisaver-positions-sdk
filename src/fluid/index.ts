@@ -896,7 +896,6 @@ const parseT2UserData = (userPositionData: FluidView.UserPositionStructOutputStr
 
   const debtUsedAsset: Partial<FluidUsedAsset> = {
     symbol: debtAsset.symbol,
-    collateral: false,
     borrowed,
     borrowedUsd: new Dec(borrowed).mul(assetsData[debtAsset.symbol].price).toString(),
     isBorrowed: new Dec(borrowed).gt(0),
@@ -957,7 +956,6 @@ const parseT3UserData = (userPositionData: FluidView.UserPositionStructOutputStr
 
   const debtUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: debtAsset0.symbol,
-    collateral: false,
     borrowed: borrowed0,
     borrowedUsd: new Dec(borrowed0).mul(assetsData[debtAsset0.symbol].price).toString(),
     isBorrowed: new Dec(borrowed0).gt(0),
@@ -965,7 +963,6 @@ const parseT3UserData = (userPositionData: FluidView.UserPositionStructOutputStr
 
   const debtUsedAsset1: Partial<FluidUsedAsset> = {
     symbol: debtAsset1.symbol,
-    collateral: false,
     borrowed: borrowed1,
     borrowedUsd: new Dec(borrowed1).mul(assetsData[debtAsset1.symbol].price).toString(),
     isBorrowed: new Dec(borrowed1).gt(0),
@@ -1038,14 +1035,12 @@ const parseT4UserData = (userPositionData: FluidView.UserPositionStructOutputStr
 
   const debtUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: debtAsset0.symbol,
-    collateral: false,
     borrowed: borrowed0,
     borrowedUsd: new Dec(borrowed0).mul(assetsData[debtAsset0.symbol].price).toString(),
     isBorrowed: new Dec(borrowed0).gt(0),
   };
   const debtUsedAsset1: Partial<FluidUsedAsset> = {
     symbol: debtAsset1.symbol,
-    collateral: false,
     borrowed: borrowed1,
     borrowedUsd: new Dec(borrowed1).mul(assetsData[debtAsset1.symbol].price).toString(),
     isBorrowed: new Dec(borrowed1).gt(0),
