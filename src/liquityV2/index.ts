@@ -1,7 +1,7 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import { createContractWrapper, LiquityV2ViewContract } from '../contracts';
+import { createContractWrapper, LiquityV2LegacyViewContract, LiquityV2ViewContract } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
 import {
   InnerLiquityV2MarketData,
@@ -15,11 +15,19 @@ import { compareAddresses, ethToWeth, MAXUINT } from '../services/utils';
 import { LiquityV2View } from '../types/contracts/generated';
 import { ZERO_ADDRESS } from '../constants';
 import { LiquityV2Markets } from '../markets';
+import { BaseContract } from '../types/contracts/generated/types';
+
+const getLiquityV2ViewContract = (web3: Web3, network: NetworkNumber, isLegacy: boolean): BaseContract => {
+  if (isLegacy) return LiquityV2LegacyViewContract(web3, network);
+  return LiquityV2ViewContract(web3, network);
+};
 
 
 export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, mainnetWeb3: Web3): Promise<LiquityV2MarketData> => {
-  const viewContract = LiquityV2ViewContract(web3, network);
-  const { marketAddress, debtToken, collateralToken } = selectedMarket;
+  const {
+    marketAddress, debtToken, collateralToken, isLegacy,
+  } = selectedMarket;
+  const viewContract = getLiquityV2ViewContract(web3, network, isLegacy);
   const data = await viewContract.methods.getMarketData(marketAddress).call();
   const hintHelperAddress = data.hintHelpers;
   const troveNFTAddress = data.troveNFT;
@@ -31,6 +39,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
 
   const minCollRatio = new Dec(data.MCR).div(1e16).toString();
   const criticalCollRatio = new Dec(data.CCR).div(1e18).toString();
+  const batchCollRatio = new Dec(data.BCR || '0').div(1e16).toString();
 
   const totalMarketBorrow = assetAmountInEth(data.entireSystemDebt);
   const totalMarketSupply = assetAmountInEth(data.entireSystemColl);
@@ -76,6 +85,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
       minCollRatio,
       totalCollRatio: new Dec(totalCollRatio).mul(100).toString(),
       criticalCollRatio: new Dec(criticalCollRatio).mul(100).toString(),
+      batchCollRatio,
       isUnderCollateralized: new Dec(totalCollRatio).lt(criticalCollRatio),
       hintHelperAddress,
       troveNFTAddress,
@@ -102,15 +112,18 @@ const getUserTroves = async (viewContract: any, account: EthAddress, marketAddre
 const TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
 const nftContractCreationBlockMapping = {
-  ETH: 21686215,
-  wstETH: 21686238,
-  rETH: 21686257,
+  [LiquityV2Versions.LiquityV2Eth]: 22516079,
+  [LiquityV2Versions.LiquityV2WstEth]: 22516099,
+  [LiquityV2Versions.LiquityV2REth]: 22516118,
+  // legacy
+  [LiquityV2Versions.LiquityV2EthLegacy]: 21686215,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: 21686238,
+  [LiquityV2Versions.LiquityV2REthLegacy]: 21686257,
 };
 
-const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, collAsset: string, account: EthAddress): Promise<{ troveId: string }[]> => {
+const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, market: LiquityV2Versions, account: EthAddress): Promise<{ troveId: string }[]> => {
   const nftContract = createContractWrapper(web3, network, 'LiquityV2TroveNFT', troveNFTAddress);
-  // @ts-ignore
-  const nftContractCreationBlock = nftContractCreationBlockMapping[collAsset];
+  const nftContractCreationBlock = nftContractCreationBlockMapping[market];
   const currentBlock = await web3.eth.getBlockNumber();
   const events = await nftContract.getPastEvents(
     TransferEventSig,
@@ -132,10 +145,10 @@ const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFT
 };
 
 export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
-  const viewContract = LiquityV2ViewContract(web3, network);
+  const viewContract = getLiquityV2ViewContract(web3, network, selectedMarket.isLegacy);
   const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
     getUserTroves(viewContract, account, selectedMarket.marketAddress),
-    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.collateralToken, account),
+    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.value, account),
   ]);
   const troves = [...userTroves.map(({ troveId }) => ({ troveId })), ...userTransferredTroves];
   const filteredTroves = troves.filter((value, index, self) => index === self.findIndex((t) => (
@@ -230,8 +243,8 @@ export const getLiquityV2TroveData = async (
     allMarketsData: Record<LiquityV2Versions, LiquityV2MarketData>,
   },
 ): Promise<LiquityV2TroveData> => {
-  const viewContract = LiquityV2ViewContract(web3, network);
-  const { minCollRatio } = allMarketsData[selectedMarket.value].marketData;
+  const viewContract = getLiquityV2ViewContract(web3, network, selectedMarket.isLegacy);
+  const { minCollRatio, batchCollRatio } = allMarketsData[selectedMarket.value].marketData;
   const { collateralToken, marketAddress, debtToken } = selectedMarket;
   const [_data, debtInFront] = await Promise.all([
     viewContract.methods.getTroveInfo(marketAddress, troveId).call(),
@@ -273,6 +286,9 @@ export const getLiquityV2TroveData = async (
   const interestBatchManager = data.interestBatchManager;
   const lastInterestRateAdjTime = data.lastInterestRateAdjTime;
 
+  const hasInterestBatchManager = !compareAddresses(interestBatchManager, ZERO_ADDRESS);
+  const liqRatio = hasInterestBatchManager ? new Dec(minCollRatio).add(batchCollRatio).toString() : minCollRatio;
+
   const payload: LiquityV2TroveData = {
     usedAssets,
     troveId,
@@ -280,9 +296,10 @@ export const getLiquityV2TroveData = async (
     interestBatchManager,
     debtInFront,
     lastInterestRateAdjTime,
+    liqRatio,
     troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status, 10)],
     ...getLiquityV2AggregatedPositionData({
-      usedAssets, assetsData, minCollRatio, interestRate,
+      usedAssets, assetsData, minCollRatio: liqRatio, interestRate,
     }),
     collRatio,
   };
