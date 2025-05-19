@@ -13,7 +13,7 @@
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
     "generate-contracts": "node scripts/generateContracts.js",
-    "test": "mocha tests/liquityv2.ts",
+    "test": "mocha tests/*.ts",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "build-test": "npm run build && npm run test",
@@ -23,7 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.6.4-dev-1",
+    "@defisaver/tokens": "^1.6.5",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "@types/lodash": "^4.17.15",

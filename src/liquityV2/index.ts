@@ -111,17 +111,19 @@ const getUserTroves = async (viewContract: any, account: EthAddress, marketAddre
 
 const TransferEventSig = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef';
 
-// TODO: add the rest of the markets
 const nftContractCreationBlockMapping = {
-  ETH: 21686215,
-  wstETH: 21686238,
-  rETH: 21686257,
+  [LiquityV2Versions.LiquityV2Eth]: 22516079,
+  [LiquityV2Versions.LiquityV2WstEth]: 22516099,
+  [LiquityV2Versions.LiquityV2REth]: 22516118,
+  // legacy
+  [LiquityV2Versions.LiquityV2EthLegacy]: 21686215,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: 21686238,
+  [LiquityV2Versions.LiquityV2REthLegacy]: 21686257,
 };
 
-const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, collAsset: string, account: EthAddress): Promise<{ troveId: string }[]> => {
+const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, market: LiquityV2Versions, account: EthAddress): Promise<{ troveId: string }[]> => {
   const nftContract = createContractWrapper(web3, network, 'LiquityV2TroveNFT', troveNFTAddress);
-  // @ts-ignore
-  const nftContractCreationBlock = nftContractCreationBlockMapping[collAsset];
+  const nftContractCreationBlock = nftContractCreationBlockMapping[market];
   const currentBlock = await web3.eth.getBlockNumber();
   const events = await nftContract.getPastEvents(
     TransferEventSig,
@@ -146,7 +148,7 @@ export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumbe
   const viewContract = getLiquityV2ViewContract(web3, network, selectedMarket.isLegacy);
   const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
     getUserTroves(viewContract, account, selectedMarket.marketAddress),
-    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.collateralToken, account),
+    getTransferredTroves(web3, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.value, account),
   ]);
   const troves = [...userTroves.map(({ troveId }) => ({ troveId })), ...userTransferredTroves];
   const filteredTroves = troves.filter((value, index, self) => index === self.findIndex((t) => (
