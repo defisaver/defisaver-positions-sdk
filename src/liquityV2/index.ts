@@ -128,7 +128,6 @@ const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFT
   const events = await nftContract.getPastEvents(
     TransferEventSig,
     {
-      filter: { to: account },
       fromBlock: limitBlocksForEventFetching ? (currentBlock - 1000) : nftContractCreationBlock,
     },
   );
