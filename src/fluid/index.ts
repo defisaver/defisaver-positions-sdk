@@ -517,6 +517,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const totalBorrowVaultUsd = new Dec(totalBorrowSharesInVault).mul(debtSharePrice).toString();
 
   const borrowableUSD = new Dec(borrowableShares).mul(debtSharePrice).toString();
+  const maxBorrowSharesUsd = new Dec(maxBorrowShares).mul(debtSharePrice).toString();
 
   const marketData = {
     vaultId: +data.vaultId,
@@ -553,6 +554,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowableShares,
     borrowableDex: new Dec(maxBorrowShares).minus(totalBorrowShares).toString(),
     maxBorrowShares,
+    maxBorrowSharesUsd,
     borrowDexFee,
     debtSharePrice,
   };
@@ -710,11 +712,13 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const totalBorrowSharesInVault = assetAmountInEth(data.totalBorrowVault);
   const debtSharePrice = new Dec(quoteTokensPerShare).mul(prices[quoteToken.address]).toString();
   const totalBorrowVaultUsd = new Dec(totalBorrowSharesInVault).mul(debtSharePrice).toString();
+  const maxBorrowSharesUsd = new Dec(maxBorrowShares).mul(debtSharePrice).toString();
   const borrowableUSD = new Dec(borrowableShares).mul(debtSharePrice).toString();
 
   const totalSupplySharesInVault = assetAmountInEth(data.totalSupplyVault);
   const collSharePrice = new Dec(oraclePrice).mul(debtSharePrice).toString();
   const totalSupplyVaultUsd = new Dec(totalSupplySharesInVault).mul(collSharePrice).toString();
+  const maxSupplySharesUsd = new Dec(maxSupplyShares).mul(collSharePrice).toString();
   const withdrawableUSD = new Dec(withdrawableShares).mul(collSharePrice).toString();
 
   const marketData = {
@@ -750,6 +754,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowable: borrowableShares,
     borrowableDex: new Dec(maxBorrowShares).minus(totalBorrowShares).toString(),
     maxBorrowShares,
+    maxBorrowSharesUsd,
     borrowDexFee,
     totalSupplyToken0,
     totalSupplyToken1,
@@ -759,6 +764,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawable: withdrawableShares,
     widthdrawableDex: new Dec(maxSupplyShares).minus(totalSupplyShares).toString(),
     maxSupplyShares,
+    maxSupplySharesUsd,
     collDexFee: supplyDexFee,
     collSharePrice,
     debtSharePrice,

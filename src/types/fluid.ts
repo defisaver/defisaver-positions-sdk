@@ -244,6 +244,7 @@ export interface InnerFluidMarketData {
   // T2 and T4 vaults
   collSharePrice?: string,
   maxSupplyShares?: string,
+  maxSupplySharesUsd?: string,
   withdrawableUSD?: string,
   totalSupplyToken0?: string,
   totalSupplyToken1?: string,
@@ -253,6 +254,7 @@ export interface InnerFluidMarketData {
   // T3 and T4 vaults
   debtSharePrice?: string,
   maxBorrowShares?: string,
+  maxBorrowSharesUsd?: string,
   borrowableUSD?: string,
   borrowableToken0?: string,
   borrowableToken1?: string,
