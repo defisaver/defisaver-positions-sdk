@@ -132,7 +132,7 @@ const getTransferredTroves = async (web3: Web3, network: NetworkNumber, troveNFT
       fromBlock: limitBlocksForEventFetching ? (currentBlock - 1000) : nftContractCreationBlock,
     },
   );
-  const userTransferredTroves = events.filter((event) => !compareAddresses(event.returnValues.from, ZERO_ADDRESS) && compareAddresses(event.returnValues.to, account));
+  const userTransferredTroves = events.filter((event) => compareAddresses(event.returnValues.to, account));
 
   // check if the last know transfer address is the user
   userTransferredTroves.forEach((event, index) => {
@@ -155,7 +155,11 @@ export const getLiquityV2UserTroveIds = async (web3: Web3, network: NetworkNumbe
     t.troveId === value.troveId
   )),
   );
-  return { troves: filteredTroves, nextFreeTroveIndex };
+  const troveIds = filteredTroves.map((trove) => trove.troveId);
+  const troveIdsSet = new Set(troveIds);
+  const troveIdsArray = Array.from(troveIdsSet);
+  const trovesNoDuplicates = troveIdsArray.map((troveId) => troves.find((trove) => trove.troveId === troveId)) as { troveId: string }[];
+  return { troves: trovesNoDuplicates, nextFreeTroveIndex };
 };
 
 const _getDebtInFrontForSingleMarket = async (viewContract: any, marketAddress: EthAddress, troveId: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(marketAddress, troveId, accumulatedSum, iterations).call();
