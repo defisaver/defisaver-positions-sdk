@@ -250,12 +250,23 @@ const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     liquidationMaxLimit,
     borrowRate,
     supplyRate,
+    oraclePrice,
   };
 
   return {
     assetsData,
     marketData,
   } as FluidMarketData;
+};
+
+const getMarketRateForDex = (token1PerShare: string, token0PerShare: string, rate0: string, rate1: string) => {
+  const sharesCombined = new Dec(token1PerShare).plus(token0PerShare);
+
+  const rate0PerShare = new Dec(rate0).mul(token0PerShare).div(sharesCombined).toString();
+
+  const rate1PerShare = new Dec(rate1).mul(token1PerShare).div(sharesCombined).toString();
+
+  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
 };
 
 const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
@@ -325,11 +336,13 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collFirstAssetData.incentiveSupplyToken = collAsset1.symbol;
   }
 
+  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
+
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
     symbol: debtAsset.symbol,
-    address: debtAsset.address,
     price: prices[debtAsset.address],
+    address: debtAsset.address,
     totalBorrow: data.totalBorrowVault,
     canBeBorrowed: true,
     borrowRate,
@@ -360,6 +373,8 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   const totalSupplySharesInVault = assetAmountInEth(data.totalSupplyVault);
   const collSharePrice = new Dec(oraclePrice).mul(prices[debtAsset.address]).toString();
   const totalSupplyVaultUsd = new Dec(totalSupplySharesInVault).mul(collSharePrice).toString();
+  const maxSupplySharesUsd = new Dec(maxSupplyShares).mul(collSharePrice).toString();
+
   const withdrawableUSD = new Dec(withdrawableShares).mul(collSharePrice).toString();
 
   const marketData = {
@@ -393,7 +408,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     minimumBorrowing: getEthAmountForDecimals(data.minimumBorrowing, debtAsset.decimals),
     liquidationMaxLimit,
     borrowRate,
-    supplyRate: '0',
+    supplyRate: marketSupplyRate,
     totalSupplyToken0,
     totalSupplyToken1,
     withdrawableToken0,
@@ -402,7 +417,9 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawable: withdrawableShares,
     widthdrawableDex: new Dec(maxSupplyShares).minus(totalSupplyShares).toString(),
     maxSupplyShares,
+    maxSupplySharesUsd,
     collDexFee: supplyDexFee,
+    oraclePrice,
   };
 
   return {
@@ -410,6 +427,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     marketData,
   } as FluidMarketData;
 };
+
 
 const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
@@ -491,6 +509,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
+  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -544,7 +563,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     withdrawableUntilLimit: getEthAmountForDecimals(data.withdrawableUntilLimit, collAsset.decimals),
     withdrawable: getEthAmountForDecimals(data.withdrawable, collAsset.decimals),
     liquidationMaxLimit,
-    borrowRate: '0',
+    borrowRate: marketBorrowRate,
     supplyRate,
     borrowableToken0,
     borrowableToken1,
@@ -557,6 +576,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     maxBorrowSharesUsd,
     borrowDexFee,
     debtSharePrice,
+    oraclePrice,
   };
 
   return {
@@ -692,6 +712,9 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
 
+  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
+  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
+
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],
     [collAsset1.symbol, collAsset1Data],
@@ -744,8 +767,8 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalSupplyVaultUsd,
     totalBorrowVaultUsd,
     liquidationMaxLimit,
-    borrowRate: '0',
-    supplyRate: '0',
+    borrowRate: marketBorrowRate,
+    supplyRate: marketSupplyRate,
     borrowableToken0,
     borrowableToken1,
     totalBorrowToken0,
@@ -768,6 +791,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collDexFee: supplyDexFee,
     collSharePrice,
     debtSharePrice,
+    oraclePrice,
   };
 
   return {

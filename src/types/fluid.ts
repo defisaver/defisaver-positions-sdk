@@ -251,6 +251,7 @@ export interface InnerFluidMarketData {
   supplyRate: string,
   borrowRate: string,
   liquidationMaxLimit: string,
+  oraclePrice: string,
   // T2 and T4 vaults
   collSharePrice?: string,
   maxSupplyShares?: string,
