@@ -94,7 +94,7 @@ export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructO
   const {
     dexPool, // address of the dex pool
     dexId, // id of the dex pool
-    fee: _fee, // fee of the dex pool TODO videti sa Rajkom
+    fee: _fee, // fee of the dex pool (Only used as swap fees)
     lastStoredPrice, // last stored price of the dex pool
     centerPrice, // center price of the dex pool
     token0Utilization, // token0 utilization
