@@ -155,6 +155,30 @@ const getTokenPriceFromChainlink = async (asset: AssetData, network: NetworkNumb
   return new Dec(loanTokenPrice).div(1e8).toString();
 };
 
+const getMarketRateForDex = (token1PerShare: string, token0PerShare: string, rate0: string, rate1: string, price0: string, price1: string) => {
+  const token0PerShareUsd = new Dec(token0PerShare).mul(price0).toString();
+  const token1PerShareUsd = new Dec(token1PerShare).mul(price1).toString();
+  const sharesCombinedUsd = new Dec(token0PerShareUsd).plus(token1PerShareUsd);
+
+  const rate0PerShare = new Dec(rate0).mul(token0PerShareUsd).div(sharesCombinedUsd).toString();
+
+  const rate1PerShare = new Dec(rate1).mul(token1PerShareUsd).div(sharesCombinedUsd).toString();
+
+  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
+};
+
+const getAdditionalMarketRateForDex = (token1PerShare: string, token0PerShare: string, incentiveSupplyRate0: string, incentiveSupplyRate1: string, price0: string, price1: string) => {
+  const token0PerShareUsd = new Dec(token0PerShare).mul(price0).toString();
+  const token1PerShareUsd = new Dec(token1PerShare).mul(price1).toString();
+  const sharesCombinedUsd = new Dec(token0PerShareUsd).plus(token1PerShareUsd);
+
+  const rate0PerShare = incentiveSupplyRate0 ? new Dec(incentiveSupplyRate0).mul(token0PerShareUsd).div(sharesCombinedUsd).toString() : 0;
+
+  const rate1PerShare = incentiveSupplyRate1 ? new Dec(incentiveSupplyRate1).mul(token1PerShareUsd).div(sharesCombinedUsd).toString() : 0;
+
+  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
+};
+
 const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
@@ -184,6 +208,8 @@ const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collAssetData.incentiveSupplyToken = collAsset.symbol;
   }
 
+  const incentiveSupplyRate = collAssetData.incentiveSupplyApy;
+
   const debtAssetData: FluidAssetData = {
     symbol: debtAsset.symbol,
     address: debtAsset.address,
@@ -200,10 +226,7 @@ const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAssetData.incentiveBorrowToken = debtAsset.symbol;
   }
 
-  if (STAKING_ASSETS.includes(debtAssetData.symbol)) {
-    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol, mainnetWeb3);
-    debtAssetData.incentiveBorrowToken = debtAsset.symbol;
-  }
+  const incentiveBorrowRate = debtAssetData.incentiveBorrowApy;
 
   const assetsData = {
     [collAsset.symbol]: collAssetData,
@@ -250,6 +273,8 @@ const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     liquidationMaxLimit,
     borrowRate,
     supplyRate,
+    incentiveSupplyRate,
+    incentiveBorrowRate,
     oraclePrice,
   };
 
@@ -257,27 +282,6 @@ const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     assetsData,
     marketData,
   } as FluidMarketData;
-};
-
-const getMarketRateForDex = (token1PerShare: string, token0PerShare: string, rate0: string, rate1: string) => {
-  const sharesCombined = new Dec(token1PerShare).plus(token0PerShare);
-
-  const rate0PerShare = new Dec(rate0).mul(token0PerShare).div(sharesCombined).toString();
-
-  const rate1PerShare = new Dec(rate1).mul(token1PerShare).div(sharesCombined).toString();
-
-  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
-};
-
-const getAdditionalMarketRateForDex = (token1PerShare: string, token0PerShare: string, incentiveSupplyRate0: string, incentiveSupplyRate1: string) => {
-  console.log(incentiveSupplyRate0, incentiveSupplyRate1);
-  const sharesCombined = new Dec(token1PerShare).plus(token0PerShare);
-
-  const rate0PerShare = incentiveSupplyRate0 ? new Dec(incentiveSupplyRate0).mul(token0PerShare).div(sharesCombined).toString() : 0;
-
-  const rate1PerShare = incentiveSupplyRate1 ? new Dec(incentiveSupplyRate1).mul(token1PerShare).div(sharesCombined).toString() : 0;
-
-  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
 };
 
 const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
@@ -347,8 +351,8 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collSecondAssetData.incentiveSupplyToken = collAsset1.symbol;
   }
 
-  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
-  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!);
+  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collFirstAssetData.price!, collSecondAssetData.price!);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!, collFirstAssetData.price!, collSecondAssetData.price!);
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
@@ -363,6 +367,8 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol, mainnetWeb3);
     debtAssetData.incentiveBorrowToken = debtAsset.symbol;
   }
+
+  const incentiveBorrowRate = debtAssetData.incentiveBorrowApy;
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collFirstAssetData],
@@ -422,6 +428,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowRate,
     supplyRate: marketSupplyRate,
     incentiveSupplyRate,
+    incentiveBorrowRate,
     totalSupplyToken0,
     totalSupplyToken1,
     withdrawableToken0,
@@ -440,7 +447,6 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     marketData,
   } as FluidMarketData;
 };
-
 
 const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
@@ -489,6 +495,8 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collAssetData.incentiveSupplyToken = collAsset.symbol;
   }
 
+  const incentiveSupplyRate = collAssetData.incentiveSupplyApy;
+
   const debtAsset0Data: Partial<FluidAssetData> = {
     symbol: debtAsset0.symbol,
     address: debtAsset0.address,
@@ -522,8 +530,8 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
-  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
-  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!);
+  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -580,6 +588,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowRate: marketBorrowRate,
     supplyRate,
     incentiveBorrowRate,
+    incentiveSupplyRate,
     borrowableToken0,
     borrowableToken1,
     totalBorrowToken0,
@@ -726,12 +735,13 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
+  const marketInfo = getFluidMarketInfoById(+data.vaultId, network);
 
-  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
-  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!);
+  const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
 
-  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
-  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!);
+  const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collAsset0Data.price!, collAsset1Data.price!);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!, collAsset0Data.price!, collAsset1Data.price!);
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],
@@ -744,7 +754,6 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
       [symbol]: mergeAssetData(acc[symbol], partialData),
     }), {} as Record<string, FluidAssetData>) as FluidAssetsData;
 
-  const marketInfo = getFluidMarketInfoById(+data.vaultId, network);
 
   const liqRatio = new Dec(data.liquidationThreshold).div(100).toString();
   const liquidationMaxLimit = new Dec(data.liquidationMaxLimit).div(100).toString();
