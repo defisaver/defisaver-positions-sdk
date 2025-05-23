@@ -252,6 +252,8 @@ export interface InnerFluidMarketData {
   borrowRate: string,
   liquidationMaxLimit: string,
   oraclePrice: string,
+  incentiveBorrowRate?: string,
+  incentiveSupplyRate?: string,
   // T2 and T4 vaults
   collSharePrice?: string,
   maxSupplyShares?: string,
@@ -272,6 +274,9 @@ export interface InnerFluidMarketData {
   totalBorrowToken0?: string,
   totalBorrowToken1?: string,
   borrowDexFee?: string,
+  // Dex vault
+  tradingBorrowRate?: string,
+  tradingSupplyRate?: string,
 }
 
 export interface FluidMarketData {

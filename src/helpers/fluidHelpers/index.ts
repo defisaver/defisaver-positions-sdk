@@ -13,6 +13,36 @@ import { MMAssetsData } from '../../types/common';
 import { FluidView } from '../../types/contracts/generated';
 import { getEthAmountForDecimals } from '../../services/utils';
 
+const calculateNetApyDex = ({ marketData, suppliedUsd, borrowedUsd }: { marketData: InnerFluidMarketData, suppliedUsd: string, borrowedUsd: string }) => {
+  const {
+    borrowRate,
+    supplyRate,
+    incentiveBorrowRate,
+    incentiveSupplyRate,
+    tradingBorrowRate,
+    tradingSupplyRate,
+  } = marketData;
+
+  const totalBorrowRate = new Dec(borrowRate).minus(tradingBorrowRate || '0').toString();
+  const totalSupplyRate = new Dec(supplyRate).add(tradingSupplyRate || '0').toString();
+
+  const borrowIncentive = new Dec(incentiveBorrowRate || '0').mul(borrowedUsd).div(100).toString();
+  const supplyIncentive = new Dec(incentiveSupplyRate || '0').mul(suppliedUsd).div(100).toString();
+  const incentiveUsd = new Dec(supplyIncentive).minus(borrowIncentive).toString();
+
+  const borrowInterest = new Dec(totalBorrowRate).mul(borrowedUsd).div(100).toString();
+  const supplyInterest = new Dec(totalSupplyRate).mul(suppliedUsd).div(100).toString();
+  const totalInterestUsd = new Dec(supplyInterest).add(incentiveUsd).minus(borrowInterest).toString();
+  const balance = new Dec(suppliedUsd).sub(borrowedUsd).toString();
+  const netApy = new Dec(totalInterestUsd).div(balance).times(100).toString();
+
+  return {
+    netApy,
+    incentiveUsd,
+    totalInterestUsd,
+  };
+}
+
 export const getFluidAggregatedData = ({
   usedAssets,
   assetsData,
@@ -34,7 +64,8 @@ borrowShares?: string,
     ? getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd)
     : new Dec(marketData.debtSharePrice!).mul(borrowShares!).toString();
 
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
+  const isDex = [FluidVaultType.T2, FluidVaultType.T3, FluidVaultType.T4].includes(marketData.vaultType);
+  const { netApy, incentiveUsd, totalInterestUsd } = isDex ? calculateNetApyDex({ marketData, suppliedUsd: payload.suppliedUsd, borrowedUsd: payload.borrowedUsd }) : calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;

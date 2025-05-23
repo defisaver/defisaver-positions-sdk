@@ -179,6 +179,15 @@ const getAdditionalMarketRateForDex = (token1PerShare: string, token0PerShare: s
   return new Dec(rate0PerShare).plus(rate1PerShare).toString();
 };
 
+const getTradingApy = async (poolAddress: EthAddress) => {
+  const res = await fetch(`https://api.fluid.instadapp.io/v2/1/dexes/${poolAddress}/apy`);
+  if (!res.ok) {
+    return '0';
+  }
+  const data = await res.json();
+  return new Dec(data.tradingApy).div(100).toString();
+}
+
 const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
@@ -353,6 +362,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collFirstAssetData.price!, collSecondAssetData.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!, collFirstAssetData.price!, collSecondAssetData.price!);
+  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool);
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
@@ -440,6 +450,8 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     maxSupplySharesUsd,
     collDexFee: supplyDexFee,
     oraclePrice,
+    tradingSupplyRate,
+    tradingBorrowRate: '0',
   };
 
   return {
@@ -532,6 +544,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
+  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool);
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -589,6 +602,8 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyRate,
     incentiveBorrowRate,
     incentiveSupplyRate,
+    tradingBorrowRate,
+    tradingSupplyRate: '0',
     borrowableToken0,
     borrowableToken1,
     totalBorrowToken0,
@@ -739,9 +754,11 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
 
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
+  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool);
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collAsset0Data.price!, collAsset1Data.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!, collAsset0Data.price!, collAsset1Data.price!);
+  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool);
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],
@@ -821,6 +838,8 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     collSharePrice,
     debtSharePrice,
     oraclePrice,
+    tradingBorrowRate,
+    tradingSupplyRate,
   };
 
   return {
