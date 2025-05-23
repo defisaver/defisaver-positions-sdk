@@ -269,6 +269,17 @@ const getMarketRateForDex = (token1PerShare: string, token0PerShare: string, rat
   return new Dec(rate0PerShare).plus(rate1PerShare).toString();
 };
 
+const getAdditionalMarketRateForDex = (token1PerShare: string, token0PerShare: string, incentiveSupplyRate0: string, incentiveSupplyRate1: string) => {
+  console.log(incentiveSupplyRate0, incentiveSupplyRate1);
+  const sharesCombined = new Dec(token1PerShare).plus(token0PerShare);
+
+  const rate0PerShare = incentiveSupplyRate0 ? new Dec(incentiveSupplyRate0).mul(token0PerShare).div(sharesCombined).toString() : 0;
+
+  const rate1PerShare = incentiveSupplyRate1 ? new Dec(incentiveSupplyRate1).mul(token1PerShare).div(sharesCombined).toString() : 0;
+
+  return new Dec(rate0PerShare).plus(rate1PerShare).toString();
+};
+
 const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset0 = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset1 = getAssetInfoByAddress(data.supplyToken1, network);
@@ -331,12 +342,13 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     tokenPerSupplyShare: token1PerSupplyShare,
     supplyReserves: reservesSupplyToken1,
   };
-  if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
-    collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
-    collFirstAssetData.incentiveSupplyToken = collAsset1.symbol;
+  if (STAKING_ASSETS.includes(collSecondAssetData.symbol!)) {
+    collSecondAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
+    collSecondAssetData.incentiveSupplyToken = collAsset1.symbol;
   }
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!);
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
@@ -409,6 +421,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     liquidationMaxLimit,
     borrowRate,
     supplyRate: marketSupplyRate,
+    incentiveSupplyRate,
     totalSupplyToken0,
     totalSupplyToken1,
     withdrawableToken0,
@@ -510,6 +523,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!);
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -565,6 +579,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     liquidationMaxLimit,
     borrowRate: marketBorrowRate,
     supplyRate,
+    incentiveBorrowRate,
     borrowableToken0,
     borrowableToken1,
     totalBorrowToken0,
@@ -713,7 +728,10 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   }
 
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!);
+
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!);
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],
@@ -768,7 +786,9 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     totalBorrowVaultUsd,
     liquidationMaxLimit,
     borrowRate: marketBorrowRate,
+    incentiveBorrowRate,
     supplyRate: marketSupplyRate,
+    incentiveSupplyRate,
     borrowableToken0,
     borrowableToken1,
     totalBorrowToken0,
