@@ -35,6 +35,8 @@ import {
   getWstETHPriceFluid,
   parseWeETHPriceCalls,
   parseWstETHPriceCalls,
+  getEthPriceForFluid,
+  getBTCPriceForFluid,
 } from '../services/priceService';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 
@@ -68,6 +70,10 @@ const getChainLinkPricesForTokens = async (
 
   const noDuplicateTokens = new Array(...new Set(tokens));
 
+  // TODO: this needs to be refactored
+  const ethPriceChainlink = await getEthPriceForFluid(web3, network);
+  const btcPriceChainlink = await getBTCPriceForFluid(web3, network);
+
   const calls = noDuplicateTokens.flatMap((address) => {
     const assetInfo = getAssetInfoByAddress(address, network);
     const isTokenUSDA = assetInfo.symbol === 'USDA';
@@ -95,8 +101,8 @@ const getChainLinkPricesForTokens = async (
   });
 
   const prices = await chunkAndMulticall(calls, 10, 'latest', web3, network);
-  let offset = 0; // wstETH has 3 calls, while others have only 1, so we need to keep track
 
+  let offset = 0; // wstETH has 3 calls, while others have only 1, so we need to keep track
   return noDuplicateTokens.reduce((acc, token, i) => {
     const assetInfo = getAssetInfoByAddress(token, network);
     switch (assetInfo.symbol) {
@@ -111,6 +117,28 @@ const getChainLinkPricesForTokens = async (
         } = parseWstETHPriceCalls(prices[i + offset][0], prices[i + offset + 1], prices[i + offset + 2][0]);
         offset += 2;
         acc[token] = new Dec(ethPrice).mul(wstETHRate).toString();
+        break;
+      }
+
+      // TODO: These addresses do not have chainlink feeds, so we need to handle them separately, this is hotfix
+      case 'ezETH': {
+        acc[token] = new Dec(ethPriceChainlink).mul(1.049).toString();
+        break;
+      }
+      case 'rsETH': {
+        acc[token] = new Dec(ethPriceChainlink).mul(1.0454).toString();
+        break;
+      }
+      case 'weETHs': {
+        acc[token] = new Dec(ethPriceChainlink).mul(1.026).toString();
+        break;
+      }
+      case 'LBTC': {
+        acc[token] = new Dec(btcPriceChainlink).toString();
+        break;
+      }
+      case 'sUSDS': {
+        acc[token] = new Dec('105276929').toString();
         break;
       }
 
@@ -134,6 +162,9 @@ const getChainLinkPricesForTokens = async (
 
 
 const getTokenPriceFromChainlink = async (asset: AssetData, network: NetworkNumber, web3: Web3) => {
+  if (asset.symbol === 'sUSDS') {
+    return new Dec('105276929').div(1e8).toString();
+  }
   const isTokenUSDA = asset.symbol === 'USDA';
   const isMainnet = isMainnetNetwork(network);
   const loanTokenFeedAddress = getChainlinkAssetAddress(asset.symbol, network);
@@ -186,7 +217,7 @@ const getTradingApy = async (poolAddress: EthAddress) => {
   }
   const data = await res.json();
   return new Dec(data.tradingApy).div(100).toString();
-}
+};
 
 const parseT1MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutputStruct, network: NetworkNumber, mainnetWeb3: Web3) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);

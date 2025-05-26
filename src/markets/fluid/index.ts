@@ -1861,7 +1861,8 @@ export const FLUID_WBTC_USDC_USDT_26_ARB = (networkId: NetworkNumber = NetworkNu
   debtAsset0: 'USDC',
   debtAsset1: 'USDT',
 });
-
+// TODO: This issue is due to sUSDS price fetching via multicall on arbi fails and it's not handled correctly
+/*
 export const FLUID_SUSDS_USDC_USDT_30_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
   btcBased: false,
@@ -1881,6 +1882,7 @@ export const FLUID_SUSDS_USDC_USDT_30_ARB = (networkId: NetworkNumber = NetworkN
   debtAsset0: 'USDC',
   debtAsset1: 'USDT',
 });
+*/
 
 export const FLUID_ETH_USDC_1_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
@@ -2202,7 +2204,7 @@ export const FLUID_ETH_SUSDS_17_BASE = (networkId: NetworkNumber = NetworkNumber
   hasSmartCollateral: false,
   hasSmartDebt: false,
   collateralAsset0: 'ETH',
-  debtAsset0: 'sSUDS',
+  debtAsset0: 'sUSDS',
 });
 
 export const FLUID_WSTETH_SUSDS_18_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -2380,7 +2382,7 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidArbitrumVersion.FLUID_WSTETH_USDC_USDT_24_ARB]: FLUID_WSTETH_USDC_USDT_24_ARB(networkId),
   [FluidArbitrumVersion.FLUID_WEETH_USDC_USDT_25_ARB]: FLUID_WEETH_USDC_USDT_25_ARB(networkId),
   [FluidArbitrumVersion.FLUID_WBTC_USDC_USDT_26_ARB]: FLUID_WBTC_USDC_USDT_26_ARB(networkId),
-  [FluidArbitrumVersion.FLUID_SUSDS_USDC_USDT_30_ARB]: FLUID_SUSDS_USDC_USDT_30_ARB(networkId),
+  // [FluidArbitrumVersion.FLUID_SUSDS_USDC_USDT_30_ARB]: FLUID_SUSDS_USDC_USDT_30_ARB(networkId),
 
   // base
   [FluidBaseVersions.FLUID_ETH_USDC_1_BASE]: FLUID_ETH_USDC_1_BASE(networkId),

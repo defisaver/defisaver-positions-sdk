@@ -4,6 +4,7 @@ import { getAssetInfo } from '@defisaver/tokens';
 import {
   COMPPriceFeedContract,
   ETHPriceFeedContract,
+  BTCPriceFeedContract,
   USDCPriceFeedContract, WeETHPriceFeedContract,
   WstETHPriceFeedContract,
 } from '../contracts';
@@ -119,6 +120,18 @@ export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) =>
   const { ethPrice, wstETHRate } = parseWstETHPriceCalls(multicallRes[0][0], multicallRes[1], multicallRes[2][0]);
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
+};
+
+export const getBTCPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
+  const contract = BTCPriceFeedContract(web3, network);
+  const price = await contract.methods.latestAnswer().call();
+  return new Dec(price).div(1e8).toString();
+};
+
+export const getEthPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
+  const contract = ETHPriceFeedContract(web3, network);
+  const price = await contract.methods.latestAnswer().call();
+  return new Dec(price).div(1e8).toString();
 };
 
 // chainlink price feed available only on mainnet

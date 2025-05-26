@@ -41,7 +41,7 @@ const calculateNetApyDex = ({ marketData, suppliedUsd, borrowedUsd }: { marketDa
     incentiveUsd,
     totalInterestUsd,
   };
-}
+};
 
 export const getFluidAggregatedData = ({
   usedAssets,
