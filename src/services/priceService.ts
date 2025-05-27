@@ -4,7 +4,8 @@ import { getAssetInfo } from '@defisaver/tokens';
 import {
   COMPPriceFeedContract,
   ETHPriceFeedContract,
-  USDCPriceFeedContract,
+  BTCPriceFeedContract,
+  USDCPriceFeedContract, WeETHPriceFeedContract,
   WstETHPriceFeedContract,
 } from '../contracts';
 import { NetworkNumber } from '../types/common';
@@ -53,8 +54,8 @@ export const getWstETHPrice = async (web3: Web3) => {
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
 };
-// this is a fixed version, the original version is above but requires to refactor comp v3 function, so it's easier to just copy the function for now
-export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) => {
+
+export const getWstETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber) => {
   const wstETHFeedContract = WstETHPriceFeedContract(web3, network);
   const ethFeedContract = ETHPriceFeedContract(web3, network);
   const calls = [
@@ -74,12 +75,63 @@ export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) =>
       params: [],
     },
   ];
-  const multicallRes = await multicall(calls, web3, network);
+  return calls;
+};
 
-  const ethPrice = new Dec(multicallRes[0][0]).div(1e8);
-  const wstETHRate = getEthAmountForDecimals(multicallRes[1].answer, multicallRes[2][0]);
+export const getWeETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber) => {
+  const weETHFeedContract = WeETHPriceFeedContract(web3, network);
+  const ethFeedContract = ETHPriceFeedContract(web3, network);
+  const calls = [
+    {
+      target: ethFeedContract.options.address,
+      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
+      params: [],
+    },
+    {
+      target: weETHFeedContract.options.address,
+      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
+      params: [],
+    },
+    {
+      target: weETHFeedContract.options.address,
+      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'decimals'),
+      params: [],
+    },
+  ];
+  return calls;
+};
+
+export const parseWstETHPriceCalls = (_ethPrice: string, wstETHrate: { answer: string }, decimals: string) => {
+  const ethPrice = new Dec(_ethPrice).div(1e8);
+  const wstETHRate = getEthAmountForDecimals(wstETHrate.answer, decimals);
+  return { ethPrice, wstETHRate };
+};
+
+export const parseWeETHPriceCalls = (_ethPrice: string, weETHrate: { answer: string }, decimals: string) => {
+  const ethPrice = new Dec(_ethPrice).div(1e8);
+  const weETHRate = getEthAmountForDecimals(weETHrate.answer, decimals);
+  return { ethPrice, weETHRate };
+};
+
+// this is a fixed version, the original version is above but requires to refactor comp v3 function, so it's easier to just copy the function for now
+export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) => {
+  const calls = getWstETHChainLinkPriceCalls(web3, network);
+  const multicallRes = await multicall(calls, web3, network);
+  const { ethPrice, wstETHRate } = parseWstETHPriceCalls(multicallRes[0][0], multicallRes[1], multicallRes[2][0]);
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
+};
+
+export const getBTCPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
+  const contract = BTCPriceFeedContract(web3, network);
+  const price = await contract.methods.latestAnswer().call();
+  return new Dec(price).div(1e8).toString();
+};
+
+export const getEthPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
+  const contract = ETHPriceFeedContract(web3, network);
+  const price = await contract.methods.latestAnswer().call();
+  return new Dec(price).div(1e8).toString();
 };
 
 // chainlink price feed available only on mainnet
