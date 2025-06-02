@@ -211,7 +211,12 @@ const getAdditionalMarketRateForDex = (token1PerShare: string, token0PerShare: s
 };
 
 const getTradingApy = async (poolAddress: EthAddress) => {
-  const res = await fetch(`https://api.fluid.instadapp.io/v2/1/dexes/${poolAddress}/apy`);
+  let res;
+  try {
+    res = await fetch(`https://api.fluid.instadapp.io/v2/1/dexes/${poolAddress}/apy`, { signal: AbortSignal.timeout(2000) });
+  } catch (e) {
+    return '0';
+  }
   if (!res.ok) {
     return '0';
   }
