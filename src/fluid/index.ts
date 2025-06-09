@@ -1284,11 +1284,7 @@ export const getFluidTokenData = async (web3: Web3, network: NetworkNumber, toke
   };
 };
 
-export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, token: string, address: EthAddress) => {
-  const view = FluidViewContract(web3, network);
-  const fTokenAddress = getFTokenAddress(token, network);
-  const { fTokenData, userPosition } = await view.methods.getUserEarnPositionWithFToken(fTokenAddress, address).call();
-
+const parseFDepositTokenData = (fTokenData: FluidView.FTokenDataStructOutput, userPosition: FluidView.UserEarnPositionStructOutput, fTokenAddress?: string) => {
   const supplyRate = new Dec(fTokenData.supplyRate).div(100).toString();
   const rewardsRate = new Dec(fTokenData.rewardsRate).div(1e12).toString();
   const decimals = fTokenData.decimals;
@@ -1308,6 +1304,33 @@ export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, to
     deposited: getEthAmountForDecimals(userPosition.underlyingAssets, decimals),
     depositedShares: getEthAmountForDecimals(userPosition.fTokenShares, decimals),
   };
+};
+
+export const getFluidDepositData = async (web3: Web3, network: NetworkNumber, token: string, address: EthAddress) => {
+  const view = FluidViewContract(web3, network);
+  const fTokenAddress = getFTokenAddress(token, network);
+  const { fTokenData, userPosition } = await view.methods.getUserEarnPositionWithFToken(fTokenAddress, address).call();
+
+  return parseFDepositTokenData(fTokenData, userPosition, fTokenAddress);
+};
+
+export const getAllUserEarnPositionsWithFTokens = async (web3: Web3, network: NetworkNumber, user: EthAddress, mainnetWeb3: Web3) => {
+  const view = FluidViewContract(web3, network);
+  const { fTokensData, userPositions } = await view.methods.getAllUserEarnPositionsWithFTokens(user).call();
+
+  const parsedRes = fTokensData.reduce<ReturnType<typeof parseFDepositTokenData>[]>((acc, fTokenData, i) => {
+    const userPosition = userPositions[i];
+    const deposited = userPosition?.underlyingAssets;
+
+    if (Number(deposited) > 0) {
+      const fTokenAddress = getFTokenAddress(fTokenData.symbol, network);
+      acc.push(parseFDepositTokenData(fTokenData, userPosition, fTokenAddress));
+    }
+
+    return acc;
+  }, []);
+
+  return parsedRes;
 };
 
 export const getUserPositions = async (web3: Web3, network: NetworkNumber, user: EthAddress, mainnetWeb3: Web3) => {
