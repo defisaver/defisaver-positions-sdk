@@ -1209,7 +1209,7 @@ export const getFluidMarketData = async (web3: Web3, network: NetworkNumber, mar
 };
 
 export const getFluidVaultIdsForUser = async (web3: Web3,
-  network:NetworkNumber,
+  network: NetworkNumber,
   user: EthAddress): Promise<string[]> => {
   const view = FluidViewContract(web3, network);
 
