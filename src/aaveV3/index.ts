@@ -97,7 +97,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
+export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
@@ -142,10 +142,10 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
-    loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
-    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
-    loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
+    loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call({}, blockNumber),
+    loanInfoContract.methods.getAllEmodes(marketAddress).call({}, blockNumber),
+    loanInfoContract.methods.isBorrowAllowed(marketAddress).call({}, blockNumber), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network, blockNumber),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -469,7 +469,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3PositionData> => {
   const {
     selectedMarket: market, assetsData, eModeCategoriesData,
   } = extractedState;
@@ -515,7 +515,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   ];
 
   const [multicallRes, { 0: stkAaveBalance }] = await Promise.all([
-    multicall(multicallData, web3, network),
+    multicall(multicallData, web3, network, blockNumber),
     isL2 ? { 0: '0' } : getAssetsBalances(['stkAAVE'], address, network, web3),
     { 0: '0' },
   ]);
