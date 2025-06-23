@@ -56,12 +56,14 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
 
   let morphoSupplyApy = '0';
   let morphoBorrowApy = '0';
-  try {
-    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
-    morphoSupplyApy = _morphoSupplyApy;
-    morphoBorrowApy = _morphoBorrowApy;
-  } catch (e) {
-    console.error(e);
+  if (!collateralTokenInfo.isPendle) {
+    try {
+      const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
+      morphoSupplyApy = _morphoSupplyApy;
+      morphoBorrowApy = _morphoBorrowApy;
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);

@@ -275,6 +275,21 @@ export const MORPHO_BLUE_SUSDE_USDC_915 = (networkId: NetworkNumber = NetworkNum
   marketId: '0x85c7f4374f3a403b36d54cc284983b2b02bbd8581ee0f3c36494447b87d9fcab',
   protocolName: 'morpho-blue',
 });
+export const MORPHO_BLUE_SYRUPUSDC_USDC_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho',
+  shortLabel: 'syrupUSDC/USDC',
+  value: MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915,
+  url: 'syrupusdc-729badf2',
+  loanToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  collateralToken: '0x80ac24aA929eaF5013f6436cdA2a7ba190f5Cc0b',
+  oracle: '0x80032f4cb6e3573b9ed61e888af658e48fb790cc',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x870ac11d48b15db9a138cf899d20f13f79ba00bc',
+  lltv: 0.915,
+  marketId: '729badf297ee9f2f6b3f717b96fd355fc6ec00422284ce1968e76647b258cf44',
+  protocolName: 'morpho-blue',
+});
 // ezETH/ETH
 export const MORPHO_BLUE_EZETH_ETH_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
@@ -535,6 +550,24 @@ export const MORPHO_BLUE_USR_USDC_915 = (networkId: NetworkNumber = NetworkNumbe
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.915,
   marketId: '0x8e7cc042d739a365c43d0a52d5f24160fa7ae9b7e7c9a479bd02a56041d4cf77',
+  protocolName: 'morpho-blue',
+});
+
+// Pendle
+
+export const MORPHO_BLUE_PTSYRUPUSDCAUG_USDC_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho',
+  shortLabel: 'Pt syrupUSDC Aug/USDC',
+  value: MorphoBlueVersions.MorphoBluePTsyrupUSDCAugUSDC_860,
+  url: 'ptsyrupusdcaug-a3819a7d',
+  loanToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+  collateralToken: '0xCcE7D12f683c6dAe700154f0BAdf779C0bA1F89A',
+  oracle: '0x3b74c5fd1005cd98f349d5d9df78ec8b15131fa5',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x870ac11d48b15db9a138cf899d20f13f79ba00bc',
+  lltv: 0.860,
+  marketId: 'a3819a7d2aee958ca0e7404137d012b51ea47d051db69d94656956eff8c80c23',
   protocolName: 'morpho-blue',
 });
 
@@ -842,6 +875,7 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueSUSDeUSDC_915]: MORPHO_BLUE_SUSDE_USDC_915(networkId),
   [MorphoBlueVersions.MorphoBlueLBTCWBTC_945]: MORPHO_BLUE_LBTC_WBTC_945(networkId),
   [MorphoBlueVersions.MorphoBlueUSRUSDC_915]: MORPHO_BLUE_USR_USDC_915(networkId),
+  [MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915]: MORPHO_BLUE_SYRUPUSDC_USDC_915(networkId),
 
   // wstETH/WETH
   [MorphoBlueVersions.MorphoBlueWstEthEth_945]: MORPHO_BLUE_WSTETH_ETH_945(networkId),
@@ -857,6 +891,9 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueUSDeDAI_860]: MORPHO_BLUE_USDE_DAI_860(networkId),
   [MorphoBlueVersions.MorphoBlueUSDeDAI_915]: MORPHO_BLUE_USDE_DAI_915(networkId),
   [MorphoBlueVersions.MorphoBlueUSDeDAI_945]: MORPHO_BLUE_USDE_DAI_945(networkId),
+
+  // Pendle
+  [MorphoBlueVersions.MorphoBluePTsyrupUSDCAugUSDC_860]: MORPHO_BLUE_PTSYRUPUSDCAUG_USDC_860(networkId),
 
   // Base
   [MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base]: MORPHO_BLUE_CBETH_USDC_860_BASE(networkId),

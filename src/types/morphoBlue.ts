@@ -23,6 +23,7 @@ export enum MorphoBlueVersions {
   MorphoBlueSUSDeUSDC_915 = 'morphobluesusdeusdc_915', // sUSDe/USDC
   MorphoBlueLBTCWBTC_945 = 'morphobluelbtcwbtc_945', // LBTC/WBTC
   MorphoBlueUSRUSDC_915 = 'morphoblueusrusdc_915', // USR/USDC
+  MorphoBlueSyrupUSDCUSDC_915 = 'morphobluesyrupusdcusdc_915', // syrupUSDC/USDC
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
@@ -43,6 +44,8 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
   MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
+  // Pendle
+  MorphoBluePTsyrupUSDCAugUSDC_860 = 'morphoblueptsyrupusdcaugusdc_860', // PT syrupUSDC Aug/USDC
 
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
