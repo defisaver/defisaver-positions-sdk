@@ -1,4 +1,4 @@
-import { MMUsedAssets, NetworkNumber } from './common';
+import { IncentiveData, MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
   // MAINNET
@@ -97,14 +97,12 @@ export interface MorphoBlueAssetData {
   price: string,
   supplyRate: string,
   borrowRate: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
   totalSupply?: string,
   totalBorrow?: string,
   canBeSupplied?: boolean,
   canBeBorrowed?: boolean,
+  supplyIncentives?: IncentiveData[];
+  borrowIncentives?: IncentiveData[];
 }
 
 export type MorphoBlueAssetsData = { [key: string]: MorphoBlueAssetData };

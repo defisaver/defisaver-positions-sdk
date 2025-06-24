@@ -12,6 +12,17 @@ export enum NetworkNumber {
 }
 export type Networkish = string | NetworkNumber;
 
+export enum IncentiveKind {
+  Staking = 'staking',
+  Reward = 'reward',
+}
+
+export interface IncentiveData {
+  token: string,
+  apy: string,
+  incentiveKind?: IncentiveKind;
+}
+
 // Common
 export interface MMAssetData {
   symbol: string,
@@ -33,6 +44,8 @@ export interface MMAssetData {
   incentiveSupplyToken?: string,
   borrowRateP2P?: string,
   supplyRateP2P?: string,
+  supplyIncentives?: IncentiveData[];
+  borrowIncentives?: IncentiveData[];
 }
 
 export interface MMAssetsData {

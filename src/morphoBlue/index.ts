@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  Blockish, EthAddress, MMUsedAssets, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, IncentiveKind, MMUsedAssets, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { DFSFeedRegistryContract, FeedRegistryContract, MorphoBlueViewContract } from '../contracts';
 import {
@@ -15,6 +15,7 @@ import {
   getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
 } from '../helpers/morphoBlueHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
+import { getReward, REWARD_ASSETS } from '../rewards';
 
 export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
   const {
@@ -56,14 +57,12 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
 
   let morphoSupplyApy = '0';
   let morphoBorrowApy = '0';
-  if (!collateralTokenInfo.isPendle) {
-    try {
-      const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
-      morphoSupplyApy = _morphoSupplyApy;
-      morphoBorrowApy = _morphoBorrowApy;
-    } catch (e) {
-      console.error(e);
-    }
+  try {
+    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
+    morphoSupplyApy = _morphoSupplyApy;
+    morphoBorrowApy = _morphoBorrowApy;
+  } catch (e) {
+    console.error(e);
   }
 
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
@@ -87,10 +86,20 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
     canBeSupplied: true,
     canBeBorrowed: true,
-    incentiveSupplyApy: morphoSupplyApy,
-    incentiveBorrowApy: morphoBorrowApy,
-    incentiveSupplyToken: 'MORPHO',
-    incentiveBorrowToken: 'MORPHO',
+    supplyIncentives: [
+      {
+        token: 'MORPHO',
+        apy: morphoSupplyApy,
+        incentiveKind: IncentiveKind.Reward,
+      },
+    ],
+    borrowIncentives: [
+      {
+        token: 'MORPHO',
+        apy: morphoBorrowApy,
+        incentiveKind: IncentiveKind.Reward,
+      },
+    ],
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
@@ -101,10 +110,21 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     borrowRate: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
+    supplyIncentives: [],
   };
   if (STAKING_ASSETS.includes(collateralTokenInfo.symbol)) {
-    assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol, mainnetWeb3);
-    assetsData[collateralTokenInfo.symbol].incentiveSupplyToken = collateralTokenInfo.symbol;
+    assetsData[collateralTokenInfo.symbol].supplyIncentives = [
+      ...assetsData[collateralTokenInfo.symbol].supplyIncentives!,
+      {
+        token: collateralTokenInfo.symbol,
+        apy: await getStakingApy(collateralTokenInfo.symbol, mainnetWeb3),
+        incentiveKind: IncentiveKind.Staking,
+      },
+    ];
+  }
+
+  if (REWARD_ASSETS.includes(collateralTokenInfo.symbol)) {
+    assetsData[collateralTokenInfo.symbol].supplyIncentives?.push(await getReward(collateralTokenInfo.symbol));
   }
 
   return {

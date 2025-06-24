@@ -32,7 +32,7 @@ import {
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
 
@@ -286,7 +286,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       _market.supplyIncentives.push({
         apy: _market.incentiveSupplyApy || '0',
         token: _market.symbol,
-        incentiveKind: 'staking',
+        incentiveKind: IncentiveKind.Staking,
       });
     }
 
@@ -299,7 +299,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       _market.borrowIncentives.push({
         apy: _market.incentiveBorrowApy,
         token: _market.incentiveBorrowToken!!,
-        incentiveKind: 'reward',
+        incentiveKind: IncentiveKind.Reward,
       });
     }
 
@@ -328,7 +328,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         _market.supplyIncentives.push({
           token: supplyRewardData.rewardTokenSymbol,
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
         });
       }
     });
@@ -355,7 +355,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         _market.borrowIncentives.push({
           token: borrowRewardData.rewardTokenSymbol,
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
         });
       }
     });

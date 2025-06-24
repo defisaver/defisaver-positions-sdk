@@ -558,7 +558,7 @@ export const MORPHO_BLUE_USR_USDC_915 = (networkId: NetworkNumber = NetworkNumbe
 export const MORPHO_BLUE_PTSYRUPUSDCAUG_USDC_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
   label: 'Morpho',
-  shortLabel: 'Pt syrupUSDC Aug/USDC',
+  shortLabel: 'PT syrupUSDC Aug/USDC',
   value: MorphoBlueVersions.MorphoBluePTsyrupUSDCAugUSDC_860,
   url: 'ptsyrupusdcaug-a3819a7d',
   loanToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',

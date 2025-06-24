@@ -109,7 +109,29 @@ const getApyFromDfsApi = async (asset: string) => {
   return String(data.apy);
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug'];
+export const STAKING_ASSETS = [
+  'cbETH',
+  'wstETH',
+  'cbETH',
+  'rETH',
+  'sDAI',
+  'weETH',
+  'sUSDe',
+  'osETH',
+  'ezETH',
+  'ETHx',
+  'rsETH',
+  'pufETH',
+  'wrsETH',
+  'wsuperOETHb',
+  'sUSDS',
+  'PT eUSDe May',
+  'PT sUSDe July',
+  'PT USDe July',
+  'PT eUSDe Aug',
+  'PT syrupUSDC Aug',
+  'syrupUSDC',
+];
 
 export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
   try {
@@ -130,6 +152,8 @@ export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumb
     if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July');
     if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July');
     if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug');
+    if (asset === 'PT syrupUSDC Aug') return await getApyFromDfsApi('PT syrupUSDC Aug');
+    if (asset === 'syrupUSDC') return await getApyFromDfsApi('syrupUSDC');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
@@ -165,7 +189,14 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
         : assetData.supplyRate;
       const supplyInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
-      if (assetData.incentiveSupplyApy) {
+      if (assetData.supplyIncentives && assetData.supplyIncentives.length > 0) {
+        let totalApy = '0';
+        for (const incentive of assetData.supplyIncentives || []) {
+          totalApy = new Dec(totalApy).add(incentive.apy).toString();
+        }
+        const incentiveInterest = calculateInterestEarned(amount, totalApy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+      } else if (assetData.incentiveSupplyApy) {
         // take COMP/AAVE yield into account
         const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
@@ -182,7 +213,14 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
           : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
-      if (assetData.incentiveBorrowApy) {
+      if (assetData.borrowIncentives && assetData.borrowIncentives.length > 0) {
+        let totalApy = '0';
+        for (const incentive of assetData.borrowIncentives || []) {
+          totalApy = new Dec(totalApy).add(incentive.apy).toString();
+        }
+        const incentiveInterest = calculateInterestEarned(amount, totalApy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+      } else if (assetData.incentiveBorrowApy) {
         // take COMP/AAVE yield into account
         const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveBorrowApy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();

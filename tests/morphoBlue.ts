@@ -37,25 +37,24 @@ describe('Morpho Blue', () => {
     const accountData = await sdk.morphoBlue.getMorphoBlueAccountData(
       _web3,
       network,
-      '0x199666178740df61638b5fcd188eae70180cc8e8',
+      '0xe5d68e1efa86f663856556169b8a0da08274d3d8',
       selectedMarket,
       marketData,
     );
-    // console.log(accountData);
+    console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ltv', // ...
     ]);
   };
 
   const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish, selectedMarket: sdk.MorphoBlueMarketData) => {
-    const balances = await sdk.morphoBlue.getMorphoBlueAccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
+    const balances = await sdk.morphoBlue.getMorphoBlueAccountBalances(_web3, network, blockNumber, false, '0xe5d68e1efa86f663856556169b8a0da08274d3d8', selectedMarket);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
     ]);
     return balances;
   };
-
   // APY
 
   it('can fetch apy afters for wstETH/ETH market on Ethereum', async function () {
