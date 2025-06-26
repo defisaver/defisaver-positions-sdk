@@ -181,6 +181,7 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
   }
 
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
+    .filter((tokenMarket: any) => Object.keys(tokenMarket).length > 0)
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';

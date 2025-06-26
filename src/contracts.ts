@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { getContract, Client, GetContractReturnType } from 'viem';
-import * as configRaw from './config/contracts';
+import configRaw from './config/contracts';
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
 import { Blockish, EthAddress, NetworkNumber } from './types/common';
@@ -64,7 +64,7 @@ const createViemContractFromConfigFunc = (name: ConfigKey, _address?: string) =>
     address,
     abi,
     client,
-  }); // as GetContractReturnType<typeof abi, Client>;
+  });
 };
 
 const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
