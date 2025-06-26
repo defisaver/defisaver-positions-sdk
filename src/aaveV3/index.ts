@@ -1,5 +1,5 @@
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import { createWalletClient, createPublicClient, custom } from 'viem';
+import { createPublicClient, custom } from 'viem';
 import Dec from 'decimal.js';
 import { getAssetsBalances } from '../assets';
 import {
@@ -181,7 +181,6 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
   }
 
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
-    .filter((tokenMarket: any) => Object.keys(tokenMarket).length > 0)
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
       const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
@@ -192,7 +191,7 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
       }
 
-      let borrowCap = tokenMarket.borrowCap;
+      let borrowCap = tokenMarket.borrowCap.toString();
       let discountRateOnBorrow = '0';
 
       if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {

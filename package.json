@@ -28,7 +28,7 @@
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
-    "decimal.js": "^10.4.3",
+    "decimal.js": "^10.5.0",
     "lodash": "^4.17.21",
     "memoizee": "^0.4.17",
     "viem": "^2.31.4"

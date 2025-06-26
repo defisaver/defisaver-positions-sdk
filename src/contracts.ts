@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { getContract, Client, GetContractReturnType } from 'viem';
-import configRaw from './config/contracts';
+import * as configRaw from './config/contracts';
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
 import { Blockish, EthAddress, NetworkNumber } from './types/common';
@@ -57,15 +57,15 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
   return latestAbi;
 };
 
-const createViemContractFromConfigFunc = (name: ConfigKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
+const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
   const address = (_address || getConfigContractAddress(name, network, block)) as `0x${string}`;
-  const abi = configRaw[name].abi; // getConfigContractAbi(name, network, block)
+  const abi = configRaw[name].abi as typeof configRaw[TKey]['abi']; // getConfigContractAbi(name, network, block)
   return getContract({
     address,
     abi,
     client,
   });
-};
+}
 
 const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
   const address = _address || getConfigContractAddress(name, network, block);
