@@ -1,6 +1,6 @@
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
+import { createWalletClient, createPublicClient, custom } from 'viem';
 import Dec from 'decimal.js';
-import Web3 from 'web3';
 import { getAssetsBalances } from '../assets';
 import {
   AaveIncentiveDataProviderV3Contract,
@@ -22,7 +22,6 @@ import {
   AaveMarketInfo,
   AaveV3AssetData,
   AaveV3AssetsData,
-  AaveV3IncentiveData,
   AaveV3MarketData,
   AaveV3PositionData,
   AaveV3UsedAsset,
@@ -34,12 +33,6 @@ import {
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiIncentiveDataProviderV3';
-
-export const test = (web3: Web3, network: NetworkNumber) => {
-  const contract = AaveV3ViewContract(web3, 1);
-  return contract.methods.AAVE_REFERRAL_CODE().call();
-};
 
 export const aaveV3CalculateDiscountRate = (
   debtBalance: string,
@@ -97,13 +90,17 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+export async function getAaveV3MarketData(provider: EthereumProvider, network: NetworkNumber, market: AaveMarketInfo, defaultProvider: EthereumProvider = provider): Promise<AaveV3MarketData> {
+  const client = createPublicClient({
+    transport: custom(provider),
+  });
+
+  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address) as `0x${string}`[];
 
   const isL2 = isLayer2Network(network);
 
-  const loanInfoContract = AaveV3ViewContract(web3, network);
-  const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract(web3, network);
+  const loanInfoContract = AaveV3ViewContract(client, network);
+  const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract(client, network);
   const marketAddress = market.providerAddress;
 
   const GhoDiscountRateStrategyAddress = getConfigContractAddress('GhoDiscountRateStrategy', NetworkNumber.Eth);
@@ -138,13 +135,13 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     },
   ];
 
-  const ghoContract = GhoTokenContract(web3, network);
+  const ghoContract = GhoTokenContract(client, network);
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
-    loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
-    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
-    loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses]),
+    loanInfoContract.read.getAllEmodes([marketAddress]),
+    loanInfoContract.read.isBorrowAllowed([marketAddress]), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
@@ -158,8 +155,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
       liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
       collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
-      borrowableBitmap: eModesInfo[i].borrowableBitmap,
-      collateralBitmap: eModesInfo[i].collateralBitmap,
+      borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
+      collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
       borrowAssets: [],
       collateralAssets: [],
     };
@@ -172,11 +169,11 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     { 0: facilitatorsList },
   ] = multiRes;
 
-  let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
+  let rewardInfo: Record<string, Awaited<ReturnType<typeof aaveIncentivesContract.read.getReservesIncentivesData>>> | null = null;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt];
   if (networksWithIncentives.includes(network)) {
-    rewardInfo = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
-    rewardInfo = rewardInfo.reduce((all: any, _market: AaveV3IncentiveData) => {
+    const res = await aaveIncentivesContract.read.getReservesIncentivesData([marketAddress]);
+    rewardInfo = res.reduce((all: any, _market: any) => {
       // eslint-disable-next-line no-param-reassign
       all[_market.underlyingAsset] = _market;
       return all;
@@ -198,7 +195,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       let discountRateOnBorrow = '0';
 
       if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {
-        const facilitatorBucket = await ghoContract.methods.getFacilitatorBucket(facilitatorsList[0]).call();
+        const facilitatorBucket = await ghoContract.read.getFacilitatorBucket([facilitatorsList[0]]);
 
         borrowCap = Dec.min(borrowCap, assetAmountInEth(facilitatorBucket[0], 'GHO')).toString();
 
@@ -275,7 +272,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   // Get incentives data
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
     /* eslint-disable no-param-reassign */
-    const rewardForMarket: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput | undefined = rewardInfo?.[_market.underlyingTokenAddress as any];
+    const rewardForMarket = rewardInfo?.[_market.underlyingTokenAddress];
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
     if (isStakingAsset) {
       _market.incentiveSupplyApy = await getStakingApy(_market.symbol, defaultWeb3);
@@ -409,7 +406,7 @@ export const EMPTY_AAVE_DATA = {
   suppliedCollateralUsd: '0',
 };
 
-export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const getAaveV3AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -469,7 +466,7 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
+export const getAaveV3AccountData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
     selectedMarket: market, assetsData, eModeCategoriesData,
   } = extractedState;
@@ -617,8 +614,10 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   return payload;
 };
 
-export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV3PositionData> => {
-  const marketData = await getAaveV3MarketData(web3, network, market, mainnetWeb3);
-  const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
+type EthereumProvider = { request(...args: any): Promise<any> }; // TODO
+
+export const getAaveV3FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV3PositionData> => {
+  const marketData = await getAaveV3MarketData(provider, network, market, mainnetWeb3);
+  const positionData = await getAaveV3AccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };

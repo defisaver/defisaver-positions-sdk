@@ -1,5 +1,6 @@
 import Web3 from 'web3';
-import configRaw from './config/contracts';
+import { getContract, Client, GetContractReturnType } from 'viem';
+import * as configRaw from './config/contracts';
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
 import { Blockish, EthAddress, NetworkNumber } from './types/common';
@@ -56,6 +57,16 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
   return latestAbi;
 };
 
+const createViemContractFromConfigFunc = (name: ConfigKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
+  const address = (_address || getConfigContractAddress(name, network, block)) as `0x${string}`;
+  const abi = configRaw[name].abi; // getConfigContractAbi(name, network, block)
+  return getContract({
+    address,
+    abi,
+    client,
+  }); // as GetContractReturnType<typeof abi, Client>;
+};
+
 const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
   const address = _address || getConfigContractAddress(name, network, block);
   return new web3.eth.Contract(getConfigContractAbi(name, network, block), address) as any as T;
@@ -71,10 +82,10 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
-export const AaveIncentiveDataProviderV3Contract = createContractFromConfigFunc<ContractTypes.AaveUiIncentiveDataProviderV3>('AaveUiIncentiveDataProviderV3');
+export const AaveV3ViewContract = createViemContractFromConfigFunc('AaveV3View');
+export const AaveIncentiveDataProviderV3Contract = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
 
-export const GhoTokenContract = createContractFromConfigFunc<ContractTypes.GHO>('GHO');
+export const GhoTokenContract = createViemContractFromConfigFunc('GHO');
 
 export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
 export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');

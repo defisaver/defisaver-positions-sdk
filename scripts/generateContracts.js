@@ -1,7 +1,7 @@
 const { runTypeChain, glob } = require('typechain');
 const fs = require('fs');
 const path = require('path');
-const config = require('../src/config/contracts.js');
+const config = require('../src/config/contracts.ts');
 
 async function main() {
   const abiDir = path.join(__dirname, 'temp');

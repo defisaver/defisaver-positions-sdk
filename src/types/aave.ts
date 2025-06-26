@@ -2,8 +2,6 @@ import {
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
-import { IUiIncentiveDataProviderV3 } from './contracts/generated/AaveUiIncentiveDataProviderV3';
-
 export enum AaveVersions {
   AaveV1 = 'v1',
   AaveV2 = 'v2default',
@@ -21,7 +19,7 @@ export type AaveMarketInfo = {
   value: AaveVersions,
   assets: readonly string[],
   provider: '' | 'LendingPoolAddressesProvider' | 'AaveV3PoolAddressesProvider' | 'AaveV3LidoPoolAddressesProvider' | 'AaveV3EtherfiPoolAddressesProvider',
-  providerAddress: string,
+  providerAddress: `0x${string}`,
   lendingPool: '' | 'AaveLendingPoolV2' | 'AaveV3LendingPool' | 'MorphoAaveV3ProxyEthMarket' | 'AaveV3LidoLendingPool' | 'AaveV3EtherfiLendingPool',
   lendingPoolAddress: string,
   protocolData: '' | 'AaveProtocolDataProvider' | 'AaveV3ProtocolDataProvider' | 'AaveV3LidoProtocolDataProvider' | 'AaveV3EtherfiProtocolDataProvider',
@@ -225,13 +223,6 @@ export interface MorphoAaveV3PositionData extends AavePositionData {
 
 export interface MorphoAaveV2PositionData extends AavePositionData {
   usedAssets: MorphoAaveV2UsedAssets,
-}
-
-export interface AaveV3IncentiveData {
-  underlyingAsset: string,
-  aIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
-  vIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput,
-  sIncentiveData: IUiIncentiveDataProviderV3.IncentiveDataStructOutput
 }
 
 export interface AaveV3AggregatedPositionData {

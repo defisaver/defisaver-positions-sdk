@@ -30,7 +30,8 @@
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.4.3",
     "lodash": "^4.17.21",
-    "memoizee": "^0.4.17"
+    "memoizee": "^0.4.17",
+    "viem": "^2.26.5"
   },
   "devDependencies": {
     "@defisaver/eslint-config": "^1.0.1",
