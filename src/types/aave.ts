@@ -31,13 +31,6 @@ export type AaveMarketInfo = {
   disabled?: boolean,
 };
 
-export interface DiscountData {
-  ghoDiscountedPerDiscountToken: string,
-  discountRate: string,
-  minDiscountTokenBalance: string,
-  minGhoBalanceForDiscount: string,
-}
-
 export interface EModeCategoryData {
   label: string,
   id: number,
@@ -94,10 +87,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
   nativeAsset?: boolean,
-  discountData?: DiscountData,
   debtCeilingForIsolationMode: string,
   isolationModeTotalDebt: string,
-  borrowRateDiscounted: string,
   isolationModeBorrowingEnabled: boolean,
   supplyRateP2P?: string,
   borrowRateP2P?: string,
@@ -112,7 +103,7 @@ export interface AaveV3AssetData extends AaveAssetData {
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
 
-export interface MorphoAaveV3AssetData extends Omit<AaveV3AssetData, 'nativeAsset' | 'discountData' | 'borrowRateDiscounted'> {
+export interface MorphoAaveV3AssetData extends AaveV3AssetData {
 }
 
 export type AaveAssetsData<T> = { [key: string]: T };
@@ -161,14 +152,13 @@ export interface MorphoAaveV2UsedAsset extends Omit<AaveV2UsedAsset, 'debt'> {
   eModeCategory: number,
 }
 export interface AaveV3UsedAsset extends AaveUsedAsset {
-  discountedBorrowRate: string,
   supplyRate: string,
   borrowRate: string,
   interestMode: string,
   collateral: boolean,
 }
 
-export interface MorphoAaveV3UsedAsset extends Omit<AaveV3UsedAsset, 'discountedBorrowRate' | 'debt'> {
+export interface MorphoAaveV3UsedAsset extends AaveV3UsedAsset {
   suppliedP2P: string,
   suppliedPool: string,
   suppliedMatched: string,

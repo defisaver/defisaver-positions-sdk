@@ -7,8 +7,6 @@ import {
   AaveV3ViewContract,
   createContractWrapper,
   getConfigContractAbi,
-  getConfigContractAddress,
-  GhoTokenContract,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
@@ -39,32 +37,6 @@ import { IUiIncentiveDataProviderV3 } from '../types/contracts/generated/AaveUiI
 export const test = (web3: Web3, network: NetworkNumber) => {
   const contract = AaveV3ViewContract(web3, 1);
   return contract.methods.AAVE_REFERRAL_CODE().call();
-};
-
-export const aaveV3CalculateDiscountRate = (
-  debtBalance: string,
-  discountTokenBalance: string,
-  discountRate: string,
-  minDiscountTokenBalance: string,
-  minGhoBalanceForDiscount: string,
-  ghoDiscountedPerDiscountToken: string,
-) => {
-  if (new Dec(discountTokenBalance).lt(minDiscountTokenBalance) || new Dec(debtBalance).lt(minGhoBalanceForDiscount)) {
-    return '0';
-  }
-  const discountedBalance = new Dec( // wadMul
-    new Dec(discountTokenBalance).mul(ghoDiscountedPerDiscountToken).add(new Dec(1e18).div(2)),
-  ).div(1e18).toDP(0);
-
-  if (new Dec(discountedBalance).gte(debtBalance)) {
-    return new Dec(discountRate).div(10000).toDP(4).toString();
-  }
-  return new Dec(discountedBalance)
-    .mul(discountRate)
-    .div(debtBalance)
-    .div(10000)
-    .toDP(4)
-    .toString();
 };
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
@@ -152,7 +124,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       }
 
       const borrowCap = tokenMarket.borrowCap;
-      const discountRateOnBorrow = '0';
 
       const borrowCapInWei = new Dec(assetAmountInWei(borrowCap.toString(), symbol));
       let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply))
@@ -176,7 +147,6 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         underlyingTokenAddress: tokenMarket.underlyingTokenAddress,
         supplyRate: aprToApy(new Dec(tokenMarket.supplyRate.toString()).div(1e25).toString()),
         borrowRate: aprToApy(new Dec(tokenMarket.borrowRateVariable.toString()).div(1e25).toString()),
-        borrowRateDiscounted: aprToApy(new Dec(tokenMarket.borrowRateVariable.toString()).div(1e25).toString()),
         borrowRateStable: aprToApy(new Dec(tokenMarket.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(tokenMarket.collateralFactor.toString()).div(10000).toString(),
         liquidationBonus: new Dec(tokenMarket.liquidationBonus.toString()).div(10000).toString(),
@@ -486,7 +456,6 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       isSupplied,
       collateral: enabledAsCollateral,
       stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate).div(1e25).toString()),
-      discountedBorrowRate: aprToApy(assetsData[asset].borrowRate),
       borrowedStable,
       borrowedVariable,
       borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),

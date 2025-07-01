@@ -74,8 +74,6 @@ export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.U
 export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
 export const AaveIncentiveDataProviderV3Contract = createContractFromConfigFunc<ContractTypes.AaveUiIncentiveDataProviderV3>('AaveUiIncentiveDataProviderV3');
 
-export const GhoTokenContract = createContractFromConfigFunc<ContractTypes.GHO>('GHO');
-
 export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
 export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');
 export const REthContract = createContractFromConfigFunc<ContractTypes.REth>('REth');
