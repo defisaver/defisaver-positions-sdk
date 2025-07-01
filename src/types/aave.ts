@@ -93,8 +93,8 @@ export interface IncentiveData {
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
-  nativeAsset: boolean,
-  discountData: DiscountData,
+  nativeAsset?: boolean,
+  discountData?: DiscountData,
   debtCeilingForIsolationMode: string,
   isolationModeTotalDebt: string,
   borrowRateDiscounted: string,
@@ -104,7 +104,7 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFrozen: boolean,
   isPaused: boolean,
   isFlashLoanEnabled: boolean,
-  assetId: string | null,
+  assetId: string | number | null,
   liquidationBonus: string,
   supplyIncentives?: IncentiveData[];
   borrowIncentives?: IncentiveData[];
