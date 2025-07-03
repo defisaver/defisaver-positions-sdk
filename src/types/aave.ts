@@ -86,7 +86,6 @@ export interface IncentiveData {
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
-  nativeAsset?: boolean,
   debtCeilingForIsolationMode: string,
   isolationModeTotalDebt: string,
   isolationModeBorrowingEnabled: boolean,

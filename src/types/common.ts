@@ -52,7 +52,6 @@ export interface MMUsedAsset {
   debt?: string,
   supplyRate?: string,
   borrowRate?: string,
-  stableBorrowRate?: string,
   interestMode?: string,
   collateral?: boolean,
 }
