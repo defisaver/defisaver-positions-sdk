@@ -49,6 +49,7 @@ export interface MMUsedAsset {
   borrowed: string,
   borrowedUsd: string,
   isBorrowed: boolean,
+  stableBorrowRate?: string,
   debt?: string,
   supplyRate?: string,
   borrowRate?: string,
