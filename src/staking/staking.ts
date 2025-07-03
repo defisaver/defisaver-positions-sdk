@@ -178,9 +178,7 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
       acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
       const rate = isMorpho
         ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
-        : (usedAsset.symbol === 'GHO' && assetsData.nativeAsset)
-          ? usedAsset.discountedBorrowRate
-          : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
+        : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
       if (assetData.incentiveBorrowApy) {
