@@ -223,9 +223,19 @@ export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions,
   return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };
 
-export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
+/**
+ * @param markets
+ * @param selectedMarket
+ * @param web3
+ * @param network
+ * @param viewContract
+ * @param interestRate
+ * @param debtInFrontBeingMoved - amound of debt being repositioned if interest rate is being increased (prevents including it as debt in front)
+ */
+export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string, debtInFrontBeingMoved: string = '0') => {
   const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
-  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
+  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate))
+    .sub(debtInFrontBeingMoved);
 
   return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };

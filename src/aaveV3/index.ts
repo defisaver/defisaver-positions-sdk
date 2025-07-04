@@ -7,8 +7,6 @@ import {
   AaveV3ViewContract,
   createContractWrapper,
   getConfigContractAbi,
-  getConfigContractAddress,
-  GhoTokenContract,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
@@ -33,32 +31,6 @@ import {
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-
-export const aaveV3CalculateDiscountRate = (
-  debtBalance: string,
-  discountTokenBalance: string,
-  discountRate: string,
-  minDiscountTokenBalance: string,
-  minGhoBalanceForDiscount: string,
-  ghoDiscountedPerDiscountToken: string,
-) => {
-  if (new Dec(discountTokenBalance).lt(minDiscountTokenBalance) || new Dec(debtBalance).lt(minGhoBalanceForDiscount)) {
-    return '0';
-  }
-  const discountedBalance = new Dec( // wadMul
-    new Dec(discountTokenBalance).mul(ghoDiscountedPerDiscountToken).add(new Dec(1e18).div(2)),
-  ).div(1e18).toDP(0);
-
-  if (new Dec(discountedBalance).gte(debtBalance)) {
-    return new Dec(discountRate).div(10000).toDP(4).toString();
-  }
-  return new Dec(discountedBalance)
-    .mul(discountRate)
-    .div(debtBalance)
-    .div(10000)
-    .toDP(4)
-    .toString();
-};
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { assetsData, eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -103,46 +75,11 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
   const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract(client, network);
   const marketAddress = market.providerAddress;
 
-  const GhoDiscountRateStrategyAddress = getConfigContractAddress('GhoDiscountRateStrategy', NetworkNumber.Eth);
-  const GhoDiscountRateStrategyAbi = getConfigContractAbi('GhoDiscountRateStrategy');
-  const GhoTokenAbi = getConfigContractAbi('GHO');
-
-  const multicallCallsObject = [
-    {
-      target: GhoDiscountRateStrategyAddress,
-      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'GHO_DISCOUNTED_PER_DISCOUNT_TOKEN'),
-      params: [],
-    },
-    {
-      target: GhoDiscountRateStrategyAddress,
-      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'DISCOUNT_RATE'),
-      params: [],
-    },
-    {
-      target: GhoDiscountRateStrategyAddress,
-      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'MIN_DISCOUNT_TOKEN_BALANCE'),
-      params: [],
-    },
-    {
-      target: GhoDiscountRateStrategyAddress,
-      abiItem: getAbiItem(GhoDiscountRateStrategyAbi, 'MIN_DEBT_TOKEN_BALANCE'),
-      params: [],
-    },
-    {
-      target: getAssetInfo('GHO', network).address,
-      abiItem: getAbiItem(GhoTokenAbi, 'getFacilitatorsList'),
-      params: [],
-    },
-  ];
-
-  const ghoContract = GhoTokenContract(client, network);
-
   // eslint-disable-next-line prefer-const
-  let [loanInfo, eModesInfo, isBorrowAllowed, multiRes] = await Promise.all([
-    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses]),
-    loanInfoContract.read.getAllEmodes([marketAddress]),
-    loanInfoContract.read.isBorrowAllowed([marketAddress]), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-    isL2 ? [{ 0: null }, { 0: null }, { 0: null }, { 0: null }, { 0: null }] : multicall(multicallCallsObject, web3, network),
+  let [loanInfo, eModesInfo, isBorrowAllowed] = await Promise.all([
+    loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
+    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
+    loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -161,13 +98,6 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
       collateralAssets: [],
     };
   }
-  const [
-    { 0: ghoDiscountedPerDiscountToken },
-    { 0: discountRate },
-    { 0: minDiscountTokenBalance },
-    { 0: minGhoBalanceForDiscount },
-    { 0: facilitatorsList },
-  ] = multiRes;
 
   let rewardInfo: Record<string, Awaited<ReturnType<typeof aaveIncentivesContract.read.getReservesIncentivesData>>> | null = null;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt];
@@ -183,7 +113,6 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
-      const nativeAsset = symbol === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
 
       // eslint-disable-next-line guard-for-in
       for (const eModeIndex in eModeCategoriesData) {
@@ -191,26 +120,10 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
       }
 
-      let borrowCap = tokenMarket.borrowCap.toString();
-      let discountRateOnBorrow = '0';
-
-      if (nativeAsset && facilitatorsList && discountRate && minDiscountTokenBalance && minGhoBalanceForDiscount && ghoDiscountedPerDiscountToken) {
-        const facilitatorBucket = await ghoContract.read.getFacilitatorBucket([facilitatorsList[0]]);
-
-        borrowCap = Dec.min(borrowCap, assetAmountInEth(facilitatorBucket[0], 'GHO')).toString();
-
-        discountRateOnBorrow = aaveV3CalculateDiscountRate(
-          tokenMarket.totalBorrow.toString(),
-          '3160881469228662060510133', // stkAAVE total supply
-          discountRate,
-          minDiscountTokenBalance,
-          minGhoBalanceForDiscount,
-          ghoDiscountedPerDiscountToken,
-        );
-      }
+      const borrowCap = tokenMarket.borrowCap;
 
       const borrowCapInWei = new Dec(assetAmountInWei(borrowCap.toString(), symbol));
-      let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply)) || nativeAsset
+      let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply))
         ? assetAmountInEth(borrowCapInWei
           .sub(tokenMarket.totalBorrow.toString())
           .toString(), symbol)
@@ -222,15 +135,6 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
         marketLiquidity = '0';
       }
       return ({
-        nativeAsset,
-        ...addToObjectIf(nativeAsset, {
-          discountData: {
-            ghoDiscountedPerDiscountToken,
-            discountRate,
-            minDiscountTokenBalance,
-            minGhoBalanceForDiscount,
-          },
-        }),
         symbol,
         isIsolated: new Dec(tokenMarket.debtCeilingForIsolationMode).gt(0),
         debtCeilingForIsolationMode: new Dec(tokenMarket.debtCeilingForIsolationMode).div(100).toString(),
@@ -240,7 +144,6 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
         underlyingTokenAddress: tokenMarket.underlyingTokenAddress,
         supplyRate: aprToApy(new Dec(tokenMarket.supplyRate.toString()).div(1e25).toString()),
         borrowRate: aprToApy(new Dec(tokenMarket.borrowRateVariable.toString()).div(1e25).toString()),
-        borrowRateDiscounted: aprToApy(nativeAsset ? new Dec(tokenMarket.borrowRateVariable.toString()).div(1e25).mul(1 - parseFloat(discountRateOnBorrow)).toString() : '0'),
         borrowRateStable: aprToApy(new Dec(tokenMarket.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(tokenMarket.collateralFactor.toString()).div(10000).toString(),
         liquidationBonus: new Dec(tokenMarket.liquidationBonus.toString()).div(10000).toString(),
@@ -255,7 +158,7 @@ export async function getAaveV3MarketData(provider: EthereumProvider, network: N
         isFrozen: tokenMarket.isFrozen,
         isPaused: tokenMarket.isPaused,
         canBeBorrowed: tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen && tokenMarket.borrowingEnabled && isBorrowAllowed,
-        canBeSupplied: !nativeAsset && tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen,
+        canBeSupplied: tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen,
         canBeWithdrawn: tokenMarket.isActive && !tokenMarket.isPaused,
         canBePayBacked: tokenMarket.isActive && !tokenMarket.isPaused,
         disabledStableBorrowing: !tokenMarket.stableBorrowRateEnabled,
@@ -540,21 +443,7 @@ export const getAaveV3AccountData = async (provider: EthereumProvider, network: 
       interestMode = 'both';
     }
     if (!usedAssets[asset]) usedAssets[asset] = {} as AaveV3UsedAsset;
-    const nativeAsset = asset === 'GHO' && network === NetworkNumber.Eth && market.value === 'v3default';
-
-    let discountRateOnBorrow = '0';
     const borrowed = new Dec(borrowedStable).add(borrowedVariable).toString();
-
-    if (nativeAsset && new Dec(borrowed).gt(0) && new Dec(stkAaveBalance).gt(0)) {
-      discountRateOnBorrow = aaveV3CalculateDiscountRate(
-        assetAmountInWei(borrowed, 'GHO'),
-        assetAmountInWei(stkAaveBalance, 'stkAAVE'),
-        assetsData[asset].discountData.discountRate,
-        assetsData[asset].discountData.minDiscountTokenBalance,
-        assetsData[asset].discountData.minGhoBalanceForDiscount,
-        assetsData[asset].discountData.ghoDiscountedPerDiscountToken,
-      );
-    }
 
     usedAssets[asset] = {
       ...usedAssets[asset],
@@ -564,7 +453,6 @@ export const getAaveV3AccountData = async (provider: EthereumProvider, network: 
       isSupplied,
       collateral: enabledAsCollateral,
       stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate).div(1e25).toString()),
-      discountedBorrowRate: aprToApy(new Dec(assetsData[asset].borrowRate).mul(1 - parseFloat(discountRateOnBorrow)).toString()),
       borrowedStable,
       borrowedVariable,
       borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),

@@ -85,8 +85,6 @@ export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.U
 export const AaveV3ViewContract = createViemContractFromConfigFunc('AaveV3View');
 export const AaveIncentiveDataProviderV3Contract = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
 
-export const GhoTokenContract = createViemContractFromConfigFunc('GHO');
-
 export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
 export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');
 export const REthContract = createContractFromConfigFunc<ContractTypes.REth>('REth');
@@ -129,9 +127,11 @@ export const ChickenBondsViewContract = createContractFromConfigFunc<ContractTyp
 export const ChickenBondsManagerContract = createContractFromConfigFunc<ContractTypes.ChickenBondsManager>('ChickenBondsManager');
 
 export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
+export const BTCPriceFeedContract = createContractFromConfigFunc<ContractTypes.BTCPriceFeed>('BTCPriceFeed');
 export const COMPPriceFeedContract = createContractFromConfigFunc<ContractTypes.COMPPriceFeed>('COMPPriceFeed');
 export const USDCPriceFeedContract = createContractFromConfigFunc<ContractTypes.USDCPriceFeed>('USDCPriceFeed');
 export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
+export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WeETHPriceFeed>('WeETHPriceFeed');
 
 export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
 export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');

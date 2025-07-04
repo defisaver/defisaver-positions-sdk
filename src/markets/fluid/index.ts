@@ -17,7 +17,7 @@ export const FLUID_ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): 
   stableBased: true,
   ethBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / USDC Market 1',
+  label: '#1 (ETH / USDC)',
   shortLabel: 'ETH/USDC',
   value: FluidMainnetVersion.FLUID_ETH_USDC_1,
   url: 'eth-usdc-1',
@@ -25,8 +25,8 @@ export const FLUID_ETH_USDC_1 = (networkId: NetworkNumber = NetworkNumber.Eth): 
   marketAddress: '0xeAbBfca72F8a8bf14C4ac59e69ECB2eB69F0811C',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
@@ -37,7 +37,7 @@ export const FLUID_ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): 
   stableBased: true,
   ethBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / USDT Market 2',
+  label: '#2 (ETH / USDT)',
   shortLabel: 'ETH/USDT',
   value: FluidMainnetVersion.FLUID_ETH_USDT_2,
   url: 'eth-usdt-2',
@@ -45,8 +45,8 @@ export const FLUID_ETH_USDT_2 = (networkId: NetworkNumber = NetworkNumber.Eth): 
   id: 2,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDT',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
@@ -57,7 +57,7 @@ export const FLUID_WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth)
   ethBased: true,
   wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / ETH Market 3',
+  label: '#3 (wstETH / ETH)',
   shortLabel: 'wstETH/ETH',
   value: FluidMainnetVersion.FLUID_WSTETH_ETH_3,
   url: 'wsteth-eth-3',
@@ -65,8 +65,8 @@ export const FLUID_WSTETH_ETH_3 = (networkId: NetworkNumber = NetworkNumber.Eth)
   id: 3,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'ETH',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
@@ -77,7 +77,7 @@ export const FLUID_WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth
   stableBased: true,
   wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / USDC Market 4',
+  label: '#4 (wstETH / USDC)',
   shortLabel: 'wstETH/USDC',
   value: FluidMainnetVersion.FLUID_WSTETH_USDC_4,
   url: 'wsteth-usdc-4',
@@ -85,8 +85,8 @@ export const FLUID_WSTETH_USDC_4 = (networkId: NetworkNumber = NetworkNumber.Eth
   id: 4,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
@@ -97,7 +97,7 @@ export const FLUID_WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth
   stableBased: true,
   wstETHBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / USDT Market 5',
+  label: '#5 (wstETH / USDT)',
   shortLabel: 'wstETH/USDT',
   value: FluidMainnetVersion.FLUID_WSTETH_USDT_5,
   url: 'wsteth-usdt-5',
@@ -105,8 +105,8 @@ export const FLUID_WSTETH_USDT_5 = (networkId: NetworkNumber = NetworkNumber.Eth
   id: 5,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDT',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
@@ -117,7 +117,7 @@ export const FLUID_WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Et
   wstETHBased: true,
   stableBased: false,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / wstETH Market 6',
+  label: '#6 (weETH / wstETH)',
   shortLabel: 'weETH/wstETH',
   value: FluidMainnetVersion.FLUID_WEETH_WSTETH_6,
   url: 'weeth-wsteth-6',
@@ -125,19 +125,58 @@ export const FLUID_WEETH_WSTETH_6 = (networkId: NetworkNumber = NetworkNumber.Et
   id: 6,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'wstETH',
   type: FluidVaultType.T1,
   isDeprecatingSoon: true,
 });
 
+export const FLUID_SUSDE_USDC_7 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  btcBased: false,
+  ethBased: false,
+  wstETHBased: false,
+  stableBased: true,
+  chainIds: [NetworkNumber.Eth],
+  label: '#7 (sUSDe / USDC)',
+  shortLabel: 'sUSDe/USDC',
+  value: FluidMainnetVersion.FLUID_SUSDE_USDC_7,
+  url: 'susde-usdc-7',
+  marketAddress: '0x4045720a33193b4Fe66c94DFbc8D37B0b4D9B469',
+  id: 7,
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDC',
+  type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
+});
+
+export const FLUID_SUSDE_USDT_8 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  btcBased: false,
+  ethBased: false,
+  wstETHBased: false,
+  stableBased: true,
+  chainIds: [NetworkNumber.Eth],
+  label: '#8 (sUSDe / USDT)',
+  shortLabel: 'sUSDe/USDT',
+  value: FluidMainnetVersion.FLUID_SUSDE_USDT_8,
+  url: 'susde-usdt-8',
+  marketAddress: '0xBFADEA65591235f38809076e14803Ac84AcF3F97',
+  id: 8,
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDT',
+  type: FluidVaultType.T1,
+  isDeprecatingSoon: true,
+});
 
 export const FLUID_WEETH_USDC_9 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   btcBased: false,
   ethBased: true,
   stableBased: true,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / USDC Market 9',
+  label: '#9 (weETH / USDC)',
   shortLabel: 'weETH/USDC',
   value: FluidMainnetVersion.FLUID_WEETH_USDC_9,
   url: 'weeth-usdc-9',
@@ -145,8 +184,8 @@ export const FLUID_WEETH_USDC_9 = (networkId: NetworkNumber = NetworkNumber.Eth)
   id: 9,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
   type: FluidVaultType.T1,
   wstETHBased: false,
   isDeprecatingSoon: true,
@@ -159,7 +198,7 @@ export const FLUID_WEETH_USDT_10 = (networkId: NetworkNumber = NetworkNumber.Eth
   stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / USDT Market 10',
+  label: '#10 (weETH / USDT)',
   shortLabel: 'weETH/USDT',
   value: FluidMainnetVersion.FLUID_WEETH_USDT_10,
   url: 'weeth-usdt-10',
@@ -167,8 +206,8 @@ export const FLUID_WEETH_USDT_10 = (networkId: NetworkNumber = NetworkNumber.Eth
   id: 10,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDT',
   isDeprecatingSoon: true,
 });
 
@@ -179,7 +218,7 @@ export const FLUID_ETH_USDC_11 = (networkId: NetworkNumber = NetworkNumber.Eth):
   stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / USDC Market 11',
+  label: '#11 (ETH / USDC)',
   shortLabel: 'ETH/USDC',
   value: FluidMainnetVersion.FLUID_ETH_USDC_11,
   url: 'eth-usdc-11',
@@ -187,8 +226,8 @@ export const FLUID_ETH_USDC_11 = (networkId: NetworkNumber = NetworkNumber.Eth):
   id: 11,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_ETH_USDT_12 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -198,7 +237,7 @@ export const FLUID_ETH_USDT_12 = (networkId: NetworkNumber = NetworkNumber.Eth):
   stableBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / USDT Market 12',
+  label: '#12 (ETH / USDT)',
   shortLabel: 'ETH/USDT',
   value: FluidMainnetVersion.FLUID_ETH_USDT_12,
   url: 'eth-usdt-12',
@@ -206,8 +245,8 @@ export const FLUID_ETH_USDT_12 = (networkId: NetworkNumber = NetworkNumber.Eth):
   id: 12,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WSTETH_ETH_13 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -217,7 +256,7 @@ export const FLUID_WSTETH_ETH_13 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / ETH Market 13',
+  label: '#13 (wstETH / ETH)',
   shortLabel: 'wstETH/ETH',
   value: FluidMainnetVersion.FLUID_WSTETH_ETH_13,
   url: 'wsteth-eth-13',
@@ -225,8 +264,8 @@ export const FLUID_WSTETH_ETH_13 = (networkId: NetworkNumber = NetworkNumber.Eth
   id: 13,
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_WSTETH_USDC_14 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -236,7 +275,7 @@ export const FLUID_WSTETH_USDC_14 = (networkId: NetworkNumber = NetworkNumber.Et
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / USDC Market 14',
+  label: '#14 (wstETH / USDC)',
   shortLabel: 'wstETH/USDC',
   value: FluidMainnetVersion.FLUID_WSTETH_USDC_14,
   url: 'wsteth-usdc-14',
@@ -244,8 +283,8 @@ export const FLUID_WSTETH_USDC_14 = (networkId: NetworkNumber = NetworkNumber.Et
   marketAddress: '0x1982CC7b1570C2503282d0A0B41F69b3B28fdcc3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WSTETH_USDT_15 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -255,7 +294,7 @@ export const FLUID_WSTETH_USDT_15 = (networkId: NetworkNumber = NetworkNumber.Et
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / USDT Market 15',
+  label: '#15 (wstETH / USDT)',
   shortLabel: 'wstETH/USDT',
   value: FluidMainnetVersion.FLUID_WSTETH_USDT_15,
   url: 'wsteth-usdt-15',
@@ -263,8 +302,8 @@ export const FLUID_WSTETH_USDT_15 = (networkId: NetworkNumber = NetworkNumber.Et
   marketAddress: '0xb4F3bf2d96139563777C0231899cE06EE95Cc946',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WEETH_WSTETH_16 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -274,7 +313,7 @@ export const FLUID_WEETH_WSTETH_16 = (networkId: NetworkNumber = NetworkNumber.E
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / wstETH Market 16',
+  label: '#16 (weETH / wstETH)',
   shortLabel: 'weETH/wstETH',
   value: FluidMainnetVersion.FLUID_WEETH_WSTETH_16,
   url: 'weeth-wsteth-16',
@@ -282,8 +321,8 @@ export const FLUID_WEETH_WSTETH_16 = (networkId: NetworkNumber = NetworkNumber.E
   marketAddress: '0xeAEf563015634a9d0EE6CF1357A3b205C35e028D',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_SUSDE_USDC_17 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -293,7 +332,7 @@ export const FLUID_SUSDE_USDC_17 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / USDC Market 17',
+  label: '#17 (sUSDe / USDC)',
   shortLabel: 'sUSDe/USDC',
   value: FluidMainnetVersion.FLUID_SUSDE_USDC_17,
   url: 'susde-usdc-17',
@@ -301,8 +340,8 @@ export const FLUID_SUSDE_USDC_17 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDC',
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_SUSDE_USDT_18 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -312,7 +351,7 @@ export const FLUID_SUSDE_USDT_18 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / USDT Market 18',
+  label: '#18 (sUSDe / USDT)',
   shortLabel: 'sUSDe/USDT',
   value: FluidMainnetVersion.FLUID_SUSDE_USDT_18,
   url: 'susde-usdt-18',
@@ -320,8 +359,8 @@ export const FLUID_SUSDE_USDT_18 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDT',
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WEETH_USDC_19 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -331,7 +370,7 @@ export const FLUID_WEETH_USDC_19 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / USDC Market 19',
+  label: '#19 (weETH / USDC)',
   shortLabel: 'weETH/USDC',
   value: FluidMainnetVersion.FLUID_WEETH_USDC_19,
   url: 'weeth-usdc-19',
@@ -339,8 +378,8 @@ export const FLUID_WEETH_USDC_19 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WEETH_USDT_20 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -350,7 +389,7 @@ export const FLUID_WEETH_USDT_20 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / USDT Market 20',
+  label: '#20 (weETH / USDT)',
   shortLabel: 'weETH/USDT',
   value: FluidMainnetVersion.FLUID_WEETH_USDT_20,
   url: 'weeth-usdt-20',
@@ -358,8 +397,8 @@ export const FLUID_WEETH_USDT_20 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0x92643E964CA4b2c165a95CA919b0A819acA6D5F1',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WBTC_USDC_21 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -369,7 +408,7 @@ export const FLUID_WBTC_USDC_21 = (networkId: NetworkNumber = NetworkNumber.Eth)
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / USDC Market 21',
+  label: '#21 (WBTC / USDC)',
   shortLabel: 'WBTC/USDC',
   value: FluidMainnetVersion.FLUID_WBTC_USDC_21,
   url: 'wbtc-usdc-21',
@@ -377,8 +416,8 @@ export const FLUID_WBTC_USDC_21 = (networkId: NetworkNumber = NetworkNumber.Eth)
   marketAddress: '0x6F72895Cf6904489Bcd862c941c3D02a3eE4f03e',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'USDC',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WBTC_USDT_22 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -388,7 +427,7 @@ export const FLUID_WBTC_USDT_22 = (networkId: NetworkNumber = NetworkNumber.Eth)
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / USDT Market 22',
+  label: '#22 (WBTC / USDT)',
   shortLabel: 'WBTC/USDT',
   value: FluidMainnetVersion.FLUID_WBTC_USDT_22,
   url: 'wbtc-usdt-22',
@@ -396,8 +435,8 @@ export const FLUID_WBTC_USDT_22 = (networkId: NetworkNumber = NetworkNumber.Eth)
   marketAddress: '0x3A0b7c8840D74D39552EF53F586dD8c3d1234C40',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'USDT',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WBTC_ETH_23 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -407,7 +446,7 @@ export const FLUID_WBTC_ETH_23 = (networkId: NetworkNumber = NetworkNumber.Eth):
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / ETH Market 23',
+  label: '#23 (WBTC / ETH)',
   shortLabel: 'WBTC/ETH',
   value: FluidMainnetVersion.FLUID_WBTC_ETH_23,
   url: 'wbtc-eth-23',
@@ -415,8 +454,8 @@ export const FLUID_WBTC_ETH_23 = (networkId: NetworkNumber = NetworkNumber.Eth):
   marketAddress: '0xaD439b9D61b25af1ca4Cd211E3eCb9AfBaAEd84a',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'ETH',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_ETH_WBTC_24 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -426,7 +465,7 @@ export const FLUID_ETH_WBTC_24 = (networkId: NetworkNumber = NetworkNumber.Eth):
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / WBTC Market 24',
+  label: '#24 (ETH / WBTC)',
   shortLabel: 'ETH/WBTC',
   value: FluidMainnetVersion.FLUID_ETH_WBTC_24,
   url: 'eth-wbtc-24',
@@ -434,8 +473,8 @@ export const FLUID_ETH_WBTC_24 = (networkId: NetworkNumber = NetworkNumber.Eth):
   marketAddress: '0x991416539E9DA46db233bCcbaEA38C4f852776D4',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_WSTETH_WBTC_25 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -445,7 +484,7 @@ export const FLUID_WSTETH_WBTC_25 = (networkId: NetworkNumber = NetworkNumber.Et
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / WBTC Market 25',
+  label: '#25 (wstETH / WBTC)',
   shortLabel: 'wstETH/WBTC',
   value: FluidMainnetVersion.FLUID_WSTETH_WBTC_25,
   url: 'wsteth-wbtc-25',
@@ -453,8 +492,8 @@ export const FLUID_WSTETH_WBTC_25 = (networkId: NetworkNumber = NetworkNumber.Et
   marketAddress: '0x03271C337c86a6Fd89625A2820e48621DC2a128b',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_WEETH_WBTC_26 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -464,7 +503,7 @@ export const FLUID_WEETH_WBTC_26 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / WBTC Market 26',
+  label: '#26 (weETH / WBTC)',
   shortLabel: 'weETH/WBTC',
   value: FluidMainnetVersion.FLUID_WEETH_WBTC_26,
   url: 'weeth-wbtc-26',
@@ -472,8 +511,8 @@ export const FLUID_WEETH_WBTC_26 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0xF74cb9D69ada3559903149CFD60fD57cEAF95F30',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_WEETHS_WSTETH_27 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -483,7 +522,7 @@ export const FLUID_WEETHS_WSTETH_27 = (networkId: NetworkNumber = NetworkNumber.
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETHs / wstETH Market 27',
+  label: '#27 (weETHs / wstETH)',
   shortLabel: 'weETHs/wstETH',
   value: FluidMainnetVersion.FLUID_WEETHS_WSTETH_27,
   url: 'weeths-wsteth-27',
@@ -491,8 +530,8 @@ export const FLUID_WEETHS_WSTETH_27 = (networkId: NetworkNumber = NetworkNumber.
   marketAddress: '0x1c6068eC051f0Ac1688cA1FE76810FA9c8644278',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETHs',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'weETHs',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_CBBTC_ETH_28 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -502,7 +541,7 @@ export const FLUID_CBBTC_ETH_28 = (networkId: NetworkNumber = NetworkNumber.Eth)
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'cbBTC / ETH Market 28',
+  label: '#28 (cbBTC / ETH)',
   shortLabel: 'cbBTC/ETH',
   value: FluidMainnetVersion.FLUID_CBBTC_ETH_28,
   url: 'cbbtc-eth-28',
@@ -510,8 +549,8 @@ export const FLUID_CBBTC_ETH_28 = (networkId: NetworkNumber = NetworkNumber.Eth)
   marketAddress: '0x5dae640956711E11016C1b27CF9968Ba5B4a69CC',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'ETH',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_CBBTC_USDC_29 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -521,7 +560,7 @@ export const FLUID_CBBTC_USDC_29 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'cbBTC / USDC Market 29',
+  label: '#29 (cbBTC / USDC)',
   shortLabel: 'cbBTC/USDC',
   value: FluidMainnetVersion.FLUID_CBBTC_USDC_29,
   url: 'cbbtc-usdc-29',
@@ -529,8 +568,8 @@ export const FLUID_CBBTC_USDC_29 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0x01c7c1c41dea58b043e700eFb23Dc077F12a125e',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'USDC',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_CBBTC_USDT_30 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -540,7 +579,7 @@ export const FLUID_CBBTC_USDT_30 = (networkId: NetworkNumber = NetworkNumber.Eth
   ethBased: false,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'cbBTC / USDT Market 30',
+  label: '#30 (cbBTC / USDT)',
   shortLabel: 'cbBTC/USDT',
   value: FluidMainnetVersion.FLUID_CBBTC_USDT_30,
   url: 'cbbtc-usdt-30',
@@ -548,8 +587,8 @@ export const FLUID_CBBTC_USDT_30 = (networkId: NetworkNumber = NetworkNumber.Eth
   marketAddress: '0xE6b5D1CdC4935295c84772C4700932b4BFC93274',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'USDT',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_ETH_CBBTC_31 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -559,7 +598,7 @@ export const FLUID_ETH_CBBTC_31 = (networkId: NetworkNumber = NetworkNumber.Eth)
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / cbBTC Market 31',
+  label: '#31 (ETH / cbBTC)',
   shortLabel: 'ETH/cbBTC',
   value: FluidMainnetVersion.FLUID_ETH_CBBTC_31,
   url: 'eth-cbbtc-31',
@@ -567,8 +606,27 @@ export const FLUID_ETH_CBBTC_31 = (networkId: NetworkNumber = NetworkNumber.Eth)
   marketAddress: '0x69deb634Edc47A35B7b05056768d957F029Cbc0A',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'cbBTC',
+});
+
+export const FLUID_WSTETH_CBBTC_33 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: true,
+  wstETHBased: true,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  chainIds: [NetworkNumber.Eth],
+  label: '#33 (wstETH / cbBTC)',
+  shortLabel: 'wstETH/cbBTC',
+  value: FluidMainnetVersion.FLUID_WSTETH_CBBTC_33,
+  url: 'wsteth-cbbtc-33',
+  id: 33,
+  marketAddress: '0x6E0cDB09eb33cD3894C905E0DFF9289b95a86FFF',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'cbBTC',
 });
 
 export const FLUID_WEETH_CBBTC_32 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -578,7 +636,7 @@ export const FLUID_WEETH_CBBTC_32 = (networkId: NetworkNumber = NetworkNumber.Et
   ethBased: true,
   type: FluidVaultType.T1,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / cbBTC Market 32',
+  label: '#32 (weETH / cbBTC)',
   shortLabel: 'weETH/cbBTC',
   value: FluidMainnetVersion.FLUID_WEETH_CBBTC_32,
   url: 'weeth-cbbtc-32',
@@ -586,10 +644,9 @@ export const FLUID_WEETH_CBBTC_32 = (networkId: NetworkNumber = NetworkNumber.Et
   marketAddress: '0xB242508306db9A52932a754D2F408Ca0cb479135',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'cbBTC',
 });
-
 
 export const FLUID_WSTETH_ETH_WSTETH_ETH_44 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: false,
@@ -598,16 +655,18 @@ export const FLUID_WSTETH_ETH_WSTETH_ETH_44 = (networkId: NetworkNumber = Networ
   ethBased: true,
   type: FluidVaultType.T4,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / ETH Market 44',
-  shortLabel: 'wstETH/ETH',
+  label: '#44 (wstETH-ETH / wstETH-ETH)',
+  shortLabel: 'wstETH-ETH/wstETH-ETH',
   value: FluidMainnetVersion.FLUID_WSTETH_ETH_WSTETH_ETH_44,
   url: 'wsteth-eth-wsteth-eth-44',
   id: 44,
   marketAddress: '0x528CF7DBBff878e02e48E83De5097F8071af768D',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'wstETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
+  debtAsset1: 'ETH',
 });
 
 export const FLUID_ETH_USDC_USDT_45 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -617,16 +676,17 @@ export const FLUID_ETH_USDC_USDT_45 = (networkId: NetworkNumber = NetworkNumber.
   ethBased: true,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / USDC Market 45',
-  shortLabel: 'ETH/USDC',
+  label: '#45 (ETH / USDC-USDT)',
+  shortLabel: 'ETH/USDC-USDT',
   value: FluidMainnetVersion.FLUID_ETH_USDC_USDT_45,
   url: 'eth-usdc-usdt-45',
   id: 45,
   marketAddress: '0x3E11B9aEb9C7dBbda4DD41477223Cc2f3f24b9d7',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_WSTETH_USDC_USDT_46 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -636,16 +696,17 @@ export const FLUID_WSTETH_USDC_USDT_46 = (networkId: NetworkNumber = NetworkNumb
   ethBased: true,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / USDC Market 46',
-  shortLabel: 'wstETH/USDC',
+  label: '#46 (wstETH / USDC-USDT)',
+  shortLabel: 'wstETH/USDC-USDT',
   value: FluidMainnetVersion.FLUID_WSTETH_USDC_USDT_46,
   url: 'wsteth-usdc-usdt-46',
   id: 46,
   marketAddress: '0x221E35b5655A1eEB3C42c4DeFc39648531f6C9CF',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_WEETH_USDC_USDT_47 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -655,16 +716,17 @@ export const FLUID_WEETH_USDC_USDT_47 = (networkId: NetworkNumber = NetworkNumbe
   ethBased: true,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / USDC Market 47',
-  shortLabel: 'weETH/USDC',
+  label: '#47 (weETH / USDC-USDT)',
+  shortLabel: 'weETH/USDC-USDT',
   value: FluidMainnetVersion.FLUID_WEETH_USDC_USDT_47,
   url: 'weeth-usdc-usdt-47',
   id: 47,
   marketAddress: '0x01F0D07fdE184614216e76782c6b7dF663F5375e',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_WBTC_USDC_USDT_48 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -674,16 +736,17 @@ export const FLUID_WBTC_USDC_USDT_48 = (networkId: NetworkNumber = NetworkNumber
   ethBased: false,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / USDC Market 48',
-  shortLabel: 'WBTC/USDC',
+  label: '#48 (WBTC / USDC-USDT)',
+  shortLabel: 'WBTC/USDC-USDT',
   value: FluidMainnetVersion.FLUID_WBTC_USDC_USDT_48,
   url: 'wbtc-usdc-usdt-48',
   id: 48,
   marketAddress: '0x59fa2F51F5c8fFfceB538180EC47A869eC3DBd4a',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_CBBTC_USDC_USDT_49 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -693,16 +756,17 @@ export const FLUID_CBBTC_USDC_USDT_49 = (networkId: NetworkNumber = NetworkNumbe
   ethBased: false,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'cbBTC / USDC Market 49',
-  shortLabel: 'cbBTC/USDC',
+  label: '#49 (cbBTC / USDC-USDT)',
+  shortLabel: 'cbBTC/USDC-USDT',
   value: FluidMainnetVersion.FLUID_CBBTC_USDC_USDT_49,
   url: 'cbbtc-usdc-usdt-49',
   id: 49,
   marketAddress: '0x47b6e2c8a0cB072198f17ccC6C7634dCc7126c3E',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_SUSDE_USDC_USDT_50 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -712,16 +776,17 @@ export const FLUID_SUSDE_USDC_USDT_50 = (networkId: NetworkNumber = NetworkNumbe
   ethBased: false,
   type: FluidVaultType.T3,
   chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / USDC Market 50',
-  shortLabel: 'sUSDe/USDC',
+  label: '#50 (sUSDe / USDC-USDT)',
+  shortLabel: 'sUSDe/USDC-USDT',
   value: FluidMainnetVersion.FLUID_SUSDE_USDC_USDT_50,
   url: 'susde-usdc-usdt-50',
   id: 50,
   marketAddress: '0xe210d8ded13Abe836a10E8Aa956dd424658d0034',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDC',
+  hasSmartDebt: true,
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_WBTC_CBBTC_WBTC_CBBTC_51 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -731,16 +796,18 @@ export const FLUID_WBTC_CBBTC_WBTC_CBBTC_51 = (networkId: NetworkNumber = Networ
   ethBased: false,
   type: FluidVaultType.T4,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / cbBTC Market 51',
-  shortLabel: 'WBTC/cbBTC',
+  label: '#51 (WBTC-cbBTC / WBTC-cbBTC)',
+  shortLabel: 'WBTC-cbBTC/WBTC-cbBTC',
   value: FluidMainnetVersion.FLUID_WBTC_CBBTC_WBTC_CBBTC_51,
   url: 'wbtc-cbbtc-wbtc-cbbtc-51',
   id: 51,
   marketAddress: '0xDCe03288F9A109150f314ED0Ca9b59a690300d9d',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'cbBTC',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'WBTC',
+  collateralAsset1: 'cbBTC',
+  debtAsset0: 'WBTC',
+  debtAsset1: 'cbBTC',
 });
 
 export const FLUID_WBTC_CBBTC_USDC_52 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -750,16 +817,17 @@ export const FLUID_WBTC_CBBTC_USDC_52 = (networkId: NetworkNumber = NetworkNumbe
   ethBased: false,
   type: FluidVaultType.T2,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / cbBTC Market 52',
-  shortLabel: 'WBTC/cbBTC',
+  label: '#52 (WBTC-cbBTC / USDC)',
+  shortLabel: 'WBTC-cbBTC/USDC',
   value: FluidMainnetVersion.FLUID_WBTC_CBBTC_USDC_52,
   url: 'wbtc-cbbtc-usdc-52',
   id: 52,
   marketAddress: '0x4e564A29c1FC18ed9b66e5754A37fCa0C8a980ff',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'WBTC',
+  collateralAsset1: 'cbBTC',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WBTC_CBBTC_USDT_53 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -770,15 +838,16 @@ export const FLUID_WBTC_CBBTC_USDT_53 = (networkId: NetworkNumber = NetworkNumbe
   type: FluidVaultType.T2,
   id: 53,
   chainIds: [NetworkNumber.Eth],
-  label: 'WBTC / cbBTC Market 53',
-  shortLabel: 'WBTC/cbBTC',
+  label: '#53 (WBTC-cbBTC / USDT)',
+  shortLabel: 'WBTC-cbBTC/USDT',
   value: FluidMainnetVersion.FLUID_WBTC_CBBTC_USDT_53,
   url: 'wbtc-cbbtc-usdt-53',
   marketAddress: '0xf7FA55D14C71241e3c970E30C509Ff58b5f5D557',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'WBTC',
+  collateralAsset1: 'cbBTC',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_ETH_GHO_54 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -789,15 +858,15 @@ export const FLUID_ETH_GHO_54 = (networkId: NetworkNumber = NetworkNumber.Eth): 
   type: FluidVaultType.T1,
   id: 54,
   chainIds: [NetworkNumber.Eth],
-  label: 'ETH / GHO Market 54',
+  label: '#54 (ETH / GHO)',
   shortLabel: 'ETH/GHO',
   value: FluidMainnetVersion.FLUID_ETH_GHO_54,
   url: 'eth-gho-54',
   marketAddress: '0xD9A7Dcdc57C6e44f00740dC73664fA456B983669',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'GHO',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'GHO',
 });
 
 export const FLUID_WSTETH_GHO_55 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -808,15 +877,15 @@ export const FLUID_WSTETH_GHO_55 = (networkId: NetworkNumber = NetworkNumber.Eth
   type: FluidVaultType.T1,
   id: 55,
   chainIds: [NetworkNumber.Eth],
-  label: 'wstETH / GHO Market 55',
+  label: '#55 (wstETH / GHO)',
   shortLabel: 'wstETH/GHO',
   value: FluidMainnetVersion.FLUID_WSTETH_GHO_55,
   url: 'wsteth-gho-55',
   marketAddress: '0xB0F2B58af3F17F1A3377c37F6E85eA41c369D1C7',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'GHO',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'GHO',
 });
 
 export const FLUID_SUSDE_GHO_56 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -827,15 +896,15 @@ export const FLUID_SUSDE_GHO_56 = (networkId: NetworkNumber = NetworkNumber.Eth)
   type: FluidVaultType.T1,
   id: 56,
   chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe / GHO Market 56',
+  label: '#56 (sUSDe / GHO)',
   shortLabel: 'sUSDe/GHO',
   value: FluidMainnetVersion.FLUID_SUSDE_GHO_56,
   url: 'susde-gho-56',
   marketAddress: '0x2F3780e21cAba1bEdFB24E37C97917def304dFFA',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'GHO',
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'GHO',
 });
 
 export const FLUID_WEETH_GHO_57 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -846,15 +915,15 @@ export const FLUID_WEETH_GHO_57 = (networkId: NetworkNumber = NetworkNumber.Eth)
   type: FluidVaultType.T1,
   id: 57,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / GHO Market 57',
+  label: '#57 (weETH / GHO)',
   shortLabel: 'weETH/GHO',
   value: FluidMainnetVersion.FLUID_WEETH_GHO_57,
   url: 'weeth-gho-57',
   marketAddress: '0xd4B34f90930645EAf53E05Edd2950f93ee0D5Eb7',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'GHO',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'GHO',
 });
 
 export const FLUID_SUSDS_GHO_58 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -865,17 +934,54 @@ export const FLUID_SUSDS_GHO_58 = (networkId: NetworkNumber = NetworkNumber.Eth)
   type: FluidVaultType.T1,
   id: 58,
   chainIds: [NetworkNumber.Eth],
-  label: 'SUSDS / GHO Market 58',
-  shortLabel: 'SUSDS/GHO',
+  label: '#58 (sUSDS / GHO)',
+  shortLabel: 'sUSDS/GHO',
   value: FluidMainnetVersion.FLUID_SUSDS_GHO_58,
   url: 'susds-gho-58',
   marketAddress: '0x7ED2cbD4C98a6E151d2a48792c1E45E4f0CD57D1',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'SUSDS',
-  debtAsset: 'GHO',
+  collateralAsset0: 'sUSDS',
+  debtAsset0: 'GHO',
 });
 
+export const FLUID_WBTC_GHO_59 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 59,
+  chainIds: [NetworkNumber.Eth],
+  label: '#59 (WBTC / GHO)',
+  shortLabel: 'WBTC/GHO',
+  value: FluidMainnetVersion.FLUID_WBTC_GHO_59,
+  url: 'wbtc-gho-59',
+  marketAddress: '0xe58Ed61ff0C9db46c8772FF7286B6B187D4fe68f',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'GHO',
+});
+
+export const FLUID_CBBTC_GHO_60 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 60,
+  chainIds: [NetworkNumber.Eth],
+  label: '#60 (cbBTC / GHO)',
+  shortLabel: 'cbBTC/GHO',
+  value: FluidMainnetVersion.FLUID_CBBTC_GHO_60,
+  url: 'cbbtc-gho-60',
+  marketAddress: '0x81A0dD6c5DDB8474b483c31309b66d7173263CbB',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'GHO',
+});
 
 export const FLUID_GHO_USDC_GHO_USDC_61 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
@@ -885,15 +991,17 @@ export const FLUID_GHO_USDC_GHO_USDC_61 = (networkId: NetworkNumber = NetworkNum
   type: FluidVaultType.T4,
   id: 61,
   chainIds: [NetworkNumber.Eth],
-  label: 'GHO / USDC Market 61',
-  shortLabel: 'GHO/USDC',
+  label: '#61 (GHO-USDC / GHO-USDC)',
+  shortLabel: 'GHO-USDC/GHO-USDC',
   value: FluidMainnetVersion.FLUID_GHO_USDC_GHO_USDC_61,
   url: 'gho-usdc-gho-usdc-61',
   marketAddress: '0x20b32C597633f12B44CFAFe0ab27408028CA0f6A',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'GHO',
-  debtAsset: 'USDC',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'GHO',
+  collateralAsset1: 'USDC',
+  debtAsset0: 'GHO',
+  debtAsset1: 'USDC',
 });
 
 export const FLUID_WEETH_ETH_WSTETH_74 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -904,15 +1012,16 @@ export const FLUID_WEETH_ETH_WSTETH_74 = (networkId: NetworkNumber = NetworkNumb
   type: FluidVaultType.T2,
   id: 74,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETH / ETH Market 74',
-  shortLabel: 'weETH/ETH',
+  label: '#74 (weETH-ETH / wstETH)',
+  shortLabel: 'weETH-ETH/wstETH',
   value: FluidMainnetVersion.FLUID_WEETH_ETH_WSTETH_74,
   url: 'weeth-eth-wsteth-74',
   marketAddress: '0xb4a15526d427f4d20b0dAdaF3baB4177C85A699A',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'weETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_USDC_ETH_USDC_ETH_77 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -923,15 +1032,17 @@ export const FLUID_USDC_ETH_USDC_ETH_77 = (networkId: NetworkNumber = NetworkNum
   type: FluidVaultType.T4,
   id: 77,
   chainIds: [NetworkNumber.Eth],
-  label: 'USDC / ETH Market 77',
-  shortLabel: 'USDC/ETH',
+  label: '#77 (USDC-ETH / USDC-ETH)',
+  shortLabel: 'USDC-ETH/USDC-ETH',
   value: FluidMainnetVersion.FLUID_USDC_ETH_USDC_ETH_77,
   url: 'usdc-eth-usdc-eth-77',
   marketAddress: '0x469D8c7990b9072EEF05d6349224621a71176213',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'USDC',
-  debtAsset: 'ETH',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'USDC',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'ETH',
 });
 
 export const FLUID_RSETH_ETH_WSTETH_78 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -942,15 +1053,16 @@ export const FLUID_RSETH_ETH_WSTETH_78 = (networkId: NetworkNumber = NetworkNumb
   type: FluidVaultType.T2,
   id: 78,
   chainIds: [NetworkNumber.Eth],
-  label: 'rsETH / ETH Market 78',
-  shortLabel: 'rsETH/ETH',
+  label: '#78 (rsETH-ETH / wstETH)',
+  shortLabel: 'rsETH-ETH/wstETH',
   value: FluidMainnetVersion.FLUID_RSETH_ETH_WSTETH_78,
   url: 'rseth-eth-wsteth-78',
   marketAddress: '0x9A64E3EB9c2F917CBAdDe75Ad23bb402257acf2E',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'rsETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'rsETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_RSETH_WSTETH_79 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -961,15 +1073,15 @@ export const FLUID_RSETH_WSTETH_79 = (networkId: NetworkNumber = NetworkNumber.E
   type: FluidVaultType.T1,
   id: 79,
   chainIds: [NetworkNumber.Eth],
-  label: 'rsETH / wstETH Market 79',
+  label: '#79 (rsETH / wstETH)',
   shortLabel: 'rsETH/wstETH',
   value: FluidMainnetVersion.FLUID_RSETH_WSTETH_79,
   url: 'rseth-wsteth-79',
   marketAddress: '0x025C1494b7d15aa931E011f6740E0b46b2136cb9',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'rsETH',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'rsETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_WEETHS_ETH_WSTETH_80 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -980,15 +1092,16 @@ export const FLUID_WEETHS_ETH_WSTETH_80 = (networkId: NetworkNumber = NetworkNum
   type: FluidVaultType.T2,
   id: 80,
   chainIds: [NetworkNumber.Eth],
-  label: 'weETHs / ETH Market 80',
-  shortLabel: 'weETHs/ETH',
+  label: '#80 (weETHs-ETH / wstETH)',
+  shortLabel: 'weETHs-ETH/wstETH',
   value: FluidMainnetVersion.FLUID_WEETHS_ETH_WSTETH_80,
   url: 'weeths-eth-wsteth-80',
   marketAddress: '0x153a0D021AeD5d20D9E59e8B9ecC9E3e9276f6C3',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'weETHs',
-  debtAsset: 'ETH',
+  collateralAsset0: 'weETHs',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_SUSDE_USDT_USDT_92 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -999,15 +1112,16 @@ export const FLUID_SUSDE_USDT_USDT_92 = (networkId: NetworkNumber = NetworkNumbe
   type: FluidVaultType.T2,
   id: 92,
   chainIds: [NetworkNumber.Eth],
-  label: 'sUSDe-USDT / USDT Market 92',
+  label: '#92 (sUSDe-USDT / USDT)',
   shortLabel: 'sUSDe-USDT/USDT',
   value: FluidMainnetVersion.FLUID_SUSDE_USDT_USDT_92,
   url: 'susde-usdt-usdt-92',
   marketAddress: '0x7503b58Bb29937e7E2980f70D3FD021B7ebeA6d0',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'sUSDe',
-  debtAsset: 'USDT',
+  collateralAsset0: 'sUSDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_USDE_USDT_USDT_93 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1018,15 +1132,16 @@ export const FLUID_USDE_USDT_USDT_93 = (networkId: NetworkNumber = NetworkNumber
   type: FluidVaultType.T2,
   id: 93,
   chainIds: [NetworkNumber.Eth],
-  label: 'USDe-USDT / USDT Market 93',
-  shortLabel: 'weETHs/ETH',
+  label: '#93 (USDe-USDT / USDT)',
+  shortLabel: 'USDe-USDT/USDT',
   value: FluidMainnetVersion.FLUID_USDE_USDT_USDT_93,
   url: 'usde-usdt-usdt-93',
   marketAddress: '0x989a44CB4dBb7eBe20e0aBf3C1E1d727BF90F881',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'USDe',
-  debtAsset: 'USDT',
+  collateralAsset0: 'USDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_LBTC_CBBTC_WBTC_97 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1037,15 +1152,251 @@ export const FLUID_LBTC_CBBTC_WBTC_97 = (networkId: NetworkNumber = NetworkNumbe
   type: FluidVaultType.T2,
   id: 97,
   chainIds: [NetworkNumber.Eth],
-  label: 'LBTC-cbBTC / WBTC Market 97',
-  shortLabel: 'weETHs/ETH',
+  label: '#97 (LBTC-cbBTC / WBTC)',
+  shortLabel: 'LBTC-cbBTC/WBTC',
   value: FluidMainnetVersion.FLUID_LBTC_CBBTC_WBTC_97,
   url: 'lbtc-cbbtc-wbtc-97',
   marketAddress: '0x96B2A29823d475468eE6f15e07878adf79E8199b',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  collateralAsset1: 'cbBTC',
+  debtAsset0: 'WBTC',
+});
+
+export const FLUID_SUSDE_USDT_USDC_USDT_98 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T4,
+  id: 98,
+  chainIds: [NetworkNumber.Eth],
+  label: '#98 (sUSDe-USDT / USDC-USDT)',
+  shortLabel: 'sUSDe-USDT/USDC-USDT',
+  value: FluidMainnetVersion.FLUID_SUSDE_USDT_USDC_USDT_98,
+  url: 'susde-usdt-usdc-usdt-98',
+  marketAddress: '0xB170B94BeFe21098966aa9905Da6a2F569463A21',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'sUSDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
+});
+
+export const FLUID_USDE_USDT_USDC_USDT_99 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T4,
+  id: 99,
+  chainIds: [NetworkNumber.Eth],
+  label: '#99 (USDe-USDT / USDC-USDT)',
+  shortLabel: 'USDe-USDT/USDC-USDT',
+  value: FluidMainnetVersion.FLUID_USDE_USDT_USDC_USDT_99,
+  url: 'usde-usdt-usdc-usdt-99',
+  marketAddress: '0xaEac94D417BF8d8bb3A44507100Ab8c0D3b12cA1',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'USDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
+});
+
+export const FLUID_USDC_ETH_100 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 100,
+  chainIds: [NetworkNumber.Eth],
+  label: '#100 (USDC / ETH)',
+  shortLabel: 'USDC/ETH',
+  value: FluidMainnetVersion.FLUID_USDC_ETH_100,
+  url: 'usdc-eth-100',
+  marketAddress: '0x348aD11DB2c90e7FdF8e57420C569F76dBe38a59',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'LBTC',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'USDC',
+  debtAsset0: 'ETH',
+});
+
+export const FLUID_USDC_WBTC_101 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 101,
+  chainIds: [NetworkNumber.Eth],
+  label: '#101 (USDC / WBTC)',
+  shortLabel: 'USDC/WBTC',
+  value: FluidMainnetVersion.FLUID_USDC_WBTC_101,
+  url: 'usdc-wbtc-101',
+  marketAddress: '0xF140Ea1C1D657EaaB802FF7626dC220cD4007CE7',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDC',
+  debtAsset0: 'WBTC',
+});
+
+export const FLUID_USDC_CBBTC_102 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 102,
+  chainIds: [NetworkNumber.Eth],
+  label: '#102 (USDC / cbBTC)',
+  shortLabel: 'USDC/cbBTC',
+  value: FluidMainnetVersion.FLUID_USDC_CBBTC_102,
+  url: 'usdc-cbbtc-102',
+  marketAddress: '0x1581f8C3De000b9A1cde85CaF68eC979D76a7b5E',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDC',
+  debtAsset0: 'cbBTC',
+});
+
+export const FLUID_EZETH_WSTETH_103 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: false,
+  wstETHBased: true,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 103,
+  chainIds: [NetworkNumber.Eth],
+  label: '#103 (ezETH / wstETH)',
+  shortLabel: 'ezETH/wstETH',
+  value: FluidMainnetVersion.FLUID_EZETH_WSTETH_103,
+  url: 'ezeth-wsteth-103',
+  marketAddress: '0x18D31F2E1374574DF8309F92305008Beb49d3618',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'ezETH',
+  debtAsset0: 'wstETH',
+});
+
+export const FLUID_EZETH_ETH_WSTETH_104 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: false,
+  wstETHBased: true,
+  ethBased: true,
+  type: FluidVaultType.T2,
+  id: 104,
+  chainIds: [NetworkNumber.Eth],
+  label: '#104 (ezETH-ETH / wstETH)',
+  shortLabel: 'ezETH-ETH/wstETH',
+  value: FluidMainnetVersion.FLUID_EZETH_ETH_WSTETH_104,
+  url: 'ezeth-eth-wsteth-104',
+  marketAddress: '0x7ca57429d74EeDA2ae0AaE009277cB140d2B4901',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'ezETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
+});
+
+export const FLUID_LBTC_USDC_107 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 107,
+  chainIds: [NetworkNumber.Eth],
+  label: '#107 (LBTC / USDC)',
+  shortLabel: 'LBTC/USDC',
+  value: FluidMainnetVersion.FLUID_LBTC_USDC_107,
+  url: 'lbtc-usdc-107',
+  marketAddress: '0x9714427bd5A212EF6779EF46577771A39F55fA3D',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  debtAsset0: 'USDC',
+});
+
+export const FLUID_LBTC_USDT_108 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 108,
+  chainIds: [NetworkNumber.Eth],
+  label: '#108 (LBTC / USDT)',
+  shortLabel: 'LBTC/USDT',
+  value: FluidMainnetVersion.FLUID_LBTC_USDT_108,
+  url: 'lbtc-usdt-108',
+  marketAddress: '0x9f64b16071387bcFD63A1EA7a518e22597575F14',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_LBTC_GHO_109 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 109,
+  chainIds: [NetworkNumber.Eth],
+  label: '#109 (LBTC / GHO)',
+  shortLabel: 'LBTC/GHO',
+  value: FluidMainnetVersion.FLUID_LBTC_GHO_109,
+  url: 'lbtc-gho-109',
+  marketAddress: '0x6388eEFD6b462662Ac295D7B436cbCa8651BEAf4',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  debtAsset0: 'GHO',
+});
+
+export const FLUID_LBTC_CBBTC_CBBTC_114 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 114,
+  chainIds: [NetworkNumber.Eth],
+  label: '#114 (LBTC-cbBTC / cbBTC)',
+  shortLabel: 'LBTC-cbBTC/cbBTC',
+  value: FluidMainnetVersion.FLUID_LBTC_CBBTC_CBBTC_114,
+  url: 'lbtc-cbbtc-cbbtc-114',
+  marketAddress: '0x9f1F074EB64470f804b34E6948132b8aAE17028F',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  collateralAsset1: 'cbBTC',
+  debtAsset0: 'cbBTC',
+});
+
+export const FLUID_WBTC_LBTC_WBTC_115 = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 115,
+  chainIds: [NetworkNumber.Eth],
+  label: '#115 (WBTC-LBTC / WBTC)',
+  shortLabel: 'WBTC-LBTC/WBTC',
+  value: FluidMainnetVersion.FLUID_WBTC_LBTC_WBTC_115,
+  url: 'wbtc-lbtc-wbtc-115',
+  marketAddress: '0x57A9f4e109EcEF8990BC794df0D159fb29861f2A',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'WBTC',
+  collateralAsset1: 'LBTC',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_ETH_USDC_1_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1056,15 +1407,15 @@ export const FLUID_ETH_USDC_1_ARB = (networkId: NetworkNumber = NetworkNumber.Et
   type: FluidVaultType.T1,
   id: 1,
   chainIds: [NetworkNumber.Arb],
-  label: 'ETH / USDC Market 1',
+  label: '#1 (ETH / USDC)',
   shortLabel: 'ETH/USDC',
   value: FluidArbitrumVersion.FLUID_ETH_USDC_1_ARB,
   url: 'eth-usdc-1-arb',
   marketAddress: '0xeAbBfca72F8a8bf14C4ac59e69ECB2eB69F0811C',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_ETH_USDT_2_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1075,15 +1426,15 @@ export const FLUID_ETH_USDT_2_ARB = (networkId: NetworkNumber = NetworkNumber.Et
   type: FluidVaultType.T1,
   id: 2,
   chainIds: [NetworkNumber.Arb],
-  label: 'ETH / USDT Market 2',
+  label: '#2 (ETH / USDT)',
   shortLabel: 'ETH/USDT',
   value: FluidArbitrumVersion.FLUID_ETH_USDT_2_ARB,
   url: 'eth-usdt-2-arb',
   marketAddress: '0xbEC491FeF7B4f666b270F9D5E5C3f443cBf20991',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WSTETH_USDC_3_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1094,15 +1445,15 @@ export const FLUID_WSTETH_USDC_3_ARB = (networkId: NetworkNumber = NetworkNumber
   type: FluidVaultType.T1,
   id: 3,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / USDC Market 3',
+  label: '#3 (wstETH / USDC)',
   shortLabel: 'wstETH/USDC',
   value: FluidArbitrumVersion.FLUID_WSTETH_USDC_3_ARB,
   url: 'wsteth-usdc-3-arb',
   marketAddress: '0xA0F83Fc5885cEBc0420ce7C7b139Adc80c4F4D91',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WSTETH_USDT_4_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1113,15 +1464,15 @@ export const FLUID_WSTETH_USDT_4_ARB = (networkId: NetworkNumber = NetworkNumber
   type: FluidVaultType.T1,
   id: 4,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / USDT Market 4',
+  label: '#4 (wstETH / USDT)',
   shortLabel: 'wstETH/USDT',
   value: FluidArbitrumVersion.FLUID_WSTETH_USDT_4_ARB,
   url: 'wsteth-usdt-4-arb',
   marketAddress: '0x51197586F6A9e2571868b6ffaef308f3bdfEd3aE',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WSTETH_ETH_5_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1132,15 +1483,15 @@ export const FLUID_WSTETH_ETH_5_ARB = (networkId: NetworkNumber = NetworkNumber.
   type: FluidVaultType.T1,
   id: 5,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / ETH Market 5',
+  label: '#5 (wstETH / ETH)',
   shortLabel: 'wstETH/ETH',
   value: FluidArbitrumVersion.FLUID_WSTETH_ETH_5_ARB,
   url: 'wsteth-eth-5-arb',
   marketAddress: '0x1c2bB46f36561bc4F05A94BD50916496aa501078',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_WEETH_WSTETH_6_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1151,15 +1502,15 @@ export const FLUID_WEETH_WSTETH_6_ARB = (networkId: NetworkNumber = NetworkNumbe
   type: FluidVaultType.T1,
   id: 6,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / wstETH Market 6',
+  label: '#6 (weETH / wstETH)',
   shortLabel: 'weETH/wstETH',
   value: FluidArbitrumVersion.FLUID_WEETH_WSTETH_6_ARB,
   url: 'weeth-wsteth-6-arb',
   marketAddress: '0x40D9b8417E6E1DcD358f04E3328bCEd061018A82',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_WEETH_USDC_7_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1170,15 +1521,15 @@ export const FLUID_WEETH_USDC_7_ARB = (networkId: NetworkNumber = NetworkNumber.
   type: FluidVaultType.T1,
   id: 7,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / USDC Market 7',
+  label: '#7 (weETH / USDC)',
   shortLabel: 'weETH/USDC',
   value: FluidArbitrumVersion.FLUID_WEETH_USDC_7_ARB,
   url: 'weeth-usdc-7-arb',
   marketAddress: '0x4045720a33193b4Fe66c94DFbc8D37B0b4D9B469',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WEETH_USDT_8_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1189,15 +1540,15 @@ export const FLUID_WEETH_USDT_8_ARB = (networkId: NetworkNumber = NetworkNumber.
   type: FluidVaultType.T1,
   id: 8,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / USDT Market 8',
+  label: '#8 (weETH / USDT)',
   shortLabel: 'weETH/USDT',
   value: FluidArbitrumVersion.FLUID_WEETH_USDT_8_ARB,
   url: 'weeth-usdt-8-arb',
   marketAddress: '0xBFADEA65591235f38809076e14803Ac84AcF3F97',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDT',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_ETH_ARB_9_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1208,15 +1559,15 @@ export const FLUID_ETH_ARB_9_ARB = (networkId: NetworkNumber = NetworkNumber.Eth
   type: FluidVaultType.T1,
   id: 9,
   chainIds: [NetworkNumber.Arb],
-  label: 'ETH / ARB Market 9',
+  label: '#9 (ETH / ARB)',
   shortLabel: 'ETH/ARB',
   value: FluidArbitrumVersion.FLUID_ETH_ARB_9_ARB,
   url: 'eth-arb-9-arb',
   marketAddress: '0xf55B8e9F0c51Ace009f4b41d03321675d4C643b3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'ARB',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'ARB',
 });
 
 export const FLUID_ARB_USDC_10_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1227,15 +1578,15 @@ export const FLUID_ARB_USDC_10_ARB = (networkId: NetworkNumber = NetworkNumber.E
   type: FluidVaultType.T1,
   id: 10,
   chainIds: [NetworkNumber.Arb],
-  label: 'ARB / USDC Market 10',
+  label: '#10 (ARB / USDC)',
   shortLabel: 'ARB/USDC',
   value: FluidArbitrumVersion.FLUID_ARB_USDC_10_ARB,
   url: 'arb-usdc-10-arb',
   marketAddress: '0xdF16AdaF80584b2723F3BA1Eb7a601338Ba18c4e',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ARB',
-  debtAsset: 'USDC',
+  collateralAsset0: 'ARB',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_ARB_USDT_11_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1246,15 +1597,15 @@ export const FLUID_ARB_USDT_11_ARB = (networkId: NetworkNumber = NetworkNumber.E
   type: FluidVaultType.T1,
   id: 11,
   chainIds: [NetworkNumber.Arb],
-  label: 'ARB / USDT Market 11',
+  label: '#11 (ARB / USDT)',
   shortLabel: 'ARB/USDT',
   value: FluidArbitrumVersion.FLUID_ARB_USDT_11_ARB,
   url: 'arb-usdt-11-arb',
   marketAddress: '0x0C8C77B7FF4c2aF7F6CEBbe67350A490E3DD6cB3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ARB',
-  debtAsset: 'USDT',
+  collateralAsset0: 'ARB',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WBTC_USDC_12_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1265,15 +1616,15 @@ export const FLUID_WBTC_USDC_12_ARB = (networkId: NetworkNumber = NetworkNumber.
   type: FluidVaultType.T1,
   id: 12,
   chainIds: [NetworkNumber.Arb],
-  label: 'WBTC / USDC Market 12',
+  label: '#12 (WBTC / USDC)',
   shortLabel: 'WBTC/USDC',
   value: FluidArbitrumVersion.FLUID_WBTC_USDC_12_ARB,
   url: 'wbtc_usdc_12_arb',
   marketAddress: '0xE16A6f5359ABB1f61cE71e25dD0932e3E00B00eB',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'USDC',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WBTC_USDT_13_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1284,15 +1635,15 @@ export const FLUID_WBTC_USDT_13_ARB = (networkId: NetworkNumber = NetworkNumber.
   type: FluidVaultType.T1,
   id: 13,
   chainIds: [NetworkNumber.Arb],
-  label: 'WBTC / USDT Market 13',
+  label: '#13 (WBTC / USDT)',
   shortLabel: 'WBTC/USDT',
   value: FluidArbitrumVersion.FLUID_WBTC_USDT_13_ARB,
   url: 'wbtc_usdc_13_arb',
   marketAddress: '0x82B27fA821419F5689381b565a8B0786aA2548De',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'USDT',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDT',
 });
 
 export const FLUID_WSTETH_ETH_WSTETH_ETH_16_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1303,15 +1654,17 @@ export const FLUID_WSTETH_ETH_WSTETH_ETH_16_ARB = (networkId: NetworkNumber = Ne
   type: FluidVaultType.T4,
   id: 16,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / ETH Market 16',
-  shortLabel: 'wstETH/ETH',
+  label: '#16 (wstETH-ETH / wstETH-ETH)',
+  shortLabel: 'wstETH-ETH/wstETH-ETH',
   value: FluidArbitrumVersion.FLUID_WSTETH_ETH_WSTETH_ETH_16_ARB,
   url: 'wsteth-eth-wsteth-eth-16-arb',
   marketAddress: '0xeAEf563015634a9d0EE6CF1357A3b205C35e028D',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'wstETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
+  debtAsset1: 'ETH',
 });
 
 export const FLUID_WEETH_ETH_WSTETH_17_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1322,15 +1675,16 @@ export const FLUID_WEETH_ETH_WSTETH_17_ARB = (networkId: NetworkNumber = Network
   type: FluidVaultType.T2,
   id: 17,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / ETH Market 17',
-  shortLabel: 'weETH/ETH',
+  label: '#17 (weETH-ETH / wstETH)',
+  shortLabel: 'weETH-ETH/wstETH',
   value: FluidArbitrumVersion.FLUID_WEETH_ETH_WSTETH_17_ARB,
   url: 'weeth-eth-wsteth-17-arb',
   marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
-  hasSmartCollateral: false,
+  hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'weETH',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_WBTC_ETH_18_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1341,15 +1695,15 @@ export const FLUID_WBTC_ETH_18_ARB = (networkId: NetworkNumber = NetworkNumber.E
   type: FluidVaultType.T1,
   id: 18,
   chainIds: [NetworkNumber.Arb],
-  label: 'WBTC / ETH Market 18',
+  label: '#18 (WBTC / ETH)',
   shortLabel: 'WBTC/ETH',
   value: FluidArbitrumVersion.FLUID_WBTC_ETH_18_ARB,
   url: 'wbtc_eth_18_arb',
   marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'ETH',
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_ETH_WBTC_19_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1360,15 +1714,15 @@ export const FLUID_ETH_WBTC_19_ARB = (networkId: NetworkNumber = NetworkNumber.E
   type: FluidVaultType.T1,
   id: 19,
   chainIds: [NetworkNumber.Arb],
-  label: 'ETH / WBTC Market 19',
+  label: '#19 (ETH / WBTC)',
   shortLabel: 'ETH/WBTC',
   value: FluidArbitrumVersion.FLUID_ETH_WBTC_19_ARB,
   url: 'eth_wbtc_19_arb',
   marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_WSTETH_WBTC_20_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1379,15 +1733,15 @@ export const FLUID_WSTETH_WBTC_20_ARB = (networkId: NetworkNumber = NetworkNumbe
   type: FluidVaultType.T1,
   id: 20,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / WBTC Market 20',
+  label: '#20 (wstETH / WBTC)',
   shortLabel: 'wstETH/WBTC',
   value: FluidArbitrumVersion.FLUID_WSTETH_WBTC_20_ARB,
   url: 'wsteth_wbtc_20_arb',
   marketAddress: '0x92643E964CA4b2c165a95CA919b0A819acA6D5F1',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_WEETH_WBTC_21_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1398,15 +1752,15 @@ export const FLUID_WEETH_WBTC_21_ARB = (networkId: NetworkNumber = NetworkNumber
   type: FluidVaultType.T1,
   id: 21,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / WBTC Market 21',
+  label: '#21 (weETH / WBTC)',
   shortLabel: 'weETH/WBTC',
   value: FluidArbitrumVersion.FLUID_WEETH_WBTC_21_ARB,
   url: 'weeth_wbtc_21_arb',
   marketAddress: '0x6F72895Cf6904489Bcd862c941c3D02a3eE4f03e',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'WBTC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'WBTC',
 });
 
 export const FLUID_USDC_ETH_USDC_ETH_22_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1417,15 +1771,17 @@ export const FLUID_USDC_ETH_USDC_ETH_22_ARB = (networkId: NetworkNumber = Networ
   type: FluidVaultType.T4,
   id: 22,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / WBTC Market 22',
-  shortLabel: 'weETH/WBTC',
+  label: '#22 (USDC-ETH / USDC-ETH)',
+  shortLabel: 'USDC-ETH/USDC-ETH',
   value: FluidArbitrumVersion.FLUID_USDC_ETH_USDC_ETH_22_ARB,
   url: 'usdc_eth_usdc_eth_22_arb',
   marketAddress: '0x3A0b7c8840D74D39552EF53F586dD8c3d1234C40',
-  hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'WBTC',
+  hasSmartCollateral: true,
+  hasSmartDebt: true,
+  collateralAsset0: 'USDC',
+  collateralAsset1: 'ETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'ETH',
 });
 
 export const FLUID_ETH_USDC_USDT_23_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1436,15 +1792,16 @@ export const FLUID_ETH_USDC_USDT_23_ARB = (networkId: NetworkNumber = NetworkNum
   type: FluidVaultType.T3,
   id: 23,
   chainIds: [NetworkNumber.Arb],
-  label: 'ETH / USDC-USDT Market 23',
+  label: '#23 (ETH / USDC-USDT)',
   shortLabel: 'ETH/USDC-USDT',
   value: FluidArbitrumVersion.FLUID_ETH_USDC_USDT_23_ARB,
   url: 'eth_usdc_usdt_23_arb',
   marketAddress: '0xaD439b9D61b25af1ca4Cd211E3eCb9AfBaAEd84a',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'WBTC',
+  hasSmartDebt: true,
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 export const FLUID_WSTETH_USDC_USDT_24_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
@@ -1452,17 +1809,18 @@ export const FLUID_WSTETH_USDC_USDT_24_ARB = (networkId: NetworkNumber = Network
   wstETHBased: true,
   ethBased: true,
   type: FluidVaultType.T3,
-  id: 23,
+  id: 24,
   chainIds: [NetworkNumber.Arb],
-  label: 'wstETH / USDC-USDT Market 23',
+  label: '#24 (wstETH / USDC-USDT)',
   shortLabel: 'wstETH/USDC-USDT',
   value: FluidArbitrumVersion.FLUID_WSTETH_USDC_USDT_24_ARB,
-  url: 'wsteth_usdc_usdt_23_arb',
+  url: 'wsteth_usdc_usdt_24_arb',
   marketAddress: '0x991416539E9DA46db233bCcbaEA38C4f852776D4',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'WBTC',
+  hasSmartDebt: true,
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 export const FLUID_WEETH_USDC_USDT_25_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
@@ -1472,15 +1830,16 @@ export const FLUID_WEETH_USDC_USDT_25_ARB = (networkId: NetworkNumber = NetworkN
   type: FluidVaultType.T3,
   id: 25,
   chainIds: [NetworkNumber.Arb],
-  label: 'weETH / USDC-USDT Market 25',
+  label: '#25 (weETH / USDC-USDT)',
   shortLabel: 'weETH/USDC-USDT',
   value: FluidArbitrumVersion.FLUID_WEETH_USDC_USDT_25_ARB,
   url: 'weeth_usdc_usdt_25_arb',
   marketAddress: '0x03271C337c86a6Fd89625A2820e48621DC2a128b',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'WBTC',
+  hasSmartDebt: true,
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
 
 export const FLUID_WBTC_USDC_USDT_26_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1491,16 +1850,39 @@ export const FLUID_WBTC_USDC_USDT_26_ARB = (networkId: NetworkNumber = NetworkNu
   type: FluidVaultType.T3,
   id: 26,
   chainIds: [NetworkNumber.Arb],
-  label: 'WBTC / USDC-USDT Market 26',
+  label: '#26 (WBTC / USDC-USDT)',
   shortLabel: 'WBTC/USDC-USDT',
   value: FluidArbitrumVersion.FLUID_WBTC_USDC_USDT_26_ARB,
   url: 'wbtc_usdc_usdt_26_arb',
   marketAddress: '0xF74cb9D69ada3559903149CFD60fD57cEAF95F30',
   hasSmartCollateral: false,
-  hasSmartDebt: false,
-  collateralAsset: 'WBTC',
-  debtAsset: 'WBTC',
+  hasSmartDebt: true,
+  collateralAsset0: 'WBTC',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
 });
+// TODO: This issue is due to sUSDS price fetching via multicall on arbi fails and it's not handled correctly
+/*
+export const FLUID_SUSDS_USDC_USDT_30_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T3,
+  id: 30,
+  chainIds: [NetworkNumber.Arb],
+  label: '#30 (sUSDS / USDC-USDT)',
+  shortLabel: 'sUSDS/USDC-USDT',
+  value: FluidArbitrumVersion.FLUID_SUSDS_USDC_USDT_30_ARB,
+  url: 'susds_usdc_usdt_30_arb',
+  marketAddress: '0xE6b5D1CdC4935295c84772C4700932b4BFC93274',
+  hasSmartCollateral: false,
+  hasSmartDebt: true,
+  collateralAsset0: 'sUSDS',
+  debtAsset0: 'USDC',
+  debtAsset1: 'USDT',
+});
+*/
 
 export const FLUID_ETH_USDC_1_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: true,
@@ -1517,8 +1899,8 @@ export const FLUID_ETH_USDC_1_BASE = (networkId: NetworkNumber = NetworkNumber.E
   marketAddress: '0xeAbBfca72F8a8bf14C4ac59e69ECB2eB69F0811C',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WSTETH_USDC_2_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1536,8 +1918,8 @@ export const FLUID_WSTETH_USDC_2_BASE = (networkId: NetworkNumber = NetworkNumbe
   marketAddress: '0xbEC491FeF7B4f666b270F9D5E5C3f443cBf20991',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_WSTETH_ETH_3_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1555,8 +1937,8 @@ export const FLUID_WSTETH_ETH_3_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0xA0F83Fc5885cEBc0420ce7C7b139Adc80c4F4D91',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'ETH',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_WEETH_WSTETH_4_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1574,8 +1956,8 @@ export const FLUID_WEETH_WSTETH_4_BASE = (networkId: NetworkNumber = NetworkNumb
   marketAddress: '0x51197586F6A9e2571868b6ffaef308f3bdfEd3aE',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'wstETH',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'wstETH',
 });
 
 export const FLUID_WEETH_USDC_5_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1593,8 +1975,8 @@ export const FLUID_WEETH_USDC_5_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0x1c2bB46f36561bc4F05A94BD50916496aa501078',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_CBETH_USDC_6_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1612,8 +1994,8 @@ export const FLUID_CBETH_USDC_6_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0x40D9b8417E6E1DcD358f04E3328bCEd061018A82',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbETH',
-  debtAsset: 'USDC',
+  collateralAsset0: 'cbETH',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_CBBTC_USDC_7_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1631,8 +2013,8 @@ export const FLUID_CBBTC_USDC_7_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0x4045720a33193b4Fe66c94DFbc8D37B0b4D9B469',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'USDC',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'USDC',
 });
 
 export const FLUID_CBBTC_EURC_8_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1650,8 +2032,8 @@ export const FLUID_CBBTC_EURC_8_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0xBFADEA65591235f38809076e14803Ac84AcF3F97',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'EURC',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'EURC',
 });
 
 export const FLUID_CBETH_EURC_9_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1669,8 +2051,8 @@ export const FLUID_CBETH_EURC_9_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0xf55B8e9F0c51Ace009f4b41d03321675d4C643b3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbETH',
-  debtAsset: 'EURC',
+  collateralAsset0: 'cbETH',
+  debtAsset0: 'EURC',
 });
 
 export const FLUID_ETH_EURC_10_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1688,8 +2070,8 @@ export const FLUID_ETH_EURC_10_BASE = (networkId: NetworkNumber = NetworkNumber.
   marketAddress: '0xdF16AdaF80584b2723F3BA1Eb7a601338Ba18c4e',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'EURC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'EURC',
 });
 
 export const FLUID_WEETH_EURC_11_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1707,8 +2089,8 @@ export const FLUID_WEETH_EURC_11_BASE = (networkId: NetworkNumber = NetworkNumbe
   marketAddress: '0x0C8C77B7FF4c2aF7F6CEBbe67350A490E3DD6cB3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'EURC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'EURC',
 });
 
 export const FLUID_WSTETH_EURC_12_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1726,8 +2108,8 @@ export const FLUID_WSTETH_EURC_12_BASE = (networkId: NetworkNumber = NetworkNumb
   marketAddress: '0xE16A6f5359ABB1f61cE71e25dD0932e3E00B00eB',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'EURC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'EURC',
 });
 
 export const FLUID_CBBTC_ETH_13_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1745,8 +2127,8 @@ export const FLUID_CBBTC_ETH_13_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0x82B27fA821419F5689381b565a8B0786aA2548De',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'cbBTC',
-  debtAsset: 'ETH',
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'ETH',
 });
 
 export const FLUID_ETH_CBBTC_14_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1764,8 +2146,8 @@ export const FLUID_ETH_CBBTC_14_BASE = (networkId: NetworkNumber = NetworkNumber
   marketAddress: '0x1982CC7b1570C2503282d0A0B41F69b3B28fdcc3',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'ETH',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'ETH',
+  debtAsset0: 'cbBTC',
 });
 
 export const FLUID_WEETH_CBBTC_15_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1783,8 +2165,8 @@ export const FLUID_WEETH_CBBTC_15_BASE = (networkId: NetworkNumber = NetworkNumb
   marketAddress: '0xb4F3bf2d96139563777C0231899cE06EE95Cc946',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'weETH',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'weETH',
+  debtAsset0: 'cbBTC',
 });
 
 export const FLUID_WSTETH_CBBTC_16_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
@@ -1802,66 +2184,104 @@ export const FLUID_WSTETH_CBBTC_16_BASE = (networkId: NetworkNumber = NetworkNum
   marketAddress: '0xeAEf563015634a9d0EE6CF1357A3b205C35e028D',
   hasSmartCollateral: false,
   hasSmartDebt: false,
-  collateralAsset: 'wstETH',
-  debtAsset: 'cbBTC',
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'cbBTC',
 });
 
-// export const FLUID_ETH_SUSDS_17_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-//   stableBased: true,
-//   btcBased: false,
-//   wstETHBased: false,
-//   ethBased: true,
-//   type: FluidVaultType.T1,
-//   id: 17,
-//   chainIds: [NetworkNumber.Base],
-//   label: 'ETH / sUSDS Market 17',
-//   shortLabel: 'ETH/sUSDS',
-//   value: FluidBaseVersions.FLUID_ETH_SUSDS_17_BASE,
-//   url: 'eth-susds-17-base',
-//   marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
-//   hasSmartCollateral: false,
-//   hasSmartDebt: false,
-//   collateralAsset: 'ETH',
-//   debtAsset: 'sSUDS',
-// });
-//
-// export const FLUID_WSTETH_SUSDS_18_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-//   stableBased: true,
-//   btcBased: false,
-//   wstETHBased: true,
-//   ethBased: true,
-//   type: FluidVaultType.T1,
-//   id: 18,
-//   chainIds: [NetworkNumber.Base],
-//   label: 'wstETH / sUSDS Market 18',
-//   shortLabel: 'wstETH/sUSDS',
-//   value: FluidBaseVersions.FLUID_WSTETH_SUSDS_18_BASE,
-//   url: 'wsteth-susds-18-base',
-//   marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
-//   hasSmartCollateral: false,
-//   hasSmartDebt: false,
-//   collateralAsset: 'wstETH',
-//   debtAsset: 'sUSDS',
-// });
-//
-// export const FLUID_CBBTC_SUSDS_19_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
-//   stableBased: true,
-//   btcBased: false,
-//   wstETHBased: false,
-//   ethBased: false,
-//   type: FluidVaultType.T1,
-//   id: 19,
-//   chainIds: [NetworkNumber.Base],
-//   label: 'cbBTC / sUSDS Market 19',
-//   shortLabel: 'cbBTC/sUSDS',
-//   value: FluidBaseVersions.FLUID_CBBTC_SUSDS_19_BASE,
-//   url: 'cbbtc-susds-19-base',
-//   marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
-//   hasSmartCollateral: false,
-//   hasSmartDebt: false,
-//   collateralAsset: 'cbBTC',
-//   debtAsset: 'sUSDS',
-// });
+export const FLUID_ETH_SUSDS_17_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 17,
+  chainIds: [NetworkNumber.Base],
+  label: 'ETH / sUSDS Market 17',
+  shortLabel: 'ETH/sUSDS',
+  value: FluidBaseVersions.FLUID_ETH_SUSDS_17_BASE,
+  url: 'eth-susds-17-base',
+  marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'ETH',
+  debtAsset0: 'sUSDS',
+});
+
+export const FLUID_WSTETH_SUSDS_18_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: true,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 18,
+  chainIds: [NetworkNumber.Base],
+  label: 'wstETH / sUSDS Market 18',
+  shortLabel: 'wstETH/sUSDS',
+  value: FluidBaseVersions.FLUID_WSTETH_SUSDS_18_BASE,
+  url: 'wsteth-susds-18-base',
+  marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'wstETH',
+  debtAsset0: 'sUSDS',
+});
+
+export const FLUID_CBBTC_SUSDS_19_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 19,
+  chainIds: [NetworkNumber.Base],
+  label: 'cbBTC / sUSDS Market 19',
+  shortLabel: 'cbBTC/sUSDS',
+  value: FluidBaseVersions.FLUID_CBBTC_SUSDS_19_BASE,
+  url: 'cbbtc-susds-19-base',
+  marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'cbBTC',
+  debtAsset0: 'sUSDS',
+});
+
+export const FLUID_LBTC_USDC_21_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 21,
+  chainIds: [NetworkNumber.Base],
+  label: 'LBTC / USDC Market 21',
+  shortLabel: 'LBTC/USDC',
+  value: FluidBaseVersions.FLUID_LBTC_USDC_21_BASE,
+  url: 'lbtc-usdc-21-base',
+  marketAddress: '0x6F72895Cf6904489Bcd862c941c3D02a3eE4f03e',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  debtAsset0: 'USDC',
+});
+
+export const FLUID_LBTC_SUSDS_22_BASE = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: true,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 22,
+  chainIds: [NetworkNumber.Base],
+  label: 'LBTC / sUSDS Market 22',
+  shortLabel: 'LBTC/sUSDS',
+  value: FluidBaseVersions.FLUID_LBTC_SUSDS_22_BASE,
+  url: 'lbtc-susds-22-base',
+  marketAddress: '0x3A0b7c8840D74D39552EF53F586dD8c3d1234C40',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'LBTC',
+  debtAsset0: 'sUSDS',
+});
 
 export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_ETH_USDC_1]: FLUID_ETH_USDC_1(networkId),
@@ -1870,6 +2290,8 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_WSTETH_USDC_4]: FLUID_WSTETH_USDC_4(networkId),
   [FluidMainnetVersion.FLUID_WSTETH_USDT_5]: FLUID_WSTETH_USDT_5(networkId),
   [FluidMainnetVersion.FLUID_WEETH_WSTETH_6]: FLUID_WEETH_WSTETH_6(networkId),
+  [FluidMainnetVersion.FLUID_SUSDE_USDC_7]: FLUID_SUSDE_USDC_7(networkId),
+  [FluidMainnetVersion.FLUID_SUSDE_USDT_8]: FLUID_SUSDE_USDT_8(networkId),
   [FluidMainnetVersion.FLUID_WEETH_USDC_9]: FLUID_WEETH_USDC_9(networkId),
   [FluidMainnetVersion.FLUID_WEETH_USDT_10]: FLUID_WEETH_USDT_10(networkId),
   [FluidMainnetVersion.FLUID_ETH_USDC_11]: FLUID_ETH_USDC_11(networkId),
@@ -1894,6 +2316,7 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_CBBTC_USDT_30]: FLUID_CBBTC_USDT_30(networkId),
   [FluidMainnetVersion.FLUID_ETH_CBBTC_31]: FLUID_ETH_CBBTC_31(networkId),
   [FluidMainnetVersion.FLUID_WEETH_CBBTC_32]: FLUID_WEETH_CBBTC_32(networkId),
+  [FluidMainnetVersion.FLUID_WSTETH_CBBTC_33]: FLUID_WSTETH_CBBTC_33(networkId),
   [FluidMainnetVersion.FLUID_WSTETH_ETH_WSTETH_ETH_44]: FLUID_WSTETH_ETH_WSTETH_ETH_44(networkId),
   [FluidMainnetVersion.FLUID_ETH_USDC_USDT_45]: FLUID_ETH_USDC_USDT_45(networkId),
   [FluidMainnetVersion.FLUID_WSTETH_USDC_USDT_46]: FLUID_WSTETH_USDC_USDT_46(networkId),
@@ -1909,6 +2332,8 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_SUSDE_GHO_56]: FLUID_SUSDE_GHO_56(networkId),
   [FluidMainnetVersion.FLUID_WEETH_GHO_57]: FLUID_WEETH_GHO_57(networkId),
   [FluidMainnetVersion.FLUID_SUSDS_GHO_58]: FLUID_SUSDS_GHO_58(networkId),
+  [FluidMainnetVersion.FLUID_WBTC_GHO_59]: FLUID_WBTC_GHO_59(networkId),
+  [FluidMainnetVersion.FLUID_CBBTC_GHO_60]: FLUID_CBBTC_GHO_60(networkId),
   [FluidMainnetVersion.FLUID_GHO_USDC_GHO_USDC_61]: FLUID_GHO_USDC_GHO_USDC_61(networkId),
   [FluidMainnetVersion.FLUID_WEETH_ETH_WSTETH_74]: FLUID_WEETH_ETH_WSTETH_74(networkId),
   [FluidMainnetVersion.FLUID_USDC_ETH_USDC_ETH_77]: FLUID_USDC_ETH_USDC_ETH_77(networkId),
@@ -1918,6 +2343,19 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_SUSDE_USDT_USDT_92]: FLUID_SUSDE_USDT_USDT_92(networkId),
   [FluidMainnetVersion.FLUID_USDE_USDT_USDT_93]: FLUID_USDE_USDT_USDT_93(networkId),
   [FluidMainnetVersion.FLUID_LBTC_CBBTC_WBTC_97]: FLUID_LBTC_CBBTC_WBTC_97(networkId),
+  [FluidMainnetVersion.FLUID_SUSDE_USDT_USDC_USDT_98]: FLUID_SUSDE_USDT_USDC_USDT_98(networkId),
+  [FluidMainnetVersion.FLUID_USDE_USDT_USDC_USDT_99]: FLUID_USDE_USDT_USDC_USDT_99(networkId),
+  [FluidMainnetVersion.FLUID_USDC_ETH_100]: FLUID_USDC_ETH_100(networkId),
+  [FluidMainnetVersion.FLUID_USDC_WBTC_101]: FLUID_USDC_WBTC_101(networkId),
+  [FluidMainnetVersion.FLUID_USDC_CBBTC_102]: FLUID_USDC_CBBTC_102(networkId),
+  [FluidMainnetVersion.FLUID_EZETH_WSTETH_103]: FLUID_EZETH_WSTETH_103(networkId),
+  [FluidMainnetVersion.FLUID_EZETH_ETH_WSTETH_104]: FLUID_EZETH_ETH_WSTETH_104(networkId),
+  [FluidMainnetVersion.FLUID_LBTC_USDC_107]: FLUID_LBTC_USDC_107(networkId),
+  [FluidMainnetVersion.FLUID_LBTC_USDT_108]: FLUID_LBTC_USDT_108(networkId),
+  [FluidMainnetVersion.FLUID_LBTC_GHO_109]: FLUID_LBTC_GHO_109(networkId),
+  [FluidMainnetVersion.FLUID_LBTC_CBBTC_CBBTC_114]: FLUID_LBTC_CBBTC_CBBTC_114(networkId),
+  [FluidMainnetVersion.FLUID_WBTC_LBTC_WBTC_115]: FLUID_WBTC_LBTC_WBTC_115(networkId),
+
 
   // arbitrum
   [FluidArbitrumVersion.FLUID_ETH_USDC_1_ARB]: FLUID_ETH_USDC_1_ARB(networkId),
@@ -1944,6 +2382,7 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidArbitrumVersion.FLUID_WSTETH_USDC_USDT_24_ARB]: FLUID_WSTETH_USDC_USDT_24_ARB(networkId),
   [FluidArbitrumVersion.FLUID_WEETH_USDC_USDT_25_ARB]: FLUID_WEETH_USDC_USDT_25_ARB(networkId),
   [FluidArbitrumVersion.FLUID_WBTC_USDC_USDT_26_ARB]: FLUID_WBTC_USDC_USDT_26_ARB(networkId),
+  // [FluidArbitrumVersion.FLUID_SUSDS_USDC_USDT_30_ARB]: FLUID_SUSDS_USDC_USDT_30_ARB(networkId),
 
   // base
   [FluidBaseVersions.FLUID_ETH_USDC_1_BASE]: FLUID_ETH_USDC_1_BASE(networkId),
@@ -1962,6 +2401,11 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidBaseVersions.FLUID_ETH_CBBTC_14_BASE]: FLUID_ETH_CBBTC_14_BASE(networkId),
   [FluidBaseVersions.FLUID_WEETH_CBBTC_15_BASE]: FLUID_WEETH_CBBTC_15_BASE(networkId),
   [FluidBaseVersions.FLUID_WSTETH_CBBTC_16_BASE]: FLUID_WSTETH_CBBTC_16_BASE(networkId),
+  [FluidBaseVersions.FLUID_ETH_SUSDS_17_BASE]: FLUID_ETH_SUSDS_17_BASE(networkId),
+  [FluidBaseVersions.FLUID_WSTETH_SUSDS_18_BASE]: FLUID_WSTETH_SUSDS_18_BASE(networkId),
+  [FluidBaseVersions.FLUID_CBBTC_SUSDS_19_BASE]: FLUID_CBBTC_SUSDS_19_BASE(networkId),
+  [FluidBaseVersions.FLUID_LBTC_USDC_21_BASE]: FLUID_LBTC_USDC_21_BASE(networkId),
+  [FluidBaseVersions.FLUID_LBTC_SUSDS_22_BASE]: FLUID_LBTC_SUSDS_22_BASE(networkId),
 });
 
 export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (

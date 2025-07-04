@@ -10,8 +10,10 @@ export interface FluidMarketInfo {
   marketAddress: string
   hasSmartCollateral: boolean
   hasSmartDebt: boolean
-  collateralAsset: string
-  debtAsset: string
+  collateralAsset0: string
+  collateralAsset1?: string
+  debtAsset0: string
+  debtAsset1?: string
   ethBased?: boolean,
   btcBased?: boolean,
   wstETHBased?: boolean,
@@ -27,6 +29,8 @@ export enum FluidMainnetVersion {
   FLUID_WSTETH_USDC_4 = 'FLUID_WSTETH_USDC_4',
   FLUID_WSTETH_USDT_5 = 'FLUID_WSTETH_USDT_5',
   FLUID_WEETH_WSTETH_6 = 'FLUID_WEETH_WSTETH_6',
+  FLUID_SUSDE_USDC_7 = 'FLUID_SUSDE_USDC_7',
+  FLUID_SUSDE_USDT_8 = 'FLUID_SUSDE_USDT_8',
   FLUID_WEETH_USDC_9 = 'FLUID_WEETH_USDC_9',
   FLUID_WEETH_USDT_10 = 'FLUID_WEETH_USDT_10',
   FLUID_ETH_USDC_11 = 'FLUID_ETH_USDC_11',
@@ -51,6 +55,7 @@ export enum FluidMainnetVersion {
   FLUID_CBBTC_USDT_30 = 'FLUID_CBBTC_USDT_30',
   FLUID_ETH_CBBTC_31 = 'FLUID_ETH_CBBTC_31',
   FLUID_WEETH_CBBTC_32 = 'FLUID_WEETH_CBBTC_32',
+  FLUID_WSTETH_CBBTC_33 = 'FLUID_WSTETH_CBBTC_33',
   FLUID_WSTETH_ETH_WSTETH_ETH_44 = 'FLUID_WSTETH_ETH_WSTETH_ETH_44',
   FLUID_ETH_USDC_USDT_45 = 'FLUID_ETH_USDC_USDT_45',
   FLUID_WSTETH_USDC_USDT_46 = 'FLUID_WSTETH_USDC_USDT_46',
@@ -66,6 +71,8 @@ export enum FluidMainnetVersion {
   FLUID_SUSDE_GHO_56 = 'FLUID_SUSDE_GHO_56',
   FLUID_WEETH_GHO_57 = 'FLUID_WEETH_GHO_57',
   FLUID_SUSDS_GHO_58 = 'FLUID_SUSDS_GHO_58',
+  FLUID_WBTC_GHO_59 = 'FLUID_WBTC_GHO_59',
+  FLUID_CBBTC_GHO_60 = 'FLUID_CBBTC_GHO_60',
   FLUID_GHO_USDC_GHO_USDC_61 = 'FLUID_GHO_USDC_GHO_USDC_61',
   FLUID_WEETH_ETH_WSTETH_74 = 'FLUID_WEETH_ETH_WSTETH_74',
   FLUID_USDC_ETH_USDC_ETH_77 = 'FLUID_USDC_ETH_USDC_ETH_77',
@@ -75,6 +82,18 @@ export enum FluidMainnetVersion {
   FLUID_SUSDE_USDT_USDT_92 = 'FLUID_SUSDE_USDT_USDT_92',
   FLUID_USDE_USDT_USDT_93 = 'FLUID_USDE_USDT_USDT_93',
   FLUID_LBTC_CBBTC_WBTC_97 = 'FLUID_LBTC_CBBTC_WBTC_97',
+  FLUID_SUSDE_USDT_USDC_USDT_98 = 'FLUID_SUSDE_USDT_USDC_USDT_98',
+  FLUID_USDE_USDT_USDC_USDT_99 = 'FLUID_USDE_USDT_USDC_USDT_99',
+  FLUID_USDC_ETH_100 = 'FLUID_USDC_ETH_100',
+  FLUID_USDC_WBTC_101 = 'FLUID_USDC_WBTC_101',
+  FLUID_USDC_CBBTC_102 = 'FLUID_USDC_CBBTC_102',
+  FLUID_EZETH_WSTETH_103 = 'FLUID_EZETH_WSTETH_103',
+  FLUID_EZETH_ETH_WSTETH_104 = 'FLUID_EZETH_ETH_WSTETH_104',
+  FLUID_LBTC_USDC_107 = 'FLUID_LBTC_USDC_107',
+  FLUID_LBTC_USDT_108 = 'FLUID_LBTC_USDT_108',
+  FLUID_LBTC_GHO_109 = 'FLUID_LBTC_GHO_109',
+  FLUID_LBTC_CBBTC_CBBTC_114 = 'FLUID_LBTC_CBBTC_CBBTC_114',
+  FLUID_WBTC_LBTC_WBTC_115 = 'FLUID_WBTC_LBTC_WBTC_115',
 }
 
 export enum FluidArbitrumVersion {
@@ -102,6 +121,7 @@ export enum FluidArbitrumVersion {
   FLUID_WSTETH_USDC_USDT_24_ARB = 'FLUID_WSTETH_USDC_USDT_24_ARB',
   FLUID_WEETH_USDC_USDT_25_ARB = 'FLUID_WEETH_USDC_USDT_25_ARB',
   FLUID_WBTC_USDC_USDT_26_ARB = 'FLUID_WBTC_USDC_USDT_26_ARB',
+  // FLUID_SUSDS_USDC_USDT_30_ARB = 'FLUID_SUSDS_USDC_USDT_30_ARB',
 }
 
 export enum FluidBaseVersions {
@@ -121,6 +141,11 @@ export enum FluidBaseVersions {
   FLUID_ETH_CBBTC_14_BASE = 'FLUID_ETH_CBBTC_14_BASE',
   FLUID_WEETH_CBBTC_15_BASE = 'FLUID_WEETH_CBBTC_15_BASE',
   FLUID_WSTETH_CBBTC_16_BASE = 'FLUID_WSTETH_CBBTC_16_BASE',
+  FLUID_ETH_SUSDS_17_BASE = 'FLUID_ETH_SUSDS_17_BASE',
+  FLUID_WSTETH_SUSDS_18_BASE = 'FLUID_WSTETH_SUSDS_18_BASE',
+  FLUID_CBBTC_SUSDS_19_BASE = 'FLUID_CBBTC_SUSDS_19_BASE',
+  FLUID_LBTC_USDC_21_BASE = 'FLUID_LBTC_USDC_21_BASE',
+  FLUID_LBTC_SUSDS_22_BASE = 'FLUID_LBTC_SUSDS_22_BASE',
 }
 
 export type FluidVersions = FluidArbitrumVersion | FluidBaseVersions | FluidMainnetVersion;
@@ -178,6 +203,13 @@ export interface FluidAssetData {
   canBeBorrowed: boolean,
   supplyRate: string,
   borrowRate: string,
+  utilization?: string,
+  withdrawable?: string,
+  borrowable?: string,
+  tokenPerSupplyShare?: string,
+  tokenPerBorrowShare?: string,
+  supplyReserves?: string,
+  borrowReserves?: string,
 }
 export type FluidAssetsData = { [key: string]: FluidAssetData };
 
@@ -204,19 +236,47 @@ export interface InnerFluidMarketData {
   totalSupplyVaultUsd: string,
   totalBorrowVault: string,
   totalBorrowVaultUsd: string,
-  withdrawalLimit: string,
-  withdrawableUntilLimit: string,
+  withdrawalLimit?: string,
+  withdrawableUntilLimit?: string,
   withdrawable: string,
-  borrowLimit: string,
-  borrowableUntilLimit: string,
+  withdrawableDex?: string,
+  borrowLimit?: string,
+  borrowableUntilLimit?: string,
   borrowable: string,
-  borrowLimitUtilization: string,
-  maxBorrowLimit: string,
-  baseBorrowLimit: string,
-  minimumBorrowing: string,
+  borrowableDex?: string,
+  borrowLimitUtilization?: string,
+  maxBorrowLimit?: string,
+  baseBorrowLimit?: string,
+  minimumBorrowing?: string,
   supplyRate: string,
   borrowRate: string,
   liquidationMaxLimit: string,
+  oraclePrice: string,
+  incentiveBorrowRate?: string,
+  incentiveSupplyRate?: string,
+  // T2 and T4 vaults
+  collSharePrice?: string,
+  maxSupplyShares?: string,
+  maxSupplySharesUsd?: string,
+  withdrawableUSD?: string,
+  totalSupplyToken0?: string,
+  totalSupplyToken1?: string,
+  withdrawableToken0?: string,
+  withdrawableToken1?: string,
+  collDexFee?: string
+  // T3 and T4 vaults
+  debtSharePrice?: string,
+  maxBorrowShares?: string,
+  maxBorrowSharesUsd?: string,
+  borrowableUSD?: string,
+  borrowableToken0?: string,
+  borrowableToken1?: string,
+  totalBorrowToken0?: string,
+  totalBorrowToken1?: string,
+  borrowDexFee?: string,
+  // Dex vault
+  tradingBorrowRate?: string,
+  tradingSupplyRate?: string,
 }
 
 export interface FluidMarketData {
@@ -264,6 +324,8 @@ export interface BaseFluidVaultData {
   isSubscribedToAutomation: boolean,
   automationResubscribeRequired: boolean,
   lastUpdated: number,
+  supplyShares?: string;
+  borrowShares?: string;
 }
 
 export type FluidVaultData = FluidAggregatedVaultData & BaseFluidVaultData;
