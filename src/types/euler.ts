@@ -27,6 +27,7 @@ export interface EulerV2Market {
 export interface EulerV2PositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
+  suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
   incentiveUsd: string,

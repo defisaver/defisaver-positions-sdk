@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { getConfigContractAddress } from '../../contracts';
 import { compareAddresses } from '../../services/utils';
 import {

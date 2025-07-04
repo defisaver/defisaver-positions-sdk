@@ -103,7 +103,7 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
 
   const stEthMarket = assetsData.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH');
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 

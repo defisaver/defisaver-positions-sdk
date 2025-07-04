@@ -60,7 +60,7 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
 
   const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH', mainnetWeb3);
+    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH');
     stEthMarket.incentiveSupplyToken = 'stETH';
   }
 

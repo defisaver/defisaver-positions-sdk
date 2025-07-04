@@ -16,7 +16,7 @@ describe('Staking utils', () => {
   it('can fetch APY for staking assets', async function () {
     this.timeout(20000);
     for (const asset of sdk.staking.STAKING_ASSETS) {
-      const apy = await sdk.staking.getStakingApy(asset, web3);
+      const apy = await sdk.staking.getStakingApy(asset);
       assert.isString(apy, `APY for ${asset} is not a string: ${apy}`);
       assert.isNotNaN(+apy, `APY for ${asset} is not a valid number: ${apy}`);
     }
@@ -24,18 +24,8 @@ describe('Staking utils', () => {
 
   it('returns 0 for APY of asset without yield', async () => {
     for (const asset of sdk.staking.STAKING_ASSETS) {
-      const apy = await sdk.staking.getStakingApy('DAI', web3);
+      const apy = await sdk.staking.getStakingApy('DAI');
       assert.equal(apy, '0');
     }
   });
-
-  // Commented out due to https://github.com/nock/nock/issues/2830
-  // it('returns 0 if API request fails', async () => {
-  //   nock('https://fe.defisaver.com')
-  //     .get('/api/staking/apy?asset=sUSDe')
-  //     .reply(500, { error: 'Internal Server Error' });
-  //   const apy = await sdk.staking.getStakingApy('sUSDe', web3);
-  //   assert.equal(apy, '0');
-  //   nock.cleanAll();
-  // });
 });

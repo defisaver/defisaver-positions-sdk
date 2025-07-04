@@ -322,11 +322,11 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
     };
 
     if (STAKING_ASSETS.includes(data.symbol)) {
-      data.incentiveSupplyApy = await getStakingApy(data.symbol, mainnetWeb3);
+      data.incentiveSupplyApy = await getStakingApy(data.symbol);
       data.incentiveSupplyToken = data.symbol;
     }
     if (data.symbol === 'sDAI') {
-      data.incentiveSupplyApy = await getStakingApy('sDAI', mainnetWeb3);
+      data.incentiveSupplyApy = await getStakingApy('sDAI');
       data.incentiveSupplyToken = 'sDAI';
     }
 

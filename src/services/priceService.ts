@@ -1,12 +1,16 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { getAssetInfo } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
-  COMPPriceFeedContract,
+  COMPPriceFeedContractViem,
   ETHPriceFeedContract,
   BTCPriceFeedContract,
   USDCPriceFeedContract, WeETHPriceFeedContract,
+  ETHPriceFeedContractViem,
+  USDCPriceFeedContractViem,
   WstETHPriceFeedContract,
+  WstETHPriceFeedContractViem,
 } from '../contracts';
 import { NetworkNumber } from '../types/common';
 import { multicall } from '../multicall';
@@ -18,39 +22,36 @@ export const getEthPrice = async (web3: Web3) => {
   return new Dec(price).div(1e8).toString();
 };
 
-export const getUSDCPrice = async (web3: Web3) => {
-  const contract = USDCPriceFeedContract(web3, NetworkNumber.Eth);
-  const price = await contract.methods.latestAnswer().call();
-  return new Dec(price).div(1e8).toString();
+export const getEthPriceViem = async (client: Client) => {
+  const contract = ETHPriceFeedContractViem(client, NetworkNumber.Eth);
+  const price = await contract.read.latestAnswer();
+  return new Dec(price.toString()).div(1e8).toString();
 };
 
-export const getCompPrice = async (web3: Web3) => {
-  const contract = COMPPriceFeedContract(web3, NetworkNumber.Eth);
-  const price = await contract.methods.latestAnswer().call();
-  return new Dec(price).div(1e8).toString();
+export const getUSDCPrice = async (client: Client) => {
+  const contract = USDCPriceFeedContractViem(client, NetworkNumber.Eth);
+  const price = await contract.read.latestAnswer();
+  return new Dec(price.toString()).div(1e8).toString();
 };
 
-export const getWstETHPrice = async (web3: Web3) => {
-  const wstETHFeedContract = WstETHPriceFeedContract(web3, NetworkNumber.Eth);
-  const ethFeedContract = ETHPriceFeedContract(web3, NetworkNumber.Eth);
-  const calls = [
-    {
-      target: ethFeedContract.options.address,
-      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
-      params: [],
-    },
-    {
-      target: wstETHFeedContract.options.address,
-      abiItem: wstETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
-      params: [],
-    },
-  ];
+export const getCompPrice = async (client: Client) => {
+  const contract = COMPPriceFeedContractViem(client, NetworkNumber.Eth);
+  const price = await contract.read.latestAnswer();
+  return new Dec(price.toString()).div(1e8).toString();
+};
 
-  const multicallRes = await multicall(calls, web3);
+export const getWstETHPrice = async (client: Client) => {
+  const wstETHFeedContract = WstETHPriceFeedContractViem(client, NetworkNumber.Eth);
+  const ethFeedContract = ETHPriceFeedContractViem(client, NetworkNumber.Eth);
 
-  const ethPrice = new Dec(multicallRes[0][0]).div(1e8);
+  const [ethPriceWei, wstETHRateWei] = await Promise.all([
+    ethFeedContract.read.latestAnswer(),
+    wstETHFeedContract.read.latestRoundData(),
+  ]);
 
-  const wstETHRate = new Dec(multicallRes[1].answer).div(1e8);
+  const ethPrice = new Dec(ethPriceWei.toString()).div(1e8);
+
+  const wstETHRate = new Dec(wstETHRateWei[1].toString()).div(1e8);
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
 };

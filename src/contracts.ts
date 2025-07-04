@@ -16,6 +16,7 @@ declare type Network = {
   address: string,
   oldVersions?: Record<string, { address: EthAddress, abi: any[] }>,
 };
+// @ts-ignore
 const contractConfig:Record<ConfigKey, ContractConfig> = configRaw;
 
 export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): string => {
@@ -57,7 +58,7 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
   return latestAbi;
 };
 
-const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
+export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
   const address = (_address || getConfigContractAddress(name, network, block)) as `0x${string}`;
   const abi = configRaw[name].abi as typeof configRaw[TKey]['abi']; // getConfigContractAbi(name, network, block)
   return getContract({
@@ -65,7 +66,7 @@ const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _a
     abi,
     client,
   });
-}
+};
 
 const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
   const address = _address || getConfigContractAddress(name, network, block);
@@ -82,8 +83,8 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const AaveV3ViewContract = createViemContractFromConfigFunc('AaveV3View');
-export const AaveIncentiveDataProviderV3Contract = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
+export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
+export const AaveIncentiveDataProviderV3Contract = createContractFromConfigFunc<ContractTypes.AaveUiIncentiveDataProviderV3>('AaveUiIncentiveDataProviderV3');
 
 export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
 export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');
@@ -133,10 +134,8 @@ export const USDCPriceFeedContract = createContractFromConfigFunc<ContractTypes.
 export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
 export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WeETHPriceFeed>('WeETHPriceFeed');
 
-export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
 export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');
-
-export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
+export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
 
 export const LlamaLendViewContract = createContractFromConfigFunc<ContractTypes.LlamaLendView>('LlamaLendView');
 
@@ -145,3 +144,25 @@ export const LiquityV2LegacyViewContract = createContractFromConfigFunc<Contract
 
 export const EulerV2ViewContract = createContractFromConfigFunc<ContractTypes.EulerV2View>('EulerV2View');
 export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
+
+export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
+
+// Viem
+
+export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
+export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
+export const AaveIncentiveDataProviderV3ContractViem = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
+export const FeedRegistryContractViem = createViemContractFromConfigFunc('FeedRegistry');
+export const DFSFeedRegistryContractViem = createViemContractFromConfigFunc('DFSFeedRegistry');
+export const GhoTokenContractViem = createViemContractFromConfigFunc('GHO');
+export const COMPPriceFeedContractViem = createViemContractFromConfigFunc('COMPPriceFeed');
+export const ETHPriceFeedContractViem = createViemContractFromConfigFunc('ETHPriceFeed');
+export const USDCPriceFeedContractViem = createViemContractFromConfigFunc('USDCPriceFeed');
+export const WstETHPriceFeedContractViem = createViemContractFromConfigFunc('WstETHPriceFeed');
+export const CompV3ViewContractViem = createViemContractFromConfigFunc('CompV3View');
+export const SparkViewContractViem = createViemContractFromConfigFunc('SparkView');
+export const SparkIncentiveDataProviderContractViem = createViemContractFromConfigFunc('SparkIncentiveDataProvider');
+export const EulerV2ViewContractViem = createViemContractFromConfigFunc('EulerV2View');
+export const CrvUSDViewContractViem = createViemContractFromConfigFunc('crvUSDView');
+export const CrvUSDFactoryContractViem = createViemContractFromConfigFunc('crvUSDFactory');
+export const LlamaLendViewContractViem = createViemContractFromConfigFunc('LlamaLendView');

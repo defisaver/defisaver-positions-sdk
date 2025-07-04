@@ -23,6 +23,7 @@ import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
 import * as llamaLend from './llamaLend';
 import * as eulerV2 from './eulerV2';
+import * as portfolio from './portfolio';
 
 export * from './types';
 
@@ -49,4 +50,5 @@ export {
   llamaLend,
   eulerV2,
   fluid,
+  portfolio,
 };

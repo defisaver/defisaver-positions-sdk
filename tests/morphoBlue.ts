@@ -4,7 +4,7 @@ import Web3 from 'web3';
 
 import * as sdk from '../src';
 
-import { Blockish, NetworkNumber } from '../src/types/common';
+import { Blockish, EthereumProvider, NetworkNumber } from '../src/types/common';
 import { getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
@@ -20,7 +20,7 @@ describe('Morpho Blue', () => {
   });
 
   const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.MorphoBlueMarketData) => {
-    const marketData = await sdk.morphoBlue.getMorphoBlueMarketData(_web3, network, selectedMarket, web3);
+    const marketData = await sdk.morphoBlue.getMorphoBlueMarketData(_web3 as unknown as EthereumProvider, network, selectedMarket);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData', 'oracle', 'utillization']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -35,7 +35,7 @@ describe('Morpho Blue', () => {
 
   const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.MorphoBlueMarketInfo, selectedMarket: sdk.MorphoBlueMarketData) => {
     const accountData = await sdk.morphoBlue.getMorphoBlueAccountData(
-      _web3,
+      _web3 as unknown as EthereumProvider,
       network,
       '0x199666178740df61638b5fcd188eae70180cc8e8',
       selectedMarket,
@@ -55,6 +55,19 @@ describe('Morpho Blue', () => {
     ]);
     return balances;
   };
+
+  it('portfolio test', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    await sdk.portfolio.getPortfolioData(
+      web3,
+      network,
+      web3,
+      ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0x21dc459fba0b1ea037cd221d35b928be1c26141a'],
+    );
+  });
+
+  return;
 
   // APY
 

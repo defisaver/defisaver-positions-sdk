@@ -119,6 +119,7 @@ export interface SparkPositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
   collRatio: string,
+  suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
   suppliedCollateralUsd: string,

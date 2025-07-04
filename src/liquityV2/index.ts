@@ -75,7 +75,7 @@ export const getLiquityV2MarketData = async (web3: Web3, network: NetworkNumber,
     leftToWithdrawGlobal,
   };
   if (STAKING_ASSETS.includes(collateralToken)) {
-    assetsData[collateralToken].incentiveSupplyApy = await getStakingApy(collateralToken, mainnetWeb3);
+    assetsData[collateralToken].incentiveSupplyApy = await getStakingApy(collateralToken);
     assetsData[collateralToken].incentiveSupplyToken = collateralToken;
   }
 

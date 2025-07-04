@@ -54,7 +54,6 @@ export type CompoundV3UsedAssets = CompoundUsedAssets<CompoundV3UsedAsset>;
 export interface CompoundAssetData extends MMAssetData {
   supplyCapAlternative?: string,
   totalSupplyAlternative?: string,
-  priceAlternative?: string,
   sortIndex?: number,
 }
 
@@ -117,6 +116,7 @@ export interface CompoundAggregatedPositionData {
 export interface CompoundPositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
+  suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
   incentiveUsd: string,

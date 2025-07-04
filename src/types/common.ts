@@ -81,3 +81,5 @@ export interface PositionBalances {
   selling?: Balances,
   deposited?: Balances,
 }
+
+export type EthereumProvider = { request(...args: any): Promise<any> }; // TODO

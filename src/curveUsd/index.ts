@@ -1,20 +1,22 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import Web3 from 'web3';
+import { Client, createPublicClient } from 'viem';
 import {
   BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData, CrvUSDVersions,
 } from '../types';
-import { multicall } from '../multicall';
 import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { CrvUSDFactoryContract, CrvUSDViewContract, getConfigContractAbi } from '../contracts';
+import {
+  createViemContractFromConfigFunc, CrvUSDFactoryContractViem, CrvUSDViewContract, CrvUSDViewContractViem,
+} from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
-import { getAbiItem, wethToEth } from '../services/utils';
+import { wethToEth } from '../services/utils';
 
-const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
-  const contract = CrvUSDViewContract(web3, network);
+const getAndFormatBands = async (provider: Client, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
+  const contract = CrvUSDViewContractViem(provider, network);
   const minBand = parseInt(_minBand, 10);
   const maxBand = parseInt(_maxBand, 10);
   const pivots: number[] = [];
@@ -37,58 +39,38 @@ const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMar
     } else {
       start = pivots[index - 1] + 1;
     }
-    // @ts-ignore
-    const pivotedBandsData = await contract.methods.getBandsData(selectedMarket.controllerAddress, start, pivot).call();
+    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress as `0x${string}`, BigInt(start), BigInt(pivot)]);
     return pivotedBandsData;
   }))).flat();
 
-  return bandsData.map((band: BandData) => ({
-    id: band.id,
-    collAmount: assetAmountInEth(band.collAmount),
-    debtAmount: assetAmountInEth(band.debtAmount),
-    lowPrice: assetAmountInEth(band.lowPrice),
-    highPrice: assetAmountInEth(band.highPrice),
+  return bandsData.map((band) => ({
+    id: band.id.toString(),
+    collAmount: assetAmountInEth(band.collAmount.toString()),
+    debtAmount: assetAmountInEth(band.debtAmount.toString()),
+    lowPrice: assetAmountInEth(band.lowPrice.toString()),
+    highPrice: assetAmountInEth(band.highPrice.toString()),
   }));
 };
 
-export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData): Promise<CrvUSDGlobalMarketData> => {
-  const contract = CrvUSDViewContract(web3, network);
-  const factoryContract = CrvUSDFactoryContract(web3, network);
-  const collAsset = selectedMarket.collAsset;
+export const _getCurveUsdGlobalData = async (provider: Client, network: NetworkNumber, selectedMarket: CrvUSDMarketData): Promise<CrvUSDGlobalMarketData> => {
+  const contract = CrvUSDViewContractViem(provider, network);
+  const factoryContract = CrvUSDFactoryContractViem(provider, network);
+  const cntrollerContract = createViemContractFromConfigFunc('crvUSDwstETHController', selectedMarket.controllerAddress)(provider, network);
   const debtAsset = selectedMarket.baseAsset;
 
-  const multicallData = [
-    {
-      target: factoryContract.options.address,
-      abiItem: factoryContract.options.jsonInterface.find(({ name }) => name === 'debt_ceiling'),
-      params: [selectedMarket.controllerAddress],
-    },
-    {
-      target: factoryContract.options.address,
-      abiItem: factoryContract.options.jsonInterface.find(({ name }) => name === 'total_debt'),
-      params: [],
-    },
-    {
-      target: contract.options.address,
-      abiItem: contract.options.jsonInterface.find(({ name }) => name === 'globalData'),
-      params: [selectedMarket.controllerAddress],
-    },
-    {
-      target: selectedMarket.controllerAddress,
-      abiItem: getAbiItem(getConfigContractAbi('crvUSDwstETHController'), 'loan_discount'),
-      params: [],
-    },
-  ];
-  const multiRes = await multicall(multicallData, web3, network);
-  const data = multiRes[2][0];
-  const debtCeiling = assetAmountInEth(multiRes[0][0], debtAsset);
+  const [debtCeiling, _, data, loanDiscountWei] = await Promise.all([
+    factoryContract.read.debt_ceiling([selectedMarket.controllerAddress as `0x${string}`]),
+    factoryContract.read.total_debt(),
+    contract.read.globalData([selectedMarket.controllerAddress as `0x${string}`]),
+    cntrollerContract.read.loan_discount(),
+  ]);
 
   // all prices are in 18 decimals
-  const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
-  const ammPrice = assetAmountInEth(data.ammPrice, debtAsset);
+  const totalDebt = assetAmountInEth(data.totalDebt.toString(), debtAsset);
+  const ammPrice = assetAmountInEth(data.ammPrice.toString(), debtAsset);
 
-  const rate = assetAmountInEth(data.ammRate);
-  const futureRate = assetAmountInEth(data.monetaryPolicyRate);
+  const rate = assetAmountInEth(data.ammRate.toString());
+  const futureRate = assetAmountInEth(data.monetaryPolicyRate.toString());
 
   const exponentRate = new Dec(rate).mul(365).mul(86400);
   const exponentFutureRate = new Dec(futureRate).mul(365).mul(86400);
@@ -97,27 +79,41 @@ export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, 
   const futureBorrowRate = new Dec(new Dec(2.718281828459).pow(exponentFutureRate).minus(1)).mul(100)
     .toString();
 
-  const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
+  const bandsData = await getAndFormatBands(provider, network, selectedMarket, data.minBand.toString(), data.maxBand.toString());
 
-  const leftToBorrow = new Dec(debtCeiling).minus(totalDebt).toString();
+  const leftToBorrow = new Dec(debtCeiling.toString()).minus(totalDebt).toString();
 
-  const loanDiscount = assetAmountInEth(multiRes[3][0], debtAsset);
+  const loanDiscount = assetAmountInEth(loanDiscountWei.toString(), debtAsset);
 
   return {
     ...data,
-    debtCeiling,
+    decimals: data.decimals.toString(),
+    activeBand: data.activeBand.toString(),
+    monetaryPolicyRate: data.monetaryPolicyRate.toString(),
+    ammRate: data.ammRate.toString(),
+    minBand: data.minBand.toString(),
+    maxBand: data.maxBand.toString(),
+    debtCeiling: debtCeiling.toString(),
     totalDebt,
     ammPrice,
-    oraclePrice: assetAmountInEth(data.oraclePrice, debtAsset),
-    basePrice: assetAmountInEth(data.basePrice, debtAsset),
-    minted: assetAmountInEth(data.minted, debtAsset),
-    redeemed: assetAmountInEth(data.redeemed, debtAsset),
+    oraclePrice: assetAmountInEth(data.oraclePrice.toString(), debtAsset),
+    basePrice: assetAmountInEth(data.basePrice.toString(), debtAsset),
+    minted: assetAmountInEth(data.minted.toString(), debtAsset),
+    redeemed: assetAmountInEth(data.redeemed.toString(), debtAsset),
     borrowRate,
     futureBorrowRate,
     bands: bandsData,
     leftToBorrow,
     loanDiscount,
   };
+};
+
+export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData): Promise<CrvUSDGlobalMarketData> => {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+  return _getCurveUsdGlobalData(client, network, selectedMarket);
 };
 
 const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplied: string, collSupplied: string, healthPercent: string) => {
@@ -161,20 +157,20 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
-  const contract = CrvUSDViewContract(web3, network);
+export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+  const contract = CrvUSDViewContractViem(provider, network);
 
-  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call();
+  const data = await contract.read.userData([selectedMarket.controllerAddress as `0x${string}`, address as `0x${string}`]);
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  const health = assetAmountInEth(data.health);
+  const health = assetAmountInEth(data.health.toString());
   const healthPercent = new Dec(health).mul(100).toString();
-  const collPrice = assetAmountInEth(data.collateralPrice, debtAsset);
-  const collSupplied = assetAmountInEth(data.marketCollateralAmount, collAsset);
+  const collPrice = assetAmountInEth(data.collateralPrice.toString(), debtAsset);
+  const collSupplied = assetAmountInEth(data.marketCollateralAmount.toString(), collAsset);
   const collSuppliedUsd = new Dec(collSupplied).mul(collPrice).toString();
-  const crvUSDSupplied = assetAmountInEth(data.curveUsdCollateralAmount, debtAsset);
-  const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const crvUSDSupplied = assetAmountInEth(data.curveUsdCollateralAmount.toString(), debtAsset);
+  const debtBorrowed = assetAmountInEth(data.debtAmount.toString(), debtAsset);
   const usedAssets: CrvUSDUsedAssets = data.loanExists ? {
     [collAsset]: {
       isSupplied: true,
@@ -201,35 +197,43 @@ export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, ad
     },
   } : {};
 
-  const priceHigh = assetAmountInEth(data.priceHigh);
-  const priceLow = assetAmountInEth(data.priceLow);
+  const priceHigh = assetAmountInEth(data.priceHigh.toString());
+  const priceLow = assetAmountInEth(data.priceLow.toString());
 
-  const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
+  const _userBands = data.loanExists ? (await getAndFormatBands(provider, network, selectedMarket, data.bandRange[0].toString(), data.bandRange[1].toString())) : [];
 
-  const status = data.loanExists ? getStatusForUser(data.bandRange, activeBand, crvUSDSupplied, collSupplied, healthPercent) : CrvUSDStatus.Nonexistant;
+  const status = data.loanExists ? getStatusForUser(data.bandRange.map(b => b.toString()), activeBand, crvUSDSupplied, collSupplied, healthPercent) : CrvUSDStatus.Nonexistant;
 
   const userBands = _userBands.map((band, index) => ({
     ...band,
-    userDebtAmount: assetAmountInEth(data.usersBands[0][index], debtAsset),
-    userCollAmount: assetAmountInEth(data.usersBands[1][index], collAsset),
+    userDebtAmount: assetAmountInEth(data.usersBands[0][index].toString(), debtAsset),
+    userCollAmount: assetAmountInEth(data.usersBands[1][index].toString(), collAsset),
   })).sort((a, b) => parseInt(b.id, 10) - parseInt(a.id, 10));
 
   return {
     ...data,
-    debtAmount: assetAmountInEth(data.debtAmount, debtAsset),
+    debtAmount: assetAmountInEth(data.debtAmount.toString(), debtAsset),
     health,
     healthPercent,
     priceHigh,
     priceLow,
-    liquidationDiscount: assetAmountInEth(data.liquidationDiscount),
-    numOfBands: data.N,
+    liquidationDiscount: assetAmountInEth(data.liquidationDiscount.toString()),
+    numOfBands: data.N.toString(),
     usedAssets,
     status,
     ...getCrvUsdAggregatedData({
-      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N,
+      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N.toString(),
     }),
     userBands,
   };
+};
+
+export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+  return _getCurveUsdUserData(client, network, address, selectedMarket, activeBand);
 };
 
 export const getCurveUsdFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
