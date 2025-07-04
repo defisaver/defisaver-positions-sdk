@@ -375,7 +375,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyReserves: reservesSupplyToken0,
   };
   if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
-    collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset0.symbol, mainnetWeb3);
+    collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset0.symbol);
     collFirstAssetData.incentiveSupplyToken = collAsset0.symbol;
   }
 
@@ -392,7 +392,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyReserves: reservesSupplyToken1,
   };
   if (STAKING_ASSETS.includes(collSecondAssetData.symbol!)) {
-    collSecondAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
+    collSecondAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol);
     collSecondAssetData.incentiveSupplyToken = collAsset1.symbol;
   }
 
@@ -410,7 +410,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowRate,
   };
   if (STAKING_ASSETS.includes(debtAssetData.symbol!)) {
-    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol, mainnetWeb3);
+    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol);
     debtAssetData.incentiveBorrowToken = debtAsset.symbol;
   }
 
@@ -539,7 +539,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyRate,
   };
   if (STAKING_ASSETS.includes(collAssetData.symbol!)) {
-    collAssetData.incentiveSupplyApy = await getStakingApy(collAsset.symbol, mainnetWeb3);
+    collAssetData.incentiveSupplyApy = await getStakingApy(collAsset.symbol);
     collAssetData.incentiveSupplyToken = collAsset.symbol;
   }
 
@@ -558,7 +558,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowReserves: reservesBorrowToken0,
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
-    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol, mainnetWeb3);
+    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol);
     debtAsset0Data.incentiveSupplyToken = debtAsset0.symbol;
   }
 
@@ -575,7 +575,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowReserves: reservesBorrowToken1,
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
-    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
+    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol);
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
@@ -732,7 +732,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyReserves: reservesSupplyToken0,
   };
   if (STAKING_ASSETS.includes(collAsset0Data.symbol!)) {
-    collAsset0Data.incentiveSupplyApy = await getStakingApy(collAsset0.symbol, mainnetWeb3);
+    collAsset0Data.incentiveSupplyApy = await getStakingApy(collAsset0.symbol);
     collAsset0Data.incentiveSupplyToken = collAsset0.symbol;
   }
 
@@ -749,7 +749,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     supplyReserves: reservesSupplyToken1,
   };
   if (STAKING_ASSETS.includes(collAsset1Data.symbol!)) {
-    collAsset1Data.incentiveSupplyApy = await getStakingApy(collAsset1.symbol, mainnetWeb3);
+    collAsset1Data.incentiveSupplyApy = await getStakingApy(collAsset1.symbol);
     collAsset1Data.incentiveSupplyToken = collAsset1.symbol;
   }
 
@@ -766,7 +766,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowReserves: reservesBorrowToken0,
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
-    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol, mainnetWeb3);
+    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol);
     debtAsset0Data.incentiveSupplyToken = debtAsset0.symbol;
   }
 
@@ -783,7 +783,7 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
     borrowReserves: reservesBorrowToken1,
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
-    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol, mainnetWeb3);
+    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol);
     debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
   }
   const marketInfo = getFluidMarketInfoById(+data.vaultId, network);

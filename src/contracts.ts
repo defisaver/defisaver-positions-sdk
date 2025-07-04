@@ -154,7 +154,6 @@ export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3Vi
 export const AaveIncentiveDataProviderV3ContractViem = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
 export const FeedRegistryContractViem = createViemContractFromConfigFunc('FeedRegistry');
 export const DFSFeedRegistryContractViem = createViemContractFromConfigFunc('DFSFeedRegistry');
-export const GhoTokenContractViem = createViemContractFromConfigFunc('GHO');
 export const COMPPriceFeedContractViem = createViemContractFromConfigFunc('COMPPriceFeed');
 export const ETHPriceFeedContractViem = createViemContractFromConfigFunc('ETHPriceFeed');
 export const USDCPriceFeedContractViem = createViemContractFromConfigFunc('USDCPriceFeed');

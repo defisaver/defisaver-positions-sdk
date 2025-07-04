@@ -1,20 +1,20 @@
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import { createPublicClient, custom } from 'viem';
+import { Client, createPublicClient, http } from 'viem';
 import Dec from 'decimal.js';
 import Web3 from 'web3';
-import { getAssetsBalances } from '../assets';
 import {
-  AaveIncentiveDataProviderV3Contract,
+  AaveIncentiveDataProviderV3ContractViem,
   AaveV3ViewContract,
+  AaveV3ViewContractViem,
   createContractWrapper,
-  getConfigContractAbi,
+  createViemContractFromConfigFunc,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { multicall } from '../multicall';
 import {
-  addToObjectIf, ethToWeth, getAbiItem, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
+  ethToWeth, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
@@ -34,7 +34,7 @@ import {
 } from '../types/common';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
-  const { assetsData, eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
+  const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
   const usedAssetsValues = Object.values(usedAssets);
 
   const categoriesMapping: { [key: number]: EModeCategoryDataMapping } = {};
@@ -63,20 +63,22 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
   return categoriesMapping;
 };
 
-export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo, defaultWeb3: Web3): Promise<AaveV3MarketData> {
+export async function _getAaveV3MarketData(provider: Client, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
 
-  const loanInfoContract = AaveV3ViewContract(web3, network);
-  const aaveIncentivesContract = AaveIncentiveDataProviderV3Contract(web3, network);
+  const loanInfoContract = AaveV3ViewContractViem(provider, network);
+  const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
+  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt];
 
   // eslint-disable-next-line prefer-const
-  let [loanInfo, eModesInfo, isBorrowAllowed] = await Promise.all([
-    loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call(),
-    loanInfoContract.methods.getAllEmodes(marketAddress).call(),
-    loanInfoContract.methods.isBorrowAllowed(marketAddress).call(), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo] = await Promise.all([
+    loanInfoContract.read.getFullTokensInfo([marketAddress as `0x${string}`, _addresses as `0x${string}`[]]),
+    loanInfoContract.read.getAllEmodes([marketAddress as `0x${string}`]),
+    loanInfoContract.read.isBorrowAllowed([marketAddress as `0x${string}`]), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+    networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress as `0x${string}`]) : null,
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -96,11 +98,8 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     };
   }
 
-  let rewardInfo: IUiIncentiveDataProviderV3.AggregatedReserveIncentiveDataStructOutput[] | null = null;
-  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt];
-  if (networksWithIncentives.includes(network)) {
-    const res = await aaveIncentivesContract.methods.getReservesIncentivesData(marketAddress).call();
-    rewardInfo = res.reduce((all: any, _market: any) => {
+  if (networksWithIncentives.includes(network) && rewardInfo) {
+    rewardInfo = rewardInfo.reduce((all: any, _market: any) => {
       // eslint-disable-next-line no-param-reassign
       all[_market.underlyingAsset] = _market;
       return all;
@@ -117,10 +116,10 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
       }
 
-      const borrowCap = tokenMarket.borrowCap;
+      const borrowCap = tokenMarket.borrowCap.toString();
 
-      const borrowCapInWei = new Dec(assetAmountInWei(borrowCap.toString(), symbol));
-      let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply))
+      const borrowCapInWei = new Dec(assetAmountInWei(borrowCap, symbol));
+      let marketLiquidity = borrowCapInWei.lt(new Dec(tokenMarket.totalSupply.toString()))
         ? assetAmountInEth(borrowCapInWei
           .sub(tokenMarket.totalBorrow.toString())
           .toString(), symbol)
@@ -133,10 +132,10 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       }
       return ({
         symbol,
-        isIsolated: new Dec(tokenMarket.debtCeilingForIsolationMode).gt(0),
-        debtCeilingForIsolationMode: new Dec(tokenMarket.debtCeilingForIsolationMode).div(100).toString(),
+        isIsolated: new Dec(tokenMarket.debtCeilingForIsolationMode.toString()).gt(0),
+        debtCeilingForIsolationMode: new Dec(tokenMarket.debtCeilingForIsolationMode.toString()).div(100).toString(),
         isSiloed: tokenMarket.isSiloedForBorrowing,
-        isolationModeTotalDebt: new Dec(tokenMarket.isolationModeTotalDebt).div(100).toString(),
+        isolationModeTotalDebt: new Dec(tokenMarket.isolationModeTotalDebt.toString()).div(100).toString(),
         assetId: Number(tokenMarket.assetId),
         underlyingTokenAddress: tokenMarket.underlyingTokenAddress,
         supplyRate: aprToApy(new Dec(tokenMarket.supplyRate.toString()).div(1e25).toString()),
@@ -148,7 +147,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
         marketLiquidity,
         utilization: new Dec(tokenMarket.totalBorrow.toString()).times(100).div(new Dec(tokenMarket.totalSupply.toString())).toString(),
         usageAsCollateralEnabled: tokenMarket.usageAsCollateralEnabled,
-        supplyCap: tokenMarket.supplyCap,
+        supplyCap: tokenMarket.supplyCap.toString(),
         borrowCap,
         totalSupply: assetAmountInEth(tokenMarket.totalSupply.toString(), symbol),
         isInactive: !tokenMarket.isActive,
@@ -205,7 +204,7 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
     // @ts-ignore
     rewardForMarket.aIncentiveData.rewardsTokenInformation.forEach(supplyRewardData => {
       if (supplyRewardData) {
-        if (+supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        if (+(supplyRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
         // reward token is aave asset
         if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveSupplyToken = _market.symbol;
@@ -285,6 +284,14 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
   };
 
   return { assetsData: payload, eModeCategoriesData };
+}
+
+export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+  return _getAaveV3MarketData(client, network, market);
 }
 
 export const EMPTY_AAVE_DATA = {
@@ -369,58 +376,32 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
+export const _getAaveV3AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
-    selectedMarket: market, assetsData, eModeCategoriesData,
+    selectedMarket: market, assetsData,
   } = extractedState;
   let payload: AaveV3PositionData = {
     ...EMPTY_AAVE_DATA,
     lastUpdated: Date.now(),
   };
   if (!address) {
-    // structure that this function returns is complex and dynamic so i didnt want to hardcode it in EMPTY_AAVE_DATA
-    // This case only triggers if user doesnt have proxy and data is refetched once proxy is created
-    // TODO when refactoring aave figure out if this is the best solution.
-    // payload.eModeCategories = aaveV3EmodeCategoriesMapping(extractedState, {});
-
     return payload;
   }
 
-  const isL2 = isLayer2Network(network);
-
-  const loanInfoContract = AaveV3ViewContract(web3, network);
+  const loanInfoContract = AaveV3ViewContractViem(provider, network);
+  const lendingPoolContract = createViemContractFromConfigFunc(market.lendingPool, market.lendingPoolAddress)(provider, network);
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map((a: string[]) => getAssetInfo(ethToWeth(a), network).address);
 
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 
-  const LendingPoolAbi = getConfigContractAbi(market.lendingPool);
-
-  const multicallData = [
-    {
-      target: market.lendingPoolAddress,
-      abiItem: LendingPoolAbi.find(({ name }) => name === 'getUserEMode'),
-      params: [address],
-    },
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
-    },
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
-    },
-  ];
-
-  const [multicallRes, { 0: stkAaveBalance }] = await Promise.all([
-    multicall(multicallData, web3, network),
-    isL2 ? { 0: '0' } : getAssetsBalances(['stkAAVE'], address, network, web3),
-    { 0: '0' },
+  const [eModeCategory, tokenBalances1, tokenBalances2] = await Promise.all([
+    lendingPoolContract.read.getUserEMode([address as `0x${string}`]),
+    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(0, middleAddressIndex) as `0x${string}`[]]),
+    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(middleAddressIndex, _addresses.length) as `0x${string}`[]]),
   ]);
 
-  const loanInfo = [...multicallRes[1][0], ...multicallRes[2][0]];
+  const loanInfo = [...tokenBalances1, ...tokenBalances2];
 
   const usedAssets = {} as AaveV3UsedAssets;
   loanInfo.map(async (tokenInfo, i) => {
@@ -452,7 +433,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
       suppliedUsd: new Dec(supplied).mul(assetsData[asset].price).toString(),
       isSupplied,
       collateral: enabledAsCollateral,
-      stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate).div(1e25).toString()),
+      stableBorrowRate: aprToApy(new Dec(tokenInfo.stableBorrowRate.toString()).div(1e25).toString()),
       borrowedStable,
       borrowedVariable,
       borrowedUsdStable: new Dec(borrowedStable).mul(assetsData[asset].price).toString(),
@@ -464,7 +445,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
     };
   });
 
-  payload.eModeCategory = +multicallRes[0][0];
+  payload.eModeCategory = +(eModeCategory as BigInt).toString();
   payload = {
     ...payload,
     usedAssets,
@@ -502,8 +483,16 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   return payload;
 };
 
-export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV3PositionData> => {
-  const marketData = await getAaveV3MarketData(web3, network, market, mainnetWeb3);
+export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+  return _getAaveV3AccountData(client, network, address, extractedState);
+};
+
+export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo): Promise<AaveV3PositionData> => {
+  const marketData = await getAaveV3MarketData(web3, network, market);
   const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };

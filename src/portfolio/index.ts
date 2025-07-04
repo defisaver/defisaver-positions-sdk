@@ -4,10 +4,13 @@ import { createPublicClient, http } from 'viem';
 import { mainnet } from 'viem/chains';
 import { EthAddress, NetworkNumber } from '../types/common';
 import {
+  AaveMarkets,
   CompoundMarkets, CrvUsdMarkets, EulerV2Markets, LlamaLendMarkets, MorphoBlueMarkets, SparkMarkets,
 } from '../markets';
 import { _getMorphoBlueAccountData, _getMorphoBlueMarketData } from '../morphoBlue';
 import {
+  AaveV3MarketData,
+  AaveVersions,
   CompoundV3MarketsData, CompoundVersions, CrvUSDGlobalMarketData, EulerV2FullMarketData, LlamaLendGlobalMarketData, MorphoBlueMarketInfo, SparkMarketsData,
 } from '../types';
 import { _getCompoundV3AccountData, _getCompoundV3MarketsData } from '../compoundV3';
@@ -15,6 +18,7 @@ import { _getSparkAccountData, _getSparkMarketsData } from '../spark';
 import { _getEulerV2AccountData, _getEulerV2MarketsData } from '../eulerV2';
 import { _getCurveUsdGlobalData, _getCurveUsdUserData } from '../curveUsd';
 import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
+import { _getAaveV3AccountData, _getAaveV3MarketData } from '../aaveV3';
 
 export async function getPortfolioData(provider: Web3, network: NetworkNumber, defaultProvider: Web3, addresses: EthAddress[]) {
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
@@ -23,6 +27,7 @@ export async function getPortfolioData(provider: Web3, network: NetworkNumber, d
   const eulerV2Markets = Object.values(EulerV2Markets(network)).filter((market) => market.chainIds.includes(network));
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
 
   const client = createPublicClient({
     // @ts-ignore
@@ -51,6 +56,7 @@ export async function getPortfolioData(provider: Web3, network: NetworkNumber, d
   const eulerV2MarketsData: Record<string, EulerV2FullMarketData> = {};
   const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
+  const aaveV3MarketsData: Record<string, AaveV3MarketData> = {};
 
   await Promise.all([
     ...morphoMarkets.map(async (market) => {
@@ -77,11 +83,17 @@ export async function getPortfolioData(provider: Web3, network: NetworkNumber, d
       const marketData = await _getLlamaLendGlobalData(client, network, market);
       llamaLendMarketsData[market.value] = marketData;
     }),
+    ...aaveV3Markets.map(async (market) => {
+      // @ts-ignore
+      const marketData = await _getAaveV3MarketData(client, network, market);
+      aaveV3MarketsData[market.value] = marketData;
+    }),
   ]);
 
   const positions: Record<string, Record<string, any>> = {};
   for (const address of addresses) {
     positions[address] = {
+      aaveV3: {},
       morphoBlue: {},
       compoundV3: {},
       spark: {},
@@ -92,6 +104,10 @@ export async function getPortfolioData(provider: Web3, network: NetworkNumber, d
   }
 
   await Promise.all([
+    ...aaveV3Markets.map((market) => addresses.map(async (address) => {
+      const accData = await _getAaveV3AccountData(client, network, address, { selectedMarket: market, ...aaveV3MarketsData[market.value] });
+      if (new Dec(accData.suppliedUsd).gt(0)) positions[address].aaveV3[market.value] = accData;
+    })).flat(),
     ...morphoMarkets.map((market) => addresses.map(async (address) => {
       const accData = await _getMorphoBlueAccountData(client, network, address, market, morphoMarketsData[market.value]);
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address].morphoBlue[market.value] = accData;
