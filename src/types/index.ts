@@ -10,3 +10,4 @@ export * from './morphoBlue';
 export * from './llamaLend';
 export * from './euler';
 export * from './fluid';
+export * from './portfolio';
