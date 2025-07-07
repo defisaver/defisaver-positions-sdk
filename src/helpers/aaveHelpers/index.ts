@@ -18,9 +18,7 @@ export const AAVE_V3_MARKETS = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, Aa
 
 export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
 export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => AAVE_V3_MARKETS.includes(selectedMarket.value as AaveVersions);
-export const isMorphoAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV2;
 export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
-export const isMorphoAave = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => isMorphoAaveV2({ selectedMarket }) || isMorphoAaveV3({ selectedMarket });
 
 export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, collateral }) => collateral && assetsData[symbol].isIsolated);
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);
@@ -37,11 +35,6 @@ export const aaveAnyGetSuppliableAssets = ({
 
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
   const marketAssets = Object.values(assetsData) as AaveAssetData[];
-
-  if (isMorphoAave({ selectedMarket })) {
-    return marketAssets.filter(({ canBeSupplied }) => canBeSupplied,
-    ).map(a => ({ ...a, canBeCollateral: new Dec(assetsData[a.symbol].collateralFactor).gt(0) }));
-  }
 
   if (collAccountAssets.length === 0 || !isAaveV3(data)) return marketAssets.filter(({ canBeSupplied }) => canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: true }));
 
@@ -128,7 +121,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
     usedAssets,
     assetsData,
-    isMorpho: isMorphoAave({ selectedMarket }),
   });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
@@ -192,7 +184,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], web3: Web3, network: NetworkNumber) => {
-  if (isAaveV2({ selectedMarket }) || isMorphoAaveV2({ selectedMarket })) {
+  if (isAaveV2({ selectedMarket })) {
     return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveLoanInfoV2Contract(web3, network), network);
   }
   if (isAaveV3({ selectedMarket }) || isMorphoAaveV3({ selectedMarket })) {

@@ -8,7 +8,6 @@ const {
   AaveProtocolDataProvider,
   AaveV3ProtocolDataProvider,
   SparkProtocolDataProvider,
-  MorphoAaveV2View,
   CompV3View,
   cUSDbCv3,
   cUSDCev3,
@@ -76,22 +75,6 @@ const aave = {
 };
 
 const morphoAave = {
-  V2: {
-    fileName: aaveFile,
-    variableName: {
-      1: 'morphoAaveV2AssetDefaultMarket',
-    },
-    networks: [1],
-    getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const morphoAaveV2ViewContract = new web3.eth.Contract(
-        MorphoAaveV2View.abi, MorphoAaveV2View.networks[chainId].address,
-      );
-      const reserveTokens = await morphoAaveV2ViewContract.methods.getAllMarketsInfo().call();
-
-      return separateAssetsByExistence(reserveTokens.marketInfo, chainId, { addressExtractingMethod: a => a.underlying });
-    },
-  },
   V3: {
     fileName: aaveFile,
     variableName: {
@@ -259,7 +242,6 @@ function createContent(data) {
       spark: await formatResponse(spark.V1),
       aaveV2: await formatResponse(aave.V2),
       aaveV3: await formatResponse(aave.V3),
-      morphoAaveV2: await formatResponse(morphoAave.V2),
       morphoAaveV3: await formatResponse(morphoAave.V3),
       compoundV3: await formatResponse(compound.V3),
     };

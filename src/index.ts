@@ -4,7 +4,6 @@ import * as fluid from './fluid';
 import * as aaveV3 from './aaveV3';
 import * as morphoAaveV3 from './morphoAaveV3';
 import * as aaveV2 from './aaveV2';
-import * as morphoAaveV2 from './morphoAaveV2';
 import * as compoundV3 from './compoundV3';
 import * as compoundV2 from './compoundV2';
 import * as spark from './spark';
@@ -30,7 +29,6 @@ export * from './types';
 export {
   aaveV2,
   aaveV3,
-  morphoAaveV2,
   morphoAaveV3,
   compoundV2,
   compoundV3,

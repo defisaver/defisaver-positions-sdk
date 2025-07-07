@@ -2,18 +2,17 @@
 import { getConfigContractAddress } from '../../contracts';
 import { compareAddresses } from '../../services/utils';
 import {
-  AaveMarketInfo, AaveVersions, MorphoAaveV2MarketInfo, MorphoAaveV3MarketInfo,
+  AaveMarketInfo, AaveVersions, MorphoAaveV3MarketInfo,
 } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import {
-  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, aaveV3AssetsEtherfiMarket, aaveV3AssetsLidoMarket, morphoAaveV2AssetDefaultMarket, morphoAaveV3AssetEthMarket,
+  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, aaveV3AssetsEtherfiMarket, aaveV3AssetsLidoMarket, morphoAaveV3AssetEthMarket,
 } from './marketAssets';
 
 export {
   aaveV1AssetsDefaultMarket,
   aaveV2AssetsDefaultMarket,
   aaveV3AssetsDefaultMarket,
-  morphoAaveV2AssetDefaultMarket,
   morphoAaveV3AssetEthMarket,
   aaveV3AssetsLidoMarket,
 };
@@ -104,19 +103,6 @@ export const AAVE_V3_ETHERFI = (networkId: NetworkNumber): AaveMarketInfo => ({
   protocolName: 'aave',
 });
 
-export const MORPHO_AAVE_V2: MorphoAaveV2MarketInfo = {
-  chainIds: [1],
-  label: 'Morpho-Aave V2',
-  shortLabel: 'morpho-aave-v2',
-  value: AaveVersions.MorphoAaveV2,
-  url: '',
-  assets: morphoAaveV2AssetDefaultMarket,
-  providerAddress: getConfigContractAddress('LendingPoolAddressesProvider', 1),
-  lendingPoolAddress: getConfigContractAddress('MorphoAaveV2Proxy', 1),
-  // icon: SvgAdapter(protocolIcons.morpho),
-  protocolName: 'morpho',
-};
-
 export const MORPHO_AAVE_V3_ETH = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoAaveV3MarketInfo => ({
   chainIds: [1],
   label: 'Morpho-Aave V3',
@@ -144,10 +130,9 @@ export const AaveMarkets = (networkId: NetworkNumber) => ({
   [AaveVersions.AaveV3Lido]: AAVE_V3_LIDO(networkId),
   [AaveVersions.AaveV3Etherfi]: AAVE_V3_ETHERFI(networkId),
   [AaveVersions.MorphoAaveV3Eth]: MORPHO_AAVE_V3_ETH(networkId),
-  [AaveVersions.MorphoAaveV2]: MORPHO_AAVE_V2,
 }) as const;
 
-export const getAaveV3MarketByMarketAddress = (marketAddress: string, network = NetworkNumber.Eth): AaveMarketInfo | MorphoAaveV2MarketInfo | MorphoAaveV3MarketInfo | undefined => {
+export const getAaveV3MarketByMarketAddress = (marketAddress: string, network = NetworkNumber.Eth): AaveMarketInfo | MorphoAaveV3MarketInfo | undefined => {
   const markets = AaveMarkets(network);
-  return Object.values(markets).filter((m) => (![AaveVersions.MorphoAaveV3Eth, AaveVersions.MorphoAaveV2].includes(m.value))).find((m) => compareAddresses(m.providerAddress, marketAddress));
+  return Object.values(markets).filter((m) => (![AaveVersions.MorphoAaveV3Eth].includes(m.value))).find((m) => compareAddresses(m.providerAddress, marketAddress));
 };

@@ -8,7 +8,6 @@ export enum AaveVersions {
   AaveV3 = 'v3default',
   AaveV3Lido = 'v3lido',
   AaveV3Etherfi = 'v3etherfi',
-  MorphoAaveV2 = 'morphoAaveV2',
   MorphoAaveV3Eth = 'morphoAaveV3Eth',
 }
 export type AaveMarketInfo = {
@@ -72,9 +71,6 @@ export interface AaveV2AssetData extends AaveAssetData {
   isFrozen: boolean,
 }
 
-export interface MorphoAaveV2AssetData extends AaveV2AssetData {
-}
-
 export interface IncentiveData {
   token: string,
   apy: string,
@@ -109,10 +105,6 @@ export type AaveV2AssetsData = AaveAssetsData<AaveV2AssetData>;
 
 export type AaveV2MarketData = { assetsData: AaveV2AssetsData };
 
-export type MorphoAaveV2AssetsData = AaveAssetsData<MorphoAaveV2AssetData>;
-
-export type MorphoAaveV2MarketData = { assetsData: MorphoAaveV2AssetsData };
-
 export type AaveV3AssetsData = AaveAssetsData<AaveV3AssetData>;
 
 export type AaveV3MarketData = { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData };
@@ -135,19 +127,6 @@ export interface AaveUsedAsset extends MMUsedAsset {
 export interface AaveV2UsedAsset extends AaveUsedAsset {
 }
 
-export interface MorphoAaveV2UsedAsset extends Omit<AaveV2UsedAsset, 'debt'> {
-  suppliedP2P: string,
-  suppliedPool: string,
-  suppliedMatched: string,
-  borrowedP2P: string,
-  borrowedPool: string,
-  borrowedMatched: string,
-  suppliedP2PUsd: string,
-  suppliedPoolUsd: string,
-  borrowedP2PUsd: string,
-  borrowedPoolUsd: string,
-  eModeCategory: number,
-}
 export interface AaveV3UsedAsset extends AaveUsedAsset {
   supplyRate: string,
   borrowRate: string,
@@ -171,8 +150,6 @@ export interface MorphoAaveV3UsedAsset extends AaveV3UsedAsset {
 export type AaveUsedAssets<T> = { [key: string]: T };
 
 export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
-
-export type MorphoAaveV2UsedAssets = AaveUsedAssets<MorphoAaveV2UsedAsset>;
 
 export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
 
@@ -211,10 +188,6 @@ export interface MorphoAaveV3PositionData extends AavePositionData {
   eModeCategory: number,
 }
 
-export interface MorphoAaveV2PositionData extends AavePositionData {
-  usedAssets: MorphoAaveV2UsedAssets,
-}
-
 export interface AaveV3AggregatedPositionData {
   suppliedUsd: string,
   suppliedCollateralUsd: string,
@@ -249,8 +222,6 @@ export interface AaveHelperCommon {
   network?: NetworkNumber,
 }
 
-export type MorphoAaveV2MarketInfo = Omit<AaveMarketInfo, 'provider' | 'lendingPool' | 'protocolData' | 'protocolDataAddress'>;
-
 export type MorphoAaveV3MarketInfo = Omit<AaveMarketInfo, 'provider'> & { aaveLendingPool: 'AaveV3LendingPool', aaveLendingPoolAddress: string };
 
-export type MorphoAaveMarketInfo = MorphoAaveV2MarketInfo | MorphoAaveV3MarketInfo;
+export type MorphoAaveMarketInfo = MorphoAaveV3MarketInfo;
