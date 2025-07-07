@@ -3,7 +3,6 @@ export {
   aaveV1AssetsDefaultMarket,
   aaveV2AssetsDefaultMarket,
   aaveV3AssetsDefaultMarket,
-  morphoAaveV3AssetEthMarket,
   getAaveV3MarketByMarketAddress,
 } from './aave';
 export {

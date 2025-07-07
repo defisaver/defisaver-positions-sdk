@@ -6,7 +6,6 @@ describe('SDK', () => {
     assert.containsAllKeys(sdk, [
       'aaveV2',
       'aaveV3',
-      'morphoAaveV3',
       'compoundV2',
       'compoundV3',
       'spark',

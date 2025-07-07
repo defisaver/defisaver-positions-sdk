@@ -6,7 +6,6 @@ Supported protocols:
 - [CrvUSD](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/curveUsd)
 - [Aave V2](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/aaveV2)
 - [Aave V3](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/aaveV3)
-- [Morpho Aave V3](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/morphoAaveV3)
 - [Compound V2](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/compoundV2)
 - [Compound V3](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/compoundV3)
 - [Liquity](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/liquity)

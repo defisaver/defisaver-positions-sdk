@@ -18,7 +18,6 @@ export const AAVE_V3_MARKETS = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, Aa
 
 export const isAaveV2 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.AaveV2;
 export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => AAVE_V3_MARKETS.includes(selectedMarket.value as AaveVersions);
-export const isMorphoAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarketInfo> }) => selectedMarket.value === AaveVersions.MorphoAaveV3Eth;
 
 export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, collateral }) => collateral && assetsData[symbol].isIsolated);
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);
@@ -92,26 +91,12 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.borrowLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
-      const suppliedUsdAmount = isMorphoAaveV3(data)
-        // Morpho has a slightly different method for calculating health ratio than underlying pool (To account for potential errors in rounding)
-        ? new Dec(suppliedUsd).minus(new Dec(suppliedUsd).div(100).times(0.1)).toString()
-        : suppliedUsd;
-
-      return new Dec(suppliedUsdAmount).mul(aaveAnyGetEmodeMutableProps(data, symbol).collateralFactor);
-    },
+    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(aaveAnyGetEmodeMutableProps(data, symbol).collateralFactor),
   );
   payload.liquidationLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
-      const suppliedUsdAmount = isMorphoAaveV3(data)
-        // Morpho has a slightly different method for calculating health ratio than underlying pool (To account for potential errors in rounding)
-        ? new Dec(suppliedUsd).minus(new Dec(suppliedUsd).div(100).times(0.1)).toString()
-        : suppliedUsd;
-
-      return new Dec(suppliedUsdAmount).mul(aaveAnyGetEmodeMutableProps(data, symbol).liquidationRatio);
-    },
+    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(aaveAnyGetEmodeMutableProps(data, symbol).liquidationRatio),
   );
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
@@ -187,7 +172,7 @@ export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo
   if (isAaveV2({ selectedMarket })) {
     return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveLoanInfoV2Contract(web3, network), network);
   }
-  if (isAaveV3({ selectedMarket }) || isMorphoAaveV3({ selectedMarket })) {
+  if (isAaveV3({ selectedMarket })) {
     return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveV3ViewContract(web3, network), network);
   }
 

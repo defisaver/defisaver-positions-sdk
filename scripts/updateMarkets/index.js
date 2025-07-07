@@ -13,7 +13,6 @@ const {
   cUSDCev3,
   cUSDCv3,
   cETHv3,
-  MorphoAaveV3ProxyEthMarket,
   cUSDTv3,
 } = require('../../src/config/contracts');
 
@@ -70,25 +69,6 @@ const aave = {
       const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
 
       return separateAssetsByExistence(reserveTokens, chainId, { addressExtractingMethod: a => a.tokenAddress });
-    },
-  },
-};
-
-const morphoAave = {
-  V3: {
-    fileName: aaveFile,
-    variableName: {
-      1: 'morphoAaveV3AssetEthMarket',
-    },
-    networks: [1],
-    getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const morphoAaveV3ProxyEthContract = new web3.eth.Contract(
-        MorphoAaveV3ProxyEthMarket.abi, MorphoAaveV3ProxyEthMarket.networks[chainId].address,
-      );
-      const reserveTokens = await morphoAaveV3ProxyEthContract.methods.marketsCreated().call();
-
-      return separateAssetsByExistence(reserveTokens, chainId);
     },
   },
 };
@@ -242,7 +222,6 @@ function createContent(data) {
       spark: await formatResponse(spark.V1),
       aaveV2: await formatResponse(aave.V2),
       aaveV3: await formatResponse(aave.V3),
-      morphoAaveV3: await formatResponse(morphoAave.V3),
       compoundV3: await formatResponse(compound.V3),
     };
 
