@@ -48,8 +48,8 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
   const [baseAssetPrice, compPrice, baseTokenInfo, collInfos] = await Promise.all([
     getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultProvider),
     getCompPrice(defaultProvider),
-    contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress as `0x${string}`]),
-    contract.read.getFullCollInfos([selectedMarket.baseMarketAddress as `0x${string}`]),
+    contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress]),
+    contract.read.getFullCollInfos([selectedMarket.baseMarketAddress]),
   ]);
 
   const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
@@ -174,8 +174,8 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
 export const _getCompoundV3AccountData = async (
   provider: Client,
   network: NetworkNumber,
-  address: string,
-  proxyAddress: string,
+  address: EthAddress,
+  proxyAddress: EthAddress,
   extractedState: ({
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
@@ -195,8 +195,8 @@ export const _getCompoundV3AccountData = async (
 
 
   const [loanData, isAllowed] = await Promise.all([
-    contract.read.getLoanData([selectedMarket.baseMarketAddress as `0x${string}`, address as `0x${string}`]),
-    contract.read.isAllowed([selectedMarket.baseMarketAddress as `0x${string}`, address as `0x${string}`, (proxyAddress || ZERO_ADDRESS) as `0x${string}`]),
+    contract.read.getLoanData([selectedMarket.baseMarketAddress, address]),
+    contract.read.isAllowed([selectedMarket.baseMarketAddress, address, (proxyAddress || ZERO_ADDRESS)]),
   ]);
 
   const usedAssets: CompoundV3UsedAssets = {};
@@ -265,8 +265,8 @@ export const _getCompoundV3AccountData = async (
 export const getCompoundV3AccountData = async (
   provider: Web3,
   network: NetworkNumber,
-  address: string,
-  proxyAddress: string,
+  address: EthAddress,
+  proxyAddress: EthAddress,
   extractedState: ({
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
@@ -279,7 +279,7 @@ export const getCompoundV3AccountData = async (
   return _getCompoundV3AccountData(client, network, address, proxyAddress, extractedState);
 };
 
-export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, proxyAddress: string, selectedMarket: CompoundMarketData, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
+export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, proxyAddress: EthAddress, selectedMarket: CompoundMarketData, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
   const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, mainnetWeb3);
   const positionData = await getCompoundV3AccountData(web3, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
   return positionData;

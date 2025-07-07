@@ -41,8 +41,8 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
   if (isMainnet) {
     const feedRegistryContract = FeedRegistryContractViem(provider, NetworkNumber.Eth);
     const [_loanTokenPrice, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress as `0x${string}`, USD_QUOTE]),
-      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken as `0x${string}`, collateralToken as `0x${string}`, oracle as `0x${string}`, irm as `0x${string}`, BigInt(lltvInWei)]),
+      isTokenUSDA ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
+      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
     loanTokenPrice = _loanTokenPrice;
@@ -52,8 +52,8 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
 
     const [loanTokenPriceRound, _marketInfo] = await Promise.all([
       isTokenUSDA ? Promise.resolve({ answer: '100000000' }) // Normalize to match the expected object structure
-        : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress as `0x${string}`, USD_QUOTE]),
-      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken as `0x${string}`, collateralToken as `0x${string}`, oracle as `0x${string}`, irm as `0x${string}`, BigInt(lltvInWei)]),
+        : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]),
+      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
     // @ts-ignore
@@ -168,7 +168,7 @@ export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkN
   return balances;
 };
 
-export async function _getMorphoBlueAccountData(provider: Client, network: NetworkNumber, account: string, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
+export async function _getMorphoBlueAccountData(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
@@ -177,8 +177,8 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
   const loanInfo = (await viewContract.read.getUserInfo([
     {
       loanToken, collateralToken, oracle, irm, lltv: BigInt(lltvInWei),
-    } as { loanToken: `0x${string}`, collateralToken: `0x${string}`, oracle: `0x${string}`, irm: `0x${string}`, lltv: bigint },
-    account as `0x${string}`]));
+    },
+    account]));
   const usedAssets: MMUsedAssets = {};
 
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
@@ -216,7 +216,7 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
   };
 }
 
-export async function getMorphoBlueAccountData(provider: EthereumProvider, network: NetworkNumber, account: string, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
+export async function getMorphoBlueAccountData(provider: EthereumProvider, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   const client = createPublicClient({
     // @ts-ignore
     transport: http(provider._provider.host),

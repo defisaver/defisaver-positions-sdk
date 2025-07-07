@@ -3,7 +3,9 @@ import { getContract, Client, GetContractReturnType } from 'viem';
 import * as configRaw from './config/contracts';
 import { BaseContract } from './types/contracts/generated/types';
 import * as ContractTypes from './types/contracts/generated';
-import { Blockish, EthAddress, NetworkNumber } from './types/common';
+import {
+  Blockish, EthAddress, HexString, NetworkNumber,
+} from './types/common';
 
 export type ConfigKey = keyof typeof configRaw;
 
@@ -19,23 +21,23 @@ declare type Network = {
 // @ts-ignore
 const contractConfig:Record<ConfigKey, ContractConfig> = configRaw;
 
-export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): string => {
+export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber, block?: Blockish): HexString => {
   const networkData = contractConfig[name].networks[network];
   const latestAddress = networkData?.address || '';
   if (block && block !== 'latest') {
     if (block >= (networkData?.createdBlock || 0)) {
-      return latestAddress;
+      return latestAddress as HexString;
     }
 
     const oldVersions = networkData?.oldVersions || {};
     // Versions are ordered from oldest to the newest
     for (const [createdBlock, oldVersionObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
-        return oldVersionObject.address;
+        return oldVersionObject.address as HexString;
       }
     }
   }
-  return latestAddress;
+  return latestAddress as HexString;
 };
 
 export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, block?: Blockish): any[] => {
@@ -58,8 +60,8 @@ export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, b
   return latestAbi;
 };
 
-export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: string) => (client: Client, network: NetworkNumber, block?: Blockish) => {
-  const address = (_address || getConfigContractAddress(name, network, block)) as `0x${string}`;
+export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: HexString) => (client: Client, network: NetworkNumber, block?: Blockish) => {
+  const address = (_address || getConfigContractAddress(name, network, block));
   const abi = configRaw[name].abi as typeof configRaw[TKey]['abi']; // getConfigContractAbi(name, network, block)
   return getContract({
     address,
@@ -165,3 +167,9 @@ export const EulerV2ViewContractViem = createViemContractFromConfigFunc('EulerV2
 export const CrvUSDViewContractViem = createViemContractFromConfigFunc('crvUSDView');
 export const CrvUSDFactoryContractViem = createViemContractFromConfigFunc('crvUSDFactory');
 export const LlamaLendViewContractViem = createViemContractFromConfigFunc('LlamaLendView');
+export const McdGetCdpsContractViem = createViemContractFromConfigFunc('McdGetCdps');
+export const McdViewContractViem = createViemContractFromConfigFunc('McdView');
+export const McdVatContractViem = createViemContractFromConfigFunc('McdVat');
+export const McdSpotterContractViem = createViemContractFromConfigFunc('McdSpotter');
+export const McdDogContractViem = createViemContractFromConfigFunc('McdDog');
+export const McdJugContractViem = createViemContractFromConfigFunc('McdJug');

@@ -4,6 +4,7 @@ import { CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
 import { EulerV2PositionData, EulerV2Versions } from './euler';
 import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
+import { CdpData } from './maker';
 import { MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
 import { SparkPositionData, SparkVersions } from './spark';
 
@@ -30,5 +31,8 @@ export interface PortfolioPositionsData {
     llamaLend: {
       [key in LlamaLendVersionsType]?: LlamaLendUserData;
     };
+    maker: {
+      [key: string]: CdpData,
+    }
   };
 }

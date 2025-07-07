@@ -6,14 +6,13 @@ import {
   Blockish, EthAddress, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  ethToWeth, getAbiItem, wethToEth, wethToEthByAddress,
+  ethToWeth, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import {
   calculateNetApy, getStakingApy, STAKING_ASSETS,
 } from '../staking';
 import {
   SparkViewContract,
-  getConfigContractAbi,
   createContractWrapper,
   SparkViewContractViem,
   SparkIncentiveDataProviderContractViem,
@@ -73,8 +72,8 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
   const sparkIncentivesContract = SparkIncentiveDataProviderContractViem(provider, network);
 
   const [loanInfo, _rewardInfo] = await Promise.all([
-    loanInfoContract.read.getFullTokensInfo([marketAddress as `0x${string}`, selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address) as `0x${string}`[]]),
-    network === NetworkNumber.Opt ? sparkIncentivesContract.read.getReservesIncentivesData([marketAddress as `0x${string}`]) : [],
+    loanInfoContract.read.getFullTokensInfo([marketAddress, selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address) as EthAddress[]]),
+    network === NetworkNumber.Opt ? sparkIncentivesContract.read.getReservesIncentivesData([marketAddress]) : [],
   ]);
 
   let rewardInfo: any[] = [];
@@ -336,7 +335,7 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
   return balances;
 };
 
-export const _getSparkAccountData = async (provider: Client, network: NetworkNumber, address: string, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
+export const _getSparkAccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -362,9 +361,9 @@ export const _getSparkAccountData = async (provider: Client, network: NetworkNum
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 
   const [userEMode, tokenBalances1, tokenBalances2] = await Promise.all([
-    lendingPoolContract.read.getUserEMode([address as `0x${string}`]),
-    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(0, middleAddressIndex) as `0x${string}`[]]),
-    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(middleAddressIndex, _addresses.length) as `0x${string}`[]]),
+    lendingPoolContract.read.getUserEMode([address]),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex) as EthAddress[]]),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length) as EthAddress[]]),
   ]);
 
 
@@ -450,7 +449,7 @@ export const _getSparkAccountData = async (provider: Client, network: NetworkNum
   return payload;
 };
 
-export const getSparkAccountData = async (provider: Web3, network: NetworkNumber, address: string, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
+export const getSparkAccountData = async (provider: Web3, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
   const client = createPublicClient({
     // @ts-ignore
     transport: http(provider._provider.host),
@@ -458,7 +457,7 @@ export const getSparkAccountData = async (provider: Web3, network: NetworkNumber
   return _getSparkAccountData(client, network, address, extractedState);
 };
 
-export const getSparkFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: SparkMarketData): Promise<SparkPositionData> => {
+export const getSparkFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, market: SparkMarketData): Promise<SparkPositionData> => {
   const marketData = await getSparkMarketsData(web3, network, market);
   const positionData = await getSparkAccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
   return positionData;

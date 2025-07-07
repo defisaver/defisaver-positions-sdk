@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -26,10 +27,10 @@ export interface CompoundMarketData {
   baseAsset: string,
   collAssets: readonly string[],
   baseMarket: string,
-  baseMarketAddress: string,
+  baseMarketAddress: EthAddress,
   secondLabel: string,
   bulkerName: string,
-  bulkerAddress: string,
+  bulkerAddress: EthAddress,
   bulkerOptions: CompoundBulkerOptions,
   // icon: Function,
 }

@@ -1,5 +1,5 @@
 // General
-export type EthAddress = string;
+export type EthAddress = HexString;
 export type Blockish = number | 'latest';
 export type AssetSymbol = string;
 export type Amount = string | number;
@@ -83,3 +83,5 @@ export interface PositionBalances {
 }
 
 export type EthereumProvider = { request(...args: any): Promise<any> }; // TODO
+
+export type HexString = `0x${string}`;

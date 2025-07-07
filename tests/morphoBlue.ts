@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import * as sdk from '../src';
 
 import { Blockish, EthereumProvider, NetworkNumber } from '../src/types/common';
-import { getWeb3Instance } from './utils/getWeb3Instance';
+import { createProviderFromRpc, getWeb3Instance } from './utils/getWeb3Instance';
 
 const { assert } = require('chai');
 
@@ -60,9 +60,9 @@ describe('Morpho Blue', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     await sdk.portfolio.getPortfolioData(
-      web3,
+      createProviderFromRpc(process.env.RPC!),
       network,
-      web3,
+      createProviderFromRpc(process.env.RPC!),
       ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0x21dc459fba0b1ea037cd221d35b928be1c26141a'],
     );
   });

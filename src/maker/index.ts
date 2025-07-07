@@ -1,13 +1,19 @@
 import Web3 from 'web3';
 import Dec from 'decimal.js';
-import { assetAmountInEth, getAssetInfo, ilkToAsset } from '@defisaver/tokens';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  assetAmountInEth, bytesToString, getAssetInfo, ilks, ilkToAsset,
+} from '@defisaver/tokens';
+import { Client, createPublicClient } from 'viem';
+import {
+  Blockish, EthAddress, HexString, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { McdViewContract } from '../contracts';
+import {
+  getConfigContractAddress, McdDogContractViem, McdGetCdpsContractViem, McdJugContractViem, McdSpotterContractViem, McdVatContractViem, McdViewContract, McdViewContractViem,
+} from '../contracts';
 import { makerHelpers } from '../helpers';
-import { CdpData } from '../types';
+import { CdpData, CdpInfo, CdpType } from '../types';
 import { wethToEth } from '../services/utils';
+import { parseCollateralInfo } from '../helpers/makerHelpers';
 
 export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
@@ -53,66 +59,130 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
   return balances;
 };
 
-export const getMakerCdpData = async (web3: Web3, network: NetworkNumber, cdpId: string): Promise<CdpData> => {
-  const viewContract = McdViewContract(web3, network);
+export const _getUserCdps = async (provider: Client, network: NetworkNumber, userAddress: HexString): Promise<CdpInfo[]> => {
+  if (!userAddress) return [];
+  const mcdGetCdpsContract = McdGetCdpsContractViem(provider, network);
 
-  // @ts-ignore
-  const cdpInfo = await viewContract.methods.getCdpInfo(cdpId).call();
+  const mcdCdpManagerAddress = getConfigContractAddress('McdCdpManager', network);
 
-  const [ilkInfo, coll] = await Promise.all([
-    makerHelpers.getCollateralInfo(cdpInfo.ilk, web3, network),
-    makerHelpers.getUnclaimedCollateral(web3, network, cdpInfo.urn, cdpInfo.ilk),
+  const standardCdps = await mcdGetCdpsContract.read.getCdpsAsc([mcdCdpManagerAddress, userAddress]);
+
+  const parsedStandardCdps = standardCdps[0].map((id, i) => ({
+    id: parseInt(id.toString(), 10),
+    ilk: standardCdps[2][i].toLowerCase() as HexString, // collateral type
+    ilkLabel: bytesToString(standardCdps[2][i].toLowerCase()),
+    urn: standardCdps[1][i].toLowerCase() as HexString, // contract of cdp
+    asset: ilkToAsset(standardCdps[2][i]),
+    type: CdpType.MCD,
+    owner: userAddress,
+  }));
+
+  return parsedStandardCdps;
+};
+
+export const getUserCdps = async (web3: Web3, network: NetworkNumber, userAddress: HexString): Promise<CdpInfo[]> => {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+
+  return _getUserCdps(client, network, userAddress);
+};
+
+export const _getMakerCdpData = async (provider: Client, network: NetworkNumber, cdp: CdpInfo): Promise<CdpData> => {
+  const vatContract = McdVatContractViem(provider, network);
+  const spotterContract = McdSpotterContractViem(provider, network);
+  const dogContract = McdDogContractViem(provider, network);
+  const jugContract = McdJugContractViem(provider, network);
+
+  const [
+    [ink, art],
+    coll,
+    par,
+    [_, mat],
+    [artGlobal, rate, spot, line],
+    [duty],
+    futureRate,
+    chop,
+  ] = await Promise.all([
+    vatContract.read.urns([cdp.ilk, cdp.urn]),
+    vatContract.read.gem([cdp.ilk, cdp.urn]),
+    spotterContract.read.par(),
+    spotterContract.read.ilks([cdp.ilk]),
+    vatContract.read.ilks([cdp.ilk]),
+    jugContract.read.ilks([cdp.ilk]),
+    jugContract.read.drip([cdp.ilk]),
+    dogContract.read.chop([cdp.ilk]),
   ]);
 
-  const asset = ilkToAsset(cdpInfo.ilk);
+  const collInfo = parseCollateralInfo(
+    cdp.ilk,
+    par.toString(),
+    mat.toString(),
+    artGlobal.toString(),
+    rate.toString(),
+    spot.toString(),
+    line.toString(),
+    duty.toString(),
+    futureRate.toString(),
+    chop.toString(),
+  );
 
-  const collateralUsd = new Dec(cdpInfo.collateral).mul(ilkInfo.assetPrice).floor().toString();
-  const debt = new Dec(cdpInfo.debt).times(ilkInfo.currentRate).div(1e27).floor()
+  const collateral = assetAmountInEth(ink.toString(), cdp.asset);
+  const cdpDebt = assetAmountInEth(art.toString(), 'DAI');
+
+  const collateralUsd = new Dec(collateral).mul(collInfo.assetPrice).floor().toString();
+  const debt = new Dec(cdpDebt).times(collInfo.currentRate).div(1e27).floor()
     .toString();
-  const futureDebt = new Dec(cdpInfo.debt).times(ilkInfo.futureRate).div(1e27).floor()
+  const futureDebt = new Dec(cdpDebt).times(collInfo.futureRate).div(1e27).floor()
     .toString(); // after drip
-  const debtDripDelta = assetAmountInEth(new Dec(futureDebt).sub(debt).toString(), 'DAI');
-  const liquidationPrice = new Dec(debt).times(ilkInfo.liqRatio).div(cdpInfo.collateral).toString();
+  const liquidationPrice = new Dec(debt).times(collInfo.liqRatio).div(collateral).toString();
 
-  let ratio = new Dec(cdpInfo.collateral).times(ilkInfo.assetPrice).div(debt).times(100)
+  let ratio = new Dec(collateral).times(collInfo.assetPrice).div(debt).times(100)
     .toString();
   if (new Dec(debt).eq(0)) ratio = '0';
 
-  const debtTooLow = new Dec(debt).gt(0) && new Dec(assetAmountInEth(debt, 'DAI')).lt(ilkInfo.minDebt);
+  const debtTooLow = new Dec(debt).gt(0) && new Dec(assetAmountInEth(debt, 'DAI')).lt(collInfo.minDebt);
 
-  const par = '1';
   return {
-    owner: cdpInfo.owner,
-    userAddress: cdpInfo.userAddr,
-    id: cdpId,
-    urn: cdpInfo.urn,
-    type: 'mcd',
-    ilk: cdpInfo.ilk,
-    ilkLabel: ilkInfo.ilkLabel,
-    asset,
-    collateral: assetAmountInEth(cdpInfo.collateral, `MCD-${asset}`),
-    collateralUsd: assetAmountInEth(collateralUsd, `MCD-${asset}`),
+    owner: cdp.owner,
+    id: cdp.id.toString(),
+    urn: cdp.urn,
+    type: CdpType.MCD,
+    ilk: cdp.ilk,
+    ilkLabel: collInfo.ilkLabel,
+    asset: cdp.asset,
+    collateral,
+    collateralUsd,
     futureDebt: assetAmountInEth(futureDebt, 'DAI'),
     debtDai: assetAmountInEth(debt, 'DAI'),
     debtUsd: assetAmountInEth(debt, 'DAI'),
     debtInAsset: assetAmountInEth(debt, 'DAI'),
-    debtAssetPrice: par,
-    debtAssetMarketPrice: par,
+    debtAssetPrice: '1',
+    debtAssetMarketPrice: '1',
     liquidationPrice,
     ratio,
-    liqRatio: ilkInfo.liqRatio.toString(),
-    liqPercent: parseFloat(ilkInfo.liqPercent.toString()),
-    assetPrice: ilkInfo.assetPrice,
+    liqRatio: collInfo.liqRatio.toString(),
+    liqPercent: parseFloat(collInfo.liqPercent.toString()),
+    assetPrice: collInfo.assetPrice,
     daiLabel: 'DAI',
     debtAsset: 'DAI',
-    unclaimedCollateral: assetAmountInEth(coll, asset),
+    unclaimedCollateral: assetAmountInEth(coll.toString(), cdp.asset),
     debtTooLow,
-    minDebt: ilkInfo.minDebt,
-    stabilityFee: ilkInfo.stabilityFee,
-    creatableDebt: ilkInfo.creatableDebt,
-    globalDebtCeiling: ilkInfo.globalDebtCeiling,
-    globalDebtCurrent: ilkInfo.globalDebtCurrent,
-    liquidationFee: ilkInfo.liquidationFee,
+    minDebt: collInfo.minDebt,
+    stabilityFee: collInfo.stabilityFee,
+    creatableDebt: collInfo.creatableDebt,
+    globalDebtCeiling: collInfo.globalDebtCeiling,
+    globalDebtCurrent: collInfo.globalDebtCurrent,
+    liquidationFee: collInfo.liquidationFee,
     lastUpdated: Date.now(),
   };
+};
+
+export const getMakerCdpData = async (web3: Web3, network: NetworkNumber, cdp: CdpInfo): Promise<CdpData> => {
+  const client = createPublicClient({
+    // @ts-ignore
+    transport: http(web3._provider.host),
+  });
+  return _getMakerCdpData(client, network, cdp);
 };

@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client, createPublicClient } from 'viem';
-import { NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber } from '../types/common';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
   compareAddresses, getEthAmountForDecimals, isMaxuint, wethToEth, wethToEthByAddress,
@@ -43,7 +43,7 @@ const UnitOfAccountUSD = '0x0000000000000000000000000000000000000348';
 export const _getEulerV2MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: EulerV2Market): Promise<EulerV2FullMarketData> => {
   const contract = EulerV2ViewContractViem(provider, network);
 
-  const data = await contract.read.getVaultInfoFull([selectedMarket.marketAddress as `0x${string}`]);
+  const data = await contract.read.getVaultInfoFull([selectedMarket.marketAddress]);
   const isInUSD = compareAddresses(UnitOfAccountUSD, data.unitOfAccount);
 
   const usdPrice = getEthAmountForDecimals(data.unitOfAccountInUsd.toString(), 8);
@@ -208,8 +208,8 @@ export const EMPTY_EULER_V2_DATA = {
 export const _getEulerV2AccountData = async (
   provider: Client,
   network: NetworkNumber,
-  addressForPosition: string,
-  ownerAddress: string,
+  addressForPosition: EthAddress,
+  ownerAddress: EthAddress,
   extractedState: ({
     selectedMarket: EulerV2Market,
     assetsData: EulerV2AssetsData,
@@ -232,7 +232,7 @@ export const _getEulerV2AccountData = async (
   const parsingDecimals = isInUSD ? 18 : getAssetInfoByAddress(marketData.unitOfAccount).decimals;
   const contract = EulerV2ViewContractViem(provider, network);
 
-  const loanData = await contract.read.getUserData([addressForPosition as `0x${string}`]);
+  const loanData = await contract.read.getUserData([addressForPosition]);
   const usedAssets: EulerV2UsedAssets = {};
   // there is no user position check for a specific market, only global check
   // but we need to make sure it works for the UI and show position only for the selected market
@@ -307,8 +307,8 @@ export const _getEulerV2AccountData = async (
 export const getEulerV2AccountData = async (
   provider: Web3,
   network: NetworkNumber,
-  addressForPosition: string,
-  ownerAddress: string,
+  addressForPosition: EthAddress,
+  ownerAddress: EthAddress,
   extractedState: ({
     selectedMarket: EulerV2Market,
     assetsData: EulerV2AssetsData,

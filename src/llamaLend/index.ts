@@ -38,7 +38,7 @@ const getAndFormatBands = async (provider: Client, network: NetworkNumber, selec
     } else {
       start = pivots[index - 1] + 1;
     }
-    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress as `0x${string}`, BigInt(start), BigInt(pivot)]);
+    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress, BigInt(start), BigInt(pivot)]);
     return pivotedBandsData;
   }))).flat();
 
@@ -57,7 +57,7 @@ export const _getLlamaLendGlobalData = async (provider: Client, network: Network
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  const data = await contract.read.globalData([selectedMarket.controllerAddress as `0x${string}`]);
+  const data = await contract.read.globalData([selectedMarket.controllerAddress]);
 
   // all prices are in 18 decimals
   const oraclePrice = getEthAmountForDecimals(data.oraclePrice.toString(), 18);
@@ -189,11 +189,11 @@ export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNu
   return balances;
 };
 
-export const _getLlamaLendUserData = async (provider: Client, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
+export const _getLlamaLendUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
   const contract = LlamaLendViewContractViem(provider, network);
   const { assetsData } = marketData;
 
-  const data = await contract.read.userData([selectedMarket.controllerAddress as `0x${string}`, address as `0x${string}`]);
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address]);
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
@@ -275,7 +275,7 @@ export const _getLlamaLendUserData = async (provider: Client, network: NetworkNu
   };
 };
 
-export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
+export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
   const client = createPublicClient({
     // @ts-ignore
     transport: http(web3._provider.host),
@@ -283,7 +283,7 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
   return _getLlamaLendUserData(client, network, address, selectedMarket, marketData);
 };
 
-export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
+export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
   const marketData = await getLlamaLendGlobalData(web3, network, selectedMarket);
   const positionData = await getLlamaLendUserData(web3, network, address, selectedMarket, marketData);
   return positionData;

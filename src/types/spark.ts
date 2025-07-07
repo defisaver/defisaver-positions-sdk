@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 import { IncentiveData } from './aave';
@@ -37,11 +38,11 @@ export interface SparkMarketData {
   value: SparkVersions,
   assets: readonly string[],
   provider: '' | 'SparkPoolAddressesProvider',
-  providerAddress: string,
+  providerAddress: EthAddress,
   lendingPool: 'SparkLendingPool',
-  lendingPoolAddress: string,
+  lendingPoolAddress: EthAddress,
   protocolData: '' | 'SparkProtocolDataProvider',
-  protocolDataAddress: string
+  protocolDataAddress: EthAddress,
   subVersionLabel?: string
   // icon: Function,
   protocolName: string,

@@ -75,10 +75,10 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo] = await Promise.all([
-    loanInfoContract.read.getFullTokensInfo([marketAddress as `0x${string}`, _addresses as `0x${string}`[]]),
-    loanInfoContract.read.getAllEmodes([marketAddress as `0x${string}`]),
-    loanInfoContract.read.isBorrowAllowed([marketAddress as `0x${string}`]), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-    networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress as `0x${string}`]) : null,
+    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]]),
+    loanInfoContract.read.getAllEmodes([marketAddress]),
+    loanInfoContract.read.isBorrowAllowed([marketAddress]), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+    networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress]) : null,
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -396,9 +396,9 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 
   const [eModeCategory, tokenBalances1, tokenBalances2] = await Promise.all([
-    lendingPoolContract.read.getUserEMode([address as `0x${string}`]),
-    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(0, middleAddressIndex) as `0x${string}`[]]),
-    loanInfoContract.read.getTokenBalances([marketAddress as `0x${string}`, address as `0x${string}`, _addresses.slice(middleAddressIndex, _addresses.length) as `0x${string}`[]]),
+    lendingPoolContract.read.getUserEMode([address]),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex) as EthAddress[]]),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length) as EthAddress[]]),
   ]);
 
   const loanInfo = [...tokenBalances1, ...tokenBalances2];
@@ -491,7 +491,7 @@ export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, a
   return _getAaveV3AccountData(client, network, address, extractedState);
 };
 
-export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo): Promise<AaveV3PositionData> => {
+export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, market: AaveMarketInfo): Promise<AaveV3PositionData> => {
   const marketData = await getAaveV3MarketData(web3, network, market);
   const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;

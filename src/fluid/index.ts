@@ -398,7 +398,7 @@ const parseT2MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collFirstAssetData.price!, collSecondAssetData.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!, collFirstAssetData.price!, collSecondAssetData.price!);
-  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool);
+  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
@@ -580,7 +580,7 @@ const parseT3MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
-  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool);
+  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -790,11 +790,11 @@ const parseT4MarketData = async (web3: Web3, data: FluidView.VaultDataStructOutp
 
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
-  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool);
+  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collAsset0Data.price!, collAsset1Data.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!, collAsset0Data.price!, collAsset1Data.price!);
-  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool);
+  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],

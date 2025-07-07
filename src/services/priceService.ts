@@ -12,7 +12,7 @@ import {
   WstETHPriceFeedContract,
   WstETHPriceFeedContractViem,
 } from '../contracts';
-import { NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber } from '../types/common';
 import { multicall } from '../multicall';
 import { getEthAmountForDecimals } from './utils';
 
@@ -136,9 +136,9 @@ export const getEthPriceForFluid = async (web3: Web3, network: NetworkNumber) =>
 };
 
 // chainlink price feed available only on mainnet
-export const getChainlinkAssetAddress = (symbol: string, network: NetworkNumber) => {
+export const getChainlinkAssetAddress = (symbol: string, network: NetworkNumber): EthAddress => {
   // Chainlink only has BTC/USD feed so we use that for BTC derivatives
   if (['WBTC', 'RENBTC'].includes(symbol?.toUpperCase())) return '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB';
-  if (symbol?.toUpperCase() === 'WETH') return getAssetInfo('ETH').addresses[network];
-  return getAssetInfo(symbol).addresses[network];
+  if (symbol?.toUpperCase() === 'WETH') return getAssetInfo('ETH').addresses[network] as EthAddress;
+  return getAssetInfo(symbol).addresses[network] as EthAddress;
 };

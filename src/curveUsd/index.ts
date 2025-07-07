@@ -39,7 +39,7 @@ const getAndFormatBands = async (provider: Client, network: NetworkNumber, selec
     } else {
       start = pivots[index - 1] + 1;
     }
-    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress as `0x${string}`, BigInt(start), BigInt(pivot)]);
+    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress, BigInt(start), BigInt(pivot)]);
     return pivotedBandsData;
   }))).flat();
 
@@ -59,9 +59,9 @@ export const _getCurveUsdGlobalData = async (provider: Client, network: NetworkN
   const debtAsset = selectedMarket.baseAsset;
 
   const [debtCeiling, _, data, loanDiscountWei] = await Promise.all([
-    factoryContract.read.debt_ceiling([selectedMarket.controllerAddress as `0x${string}`]),
+    factoryContract.read.debt_ceiling([selectedMarket.controllerAddress]),
     factoryContract.read.total_debt(),
-    contract.read.globalData([selectedMarket.controllerAddress as `0x${string}`]),
+    contract.read.globalData([selectedMarket.controllerAddress]),
     cntrollerContract.read.loan_discount(),
   ]);
 
@@ -157,10 +157,10 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
   const contract = CrvUSDViewContractViem(provider, network);
 
-  const data = await contract.read.userData([selectedMarket.controllerAddress as `0x${string}`, address as `0x${string}`]);
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address]);
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
@@ -228,7 +228,7 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
   };
 };
 
-export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
   const client = createPublicClient({
     // @ts-ignore
     transport: http(web3._provider.host),
@@ -236,7 +236,7 @@ export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, ad
   return _getCurveUsdUserData(client, network, address, selectedMarket, activeBand);
 };
 
-export const getCurveUsdFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
+export const getCurveUsdFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
   const marketData = await getCurveUsdGlobalData(web3, network, selectedMarket);
   const positionData = await getCurveUsdUserData(web3, network, address, selectedMarket, marketData.activeBand);
   return positionData;
