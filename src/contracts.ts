@@ -124,9 +124,6 @@ export const McdDogContract = createContractFromConfigFunc<ContractTypes.McdDog>
 export const McdJugContract = createContractFromConfigFunc<ContractTypes.McdJug>('McdJug');
 export const McdVatContract = createContractFromConfigFunc<ContractTypes.McdVat>('McdVat');
 
-export const ChickenBondsViewContract = createContractFromConfigFunc<ContractTypes.ChickenBondsView>('ChickenBondsView');
-export const ChickenBondsManagerContract = createContractFromConfigFunc<ContractTypes.ChickenBondsManager>('ChickenBondsManager');
-
 export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
 export const BTCPriceFeedContract = createContractFromConfigFunc<ContractTypes.BTCPriceFeed>('BTCPriceFeed');
 export const COMPPriceFeedContract = createContractFromConfigFunc<ContractTypes.COMPPriceFeed>('COMPPriceFeed');

@@ -9,7 +9,6 @@ Supported protocols:
 - [Compound V2](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/compoundV2)
 - [Compound V3](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/compoundV3)
 - [Liquity](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/liquity)
-- [Chicken Bonds](https://github.com/defisaver/defisaver-positions-sdk/tree/main/src/chickenBonds)
 
 ## Setup
 Supported Node version is v10.

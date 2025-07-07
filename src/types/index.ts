@@ -5,7 +5,6 @@ export * from './curveUsd';
 export * from './liquity';
 export * from './liquityV2';
 export * from './maker';
-export * from './chickenBonds';
 export * from './morphoBlue';
 export * from './llamaLend';
 export * from './euler';

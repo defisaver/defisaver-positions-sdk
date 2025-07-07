@@ -13,10 +13,8 @@ import * as maker from './maker';
 import * as staking from './staking';
 import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
-import * as assets from './assets';
 import * as markets from './markets';
 import * as helpers from './helpers';
-import * as chickenBonds from './chickenBonds';
 import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
 import * as llamaLend from './llamaLend';
@@ -35,7 +33,6 @@ export {
   liquity,
   liquityV2,
   maker,
-  chickenBonds,
   exchange,
   staking,
   multicall,
