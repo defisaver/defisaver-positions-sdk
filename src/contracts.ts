@@ -85,12 +85,6 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const LiquityViewContract = createContractFromConfigFunc<ContractTypes.LiquityView>('LiquityView');
-export const LiquityCollSurplusPoolContract = createContractFromConfigFunc<ContractTypes.CollSurplusPool>('CollSurplusPool');
-export const LiquityTroveManagerContract = createContractFromConfigFunc<ContractTypes.TroveManager>('TroveManager');
-export const LiquityPriceFeedContract = createContractFromConfigFunc<ContractTypes.PriceFeed>('PriceFeed');
-export const LiquityActivePoolContract = createContractFromConfigFunc<ContractTypes.LiquityActivePool>('LiquityActivePool');
-
 export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
 export const BTCPriceFeedContract = createContractFromConfigFunc<ContractTypes.BTCPriceFeed>('BTCPriceFeed');
 export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
@@ -133,3 +127,9 @@ export const McdDogContractViem = createViemContractFromConfigFunc('McdDog');
 export const McdJugContractViem = createViemContractFromConfigFunc('McdJug');
 export const CompoundLoanInfoContractViem = createViemContractFromConfigFunc('CompoundLoanInfo');
 export const ComptrollerContractViem = createViemContractFromConfigFunc('Comptroller');
+
+export const LiquityViewContractViem = createViemContractFromConfigFunc('LiquityView');
+export const LiquityCollSurplusPoolContractViem = createViemContractFromConfigFunc('CollSurplusPool');
+export const LiquityTroveManagerContractViem = createViemContractFromConfigFunc('TroveManager');
+export const LiquityPriceFeedContractViem = createViemContractFromConfigFunc('PriceFeed');
+export const LiquityActivePoolContractViem = createViemContractFromConfigFunc('LiquityActivePool');

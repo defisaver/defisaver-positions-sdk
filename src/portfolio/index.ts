@@ -31,6 +31,7 @@ import { _getMakerCdpData, _getUserCdps } from '../maker';
 import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
+import { _getLiquityTroveInfo } from '../liquity';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const isMainnet = network === NetworkNumber.Eth;
@@ -128,6 +129,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       maker: {},
       aaveV2: {},
       compoundV2: {},
+      liquity: {},
     };
   }
 
@@ -180,6 +182,11 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const accData = await _getCompoundV2AccountData(client, network, address, compoundV2MarketsData[market.value].assetsData);
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = accData;
     })).flat(),
+    ...addresses.map(async (address) => {
+      if (!isMainnet) return; // Liquity trove info is only available on mainnet
+      const troveInfo = await _getLiquityTroveInfo(client, network, address);
+      if (new Dec(troveInfo.collateral).gt(0)) positions[address.toLowerCase() as EthAddress].liquity = troveInfo;
+    }),
   ]);
 
   console.log(positions);

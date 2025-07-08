@@ -3,6 +3,7 @@ import { EthAddress } from './common';
 import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
 import { EulerV2PositionData, EulerV2Versions } from './euler';
+import { LiquityTroveInfo } from './liquity';
 import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
 import { CdpData } from './maker';
 import { MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
@@ -32,13 +33,14 @@ export interface PortfolioPositionsData {
       [key in LlamaLendVersionsType]?: LlamaLendUserData;
     };
     maker: {
-      [key: string]: CdpData,
+      [key: string]: CdpData;
     };
     aaveV2: {
       [key in AaveVersions]?: AaveV2PositionData;
     };
     compoundV2: {
       [key in CompoundVersions]?: CompoundV2PositionData;
-    }
+    };
+    liquity: LiquityTroveInfo | {};
   };
 }
