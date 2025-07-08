@@ -85,10 +85,6 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');
-
-export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot');
-
 export const SparkIncentiveDataProviderContract = createContractFromConfigFunc<ContractTypes.SparkIncentiveDataProvider>('SparkIncentiveDataProvider');
 export const SparkViewContract = createContractFromConfigFunc<ContractTypes.SparkView>('SparkView');
 
@@ -98,16 +94,8 @@ export const LiquityTroveManagerContract = createContractFromConfigFunc<Contract
 export const LiquityPriceFeedContract = createContractFromConfigFunc<ContractTypes.PriceFeed>('PriceFeed');
 export const LiquityActivePoolContract = createContractFromConfigFunc<ContractTypes.LiquityActivePool>('LiquityActivePool');
 
-export const McdViewContract = createContractFromConfigFunc<ContractTypes.McdView>('McdView');
-export const McdSpotterContract = createContractFromConfigFunc<ContractTypes.McdSpotter>('McdSpotter');
-export const McdDogContract = createContractFromConfigFunc<ContractTypes.McdDog>('McdDog');
-export const McdJugContract = createContractFromConfigFunc<ContractTypes.McdJug>('McdJug');
-export const McdVatContract = createContractFromConfigFunc<ContractTypes.McdVat>('McdVat');
-
 export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
 export const BTCPriceFeedContract = createContractFromConfigFunc<ContractTypes.BTCPriceFeed>('BTCPriceFeed');
-export const COMPPriceFeedContract = createContractFromConfigFunc<ContractTypes.COMPPriceFeed>('COMPPriceFeed');
-export const USDCPriceFeedContract = createContractFromConfigFunc<ContractTypes.USDCPriceFeed>('USDCPriceFeed');
 export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
 export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WeETHPriceFeed>('WeETHPriceFeed');
 

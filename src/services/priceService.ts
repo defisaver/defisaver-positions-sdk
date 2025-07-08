@@ -6,7 +6,7 @@ import {
   COMPPriceFeedContractViem,
   ETHPriceFeedContract,
   BTCPriceFeedContract,
-  USDCPriceFeedContract, WeETHPriceFeedContract,
+  WeETHPriceFeedContract,
   ETHPriceFeedContractViem,
   USDCPriceFeedContractViem,
   WstETHPriceFeedContract,

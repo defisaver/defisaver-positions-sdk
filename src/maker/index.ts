@@ -1,21 +1,20 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import {
-  assetAmountInEth, bytesToString, getAssetInfo, ilks, ilkToAsset,
+  assetAmountInEth, bytesToString, getAssetInfo, ilkToAsset,
 } from '@defisaver/tokens';
-import { Client, createPublicClient } from 'viem';
+import { Client, PublicClient } from 'viem';
 import {
-  Blockish, EthAddress, HexString, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  getConfigContractAddress, McdDogContractViem, McdGetCdpsContractViem, McdJugContractViem, McdSpotterContractViem, McdVatContractViem, McdViewContract, McdViewContractViem,
+  getConfigContractAddress, McdDogContractViem, McdGetCdpsContractViem, McdJugContractViem, McdSpotterContractViem, McdVatContractViem, McdViewContractViem,
 } from '../contracts';
-import { makerHelpers } from '../helpers';
 import { CdpData, CdpInfo, CdpType } from '../types';
 import { wethToEth } from '../services/utils';
 import { parseCollateralInfo } from '../helpers/makerHelpers';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
-export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
+export const _getMakerAccountBalances = async (provider: PublicClient, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -26,23 +25,57 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
     return balances;
   }
 
-  const viewContract = McdViewContract(web3, network, block);
+  const viewContract = McdViewContractViem(provider, network, block);
+  const vatContract = McdVatContractViem(provider, network, block);
+  const spotterContract = McdSpotterContractViem(provider, network, block);
+  const dogContract = McdDogContractViem(provider, network, block);
+  const jugContract = McdJugContractViem(provider, network, block);
 
   let ilk;
 
   const needsIlk = block !== 'latest' && new Dec(block).lt(14410792) && new Dec(block).gte(14384301);
 
   if (needsIlk) {
-    ilk = (await viewContract.methods.getUrnAndIlk(managerAddress, cdpId).call({}, block)).ilk;
+    ilk = (await viewContract.read.getUrnAndIlk([managerAddress, BigInt(cdpId)], setViemBlockNumber(block)))[1];
   }
 
   // @ts-ignore
-  const cdpInfo = await viewContract.methods.getCdpInfo(...(needsIlk ? [managerAddress, cdpId, ilk] : [cdpId])).call({}, block);
-  const ilkInfo = await makerHelpers.getCollateralInfo(needsIlk ? ilk : cdpInfo.ilk, web3, network, block);
+  // [urn, owner, userAddr, ilk, collateral, debt]
+  const cdpInfo: any = await viewContract.read.getCdpInfo((needsIlk ? [managerAddress, cdpId, ilk] : [cdpId]), setViemBlockNumber(block));
+  cdpInfo.ilk = cdpInfo[3];
+
+  const [
+    par,
+    [_, mat],
+    [artGlobal, rate, spot, line],
+    [duty],
+    futureRate,
+    chop,
+  ] = await Promise.all([
+    spotterContract.read.par(setViemBlockNumber(block)),
+    spotterContract.read.ilks(needsIlk ? [ilk] : [cdpInfo.ilk], setViemBlockNumber(block)),
+    vatContract.read.ilks(needsIlk ? [ilk] : [cdpInfo.ilk], setViemBlockNumber(block)),
+    jugContract.read.ilks(needsIlk ? [ilk] : [cdpInfo.ilk], setViemBlockNumber(block)),
+    jugContract.read.drip(needsIlk ? [ilk] : [cdpInfo.ilk], setViemBlockNumber(block)),
+    dogContract.read.chop(needsIlk ? [ilk] : [cdpInfo.ilk], setViemBlockNumber(block)),
+  ]);
+
+  const ilkInfo = parseCollateralInfo(
+    needsIlk ? ilk : cdpInfo.ilk,
+    par.toString(),
+    mat.toString(),
+    artGlobal.toString(),
+    rate.toString(),
+    spot.toString(),
+    line.toString(),
+    duty.toString(),
+    futureRate.toString(),
+    chop.toString(),
+  );
 
 
-  const collateral = needsIlk ? cdpInfo[1] : cdpInfo.collateral;
-  const debt = needsIlk ? cdpInfo[0] : cdpInfo.debt;
+  const collateral = cdpInfo[4];
+  const debt = cdpInfo[5];
 
   const asset = wethToEth(ilkToAsset(needsIlk ? ilk : cdpInfo.ilk));
 
@@ -59,7 +92,16 @@ export const getMakerAccountBalances = async (web3: Web3, network: NetworkNumber
   return balances;
 };
 
-export const _getUserCdps = async (provider: Client, network: NetworkNumber, userAddress: HexString): Promise<CdpInfo[]> => {
+export const getMakerAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  cdpId: string,
+  _managerAddress?: EthAddress,
+): Promise<PositionBalances> => _getMakerAccountBalances(getViemProvider(provider, network, { batch: { multicall: true } }), network, block, addressMapping, cdpId, _managerAddress);
+
+export const _getUserCdps = async (provider: Client, network: NetworkNumber, userAddress: EthAddress): Promise<CdpInfo[]> => {
   if (!userAddress) return [];
   const mcdGetCdpsContract = McdGetCdpsContractViem(provider, network);
 
@@ -69,9 +111,9 @@ export const _getUserCdps = async (provider: Client, network: NetworkNumber, use
 
   const parsedStandardCdps = standardCdps[0].map((id, i) => ({
     id: parseInt(id.toString(), 10),
-    ilk: standardCdps[2][i].toLowerCase() as HexString, // collateral type
+    ilk: standardCdps[2][i].toLowerCase() as EthAddress, // collateral type
     ilkLabel: bytesToString(standardCdps[2][i].toLowerCase()),
-    urn: standardCdps[1][i].toLowerCase() as HexString, // contract of cdp
+    urn: standardCdps[1][i].toLowerCase() as EthAddress, // contract of cdp
     asset: ilkToAsset(standardCdps[2][i]),
     type: CdpType.MCD,
     owner: userAddress,
@@ -80,14 +122,11 @@ export const _getUserCdps = async (provider: Client, network: NetworkNumber, use
   return parsedStandardCdps;
 };
 
-export const getUserCdps = async (web3: Web3, network: NetworkNumber, userAddress: HexString): Promise<CdpInfo[]> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-
-  return _getUserCdps(client, network, userAddress);
-};
+export const getUserCdps = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  userAddress: EthAddress,
+): Promise<CdpInfo[]> => _getUserCdps(getViemProvider(provider, network), network, userAddress);
 
 export const _getMakerCdpData = async (provider: Client, network: NetworkNumber, cdp: CdpInfo): Promise<CdpData> => {
   const vatContract = McdVatContractViem(provider, network);
@@ -179,10 +218,8 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
   };
 };
 
-export const getMakerCdpData = async (web3: Web3, network: NetworkNumber, cdp: CdpInfo): Promise<CdpData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getMakerCdpData(client, network, cdp);
-};
+export const getMakerCdpData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  cdp: CdpInfo,
+): Promise<CdpData> => _getMakerCdpData(getViemProvider(provider, network), network, cdp);
