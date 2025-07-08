@@ -16,13 +16,7 @@ import { EthAddress, NetworkNumber } from '../types/common';
 import { multicall } from '../multicall';
 import { getEthAmountForDecimals } from './utils';
 
-export const getEthPrice = async (web3: Web3) => {
-  const contract = ETHPriceFeedContract(web3, NetworkNumber.Eth);
-  const price = await contract.methods.latestAnswer().call();
-  return new Dec(price).div(1e8).toString();
-};
-
-export const getEthPriceViem = async (client: Client) => {
+export const getEthPrice = async (client: Client) => {
   const contract = ETHPriceFeedContractViem(client, NetworkNumber.Eth);
   const price = await contract.read.latestAnswer();
   return new Dec(price.toString()).div(1e8).toString();

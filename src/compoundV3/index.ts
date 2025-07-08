@@ -26,7 +26,6 @@ import {
 } from '../markets/compound';
 import {
   getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
-  getEthPriceViem,
 } from '../services/priceService';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
@@ -36,7 +35,7 @@ const getBaseAssetPriceFunction = (asset: string) => {
     case 'wstETH':
       return getWstETHPrice;
     case 'ETH':
-      return getEthPriceViem;
+      return getEthPrice;
     default:
       return getUSDCPrice;
   }

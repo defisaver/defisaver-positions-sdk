@@ -89,8 +89,6 @@ export const CompV3ViewContract = createContractFromConfigFunc<ContractTypes.Com
 
 export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');
 
-export const AaveLoanInfoV2Contract = createContractFromConfigFunc<ContractTypes.AaveLoanInfoV2>('AaveLoanInfoV2');
-
 export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTypes.CompoundLoanInfo>('CompoundLoanInfo');
 
 export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Comptroller>('Comptroller');
@@ -134,6 +132,8 @@ export const EulerV2ViewContract = createContractFromConfigFunc<ContractTypes.Eu
 export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
 
 export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
+
+export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
 
 // Viem
 

@@ -1,12 +1,12 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
-import { AaveLoanInfoV2Contract, createContractWrapper } from '../contracts';
+import { AaveLoanInfoV2ContractViem, createViemContractFromConfigFunc } from '../contracts';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
@@ -15,13 +15,16 @@ import { EMPTY_AAVE_DATA } from '../aaveV3';
 import { AAVE_V2 } from '../markets/aave';
 import { aaveAnyGetAggregatedPositionData } from '../helpers/aaveHelpers';
 import { getEthPrice } from '../services/priceService';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
-export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: AaveMarketInfo, mainnetWeb3: Web3) => {
-  const ethPrice = await getEthPrice(web3);
+export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: AaveMarketInfo) => {
   const _addresses = selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address);
-  const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+  const loanInfoContract = AaveLoanInfoV2ContractViem(provider, network);
   const marketAddress = selectedMarket.providerAddress;
-  const loanInfo = await loanInfoContract.methods.getFullTokensInfo(marketAddress, _addresses).call();
+  const [loanInfo, ethPrice] = await Promise.all([
+    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]]),
+    getEthPrice(provider),
+  ]);
   const markets = loanInfo
     .map((market, i) => ({
       symbol: selectedMarket.assets[i],
@@ -80,7 +83,9 @@ export const getAaveV2MarketsData = async (web3: Web3, network: NetworkNumber, s
   return { assetsData: payload };
 };
 
-export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const getAaveV2MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: AaveMarketInfo) => _getAaveV2MarketsData(getViemProvider(provider, network), network, selectedMarket);
+
+export const _getAaveV2AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -92,17 +97,17 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
 
   const market = AAVE_V2;
 
-  const loanInfoContract = AaveLoanInfoV2Contract(web3, network, block);
+  const loanInfoContract = AaveLoanInfoV2ContractViem(provider, network, block);
 
   const marketAddress = market.providerAddress;
   // @ts-ignore
-  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
+  const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
-  const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call({}, block);
+  const loanInfo = await loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses as EthAddress[]], setViemBlockNumber(block));
 
   loanInfo.forEach((_tokenInfo: any, i: number) => {
     const asset = wethToEth(symbols[i]);
@@ -129,7 +134,9 @@ export const getAaveV2AccountBalances = async (web3: Web3, network: NetworkNumbe
   return balances;
 };
 
-export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: AaveV2AssetsData, market: AaveMarketInfo): Promise<AaveV2PositionData> => {
+export const getAaveV2AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => _getAaveV2AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address);
+
+export const _getAaveV2AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, assetsData: AaveV2AssetsData, market: AaveMarketInfo): Promise<AaveV2PositionData> => {
   if (!address) throw new Error('Address is required');
 
   let payload: AaveV2PositionData = {
@@ -137,17 +144,17 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
     lastUpdated: Date.now(),
   };
 
-  const loanInfoContract = AaveLoanInfoV2Contract(web3, network);
+  const loanInfoContract = AaveLoanInfoV2ContractViem(provider, network);
   const marketAddress = market.providerAddress;
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a)).address);
-  const loanInfo = await loanInfoContract.methods.getTokenBalances(marketAddress, address, _addresses).call();
+  const loanInfo = await loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses as EthAddress[]]);
   const usedAssets = {} as AaveV2UsedAssets;
   loanInfo.forEach((_tokenInfo, i) => {
     const asset = market.assets[i];
     const tokenInfo = { ..._tokenInfo };
 
     // known bug: stETH leaves 1 wei on every transfer
-    if (asset === 'stETH' && tokenInfo.balance.toString() === '1') tokenInfo.balance = '0';
+    if (asset === 'stETH' && tokenInfo.balance.toString() === '1') tokenInfo.balance = BigInt('0');
 
     const isSupplied = tokenInfo.balance.toString() !== '0';
     const isBorrowed = tokenInfo.borrowsStable.toString() !== '0' || tokenInfo.borrowsVariable.toString() !== '0';
@@ -220,8 +227,10 @@ export const getAaveV2AccountData = async (web3: Web3, network: NetworkNumber, a
   return payload;
 };
 
-export const getAaveV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, market: AaveMarketInfo, mainnetWeb3: Web3): Promise<AaveV2PositionData> => {
-  const marketData = await getAaveV2MarketsData(web3, network, market, mainnetWeb3);
-  const positionData = await getAaveV2AccountData(web3, network, address, marketData.assetsData, market);
+export const getAaveV2AccountData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, assetsData: AaveV2AssetsData, market: AaveMarketInfo): Promise<AaveV2PositionData> => _getAaveV2AccountData(getViemProvider(provider, network), network, address, assetsData, market);
+
+export const getAaveV2FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, market: AaveMarketInfo): Promise<AaveV2PositionData> => {
+  const marketData = await getAaveV2MarketsData(provider, network, market);
+  const positionData = await getAaveV2AccountData(provider, network, address, marketData.assetsData, market);
   return positionData;
 };
