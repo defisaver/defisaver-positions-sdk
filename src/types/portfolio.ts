@@ -1,6 +1,6 @@
-import { AaveV3PositionData, AaveVersions } from './aave';
+import { AaveV2PositionData, AaveV3PositionData, AaveVersions } from './aave';
 import { EthAddress } from './common';
-import { CompoundV3PositionData, CompoundVersions } from './compound';
+import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
 import { EulerV2PositionData, EulerV2Versions } from './euler';
 import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
@@ -33,6 +33,12 @@ export interface PortfolioPositionsData {
     };
     maker: {
       [key: string]: CdpData,
+    };
+    aaveV2: {
+      [key in AaveVersions]?: AaveV2PositionData;
+    };
+    compoundV2: {
+      [key in CompoundVersions]?: CompoundV2PositionData;
     }
   };
 }

@@ -9,9 +9,11 @@ import {
 } from '../markets';
 import { _getMorphoBlueAccountData, _getMorphoBlueMarketData } from '../morphoBlue';
 import {
+  AaveV2MarketData,
   AaveV3MarketData,
   AaveVersions,
   CdpInfo,
+  CompoundV2MarketsData,
   CompoundV3MarketsData, CompoundVersions, CrvUSDGlobalMarketData, EulerV2FullMarketData, LlamaLendGlobalMarketData, MorphoBlueMarketInfo, PortfolioPositionsData, SparkMarketsData,
 } from '../types';
 import { _getCompoundV3AccountData, _getCompoundV3MarketsData } from '../compoundV3';
@@ -22,6 +24,8 @@ import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
 import { _getAaveV3AccountData, _getAaveV3MarketData } from '../aaveV3';
 import { ZERO_ADDRESS } from '../constants';
 import { _getMakerCdpData, _getUserCdps } from '../maker';
+import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
+import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
@@ -31,6 +35,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network));
   const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const aaveV2Markets = [AaveVersions.AaveV2].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
 
   const client = createPublicClient({
     transport: custom(provider),
@@ -59,6 +65,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
   const aaveV3MarketsData: Record<string, AaveV3MarketData> = {};
   const makerCdps: Record<string, CdpInfo[]> = {};
+  const aaveV2MarketsData: Record<string, AaveV2MarketData> = {};
+  const compoundV2MarketsData: Record<string, CompoundV2MarketsData> = {};
 
   await Promise.all([
     ...morphoMarkets.map(async (market) => {
@@ -94,6 +102,14 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const makerCdp = await _getUserCdps(client, network, address);
       makerCdps[address.toLowerCase() as EthAddress] = makerCdp;
     }),
+    ...aaveV2Markets.map(async (market) => {
+      const marketData = await _getAaveV2MarketsData(client, network, market);
+      aaveV2MarketsData[market.value] = marketData;
+    }),
+    ...compoundV2Markets.map(async (market) => {
+      const marketData = await _getCompoundV2MarketsData(client, network);
+      compoundV2MarketsData[market.value] = marketData;
+    }),
   ]);
 
   const positions: PortfolioPositionsData = {};
@@ -107,6 +123,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       crvUsd: {},
       llamaLend: {},
       maker: {},
+      aaveV2: {},
+      compoundV2: {},
     };
   }
 
@@ -150,6 +168,14 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       if (cdpData) {
         positions[address.toLowerCase() as EthAddress].maker[cdpInfo.id] = cdpData;
       }
+    })).flat(),
+    ...aaveV2Markets.map((market) => addresses.map(async (address) => {
+      const accData = await _getAaveV2AccountData(client, network, address, aaveV2MarketsData[market.value].assetsData, market);
+      if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV2[market.value] = accData;
+    })).flat(),
+    ...compoundV2Markets.map((market) => addresses.map(async (address) => {
+      const accData = await _getCompoundV2AccountData(client, network, address, compoundV2MarketsData[market.value].assetsData);
+      if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = accData;
     })).flat(),
   ]);
 
