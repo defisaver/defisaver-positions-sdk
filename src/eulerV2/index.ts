@@ -1,8 +1,7 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
-import { Client, createPublicClient } from 'viem';
-import { EthAddress, NetworkNumber } from '../types/common';
+import { Client } from 'viem';
+import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
   compareAddresses, getEthAmountForDecimals, isMaxuint, wethToEth, wethToEthByAddress,
@@ -24,7 +23,8 @@ import {
   getUtilizationRate,
 } from '../helpers/eulerHelpers';
 import { ZERO_ADDRESS } from '../constants';
-import { EulerV2ViewContract, EulerV2ViewContractViem } from '../contracts';
+import { EulerV2ViewContractViem } from '../contracts';
+import { getViemProvider } from '../services/viem';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -175,13 +175,11 @@ export const _getEulerV2MarketsData = async (provider: Client, network: NetworkN
   };
 };
 
-export const getEulerV2MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: EulerV2Market): Promise<EulerV2FullMarketData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getEulerV2MarketsData(client, network, selectedMarket);
-};
+export const getEulerV2MarketsData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  selectedMarket: EulerV2Market,
+): Promise<EulerV2FullMarketData> => _getEulerV2MarketsData(getViemProvider(provider, network), network, selectedMarket);
 
 export const EMPTY_EULER_V2_DATA = {
   usedAssets: {},
@@ -305,7 +303,7 @@ export const _getEulerV2AccountData = async (
 };
 
 export const getEulerV2AccountData = async (
-  provider: Web3,
+  provider: EthereumProvider,
   network: NetworkNumber,
   addressForPosition: EthAddress,
   ownerAddress: EthAddress,
@@ -314,10 +312,4 @@ export const getEulerV2AccountData = async (
     assetsData: EulerV2AssetsData,
     marketData: EulerV2MarketInfoData,
   }),
-): Promise<EulerV2PositionData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getEulerV2AccountData(client, network, addressForPosition, ownerAddress, extractedState);
-};
+): Promise<EulerV2PositionData> => _getEulerV2AccountData(getViemProvider(provider, network), network, addressForPosition, ownerAddress, extractedState);
