@@ -1,16 +1,14 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import {
-  assetAmountInEth, assetAmountInWei, getAssetInfo, getAssetInfoByAddress,
+  assetAmountInEth, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
-import { Client, createPublicClient } from 'viem';
-import { CompV3ViewContract, CompV3ViewContractViem } from '../contracts';
-import { multicall } from '../multicall';
+import { Client } from 'viem';
+import { CompV3ViewContractViem } from '../contracts';
 import {
   CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
 } from '../types';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   getStakingApy, STAKING_ASSETS,
@@ -27,6 +25,7 @@ import {
 import {
   getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
 } from '../services/priceService';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
 
@@ -84,17 +83,7 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
   return { assetsData: payload };
 };
 
-export const getCompoundV3MarketsData = async (provider: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: Web3): Promise<CompoundV3MarketsData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  const defaultClient = createPublicClient({
-    // @ts-ignore
-    transport: http(defaultProvider._provider.host),
-  });
-  return _getCompoundV3MarketsData(client, network, selectedMarket, defaultClient);
-};
+export const getCompoundV3MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3MarketsData> => _getCompoundV3MarketsData(getViemProvider(provider, network), network, selectedMarket, getViemProvider(defaultProvider, network));
 
 export const EMPTY_COMPOUND_V3_DATA = {
   usedAssets: {},
@@ -125,7 +114,7 @@ export const EMPTY_USED_ASSET = {
   debt: '0',
 };
 
-export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
+export const _getCompoundV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -143,16 +132,16 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
     [COMPOUND_V3_USDCe(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDCe(network),
   })[marketAddress.toLowerCase()];
 
-  const loanInfoContract = CompV3ViewContract(web3, network, block);
-  const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
+  const loanInfoContract = CompV3ViewContractViem(provider, network, block);
+  const loanInfo = await loanInfoContract.read.getLoanData([market.baseMarketAddress, address], setViemBlockNumber(block));
   const baseAssetInfo = getAssetInfo(wethToEth(market.baseAsset), network);
 
   balances = {
     collateral: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.depositAmount,
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.depositAmount.toString(),
     },
     debt: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.borrowAmount,
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.borrowAmount.toString(),
     },
   };
 
@@ -169,6 +158,8 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
 
   return balances;
 };
+
+export const getCompoundV3AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => _getCompoundV3AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, marketAddress);
 
 export const _getCompoundV3AccountData = async (
   provider: Client,
@@ -262,7 +253,7 @@ export const _getCompoundV3AccountData = async (
 };
 
 export const getCompoundV3AccountData = async (
-  provider: Web3,
+  provider: EthereumProvider,
   network: NetworkNumber,
   address: EthAddress,
   proxyAddress: EthAddress,
@@ -270,16 +261,10 @@ export const getCompoundV3AccountData = async (
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
   }),
-): Promise<CompoundV3PositionData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getCompoundV3AccountData(client, network, address, proxyAddress, extractedState);
-};
+): Promise<CompoundV3PositionData> => _getCompoundV3AccountData(getViemProvider(provider, network), network, address, proxyAddress, extractedState);
 
-export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, proxyAddress: EthAddress, selectedMarket: CompoundMarketData, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
-  const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, mainnetWeb3);
-  const positionData = await getCompoundV3AccountData(web3, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
+export const getCompoundV3FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, proxyAddress: EthAddress, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3PositionData> => {
+  const marketData = await getCompoundV3MarketsData(provider, network, selectedMarket, defaultProvider);
+  const positionData = await getCompoundV3AccountData(provider, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
   return positionData;
 };

@@ -85,8 +85,6 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const CompV3ViewContract = createContractFromConfigFunc<ContractTypes.CompV3View>('CompV3View');
-
 export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');
 
 export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTypes.CompoundLoanInfo>('CompoundLoanInfo');
@@ -160,3 +158,4 @@ export const McdVatContractViem = createViemContractFromConfigFunc('McdVat');
 export const McdSpotterContractViem = createViemContractFromConfigFunc('McdSpotter');
 export const McdDogContractViem = createViemContractFromConfigFunc('McdDog');
 export const McdJugContractViem = createViemContractFromConfigFunc('McdJug');
+export const CompoundLoanInfoContractViem = createViemContractFromConfigFunc('CompoundLoanInfo');
