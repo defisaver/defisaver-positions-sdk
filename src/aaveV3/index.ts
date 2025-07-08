@@ -9,9 +9,7 @@ import {
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
-import { multicall } from '../multicall';
 import {
-  addToObjectIf,
   ethToWeth, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';

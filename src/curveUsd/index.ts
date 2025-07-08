@@ -1,19 +1,19 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import Web3 from 'web3';
-import { Client, createPublicClient } from 'viem';
+import { Client } from 'viem';
 import {
-  BandData, CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData, CrvUSDVersions,
+  CrvUSDGlobalMarketData, CrvUSDMarketData, CrvUSDStatus, CrvUSDUsedAssets, CrvUSDUserData,
 } from '../types';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  createViemContractFromConfigFunc, CrvUSDFactoryContractViem, CrvUSDViewContract, CrvUSDViewContractViem,
+  createViemContractFromConfigFunc, CrvUSDFactoryContractViem, CrvUSDViewContractViem,
 } from '../contracts';
 import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
 import { wethToEth } from '../services/utils';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const getAndFormatBands = async (provider: Client, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContractViem(provider, network);
@@ -108,13 +108,11 @@ export const _getCurveUsdGlobalData = async (provider: Client, network: NetworkN
   };
 };
 
-export const getCurveUsdGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: CrvUSDMarketData): Promise<CrvUSDGlobalMarketData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getCurveUsdGlobalData(client, network, selectedMarket);
-};
+export const getCurveUsdGlobalData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  selectedMarket: CrvUSDMarketData,
+): Promise<CrvUSDGlobalMarketData> => _getCurveUsdGlobalData(getViemProvider(provider, network), network, selectedMarket);
 
 const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplied: string, collSupplied: string, healthPercent: string) => {
   // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
@@ -130,7 +128,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   return CrvUSDStatus.Nonexistant;
 };
 
-export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
+export const _getCrvUsdAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -140,22 +138,31 @@ export const getCrvUsdAccountBalances = async (web3: Web3, network: NetworkNumbe
     return balances;
   }
 
-  const contract = CrvUSDViewContract(web3, network, block);
+  const contract = CrvUSDViewContractViem(provider, network, block);
   const selectedMarket = Object.values(CrvUsdMarkets(network)).find(i => i.controllerAddress.toLowerCase() === controllerAddress.toLowerCase()) as CrvUSDMarketData;
 
-  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address], setViemBlockNumber(block));
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount.toString(),
     },
     debt: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount.toString(),
     },
   };
 
   return balances;
 };
+
+export const getCrvUsdAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  controllerAddress: EthAddress,
+): Promise<PositionBalances> => _getCrvUsdAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, controllerAddress);
 
 export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
   const contract = CrvUSDViewContractViem(provider, network);
@@ -228,16 +235,16 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
   };
 };
 
-export const getCurveUsdUserData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getCurveUsdUserData(client, network, address, selectedMarket, activeBand);
-};
+export const getCurveUsdUserData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  selectedMarket: CrvUSDMarketData,
+  activeBand: string,
+): Promise<CrvUSDUserData> => _getCurveUsdUserData(getViemProvider(provider, network), network, address, selectedMarket, activeBand);
 
-export const getCurveUsdFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
-  const marketData = await getCurveUsdGlobalData(web3, network, selectedMarket);
-  const positionData = await getCurveUsdUserData(web3, network, address, selectedMarket, marketData.activeBand);
+export const getCurveUsdFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
+  const marketData = await getCurveUsdGlobalData(provider, network, selectedMarket);
+  const positionData = await getCurveUsdUserData(provider, network, address, selectedMarket, marketData.activeBand);
   return positionData;
 };

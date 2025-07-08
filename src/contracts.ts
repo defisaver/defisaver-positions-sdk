@@ -92,9 +92,6 @@ export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot'
 export const SparkIncentiveDataProviderContract = createContractFromConfigFunc<ContractTypes.SparkIncentiveDataProvider>('SparkIncentiveDataProvider');
 export const SparkViewContract = createContractFromConfigFunc<ContractTypes.SparkView>('SparkView');
 
-export const CrvUSDViewContract = createContractFromConfigFunc<ContractTypes.CrvUSDView>('crvUSDView');
-export const CrvUSDFactoryContract = createContractFromConfigFunc<ContractTypes.CrvUSDFactory>('crvUSDFactory');
-
 export const LiquityViewContract = createContractFromConfigFunc<ContractTypes.LiquityView>('LiquityView');
 export const LiquityCollSurplusPoolContract = createContractFromConfigFunc<ContractTypes.CollSurplusPool>('CollSurplusPool');
 export const LiquityTroveManagerContract = createContractFromConfigFunc<ContractTypes.TroveManager>('TroveManager');
