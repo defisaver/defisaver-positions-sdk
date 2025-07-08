@@ -93,12 +93,7 @@ export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes
 export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');
 export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
 
-export const LiquityV2ViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2View>('LiquityV2View');
-export const LiquityV2LegacyViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2LegacyView>('LiquityV2LegacyView');
-
 export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
-
-export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
 
 // Viem
 
@@ -133,3 +128,6 @@ export const LiquityCollSurplusPoolContractViem = createViemContractFromConfigFu
 export const LiquityTroveManagerContractViem = createViemContractFromConfigFunc('TroveManager');
 export const LiquityPriceFeedContractViem = createViemContractFromConfigFunc('PriceFeed');
 export const LiquityActivePoolContractViem = createViemContractFromConfigFunc('LiquityActivePool');
+
+export const LiquityV2ViewContractViem = createViemContractFromConfigFunc('LiquityV2View');
+export const LiquityV2LegacyViewContractViem = createViemContractFromConfigFunc('LiquityV2LegacyView');
