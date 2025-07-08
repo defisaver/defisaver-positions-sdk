@@ -1,12 +1,9 @@
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import { Client, createPublicClient, http } from 'viem';
+import { Client } from 'viem';
 import Dec from 'decimal.js';
-import Web3 from 'web3';
 import {
   AaveIncentiveDataProviderV3ContractViem,
-  AaveV3ViewContract,
   AaveV3ViewContractViem,
-  createContractWrapper,
   createViemContractFromConfigFunc,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
@@ -14,6 +11,7 @@ import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { multicall } from '../multicall';
 import {
+  addToObjectIf,
   ethToWeth, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
@@ -30,8 +28,9 @@ import {
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -233,7 +232,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     // @ts-ignore
     rewardForMarket.vIncentiveData.rewardsTokenInformation.forEach(borrowRewardData => {
       if (borrowRewardData) {
-        if (+borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        if (+(borrowRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
         if (borrowRewardData.rewardTokenSymbol.startsWith('a') && borrowRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveBorrowToken = _market.symbol;
         const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
@@ -286,12 +285,8 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   return { assetsData: payload, eModeCategoriesData };
 }
 
-export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getAaveV3MarketData(client, network, market);
+export async function getAaveV3MarketData(provider: EthereumProvider, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3MarketData> {
+  return _getAaveV3MarketData(getViemProvider(provider, network), network, market);
 }
 
 export const EMPTY_AAVE_DATA = {
@@ -316,7 +311,7 @@ export const EMPTY_AAVE_DATA = {
   suppliedCollateralUsd: '0',
 };
 
-export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const _getAaveV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -326,36 +321,26 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
     return balances;
   }
 
-  const loanInfoContract = AaveV3ViewContract(web3, network, block);
+  const loanInfoContract = AaveV3ViewContractViem(provider, network, block);
 
   const market = AAVE_V3(network);
   const marketAddress = market.providerAddress;
   // @ts-ignore
-  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
+  const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
   // split addresses in half to avoid gas limit by multicall
   const middleAddressIndex = Math.floor(_addresses.length / 2);
 
-  const multicallData = [
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
-    },
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
-    },
-  ];
+  const [tokenBalances1, tokenBalances2] = await Promise.all([
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex)], setViemBlockNumber(block)),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)], setViemBlockNumber(block)),
+  ]);
 
-  const multicallRes = await multicall(multicallData, web3, network, block);
-
-  const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
+  const loanInfo = [...tokenBalances1, ...tokenBalances2];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
     const asset = wethToEth(symbols[i]);
@@ -375,6 +360,8 @@ export const getAaveV3AccountBalances = async (web3: Web3, network: NetworkNumbe
 
   return balances;
 };
+
+export const getAaveV3AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => _getAaveV3AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address);
 
 export const _getAaveV3AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
   const {
@@ -483,16 +470,10 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
   return payload;
 };
 
-export const getAaveV3AccountData = async (web3: Web3, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getAaveV3AccountData(client, network, address, extractedState);
-};
+export const getAaveV3AccountData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, extractedState: any): Promise<AaveV3PositionData> => _getAaveV3AccountData(getViemProvider(provider, network), network, address, extractedState);
 
-export const getAaveV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, market: AaveMarketInfo): Promise<AaveV3PositionData> => {
-  const marketData = await getAaveV3MarketData(web3, network, market);
-  const positionData = await getAaveV3AccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
+export const getAaveV3FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, market: AaveMarketInfo): Promise<AaveV3PositionData> => {
+  const marketData = await getAaveV3MarketData(provider, network, market);
+  const positionData = await getAaveV3AccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };

@@ -40,29 +40,29 @@ export const getConfigContractAddress = (name: ConfigKey, network: NetworkNumber
   return latestAddress as HexString;
 };
 
-export const getConfigContractAbi = (name: ConfigKey, network?: NetworkNumber, block?: Blockish): any[] => {
+export const getConfigContractAbi = <TKey extends ConfigKey>(name: TKey, network?: NetworkNumber, block?: Blockish): typeof configRaw[TKey]['abi'] => {
   const networkData = network ? contractConfig[name].networks[network] : null;
   const latestAbi = contractConfig[name].abi;
 
   if (block && block !== 'latest' && networkData) {
     if (block >= (networkData?.createdBlock || 0)) {
-      return latestAbi;
+      return latestAbi as unknown as typeof configRaw[TKey]['abi'];
     }
 
     const oldVersions = networkData?.oldVersions || {};
     // Versions are ordered from oldest to the newest
     for (const [createdBlock, oldVersionObject] of Object.entries(oldVersions).reverse()) {
       if (block >= Number(createdBlock)) {
-        return oldVersionObject.abi;
+        return oldVersionObject.abi as unknown as typeof configRaw[TKey]['abi'];
       }
     }
   }
-  return latestAbi;
+  return latestAbi as unknown as typeof configRaw[TKey]['abi'];
 };
 
 export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: HexString) => (client: Client, network: NetworkNumber, block?: Blockish) => {
   const address = (_address || getConfigContractAddress(name, network, block));
-  const abi = configRaw[name].abi as typeof configRaw[TKey]['abi']; // getConfigContractAbi(name, network, block)
+  const abi = getConfigContractAbi(name, network, block) as typeof configRaw[TKey]['abi'];
   return getContract({
     address,
     abi,
@@ -72,11 +72,11 @@ export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: T
 
 const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
   const address = _address || getConfigContractAddress(name, network, block);
-  return new web3.eth.Contract(getConfigContractAbi(name, network, block), address) as any as T;
+  return new web3.eth.Contract(getConfigContractAbi(name, network, block) as unknown as any[], address) as any as T;
 };
 
 export const getErc20Contract = (address: string, web3: Web3) => (
-  new web3.eth.Contract(getConfigContractAbi('Erc20'), address)
+  new web3.eth.Contract(getConfigContractAbi('Erc20') as unknown as any[], address)
 );
 
 export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: ConfigKey, _address?: string, block?: Blockish) => (
@@ -84,15 +84,6 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 );
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
-
-export const AaveV3ViewContract = createContractFromConfigFunc<ContractTypes.AaveV3View>('AaveV3View');
-export const AaveIncentiveDataProviderV3Contract = createContractFromConfigFunc<ContractTypes.AaveUiIncentiveDataProviderV3>('AaveUiIncentiveDataProviderV3');
-
-export const LidoContract = createContractFromConfigFunc<ContractTypes.Lido>('Lido');
-export const CbEthContract = createContractFromConfigFunc<ContractTypes.CbEth>('CbEth');
-export const REthContract = createContractFromConfigFunc<ContractTypes.REth>('REth');
-
-export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
 
 export const CompV3ViewContract = createContractFromConfigFunc<ContractTypes.CompV3View>('CompV3View');
 
@@ -147,6 +138,7 @@ export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes
 // Viem
 
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
+export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
 export const AaveIncentiveDataProviderV3ContractViem = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');
 export const FeedRegistryContractViem = createViemContractFromConfigFunc('FeedRegistry');

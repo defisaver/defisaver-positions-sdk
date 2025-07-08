@@ -1,6 +1,6 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import Web3 from 'web3';
+import { Client } from 'viem';
 import {
   AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
@@ -10,9 +10,9 @@ import {
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { borrowOperations } from '../../constants';
-import { EthAddress, NetworkNumber } from '../../types/common';
-import { AaveLoanInfoV2Contract, AaveV3ViewContract } from '../../contracts';
-import { BaseContract } from '../../types/contracts/generated/types';
+import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import { AaveLoanInfoV2ContractViem, AaveV3ViewContractViem } from '../../contracts';
+import { getViemProvider } from '../../services/viem';
 
 export const AAVE_V3_MARKETS = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi];
 
@@ -132,7 +132,7 @@ export const aaveAnyGetAggregatedPositionData = ({
   return payload;
 };
 
-const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], viewContract: BaseContract, network: NetworkNumber) => {
+const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], client: Client, network: NetworkNumber) => {
   const params = actions.map(({ action, asset, amount }) => {
     const isDebtAsset = borrowOperations.includes(action);
     const amountInWei = assetAmountInWei(amount, asset);
@@ -147,18 +147,16 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
       liquidityTaken = action === 'withdraw' ? amountInWei : '0';
     }
     return {
-      reserveAddress: assetInfo.address,
-      liquidityAdded,
-      liquidityTaken,
+      reserveAddress: assetInfo.address as EthAddress,
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityTaken: BigInt(liquidityTaken),
       isDebtAsset,
     };
   });
-  const data = await viewContract.methods.getApyAfterValuesEstimation(
-    selectedMarket.providerAddress,
-    params,
-  ).call();
+  const viewContract = isAaveV2({ selectedMarket }) ? AaveLoanInfoV2ContractViem(client, network) : AaveV3ViewContractViem(client, network);
+  const data = await viewContract.read.getApyAfterValuesEstimation([selectedMarket.providerAddress, params]);
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
-  data.forEach((d: { reserveAddress: EthAddress, supplyRate: string, variableBorrowRate: string }) => {
+  data.forEach((d: { reserveAddress: EthAddress, supplyRate: BigInt, variableBorrowRate: BigInt }) => {
     const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
     rates[asset] = {
       supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
@@ -168,13 +166,4 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   return rates;
 };
 
-export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], web3: Web3, network: NetworkNumber) => {
-  if (isAaveV2({ selectedMarket })) {
-    return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveLoanInfoV2Contract(web3, network), network);
-  }
-  if (isAaveV3({ selectedMarket })) {
-    return getApyAfterValuesEstimationInner(selectedMarket, actions, AaveV3ViewContract(web3, network), network);
-  }
-
-  return {};
-};
+export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getApyAfterValuesEstimationInner(selectedMarket, actions, getViemProvider(provider, network), network);
