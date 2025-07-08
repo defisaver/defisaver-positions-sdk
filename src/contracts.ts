@@ -107,8 +107,6 @@ export const LiquityV2LegacyViewContract = createContractFromConfigFunc<Contract
 
 export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
 
-export const MorphoBlueViewContract = createContractFromConfigFunc<ContractTypes.MorphoBlueView>('MorphoBlueView');
-
 export const BalanceScannerContract = createContractFromConfigFunc<ContractTypes.BalanceScanner>('BalanceScanner');
 
 // Viem

@@ -1,14 +1,11 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
-import {
-  Client, createPublicClient, custom, http,
-} from 'viem';
+import { Client } from 'viem';
 import {
   Blockish, EthAddress, EthereumProvider, MMUsedAssets, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContract, MorphoBlueViewContractViem,
+  DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContractViem,
 } from '../contracts';
 import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
@@ -20,6 +17,7 @@ import {
   getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
 } from '../helpers/morphoBlueHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
   const {
@@ -51,13 +49,12 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
 
     const [loanTokenPriceRound, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve({ answer: '100000000' }) // Normalize to match the expected object structure
+      isTokenUSDA ? Promise.resolve([0, '100000000']) // Normalize to match the expected object structure
         : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]),
       morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
-    // @ts-ignore
-    loanTokenPrice = loanTokenPriceRound.answer;
+    loanTokenPrice = loanTokenPriceRound[1].toString();
   }
 
   let morphoSupplyApy = '0';
@@ -126,14 +123,10 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
 }
 
 export async function getMorphoBlueMarketData(provider: EthereumProvider, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getMorphoBlueMarketData(client, network, selectedMarket);
+  return _getMorphoBlueMarketData(getViemProvider(provider, network), network, selectedMarket);
 }
 
-export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
+export const _getMorphoBlueAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -143,30 +136,39 @@ export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
-  const viewContract = MorphoBlueViewContract(web3, network, block);
+  const viewContract = MorphoBlueViewContractViem(provider, network, block);
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
-  const lltvInWei = new Dec(lltv).mul(WAD).toString();
+  const lltvInWei = BigInt(new Dec(lltv).mul(WAD).toString());
   const marketObject = {
     loanToken, collateralToken, oracle, irm, lltv: lltvInWei,
   };
 
-  const loanInfo = await viewContract.methods.getUserInfo(marketObject, address).call({}, block);
+  const loanInfo = await viewContract.read.getUserInfo([marketObject, address], setViemBlockNumber(block));
   const loanTokenInfo = getAssetInfoByAddress(selectedMarket.loanToken, network);
   const collateralTokenInfo = getAssetInfoByAddress(selectedMarket.collateralToken, network);
 
   balances = {
     collateral: {
-      [addressMapping ? collateralTokenInfo.address.toLowerCase() : wethToEth(collateralTokenInfo.symbol)]: assetAmountInEth(loanInfo.collateral, collateralTokenInfo.symbol),
+      [addressMapping ? collateralTokenInfo.address.toLowerCase() : wethToEth(collateralTokenInfo.symbol)]: assetAmountInEth(loanInfo.collateral.toString(), collateralTokenInfo.symbol),
     },
     debt: {
-      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(loanInfo.borrowedInAssets, loanTokenInfo.symbol),
+      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(loanInfo.borrowedInAssets.toString(), loanTokenInfo.symbol),
     },
   };
 
   return balances;
 };
+
+export const getMorphoBlueAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  selectedMarket: MorphoBlueMarketData,
+): Promise<PositionBalances> => _getMorphoBlueAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, selectedMarket);
 
 export async function _getMorphoBlueAccountData(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   const {
@@ -217,9 +219,5 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
 }
 
 export async function getMorphoBlueAccountData(provider: EthereumProvider, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getMorphoBlueAccountData(client, network, account, selectedMarket, marketInfo);
+  return _getMorphoBlueAccountData(getViemProvider(provider, network), network, account, selectedMarket, marketInfo);
 }
