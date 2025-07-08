@@ -1,18 +1,18 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import Web3 from 'web3';
-import { Client, createPublicClient } from 'viem';
+import { Client } from 'viem';
 import {
   LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
 } from '../types';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { LlamaLendViewContract, LlamaLendViewContractViem } from '../contracts';
+import { LlamaLendViewContractViem } from '../contracts';
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
 import { getEthAmountForDecimals, wethToEth } from '../services/utils';
 import { getLlamaLendMarketFromControllerAddress } from '../markets/llamaLend';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const getAndFormatBands = async (provider: Client, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
   const contract = LlamaLendViewContractViem(provider, network);
@@ -139,14 +139,11 @@ export const _getLlamaLendGlobalData = async (provider: Client, network: Network
   };
 };
 
-export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData): Promise<LlamaLendGlobalMarketData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-
-  return _getLlamaLendGlobalData(client, network, selectedMarket);
-};
+export const getLlamaLendGlobalData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  selectedMarket: LlamaLendMarketData,
+): Promise<LlamaLendGlobalMarketData> => _getLlamaLendGlobalData(getViemProvider(provider, network), network, selectedMarket);
 
 const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied: string, collSupplied: string, healthPercent: string) => {
   // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
@@ -162,7 +159,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied:
   return LlamaLendStatus.Nonexistant;
 };
 
-export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
+export const _getLlamaLendAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -172,22 +169,31 @@ export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNu
     return balances;
   }
 
-  const contract = LlamaLendViewContract(web3, network, block);
+  const contract = LlamaLendViewContractViem(provider, network, block);
 
   const selectedMarket = getLlamaLendMarketFromControllerAddress(controllerAddress, network);
-  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address], setViemBlockNumber(block));
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount.toString(),
     },
     debt: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount.toString(),
     },
   };
 
   return balances;
 };
+
+export const getLlamaLendAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  controllerAddress: EthAddress,
+): Promise<PositionBalances> => _getLlamaLendAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, controllerAddress);
 
 export const _getLlamaLendUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
   const contract = LlamaLendViewContractViem(provider, network);
@@ -275,16 +281,16 @@ export const _getLlamaLendUserData = async (provider: Client, network: NetworkNu
   };
 };
 
-export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(web3._provider.host),
-  });
-  return _getLlamaLendUserData(client, network, address, selectedMarket, marketData);
-};
+export const getLlamaLendUserData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  selectedMarket: LlamaLendMarketData,
+  marketData: LlamaLendGlobalMarketData,
+): Promise<LlamaLendUserData> => _getLlamaLendUserData(getViemProvider(provider, network), network, address, selectedMarket, marketData);
 
-export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
-  const marketData = await getLlamaLendGlobalData(web3, network, selectedMarket);
-  const positionData = await getLlamaLendUserData(web3, network, address, selectedMarket, marketData);
+export const getLlamaLendFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
+  const marketData = await getLlamaLendGlobalData(provider, network, selectedMarket);
+  const positionData = await getLlamaLendUserData(provider, network, address, selectedMarket, marketData);
   return positionData;
 };

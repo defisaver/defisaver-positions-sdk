@@ -114,8 +114,6 @@ export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes
 export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');
 export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
 
-export const LlamaLendViewContract = createContractFromConfigFunc<ContractTypes.LlamaLendView>('LlamaLendView');
-
 export const LiquityV2ViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2View>('LiquityV2View');
 export const LiquityV2LegacyViewContract = createContractFromConfigFunc<ContractTypes.LiquityV2LegacyView>('LiquityV2LegacyView');
 
