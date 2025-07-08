@@ -87,10 +87,6 @@ export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.U
 
 export const wstETHContract = createContractFromConfigFunc<ContractTypes.WstETH>('wstETH');
 
-export const CompoundLoanInfoContract = createContractFromConfigFunc<ContractTypes.CompoundLoanInfo>('CompoundLoanInfo');
-
-export const ComptrollerContract = createContractFromConfigFunc<ContractTypes.Comptroller>('Comptroller');
-
 export const PotContract = createContractFromConfigFunc<ContractTypes.Pot>('Pot');
 
 export const SparkIncentiveDataProviderContract = createContractFromConfigFunc<ContractTypes.SparkIncentiveDataProvider>('SparkIncentiveDataProvider');
@@ -159,3 +155,4 @@ export const McdSpotterContractViem = createViemContractFromConfigFunc('McdSpott
 export const McdDogContractViem = createViemContractFromConfigFunc('McdDog');
 export const McdJugContractViem = createViemContractFromConfigFunc('McdJug');
 export const CompoundLoanInfoContractViem = createViemContractFromConfigFunc('CompoundLoanInfo');
+export const ComptrollerContractViem = createViemContractFromConfigFunc('Comptroller');
