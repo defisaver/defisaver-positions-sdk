@@ -1,9 +1,8 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
-import { Client, createPublicClient } from 'viem';
+import { Client } from 'viem';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   ethToWeth, wethToEth, wethToEthByAddress,
@@ -12,7 +11,6 @@ import {
   calculateNetApy, getStakingApy, STAKING_ASSETS,
 } from '../staking';
 import {
-  SparkViewContract,
   createContractWrapper,
   SparkViewContractViem,
   SparkIncentiveDataProviderContractViem,
@@ -28,10 +26,10 @@ import {
   SparkUsedAsset,
   SparkUsedAssets,
 } from '../types';
-import { multicall } from '../multicall';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import { SPARK_V1 } from '../markets/spark';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkAssetsData }, usedAssets: SparkUsedAssets) => {
   const { assetsData } = extractedState;
@@ -246,13 +244,11 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
   return { assetsData: payload };
 };
 
-export const getSparkMarketsData = async (provider: Web3, network: NetworkNumber, selectedMarket: SparkMarketData): Promise<SparkMarketsData> => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getSparkMarketsData(client, network, selectedMarket);
-};
+export const getSparkMarketsData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  selectedMarket: SparkMarketData,
+): Promise<SparkMarketsData> => _getSparkMarketsData(getViemProvider(provider, network), network, selectedMarket);
 
 export const EMPTY_SPARK_DATA = {
   usedAssets: {},
@@ -274,7 +270,7 @@ export const EMPTY_SPARK_DATA = {
   eModeCategories: [],
 };
 
-export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const _getSparkAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -284,14 +280,14 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
     return balances;
   }
 
-  const loanInfoContract = SparkViewContract(web3, network, block);
+  const loanInfoContract = SparkViewContractViem(provider, network, block);
 
   const market = SPARK_V1(network);
   const marketAddress = market.providerAddress;
   // @ts-ignore
-  const protocolDataProviderContract = createContractWrapper(web3, network, market.protocolData, market.protocolDataAddress);
+  const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call({}, block);
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
@@ -299,22 +295,12 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
   // split addresses in half to avoid gas limit by multicall
   const middleAddressIndex = Math.floor(_addresses.length / 2);
 
-  const multicallData = [
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(0, middleAddressIndex)],
-    },
-    {
-      target: loanInfoContract.options.address,
-      abiItem: loanInfoContract.options.jsonInterface.find(({ name }) => name === 'getTokenBalances'),
-      params: [marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)],
-    },
-  ];
+  const [tokenBalances1, tokenBalances2] = await Promise.all([
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex)], setViemBlockNumber(block)),
+    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)], setViemBlockNumber(block)),
+  ]);
 
-  const multicallRes = await multicall(multicallData, web3, network, block);
-
-  const loanInfo = [...multicallRes[0][0], ...multicallRes[1][0]];
+  const loanInfo = [...tokenBalances1, ...tokenBalances2];
 
   loanInfo.forEach((tokenInfo: any, i: number) => {
     const asset = wethToEth(symbols[i]);
@@ -334,6 +320,14 @@ export const getSparkAccountBalances = async (web3: Web3, network: NetworkNumber
 
   return balances;
 };
+
+export const getSparkAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+): Promise<PositionBalances> => _getSparkAccountBalances(getViemProvider(provider, network, { batch: { multicall: true } }), network, block, addressMapping, address);
 
 export const _getSparkAccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
   const {
@@ -449,16 +443,15 @@ export const _getSparkAccountData = async (provider: Client, network: NetworkNum
   return payload;
 };
 
-export const getSparkAccountData = async (provider: Web3, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
-  const client = createPublicClient({
-    // @ts-ignore
-    transport: http(provider._provider.host),
-  });
-  return _getSparkAccountData(client, network, address, extractedState);
-};
+export const getSparkAccountData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData },
+) => _getSparkAccountData(getViemProvider(provider, network), network, address, extractedState);
 
-export const getSparkFullPositionData = async (web3: Web3, network: NetworkNumber, address: EthAddress, market: SparkMarketData): Promise<SparkPositionData> => {
-  const marketData = await getSparkMarketsData(web3, network, market);
-  const positionData = await getSparkAccountData(web3, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+export const getSparkFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, market: SparkMarketData): Promise<SparkPositionData> => {
+  const marketData = await getSparkMarketsData(provider, network, market);
+  const positionData = await getSparkAccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
   return positionData;
 };
