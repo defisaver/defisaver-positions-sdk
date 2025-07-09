@@ -1,8 +1,5 @@
-import Web3 from 'web3';
-import { getContract, Client, GetContractReturnType } from 'viem';
+import { getContract, Client } from 'viem';
 import * as configRaw from './config/contracts';
-import { BaseContract } from './types/contracts/generated/types';
-import * as ContractTypes from './types/contracts/generated';
 import {
   Blockish, EthAddress, HexString, NetworkNumber,
 } from './types/common';
@@ -69,23 +66,6 @@ export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: T
     client,
   });
 };
-
-const createContractFromConfigFunc = <T extends BaseContract>(name: ConfigKey, _address?: string) => (web3: Web3, network: NetworkNumber, block?: Blockish) => {
-  const address = _address || getConfigContractAddress(name, network, block);
-  return new web3.eth.Contract(getConfigContractAbi(name, network, block) as unknown as any[], address) as any as T;
-};
-
-export const getErc20Contract = (address: string, web3: Web3) => (
-  new web3.eth.Contract(getConfigContractAbi('Erc20') as unknown as any[], address)
-);
-
-export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: ConfigKey, _address?: string, block?: Blockish) => (
-  createContractFromConfigFunc(name, _address)(web3, network, block)
-);
-
-export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
-
-// Viem
 
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');

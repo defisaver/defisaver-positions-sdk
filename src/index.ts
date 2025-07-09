@@ -11,7 +11,6 @@ import * as liquity from './liquity';
 import * as liquityV2 from './liquityV2';
 import * as maker from './maker';
 import * as staking from './staking';
-import * as multicall from './multicall';
 import * as moneymarket from './moneymarket';
 import * as markets from './markets';
 import * as helpers from './helpers';
@@ -35,7 +34,6 @@ export {
   maker,
   exchange,
   staking,
-  multicall,
   moneymarket,
   markets,
   helpers,

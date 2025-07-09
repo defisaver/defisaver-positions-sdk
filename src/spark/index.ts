@@ -11,7 +11,6 @@ import {
   calculateNetApy, getStakingApy, STAKING_ASSETS,
 } from '../staking';
 import {
-  createContractWrapper,
   SparkViewContractViem,
   SparkIncentiveDataProviderContractViem,
   createViemContractFromConfigFunc,
