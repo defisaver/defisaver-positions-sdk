@@ -3,7 +3,9 @@ import { EthAddress } from './common';
 import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
 import { EulerV2PositionData, EulerV2Versions } from './euler';
+import { FluidVaultData } from './fluid';
 import { LiquityTroveInfo } from './liquity';
+import { LiquityV2TroveData, LiquityV2Versions } from './liquityV2';
 import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
 import { CdpData } from './maker';
 import { MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
@@ -26,12 +28,6 @@ export interface PortfolioPositionsData {
     eulerV2: {
       [key in EulerV2Versions]?: EulerV2PositionData;
     };
-    crvUsd: {
-      [key in CrvUSDVersions]?: CrvUSDUserData;
-    };
-    llamaLend: {
-      [key in LlamaLendVersionsType]?: LlamaLendUserData;
-    };
     maker: {
       [key: string]: CdpData;
     };
@@ -42,5 +38,22 @@ export interface PortfolioPositionsData {
       [key in CompoundVersions]?: CompoundV2PositionData;
     };
     liquity: LiquityTroveInfo | {};
+  };
+}
+
+export interface PortfolioPositionsDataSlower {
+  [key: EthAddress]: {
+    crvUsd: {
+      [key in CrvUSDVersions]?: CrvUSDUserData;
+    };
+    llamaLend: {
+      [key in LlamaLendVersionsType]?: LlamaLendUserData;
+    };
+    liquityV2: {
+      [key in LiquityV2Versions]?: Record<string, LiquityV2TroveData>;
+    };
+    fluid: {
+      [key: string]: FluidVaultData;
+    }
   };
 }

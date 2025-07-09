@@ -29,6 +29,15 @@ describe('Portfolio', () => {
     const network = NetworkNumber.Eth;
 
     const portfolioData = await fetchPortfolioData(network, provider);
+    console.log('Portfolio Data:', portfolioData);
+  });
+
+  it('can fetch portfolio slower data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const portfolioData = await sdk.portfolio.getPortfolioDataSlower(provider, network, ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0xb4d3bea9d824c4dd7ded7ccc93e6212e3f0b186a']);
+    console.log('Portfolio Slower Data:', portfolioData);
   });
 
   it('can fetch portfolio data for Arbitrum', async function () {
