@@ -263,7 +263,7 @@ const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, Liquit
 /**
  * @param markets
  * @param selectedMarket
- * @param web3
+ * @param provider
  * @param network
  * @param viewContract
  * @param interestRate

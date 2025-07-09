@@ -85,28 +85,7 @@ describe('Fluid', () => {
 
     const allMarketData = await fetchAllMarketData(network, provider);
   });
-  //
-  //   const allMarketData = await fetchAllMarketData(network, web3);
-  // });
 
-  // it('can fetch user nft ids on Arbitrum', async function () {
-  //   this.timeout(10000);
-  //   const nftIds = await fetchUserNftIds(testWhaleAddress, NetworkNumber.Arb, web3Arb);
-  //   console.log(nftIds);
-  // });
-
-  //   it('can fetch all market data on Arbitrum', async function () {
-  //     this.timeout(10000);
-  //     const network = NetworkNumber.Arb;
-  //
-  //     const allMarketData = await fetchAllMarketData(network, web3Arb);
-  //   });
-  //   it('can fetch all market data on Base', async function () {
-  //     this.timeout(10000);
-  //     const network = NetworkNumber.Base;
-  //
-  //     const allMarketData = await fetchAllMarketData(network, web3Base);
-  //   });
   it('get all user positions', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
