@@ -85,16 +85,6 @@ export const createContractWrapper = (web3: Web3, network: NetworkNumber, name: 
 
 export const UniMulticallContract = createContractFromConfigFunc<ContractTypes.UniMulticall>('UniMulticall');
 
-export const ETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.ETHPriceFeed>('ETHPriceFeed');
-export const BTCPriceFeedContract = createContractFromConfigFunc<ContractTypes.BTCPriceFeed>('BTCPriceFeed');
-export const WstETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WstETHPriceFeed>('WstETHPriceFeed');
-export const WeETHPriceFeedContract = createContractFromConfigFunc<ContractTypes.WeETHPriceFeed>('WeETHPriceFeed');
-
-export const DFSFeedRegistryContract = createContractFromConfigFunc<ContractTypes.DFSFeedRegistry>('DFSFeedRegistry');
-export const FeedRegistryContract = createContractFromConfigFunc<ContractTypes.FeedRegistry>('FeedRegistry');
-
-export const FluidViewContract = createContractFromConfigFunc<ContractTypes.FluidView>('FluidView');
-
 // Viem
 
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
@@ -123,6 +113,9 @@ export const McdJugContractViem = createViemContractFromConfigFunc('McdJug');
 export const CompoundLoanInfoContractViem = createViemContractFromConfigFunc('CompoundLoanInfo');
 export const ComptrollerContractViem = createViemContractFromConfigFunc('Comptroller');
 
+export const WeETHPriceFeedContractViem = createViemContractFromConfigFunc('WeETHPriceFeed');
+export const BTCPriceFeedContractViem = createViemContractFromConfigFunc('BTCPriceFeed');
+
 export const LiquityViewContractViem = createViemContractFromConfigFunc('LiquityView');
 export const LiquityCollSurplusPoolContractViem = createViemContractFromConfigFunc('CollSurplusPool');
 export const LiquityTroveManagerContractViem = createViemContractFromConfigFunc('TroveManager');
@@ -131,3 +124,5 @@ export const LiquityActivePoolContractViem = createViemContractFromConfigFunc('L
 
 export const LiquityV2ViewContractViem = createViemContractFromConfigFunc('LiquityV2View');
 export const LiquityV2LegacyViewContractViem = createViemContractFromConfigFunc('LiquityV2LegacyView');
+
+export const FluidViewContractViem = createViemContractFromConfigFunc('FluidView');

@@ -1,19 +1,15 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { getAssetInfo } from '@defisaver/tokens';
-import { Client } from 'viem';
+import { Client, PublicClient } from 'viem';
 import {
   COMPPriceFeedContractViem,
-  ETHPriceFeedContract,
-  BTCPriceFeedContract,
-  WeETHPriceFeedContract,
+  BTCPriceFeedContractViem,
   ETHPriceFeedContractViem,
   USDCPriceFeedContractViem,
-  WstETHPriceFeedContract,
   WstETHPriceFeedContractViem,
+  WeETHPriceFeedContractViem,
 } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
-import { multicall } from '../multicall';
 import { getEthAmountForDecimals } from './utils';
 
 export const getEthPrice = async (client: Client) => {
@@ -50,82 +46,89 @@ export const getWstETHPrice = async (client: Client) => {
   return new Dec(ethPrice).mul(wstETHRate).toString();
 };
 
-export const getWstETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber) => {
-  const wstETHFeedContract = WstETHPriceFeedContract(web3, network);
-  const ethFeedContract = ETHPriceFeedContract(web3, network);
+export const getWstETHChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
+  const wstETHFeedContract = WstETHPriceFeedContractViem(client, network);
+  const ethFeedContract = ETHPriceFeedContractViem(client, network);
   const calls = [
     {
-      target: ethFeedContract.options.address,
-      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
-      params: [],
+      address: ethFeedContract.address,
+      abi: ethFeedContract.abi,
+      functionName: 'latestAnswer',
+      args: [],
     },
     {
-      target: wstETHFeedContract.options.address,
-      abiItem: wstETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
-      params: [],
+      address: wstETHFeedContract.address,
+      abi: wstETHFeedContract.abi,
+      functionName: 'latestRoundData',
+      args: [],
     },
     {
-      target: wstETHFeedContract.options.address,
-      abiItem: wstETHFeedContract.options.jsonInterface.find(({ name }) => name === 'decimals'),
-      params: [],
+      address: wstETHFeedContract.address,
+      abi: wstETHFeedContract.abi,
+      functionName: 'decimals',
+      args: [],
     },
   ];
   return calls;
 };
 
-export const getWeETHChainLinkPriceCalls = (web3: Web3, network: NetworkNumber) => {
-  const weETHFeedContract = WeETHPriceFeedContract(web3, network);
-  const ethFeedContract = ETHPriceFeedContract(web3, network);
+export const getWeETHChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
+  const weETHFeedContract = WeETHPriceFeedContractViem(client, network);
+  const ethFeedContract = ETHPriceFeedContractViem(client, network);
   const calls = [
     {
-      target: ethFeedContract.options.address,
-      abiItem: ethFeedContract.options.jsonInterface.find(({ name }) => name === 'latestAnswer'),
-      params: [],
+      address: ethFeedContract.address,
+      abi: ethFeedContract.abi,
+      functionName: 'latestAnswer',
+      args: [],
     },
     {
-      target: weETHFeedContract.options.address,
-      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'latestRoundData'),
-      params: [],
+      address: weETHFeedContract.address,
+      abi: weETHFeedContract.abi,
+      functionName: 'latestRoundData',
+      args: [],
     },
     {
-      target: weETHFeedContract.options.address,
-      abiItem: weETHFeedContract.options.jsonInterface.find(({ name }) => name === 'decimals'),
-      params: [],
+      address: weETHFeedContract.address,
+      abi: weETHFeedContract.abi,
+      functionName: 'decimals',
+      args: [],
     },
   ];
   return calls;
 };
 
-export const parseWstETHPriceCalls = (_ethPrice: string, wstETHrate: { answer: string }, decimals: string) => {
+export const parseWstETHPriceCalls = (_ethPrice: string, wstETHrateAnswer: string, decimals: string) => {
   const ethPrice = new Dec(_ethPrice).div(1e8);
-  const wstETHRate = getEthAmountForDecimals(wstETHrate.answer, decimals);
+  const wstETHRate = getEthAmountForDecimals(wstETHrateAnswer, decimals);
   return { ethPrice, wstETHRate };
 };
 
-export const parseWeETHPriceCalls = (_ethPrice: string, weETHrate: { answer: string }, decimals: string) => {
+export const parseWeETHPriceCalls = (_ethPrice: string, weETHrateAnswer: string, decimals: string) => {
   const ethPrice = new Dec(_ethPrice).div(1e8);
-  const weETHRate = getEthAmountForDecimals(weETHrate.answer, decimals);
+  const weETHRate = getEthAmountForDecimals(weETHrateAnswer, decimals);
   return { ethPrice, weETHRate };
 };
 
 // this is a fixed version, the original version is above but requires to refactor comp v3 function, so it's easier to just copy the function for now
-export const getWstETHPriceFluid = async (web3: Web3, network: NetworkNumber) => {
-  const calls = getWstETHChainLinkPriceCalls(web3, network);
-  const multicallRes = await multicall(calls, web3, network);
-  const { ethPrice, wstETHRate } = parseWstETHPriceCalls(multicallRes[0][0], multicallRes[1], multicallRes[2][0]);
+export const getWstETHPriceFluid = async (client: PublicClient, network: NetworkNumber) => {
+  const calls = getWstETHChainLinkPriceCalls(client, network);
+  const results = await client.multicall({ contracts: calls });
+  // @ts-ignore
+  const { ethPrice, wstETHRate } = parseWstETHPriceCalls(results[0].result!.toString(), results[1].result[1]!.toString(), results[2].result!.toString());
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
 };
 
-export const getBTCPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
-  const contract = BTCPriceFeedContract(web3, network);
-  const price = await contract.methods.latestAnswer().call();
+export const getBTCPriceForFluid = async (client: PublicClient, network: NetworkNumber) => {
+  const contract = BTCPriceFeedContractViem(client, network);
+  const price = await contract.read.latestAnswer();
   return new Dec(price).div(1e8).toString();
 };
 
-export const getEthPriceForFluid = async (web3: Web3, network: NetworkNumber) => {
-  const contract = ETHPriceFeedContract(web3, network);
-  const price = await contract.methods.latestAnswer().call();
+export const getEthPriceForFluid = async (client: PublicClient, network: NetworkNumber) => {
+  const contract = ETHPriceFeedContractViem(client, network);
+  const price = await contract.read.latestAnswer();
   return new Dec(price).div(1e8).toString();
 };
 

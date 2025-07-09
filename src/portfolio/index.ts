@@ -49,14 +49,14 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const client = getViemProvider(provider, network, {
     batch: {
       multicall: {
-        batchSize: 16384,
+        batchSize: 2500000,
       },
     },
   });
   const defaultClient = getViemProvider(defaultProvider, network, {
     batch: {
       multicall: {
-        batchSize: 16384,
+        batchSize: 2500000,
       },
     },
   });

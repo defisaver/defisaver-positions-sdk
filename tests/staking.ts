@@ -1,16 +1,15 @@
 import 'dotenv/config';
-import Web3 from 'web3';
-import nock from 'nock';
-import { getWeb3Instance } from './utils/getWeb3Instance';
 
 import * as sdk from '../src';
+import { getProvider } from './utils/getProvider';
+import { EthereumProvider } from '../src/types/common';
 
 const { assert } = require('chai');
 
 describe('Staking utils', () => {
-  let web3: Web3;
+  let provider: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
+    provider = getProvider('RPC');
   });
 
   it('can fetch APY for staking assets', async function () {

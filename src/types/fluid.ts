@@ -1,4 +1,4 @@
-import { NetworkNumber } from './common';
+import { EthAddress, NetworkNumber } from './common';
 
 export interface FluidMarketInfo {
   chainIds: number[]
@@ -7,7 +7,7 @@ export interface FluidMarketInfo {
   value: FluidVersions
   url: string
   id?: number
-  marketAddress: string
+  marketAddress: EthAddress
   hasSmartCollateral: boolean
   hasSmartDebt: boolean
   collateralAsset0: string
@@ -221,7 +221,7 @@ export interface InnerFluidMarketData {
   marketAddress: string,
   vaultType: FluidVaultType,
   vaultValue?: FluidVersions
-  oracle: string,
+  oracle: EthAddress,
   liquidationPenaltyPercent: string,
   collFactor: string,
   liquidationRatio: string,
@@ -329,3 +329,122 @@ export interface BaseFluidVaultData {
 }
 
 export type FluidVaultData = FluidAggregatedVaultData & BaseFluidVaultData;
+
+export interface FluidDexSupplyDataStructOutput {
+  dexPool: EthAddress;
+  dexId: bigint;
+  fee: bigint;
+  lastStoredPrice: bigint;
+  centerPrice: bigint;
+  token0Utilization: bigint;
+  token1Utilization: bigint;
+  totalSupplyShares: bigint;
+  maxSupplyShares: bigint;
+  token0Supplied: bigint;
+  token1Supplied: bigint;
+  sharesWithdrawable: bigint;
+  token0Withdrawable: bigint;
+  token1Withdrawable: bigint;
+  token0PerSupplyShare: bigint;
+  token1PerSupplyShare: bigint;
+  token0SupplyRate: bigint;
+  token1SupplyRate: bigint;
+  supplyToken0Reserves: bigint;
+  supplyToken1Reserves: bigint;
+}
+
+export interface FluidDexBorrowDataStructOutput {
+  quoteToken: EthAddress;
+  dexPool: EthAddress;
+  dexId: bigint;
+  fee: bigint;
+  lastStoredPrice: bigint;
+  centerPrice: bigint;
+  token0Utilization: bigint;
+  token1Utilization: bigint;
+  totalBorrowShares: bigint;
+  maxBorrowShares: bigint;
+  token0Borrowed: bigint;
+  token1Borrowed: bigint;
+  sharesBorrowable: bigint;
+  token0Borrowable: bigint;
+  token1Borrowable: bigint;
+  token0PerBorrowShare: bigint;
+  token1PerBorrowShare: bigint;
+  token0BorrowRate: bigint;
+  token1BorrowRate: bigint;
+  quoteTokensPerShare: bigint;
+  borrowToken0Reserves: bigint;
+  borrowToken1Reserves: bigint;
+}
+
+export interface FluidVaultDataStructOutputStruct {
+  vault: EthAddress;
+  vaultId: bigint;
+  vaultType: bigint;
+  isSmartColl: boolean;
+  isSmartDebt: boolean;
+  supplyToken0: EthAddress;
+  supplyToken1: EthAddress;
+  borrowToken0: EthAddress;
+  borrowToken1: EthAddress;
+  supplyRateVault: bigint;
+  borrowRateVault: bigint;
+  oraclePriceOperate: bigint;
+  totalSupplyVault: bigint;
+  totalBorrowVault: bigint;
+  liquidationThreshold: number;
+  liquidationMaxLimit: number;
+  oracle: EthAddress;
+  liquidationPenalty: number;
+  collateralFactor: number;
+  totalPositions: bigint;
+  withdrawalLimit: bigint;
+  withdrawableUntilLimit: bigint;
+  withdrawable: bigint;
+  borrowLimit: bigint;
+  borrowableUntilLimit: bigint;
+  borrowable: bigint;
+  borrowLimitUtilization: bigint;
+  maxBorrowLimit: bigint;
+  baseBorrowLimit: bigint;
+  minimumBorrowing: bigint;
+  dexSupplyData: FluidDexSupplyDataStructOutput;
+  dexBorrowData: FluidDexBorrowDataStructOutput;
+}
+
+export interface FluidUserPositionStructOutputStruct {
+  nftId: bigint;
+  owner: EthAddress;
+  isLiquidated: boolean;
+  isSupplyPosition: boolean;
+  supply: bigint;
+  borrow: bigint;
+  ratio: bigint;
+  tick: bigint;
+  tickId: bigint;
+}
+
+export interface FluidUserEarnPositionStructOutput {
+  fTokenShares: bigint;
+  underlyingAssets: bigint;
+  underlyingBalance: bigint;
+  allowance: bigint;
+}
+
+export interface FluidFTokenDataStructOutput {
+  tokenAddress: EthAddress;
+  isNativeUnderlying: boolean;
+  name: string;
+  symbol: string;
+  decimals: bigint;
+  asset: EthAddress;
+  totalAssets: bigint;
+  totalSupply: bigint;
+  convertToShares: bigint;
+  convertToAssets: bigint;
+  expandDuration: bigint;
+  supplyRate: bigint;
+  rewardsRate: bigint;
+  withdrawable: bigint;
+}

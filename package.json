@@ -13,7 +13,7 @@
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
     "generate-contracts": "node scripts/generateContracts.js",
-    "test": "mocha tests/liquityV2.ts",
+    "test": "mocha tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "build-test": "npm run build && npm run test",
