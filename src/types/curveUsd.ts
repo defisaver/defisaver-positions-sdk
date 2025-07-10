@@ -1,4 +1,4 @@
-import { NetworkNumber } from './common';
+import { EthAddress, NetworkNumber } from './common';
 
 export enum CrvUSDVersions {
   'crvUSDwstETH' = 'wstETH',
@@ -23,8 +23,8 @@ export interface CrvUSDMarketData {
   value: CrvUSDVersions,
   collAsset: string,
   baseAsset: string,
-  controllerAddress: string,
-  ammAddress: string,
+  controllerAddress: EthAddress,
+  ammAddress: EthAddress,
   createCollAssets: string[],
 }
 

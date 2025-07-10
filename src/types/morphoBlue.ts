@@ -1,4 +1,4 @@
-import { MMUsedAssets, NetworkNumber } from './common';
+import { EthAddress, MMUsedAssets, NetworkNumber } from './common';
 
 export enum MorphoBlueVersions {
   // MAINNET
@@ -77,11 +77,11 @@ export interface MorphoBlueMarketData {
   shortLabel: string,
   url: string,
   value: MorphoBlueVersions,
-  loanToken: string,
-  collateralToken: string,
-  oracle: string,
+  loanToken: EthAddress,
+  collateralToken: EthAddress,
+  oracle: EthAddress,
   oracleType: MorphoBlueOracleType,
-  irm: string,
+  irm: EthAddress,
   lltv: number | string,
   marketId: string,
   // icon: Function,

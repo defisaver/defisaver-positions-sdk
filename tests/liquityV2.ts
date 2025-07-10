@@ -1,28 +1,26 @@
 /* eslint-disable func-names */
 import 'dotenv/config';
-import Web3 from 'web3';
 
 import * as sdk from '../src';
 
-import { NetworkNumber } from '../src/types/common';
-import { getWeb3Instance } from './utils/getWeb3Instance';
-import { LiquityV2ViewContract } from '../src/contracts';
+import { EthereumProvider, NetworkNumber } from '../src/types/common';
+import { getProvider } from './utils/getProvider';
 
 const TROVE_ID = '70060145442968520127940599527972768745683442224908533738190719306518908292482';
 
 describe('Liquity V2', () => {
-  let web3: Web3;
+  let provider: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
+    provider = getProvider('RPC');
   });
 
-  const fetchMarketData = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo) => {
-    const marketData = await sdk.liquityV2.getLiquityV2MarketData(_web3, network, market, web3);
+  const fetchMarketData = async (_provider: EthereumProvider, network: NetworkNumber, market: sdk.LiquityV2MarketInfo) => {
+    const marketData = await sdk.liquityV2.getLiquityV2MarketData(_provider, network, market);
     // console.log(marketData.assetsData);
     return marketData;
   };
 
-  const fetchAllMarketsData = async (_web3: Web3, network: NetworkNumber) => {
+  const fetchAllMarketsData = async (_provider: EthereumProvider, network: NetworkNumber) => {
     const markets = sdk.markets.LiquityV2Markets(network);
 
     const marketsData: Record<sdk.LiquityV2Versions, sdk.LiquityV2MarketData> = {} as Record<sdk.LiquityV2Versions, sdk.LiquityV2MarketData>;
@@ -30,21 +28,21 @@ describe('Liquity V2', () => {
     for (const version of Object.keys(markets)) {
       const market = markets[version as sdk.LiquityV2Versions];
 
-      marketsData[version as sdk.LiquityV2Versions] = await fetchMarketData(_web3, network, market);
+      marketsData[version as sdk.LiquityV2Versions] = await fetchMarketData(_provider, network, market);
     }
 
     return marketsData;
   };
 
-  const fetchUserTroves = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData) => {
-    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_web3, network, market, marketData.marketData.troveNFTAddress, false, '0xDc0Ad7a48088f1AA55d26f8b36F7C1E827DdD280');
+  const fetchUserTroves = async (_provider: EthereumProvider, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData) => {
+    const { troves, nextFreeTroveIndex } = await sdk.liquityV2.getLiquityV2UserTroveIds(_provider, network, market, marketData.marketData.troveNFTAddress, false, '0xDc0Ad7a48088f1AA55d26f8b36F7C1E827DdD280');
     // console.log(troves);
     // console.log(nextFreeTroveIndex);
   };
 
-  const fetchTroveData = async (_web3: Web3, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData, troveId: string) => {
-    const allMarketsData = await fetchAllMarketsData(_web3, network);
-    const troveData = await sdk.liquityV2.getLiquityV2TroveData(_web3, network, {
+  const fetchTroveData = async (_provider: EthereumProvider, network: NetworkNumber, market: sdk.LiquityV2MarketInfo, marketData: sdk.LiquityV2MarketData, troveId: string) => {
+    const allMarketsData = await fetchAllMarketsData(_provider, network);
+    const troveData = await sdk.liquityV2.getLiquityV2TroveData(_provider, network, {
       selectedMarket: market, assetsData: marketData.assetsData, troveId, allMarketsData,
     });
     // console.log(troveData);
@@ -54,18 +52,18 @@ describe('Liquity V2', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
-    const marketData = await fetchMarketData(web3, network, market);
+    const marketData = await fetchMarketData(provider, network, market);
 
-    await fetchUserTroves(web3, network, market, marketData);
+    await fetchUserTroves(provider, network, market, marketData);
   });
 
   it('can fetch troves for user on ETH Legacy market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2EthLegacy];
-    const marketData = await fetchMarketData(web3, network, market);
+    const marketData = await fetchMarketData(provider, network, market);
 
-    await fetchUserTroves(web3, network, market, marketData);
+    await fetchUserTroves(provider, network, market, marketData);
   });
 
   it('can fetch trove data for ETH market on Ethereum', async function () {
@@ -73,8 +71,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
   it('can fetch trove data for ETH Legacy market on Ethereum', async function () {
@@ -82,8 +80,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2EthLegacy];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
 
@@ -92,8 +90,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2WstEth];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
   it('can fetch trove data for wstETH Legacy market on Ethereum', async function () {
@@ -101,8 +99,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2WstEthLegacy];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
   it('can fetch trove data for rETH market on Ethereum', async function () {
@@ -110,8 +108,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2REth];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
   it('can fetch trove data for rETH Legacy market on Ethereum', async function () {
@@ -119,8 +117,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2REthLegacy];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    await fetchTroveData(web3, network, market, marketData, TROVE_ID);
+    const marketData = await fetchMarketData(provider, network, market);
+    await fetchTroveData(provider, network, market, marketData, TROVE_ID);
   });
 
   it('can fetch claimable coll on Ethereum', async function () {
@@ -128,8 +126,8 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.markets.LiquityV2Markets(network)[sdk.LiquityV2Versions.LiquityV2Eth];
 
-    const marketData = await fetchMarketData(web3, network, market);
-    const claimableCollateral = await sdk.liquityV2.getLiquityV2ClaimableCollateral(marketData.marketData.collSurplusPoolAddress, '0x9768F31bd299fA1cA98EDd7Aa15Fc84d94C33f7C', web3, network);
+    const marketData = await fetchMarketData(provider, network, market);
+    const claimableCollateral = await sdk.liquityV2.getLiquityV2ClaimableCollateral(marketData.marketData.collSurplusPoolAddress, '0x9768F31bd299fA1cA98EDd7Aa15Fc84d94C33f7C', provider, network);
   });
 
   it('can calculate ETH debt in front for interest rate on Ethereum', async function () {
@@ -137,7 +135,7 @@ describe('Liquity V2', () => {
     const network = NetworkNumber.Eth;
     const market = sdk.LiquityV2Versions.LiquityV2Eth;
 
-    const allMarketsData = await fetchAllMarketsData(web3, network);
-    const debtInFrontForInterestRate = await sdk.liquityV2.getDebtInFrontForInterestRateLiquityV2(allMarketsData, market, web3, network, LiquityV2ViewContract(web3, network), '6.1');
+    const allMarketsData = await fetchAllMarketsData(provider, network);
+    const debtInFrontForInterestRate = await sdk.liquityV2.getDebtInFrontForInterestRateLiquityV2(allMarketsData, market, provider, network, false, '6.1');
   });
 });
