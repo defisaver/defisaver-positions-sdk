@@ -152,4 +152,6 @@ export interface LlamaLendUserData {
   suppliedForYieldUsd: string,
   safetyRatio: string,
   userBands: UserBandData[],
+  loanExists: boolean,
+  borrowRate?: string,
 }

@@ -239,7 +239,7 @@ export async function getPortfolioDataSlower(provider: EthereumProvider, network
     ...llamaLendMarkets.map((market) => addresses.map(async (address) => {
       const accData = await _getLlamaLendUserData(client, network, address, market, llamaLendMarketsData[market.value]);
       if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-        positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = accData;
+        positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { ...accData, borrowRate: llamaLendMarketsData[market.value].borrowRate };
       }
     })).flat(),
     ...liquityV2Markets.map((market) => addresses.map(async (address) => {
