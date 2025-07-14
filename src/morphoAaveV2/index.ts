@@ -22,11 +22,16 @@ export const getMorphoAaveV2MarketsData = async (web3: Web3, network: NetworkNum
 
   const [contractData, morphoRewardsRes] = await Promise.allSettled([
     morphoAaveV2ViewContract.methods.getAllMarketsInfo().call(),
-    fetch('https://api.morpho.xyz/rewards/distribution'),
+    fetch('https://api.morpho.xyz/rewards/distribution',
+      { signal: AbortSignal.timeout(5000) }),
   ]);
 
   if (contractData.status !== 'fulfilled') {
     throw new Error('Failed to fetch market data.');
+  }
+
+  if (morphoRewardsRes.status !== 'fulfilled') {
+    console.error('External API Failure: Morpho Aave v2 rewards api', morphoRewardsRes.reason);
   }
 
   const { marketInfo, aaveTokenInfo } = contractData.value;
