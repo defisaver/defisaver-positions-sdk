@@ -182,7 +182,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
 export async function getPortfolioDataSlower(provider: EthereumProvider, network: NetworkNumber, addresses: EthAddress[]): Promise<PortfolioPositionsDataSlower> {
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
-  const liquityV2Markets = [LiquityV2Versions.LiquityV2Eth, LiquityV2Versions.LiquityV2REth, LiquityV2Versions.LiquityV2WstEth].map((version) => LiquityV2Markets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const liquityV2Markets = Object.values(LiquityV2Markets(network)).filter((market) => market.chainIds.includes(network));
 
   const client = getViemProvider(provider, network, {
     batch: {
