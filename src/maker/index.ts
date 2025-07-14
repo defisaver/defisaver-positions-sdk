@@ -167,7 +167,7 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     chop.toString(),
   );
 
-  const collateral = assetAmountInEth(ink.toString(), cdp.asset);
+  const collateral = assetAmountInEth(ink.toString(), `MCD-${cdp.asset}`);
 
   const collateralUsd = new Dec(collateral).mul(collInfo.assetPrice).toString();
   const debt = new Dec(art).times(collInfo.currentRate).div(1e27).floor()
