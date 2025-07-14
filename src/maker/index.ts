@@ -168,16 +168,15 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
   );
 
   const collateral = assetAmountInEth(ink.toString(), cdp.asset);
-  const cdpDebt = assetAmountInEth(art.toString(), 'DAI');
 
-  const collateralUsd = new Dec(collateral).mul(collInfo.assetPrice).floor().toString();
-  const debt = new Dec(cdpDebt).times(collInfo.currentRate).div(1e27).floor()
+  const collateralUsd = new Dec(collateral).mul(collInfo.assetPrice).toString();
+  const debt = new Dec(art).times(collInfo.currentRate).div(1e27).floor()
     .toString();
-  const futureDebt = new Dec(cdpDebt).times(collInfo.futureRate).div(1e27).floor()
+  const futureDebt = new Dec(art).times(collInfo.futureRate).div(1e27).floor()
     .toString(); // after drip
-  const liquidationPrice = new Dec(debt).times(collInfo.liqRatio).div(collateral).toString();
+  const liquidationPrice = new Dec(debt).times(collInfo.liqRatio).div(ink).toString();
 
-  let ratio = new Dec(collateral).times(collInfo.assetPrice).div(debt).times(100)
+  let ratio = new Dec(ink).times(collInfo.assetPrice).div(debt).times(100)
     .toString();
   if (new Dec(debt).eq(0)) ratio = '0';
 
