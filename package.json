@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "1.0.21",
+  "version": "1.0.26",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -23,7 +23,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.6.7",
+    "@defisaver/tokens": "^1.6.14",
     "@ethersproject/bignumber": "^5.7.0",
     "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
     "@types/lodash": "^4.17.15",
