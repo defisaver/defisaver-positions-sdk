@@ -223,7 +223,7 @@ export async function getPortfolioDataSlower(provider: EthereumProvider, network
       const userPositions = await _getUserPositions(client, network, address);
       for (const position of userPositions) {
         if (new Dec(position.userData.suppliedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].fluid[position.userData.vaultId] = position.userData;
+          positions[address.toLowerCase() as EthAddress].fluid[position.userData.nftId] = position.userData;
         }
       }
     }),
