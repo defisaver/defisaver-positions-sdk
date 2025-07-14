@@ -189,9 +189,12 @@ const getChainLinkPricesForTokens = async (
 
       default:
         // @ts-ignore
-        if (!results[i + offset].result[1]) acc[token] = '0';
-        // @ts-ignore
-        else acc[token] = new Dec(results[i + offset].result[1]!.toString() as string).div(1e8).toString();
+        if (results[i + offset].result[1]) {
+          // @ts-ignore
+          acc[token] = new Dec(results[i + offset].result[1]!.toString() as string).div(1e8).toString();
+        } else if (results[i + offset].result) {
+          acc[token] = new Dec(results[i + offset].result!.toString() as string).div(1e8).toString();
+        } else acc[token] = '0';
         break;
     }
     return acc;
@@ -1155,7 +1158,6 @@ const parseT4UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
     ...EMPTY_FLUID_DATA,
     lastUpdated: Date.now(),
   };
-
   const collAsset0 = getAssetInfo(marketData.collAsset0);
   const collAsset1 = getAssetInfo(marketData.collAsset1);
   const debtAsset0 = getAssetInfo(marketData.debtAsset0);
