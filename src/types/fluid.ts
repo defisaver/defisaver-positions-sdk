@@ -326,6 +326,7 @@ export interface BaseFluidVaultData {
   lastUpdated: number,
   supplyShares?: string;
   borrowShares?: string;
+  nftId: string;
 }
 
 export type FluidVaultData = FluidAggregatedVaultData & BaseFluidVaultData;

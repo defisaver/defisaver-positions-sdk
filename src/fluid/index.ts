@@ -1002,6 +1002,7 @@ const parseT1UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   return {
     ...payload,
     usedAssets,
+    nftId: userPositionData.nftId.toString(),
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
@@ -1070,6 +1071,7 @@ const parseT2UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
     ...payload,
     usedAssets,
     supplyShares,
+    nftId: userPositionData.nftId.toString(),
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
@@ -1138,6 +1140,7 @@ const parseT3UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
     ...payload,
     usedAssets,
     borrowShares,
+    nftId: userPositionData.nftId.toString(),
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
@@ -1216,6 +1219,7 @@ const parseT4UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
     usedAssets,
     supplyShares,
     borrowShares,
+    nftId: userPositionData.nftId.toString(),
     ...(getFluidAggregatedData({
       usedAssets,
       assetsData,
@@ -1224,7 +1228,7 @@ const parseT4UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   };
 };
 
-const parseUserData = (userPositionData: FluidUserPositionStructOutputStruct, vaultData: FluidMarketData) => {
+const parseUserData = (userPositionData: FluidUserPositionStructOutputStruct, vaultData: FluidMarketData): FluidVaultData => {
   const vaultType = vaultData.marketData.vaultType;
   switch (vaultType) {
     case FluidVaultType.T1:
@@ -1427,7 +1431,7 @@ export const _getUserPositions = async (provider: PublicClient, network: Network
 
   const parsedMarketData = await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network)));
 
-  const userData = data[0].map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]), nftId: position.nftId }));
+  const userData = data[0].map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]) }));
 
   return parsedMarketData.map((market, i) => ({
     marketData: market,
