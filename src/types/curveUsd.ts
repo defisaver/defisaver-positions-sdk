@@ -117,4 +117,6 @@ export interface CrvUSDUserData {
   borrowed: string,
   safetyRatio: string,
   userBands: UserBandData[],
+  loanExists: boolean,
+  borrowRate?: string,
 }

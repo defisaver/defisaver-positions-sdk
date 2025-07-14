@@ -233,7 +233,7 @@ export async function getPortfolioDataSlower(provider: EthereumProvider, network
     ...crvUsdMarkets.map((market) => addresses.map(async (address) => {
       const accData = await _getCurveUsdUserData(client, network, address, market, crvUsdMarketsData[market.value].activeBand);
       if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-        positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = accData;
+        positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { ...accData, borrowRate: crvUsdMarketsData[market.value].borrowRate };
       }
     })).flat(),
     ...llamaLendMarkets.map((market) => addresses.map(async (address) => {
