@@ -231,3 +231,30 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
   }
   return data;
 };
+
+const xorLastByte = (address: string, xorValue: string): EthAddress => {
+  // Extract the last byte (2 hex characters)
+  const lastByte = address.slice(-2);
+
+  // XOR the last byte with the given xorValue
+
+  // eslint-disable-next-line no-bitwise
+  const xorResult = [...lastByte].map((char, i) => (parseInt(char, 16) ^ parseInt(xorValue[i], 16)).toString(16),
+  ).join('');
+
+  // Return the full address with the last byte XORed
+  return `0x${address.slice(0, -2)}${xorResult.padStart(2, '0')}`;
+};
+
+export const getEulerV2SubAccounts = (address: EthAddress): EthAddress[] => {
+  // Clean the address by removing "0x"
+  const cleanAddress = address.toLowerCase().replace(/^0x/, '');
+
+  // XOR the last byte with 0x01, 0x02, and 0x03
+  const xorWith01 = xorLastByte(cleanAddress, '01');
+  const xorWith02 = xorLastByte(cleanAddress, '02');
+  const xorWith03 = xorLastByte(cleanAddress, '03');
+
+  // Return an array with all three modified addresses
+  return [xorWith01, xorWith02, xorWith03];
+};

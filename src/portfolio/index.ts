@@ -37,6 +37,7 @@ import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo } from '../liquity';
 import { _getLiquityV2MarketData, _getLiquityV2TroveData, _getLiquityV2UserTroveIds } from '../liquityV2';
 import { _getUserPositions } from '../fluid';
+import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const isMainnet = network === NetworkNumber.Eth;
@@ -141,12 +142,19 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData });
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = accData;
     })).flat(),
-    ...eulerV2Markets.map((market) => addresses.map(async (address) => {
-      const accData = await _getEulerV2AccountData(client, network, address, address, { selectedMarket: market, ...eulerV2MarketsData[market.value] });
-      if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-        positions[address.toLowerCase() as EthAddress].eulerV2[market.value] = accData;
-      }
-    })).flat(),
+    ...eulerV2Markets.map((market) => addresses.map((address) => {
+      const eulerV2SubAccounts = getEulerV2SubAccounts(address);
+      const eulerV2Addresses = [address, ...eulerV2SubAccounts];
+      return Promise.all(eulerV2Addresses.map(async (eulerAddress) => {
+        const accData = await _getEulerV2AccountData(client, network, eulerAddress, eulerAddress, { selectedMarket: market, ...eulerV2MarketsData[market.value] });
+        if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
+          if (!positions[address.toLowerCase() as EthAddress].eulerV2[market.value]) {
+            positions[address.toLowerCase() as EthAddress].eulerV2[market.value] = {};
+          }
+          positions[address.toLowerCase() as EthAddress].eulerV2[market.value]![eulerAddress.toLowerCase() as EthAddress] = accData;
+        }
+      }));
+    }).flat()).flat(),
     ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
       const cdpData = await _getMakerCdpData(client, network, cdpInfo);
       if (cdpData) {

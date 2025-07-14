@@ -25,7 +25,7 @@ export interface PortfolioPositionsDataForAddress {
     [key in SparkVersions]?: SparkPositionData;
   }
   eulerV2: {
-    [key in EulerV2Versions]?: EulerV2PositionData;
+    [key in EulerV2Versions]?: Record<EthAddress, EulerV2PositionData>;
   };
   maker: {
     [key: string]: CdpData;
