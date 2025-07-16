@@ -16,7 +16,6 @@ import {
   CrvUSDGlobalMarketData,
   EulerV2FullMarketData,
   LiquityV2MarketData,
-  LiquityV2Versions,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   PortfolioPositionsData,
@@ -39,7 +38,7 @@ import { _getLiquityV2MarketData, _getLiquityV2TroveData, _getLiquityV2UserTrove
 import { _getUserPositions } from '../fluid';
 import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 
-export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[]): Promise<PortfolioPositionsData> {
+export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const isMainnet = network === NetworkNumber.Eth;
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
@@ -110,8 +109,10 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     }),
   ]);
 
+  const allAddresses = [...addresses, ...summerFiAddresses];
+
   const positions: PortfolioPositionsData = {};
-  for (const address of addresses) {
+  for (const address of allAddresses) {
     positions[address.toLowerCase() as EthAddress] = {
       aaveV3: {},
       morphoBlue: {},
@@ -126,7 +127,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   }
 
   await Promise.all([
-    ...aaveV3Markets.map((market) => addresses.map(async (address) => {
+    ...aaveV3Markets.map((market) => allAddresses.map(async (address) => {
       const accData = await _getAaveV3AccountData(client, network, address, { selectedMarket: market, ...aaveV3MarketsData[market.value] });
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = accData;
     })).flat(),
@@ -138,7 +139,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const accData = await _getCompoundV3AccountData(client, network, address, ZERO_ADDRESS, { selectedMarket: market, assetsData: compoundV3MarketsData[market.value].assetsData });
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV3[market.value] = accData;
     })).flat(),
-    ...sparkMarkets.map((market) => addresses.map(async (address) => {
+    ...sparkMarkets.map((market) => allAddresses.map(async (address) => {
       const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData });
       if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = accData;
     })).flat(),
