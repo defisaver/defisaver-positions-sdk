@@ -15,14 +15,14 @@
     "test": "mocha tests/portfolio.ts",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
-    "build-test": "npm run build && npm run test",
+    "test-single": "mocha ./tests/$npm_config_name.ts",
     "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.6.14",
+    "@defisaver/tokens": "^1.6.16",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.6.0",

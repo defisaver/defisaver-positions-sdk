@@ -88,7 +88,7 @@ describe('Morpho Blue', () => {
   it('can fetch reallocatable liquidity for wstETH/ETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_965_Exchange_Rate];
 
     const { reallocatableLiquidity, targetBorrowUtilization } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
     assert.isTrue(new Dec(reallocatableLiquidity).gt(0), 'No reallocatable liquidity found');
@@ -98,7 +98,7 @@ describe('Morpho Blue', () => {
   it('can fetch vaults for reallocation for wstETH/ETH market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_945];
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthEth_965_Exchange_Rate];
 
     const { reallocatableLiquidity } = await sdk.helpers.morphoBlueHelpers.getReallocatableLiquidity(selectedMarket.marketId, network);
     const liquidityToAllocate = new Dec(reallocatableLiquidity).div(2).toString();
