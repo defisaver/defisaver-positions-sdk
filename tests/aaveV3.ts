@@ -1,33 +1,26 @@
 import 'dotenv/config';
-import Web3 from 'web3';
 
 import * as sdk from '../src';
 
-import { Blockish, NetworkNumber } from '../src/types/common';
-import { getWeb3Instance } from './utils/getWeb3Instance';
+import { Blockish, EthereumProvider, NetworkNumber } from '../src/types/common';
+import { getProvider } from './utils/getProvider';
 
 const { assert } = require('chai');
 
 describe('Aave v3', () => {
-  let web3: Web3;
-  let web3Base: Web3;
-  let web3Opt: Web3;
-  let web3Arb: Web3;
+  let provider: EthereumProvider;
+  let providerBase: EthereumProvider;
+  let providerOpt: EthereumProvider;
+  let providerArb: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
-    web3Opt = getWeb3Instance('RPCOPT');
-    web3Base = getWeb3Instance('RPCBASE');
-    web3Arb = getWeb3Instance('RPCARB');
+    provider = getProvider('RPC');
+    providerOpt = getProvider('RPCOPT');
+    providerBase = getProvider('RPCBASE');
+    providerArb = getProvider('RPCARB');
   });
 
-  it('has working contract', async () => {
-    const res = await sdk.aaveV3.test(web3, 1);
-    // console.log(res);
-    assert.equal(res, '64');
-  });
-
-  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, version = sdk.AaveVersions.AaveV3) => {
-    const marketData = await sdk.aaveV3.getAaveV3MarketData(_web3, network, sdk.markets.AaveMarkets(network)[version] as sdk.AaveMarketInfo, web3);
+  const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveVersions.AaveV3) => {
+    const marketData = await sdk.aaveV3.getAaveV3MarketData(_provider, network, sdk.markets.AaveMarkets(network)[version] as sdk.AaveMarketInfo);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -40,24 +33,24 @@ describe('Aave v3', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(_web3, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
+  const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3) => {
-    const positionData = await sdk.aaveV3.getAaveV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3], web3);
+  const fetchFullPositionData = async (network: NetworkNumber, _provider: EthereumProvider) => {
+    const positionData = await sdk.aaveV3.getAaveV3FullPositionData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3]);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
   };
 
-  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
-    const balances = await sdk.aaveV3.getAaveV3AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, blockNumber: Blockish) => {
+    const balances = await sdk.aaveV3.getAaveV3AccountBalances(_provider, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -73,7 +66,7 @@ describe('Aave v3', () => {
     const afterValues = await sdk.helpers.aaveHelpers.getApyAfterValuesEstimation(
       sdk.markets.AaveMarkets(network)[sdk.AaveVersions.AaveV3],
       [{ action: 'collateral', amount: '1000', asset: 'USDC' }],
-      web3,
+      provider,
       network,
     );
   });
@@ -89,45 +82,45 @@ describe('Aave v3', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3, sdk.AaveVersions.AaveV3Lido);
-    await fetchAccountData(network, web3, marketData, sdk.AaveVersions.AaveV3Lido);
+    const marketData = await fetchMarketData(network, provider, sdk.AaveVersions.AaveV3Lido);
+    await fetchAccountData(network, provider, marketData, sdk.AaveVersions.AaveV3Lido);
   });
 
   it('can fetch market and account data for Etherfi Market Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3, sdk.AaveVersions.AaveV3Etherfi);
-    await fetchAccountData(network, web3, marketData, sdk.AaveVersions.AaveV3Etherfi);
+    const marketData = await fetchMarketData(network, provider, sdk.AaveVersions.AaveV3Etherfi);
+    await fetchAccountData(network, provider, marketData, sdk.AaveVersions.AaveV3Etherfi);
   });
 
   it('can fetch market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3);
-    await fetchAccountData(network, web3, marketData);
+    const marketData = await fetchMarketData(network, provider);
+    await fetchAccountData(network, provider, marketData);
   });
 
   it('can fetch full position data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchFullPositionData(network, web3);
+    await fetchFullPositionData(network, provider);
   });
 
   it('can fetch latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 'latest');
+    await fetchAccountBalances(network, provider, 'latest');
   });
 
   it('can fetch past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 18184392);
+    await fetchAccountBalances(network, provider, 18184392);
   });
 
   // Optimism
@@ -136,29 +129,29 @@ describe('Aave v3', () => {
     this.timeout(10000);
     const network = NetworkNumber.Opt;
 
-    const marketData = await fetchMarketData(network, web3Opt);
-    await fetchAccountData(network, web3Opt, marketData);
+    const marketData = await fetchMarketData(network, providerOpt);
+    await fetchAccountData(network, providerOpt, marketData);
   });
 
   it('can fetch full position data for Optimism', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Opt;
 
-    await fetchFullPositionData(network, web3Opt);
+    await fetchFullPositionData(network, providerOpt);
   });
 
   it('can fetch latest account balances for Optimism', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Opt;
 
-    await fetchAccountBalances(network, web3Opt, 'latest');
+    await fetchAccountBalances(network, providerOpt, 'latest');
   });
 
   it('can fetch past account balances for Optimism', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Opt;
 
-    await fetchAccountBalances(network, web3Opt, 109851575);
+    await fetchAccountBalances(network, providerOpt, 109851575);
   });
 
   // Arbitrum
@@ -167,29 +160,29 @@ describe('Aave v3', () => {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
 
-    const marketData = await fetchMarketData(network, web3Arb);
-    await fetchAccountData(network, web3Arb, marketData);
+    const marketData = await fetchMarketData(network, providerArb);
+    await fetchAccountData(network, providerArb, marketData);
   });
 
   it('can fetch full position data for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
 
-    await fetchFullPositionData(network, web3Arb);
+    await fetchFullPositionData(network, providerArb);
   });
 
   it('can fetch latest account balances for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
 
-    await fetchAccountBalances(network, web3Arb, 'latest');
+    await fetchAccountBalances(network, providerArb, 'latest');
   });
 
   it('can fetch past account balances for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
 
-    await fetchAccountBalances(network, web3Arb, 130191171);
+    await fetchAccountBalances(network, providerArb, 130191171);
   });
 
   // Base
@@ -198,28 +191,28 @@ describe('Aave v3', () => {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    const marketData = await fetchMarketData(network, web3Base);
-    await fetchAccountData(network, web3Base, marketData);
+    const marketData = await fetchMarketData(network, providerBase);
+    await fetchAccountData(network, providerBase, marketData);
   });
 
   it('can fetch full position data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    await fetchFullPositionData(network, web3Base);
+    await fetchFullPositionData(network, providerBase);
   });
 
   it('can fetch latest account balances for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    await fetchAccountBalances(network, web3Base, 'latest');
+    await fetchAccountBalances(network, providerBase, 'latest');
   });
 
   it('can fetch past account balances for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    await fetchAccountBalances(network, web3Base, 4256022);
+    await fetchAccountBalances(network, providerBase, 4256022);
   });
 });

@@ -1,4 +1,4 @@
-import { EthAddress } from './common';
+import { EthAddress, HexString } from './common';
 
 export interface IlkInfo {
   ilkLabel: string;
@@ -15,12 +15,25 @@ export interface IlkInfo {
   creatableDebt: string;
 }
 
+export enum CdpType {
+  MCD = 'mcd',
+}
+
+export interface CdpInfo {
+  id: number,
+  ilk: HexString,
+  ilkLabel: string,
+  urn: HexString,
+  asset: string,
+  type: CdpType,
+  owner: EthAddress,
+}
+
 export interface CdpData {
   owner: EthAddress,
-  userAddress: EthAddress,
   id: string,
   urn: EthAddress,
-  type: string,
+  type: CdpType,
   ilk: string,
   ilkLabel: string,
   asset: string,
