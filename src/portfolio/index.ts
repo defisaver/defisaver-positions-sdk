@@ -180,7 +180,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   return positions;
 }
 
-export async function getPortfolioDataSlower(provider: EthereumProvider, network: NetworkNumber, addresses: EthAddress[]): Promise<PortfolioPositionsDataSlower> {
+export async function getPortfolioDataSlower(provider: EthereumProvider, network: NetworkNumber, addresses: EthAddress[], isFork: boolean = false): Promise<PortfolioPositionsDataSlower> {
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
   const liquityV2Markets = Object.values(LiquityV2Markets(network)).filter((market) => market.chainIds.includes(network));
@@ -244,7 +244,7 @@ export async function getPortfolioDataSlower(provider: EthereumProvider, network
       }
     })).flat(),
     ...liquityV2Markets.map((market) => addresses.map(async (address) => {
-      const troveIds = await _getLiquityV2UserTroveIds(client, network, market, liquityV2MarketsData[market.value].marketData.troveNFTAddress, false, address);
+      const troveIds = await _getLiquityV2UserTroveIds(client, network, market, liquityV2MarketsData[market.value].marketData.troveNFTAddress, isFork, address);
       return Promise.all(troveIds.troves.map(async (troveId) => {
         const troveData = await _getLiquityV2TroveData(client, network, {
           selectedMarket: market,
