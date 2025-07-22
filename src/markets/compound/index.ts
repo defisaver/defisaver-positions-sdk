@@ -55,13 +55,13 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDbC]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: STANDARD_BULKER_OPTIONS,
 
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
-    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Opt]: {
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
