@@ -1,6 +1,6 @@
-import {getConfigContractAddress} from '../../contracts';
-import {CompoundBulkerOptions, CompoundMarketData, CompoundVersions} from '../../types';
-import {NetworkNumber} from '../../types/common';
+import { getConfigContractAddress } from '../../contracts';
+import { CompoundBulkerOptions, CompoundMarketData, CompoundVersions } from '../../types';
+import { NetworkNumber } from '../../types/common';
 import {
   compoundV2CollateralAssets,
   v3ETHCollAssets,
