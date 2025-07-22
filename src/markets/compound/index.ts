@@ -1,13 +1,15 @@
-import { getConfigContractAddress } from '../../contracts';
-import { CompoundBulkerOptions, CompoundMarketData, CompoundVersions } from '../../types';
-import { NetworkNumber } from '../../types/common';
+import {getConfigContractAddress} from '../../contracts';
+import {CompoundBulkerOptions, CompoundMarketData, CompoundVersions} from '../../types';
+import {NetworkNumber} from '../../types/common';
 import {
   compoundV2CollateralAssets,
   v3ETHCollAssets,
   v3USDbCCollAssets,
   v3USDCCollAssets,
-  v3USDCeCollAssets, v3USDSCollAssets,
-  v3USDTCollAssets, v3wstETHCollAssets,
+  v3USDCeCollAssets,
+  v3USDSCollAssets,
+  v3USDTCollAssets,
+  v3wstETHCollAssets,
 } from './marketsAssets';
 
 export {
@@ -188,7 +190,7 @@ export const COMPOUND_V3_WSTETH = (networkId: NetworkNumber): CompoundMarketData
 });
 
 export const COMPOUND_V3_USDS = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Eth],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Base],
   label: 'Compound V3 - USDS',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3USDS,
