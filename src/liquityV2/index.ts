@@ -188,10 +188,11 @@ const getUnbackedDebtForSingleMarket = async (totalBorrowed: string, web3: Web3,
   return Dec.max(new Dec(totalBorrowed).sub(totalBoldDepositsInEth), 0).toString();
 };
 
-export const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, web3: Web3, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
+export const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, isLegacy: boolean, web3: Web3, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
   const allMarketsUnbackedDebt = await Promise.all(Object.entries(markets).map(async ([version, market]) => {
     const { assetsData, marketData } = market;
-    const { debtToken } = LiquityV2Markets(network)[version as LiquityV2Versions];
+    const { debtToken, isLegacy: isLegacyMarket } = LiquityV2Markets(network)[version as LiquityV2Versions];
+    if (isLegacyMarket !== isLegacy) return [version, '0'];
     const unbackedDebt = await getUnbackedDebtForSingleMarket(assetsData[debtToken].totalBorrow, web3, network, marketData.stabilityPoolAddress);
     return [version, unbackedDebt];
   }));
@@ -201,10 +202,12 @@ export const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versio
 
 export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, allMarketsUnbackedDebts: Record<LiquityV2Versions, string>, interestRateDebtInFront: string): string => {
   const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
-  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
+  if (selectedMarketUnbackedDebt.eq(0)) return interestRateDebtInFront;
 
   const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
-    if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+    const { isLegacy: isLegacyMarket } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
+    if (version === selectedMarket && isLegacyMarket !== isLegacy) return new Dec(interestRateDebtInFront);
     const { assetsData } = market;
     const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
     const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
@@ -217,7 +220,8 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
 };
 
 export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, troveId: string) => {
-  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, isLegacy, web3, network);
   const interestRateDebtInFront = await getDebtInFrontForSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, troveId);
 
   return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
@@ -233,7 +237,8 @@ export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions,
  * @param debtInFrontBeingMoved - amound of debt being repositioned if interest rate is being increased (prevents including it as debt in front)
  */
 export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string, debtInFrontBeingMoved: string = '0') => {
-  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, web3, network);
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, isLegacy, web3, network);
   const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate))
     .sub(debtInFrontBeingMoved);
 
