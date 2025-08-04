@@ -251,4 +251,13 @@ describe('Compound v3', () => {
 
     await fetchAccountBalances(network, providerBase, 'latest', '0x46e6b214b524310239732D51387075E0e70970bf');
   });
+
+  it('can fetch market and account data for USDS Market on Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
+
+    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  });
 });

@@ -35,7 +35,7 @@ const getApyFromDfsApi = async (asset: string) => {
   return String(data.apy);
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH', 'PT sUSDe Sep'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep'];
 
 export const getStakingApy = memoize(async (asset: string) => {
   try {
@@ -58,7 +58,9 @@ export const getStakingApy = memoize(async (asset: string) => {
     if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July');
     if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug');
     if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep');
+    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
+    if (asset === 'USDe') return await getApyFromDfsApi('USDe');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
@@ -81,7 +83,41 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean }) => {
+export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
+  const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
+  const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
+  const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
+  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
+  const totalAmountSupplied = new Dec(USDeUSDAmountSupplied).add(sUSDeUSDAmountSupplied).toString();
+  const percentageInUSDe = new Dec(USDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
+  if (percentageInUSDe < 0.45 || percentageInUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in USDe
+  const percentageInSUSDe = new Dec(sUSDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
+  if (percentageInSUSDe < 0.45 || percentageInSUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in sUSDe
+
+  const allowedBorrowAssets = ['USDC', 'USDT', 'USDS'];
+  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
+  if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const totalAmountBorrowed = Object.values(usedAssets).reduce((acc, asset) => {
+    if (asset.isBorrowed) {
+      return acc.add(asset.borrowedUsd);
+    }
+    return acc;
+  }, new Dec(0)).toString();
+
+  const borrowPercentage = new Dec(totalAmountBorrowed).div(totalAmountSupplied).toNumber();
+  if (borrowPercentage < 0.5) return { isEligible: false, eligibleUSDAmount: '0' }; // must be looped at least once
+
+  const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
+  const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
+
+  return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
+};
+
+export const calculateNetApy = ({
+  usedAssets, assetsData, isMorpho = false, isAave = false,
+}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean, isAave?: boolean }) => {
+  const { isEligible, eligibleUSDAmount } = isAave ? isEligibleForEthenaUSDeRewards(usedAssets) : { isEligible: true, eligibleUSDAmount: '0' };
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
     const assetData = assetsData[usedAsset.symbol];
@@ -97,6 +133,12 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
       if (assetData.incentiveSupplyApy) {
         // take COMP/AAVE yield into account
         const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+      }
+
+      if (usedAsset.symbol === 'USDe' && isEligible) {
+        // @ts-ignore
+        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, assetData.supplyIncentives?.[0]?.apy || '0', 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }

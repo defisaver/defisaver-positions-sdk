@@ -225,10 +225,11 @@ const getUnbackedDebtForSingleMarket = async (totalBorrowed: string, provider: C
   return Dec.max(new Dec(totalBorrowed).sub(totalBoldDepositsInEth), 0).toString();
 };
 
-const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, provider: Client, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
+const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, isLegacy: boolean, provider: Client, network: NetworkNumber): Promise<Record<LiquityV2Versions, string>> => {
   const allMarketsUnbackedDebt = await Promise.all(Object.entries(markets).map(async ([version, market]) => {
     const { assetsData, marketData } = market;
-    const { debtToken } = LiquityV2Markets(network)[version as LiquityV2Versions];
+    const { debtToken, isLegacy: isLegacyMarket } = LiquityV2Markets(network)[version as LiquityV2Versions];
+    if (isLegacyMarket !== isLegacy) return [version, '0'];
     const unbackedDebt = await getUnbackedDebtForSingleMarket(assetsData[debtToken].totalBorrow, provider, network, marketData.stabilityPoolAddress);
     return [version, unbackedDebt];
   }));
@@ -238,10 +239,12 @@ const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versions, Liq
 
 const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, allMarketsUnbackedDebts: Record<LiquityV2Versions, string>, interestRateDebtInFront: string): string => {
   const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
-  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
+  if (selectedMarketUnbackedDebt.eq(0)) return interestRateDebtInFront;
 
   const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
-    if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+    const { isLegacy: isLegacyMarket } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
+    if (version === selectedMarket && isLegacyMarket !== isLegacy) return new Dec(interestRateDebtInFront);
     const { assetsData } = market;
     const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
     const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
@@ -253,8 +256,9 @@ const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions, Liquit
   return amountBeingReedemedOnEachMarket.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
-const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, isLegacy: boolean, troveId: string) => {
-  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, provider, network);
+const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, viewContract: any, troveId: string) => {
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, isLegacy, provider, network);
   const interestRateDebtInFront = await getDebtInFrontForSingleMarketLiquityV2(provider, network, isLegacy, LiquityV2Markets(network)[selectedMarket].marketAddress, troveId);
 
   return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
@@ -270,7 +274,7 @@ const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, Liquit
  * @param debtInFrontBeingMoved - amound of debt being repositioned if interest rate is being increased (prevents including it as debt in front)
  */
 const _getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, isLegacy: boolean, interestRate: string, debtInFrontBeingMoved: string = '0') => {
-  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, provider, network);
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(markets, isLegacy, provider, network);
   const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(provider, network, isLegacy, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate))
     .sub(debtInFrontBeingMoved);
 

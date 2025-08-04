@@ -392,6 +392,9 @@ export const cUSDSv3 =  {
       "1": {
         "address": "0x5D409e56D886231aDAf00c8775665AD0f9897b56",
       },
+      "8453": {
+        "address": "0x2c776041CCFe903071AF44aa147368a9c8EEA518",
+      },
     },
   } as const;
 export const cWstETHv3 =  {
