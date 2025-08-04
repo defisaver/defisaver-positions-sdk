@@ -22,7 +22,7 @@ import {
 import {
   BTCPriceFeedContractViem, DFSFeedRegistryContractViem, ETHPriceFeedContractViem, FeedRegistryContractViem, FluidViewContractViem,
 } from '../contracts';
-import { getEthAmountForDecimals, isMainnetNetwork } from '../services/utils';
+import { compareAddresses, getEthAmountForDecimals, isMainnetNetwork } from '../services/utils';
 import {
   getFluidAggregatedData,
   mergeAssetData,
@@ -31,11 +31,13 @@ import {
   parseDexSupplyData,
 } from '../helpers/fluidHelpers';
 import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddress } from '../markets';
-import { USD_QUOTE } from '../constants';
+import { USD_QUOTE, ZERO_ADDRESS } from '../constants';
 import {
   getChainlinkAssetAddress,
   getWeETHChainLinkPriceCalls,
+  getWeETHPrice,
   getWstETHChainLinkPriceCalls,
+  getWstETHPrice,
   getWstETHPriceFluid,
   parseWeETHPriceCalls,
   parseWstETHPriceCalls,
@@ -265,7 +267,7 @@ const getTradingApy = async (poolAddress: EthAddress) => {
   return new Dec(data.tradingApy).div(100).toString();
 };
 
-const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
 
@@ -275,7 +277,12 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const oracleScaleFactor = new Dec(27).add(debtAsset.decimals).sub(collAsset.decimals).toString();
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
   const oraclePrice = new Dec(data.oraclePriceOperate).div(oracleScale).toString();
-  const debtPriceParsed = await getTokenPriceFromChainlink(debtAsset, network, provider);
+  let debtPriceParsed = '0';
+  if (tokenPrices) {
+    debtPriceParsed = tokenPrices[debtAsset.symbol] || '0';
+  } else {
+    debtPriceParsed = await getTokenPriceFromChainlink(debtAsset, network, provider);
+  }
 
   const collAssetData: FluidAssetData = {
     symbol: collAsset.symbol,
@@ -370,7 +377,7 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const collAsset0 = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset1 = getAssetInfoByAddress(data.supplyToken1, network);
   const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
@@ -380,7 +387,12 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
   const oraclePrice = new Dec(data.oraclePriceOperate).div(oracleScale).toString();
 
-  const prices = await getChainLinkPricesForTokens([collAsset0.address, collAsset1.address, debtAsset.address], network, provider);
+  let prices: Record<string, string> = {};
+  if (tokenPrices) {
+    prices = tokenPrices;
+  } else {
+    prices = await getChainLinkPricesForTokens([collAsset0.address, collAsset1.address, debtAsset.address], network, provider);
+  }
 
   const {
     supplyDexFee,
@@ -406,7 +418,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const collFirstAssetData: Partial<FluidAssetData> = {
     symbol: collAsset0.symbol,
     address: collAsset0.address,
-    price: prices[collAsset0.address],
+    price: prices[tokenPrices ? collAsset0.symbol : collAsset0.address],
     totalSupply: new Dec(totalSupplyShares).mul(token0PerSupplyShare).toString(),
     canBeSupplied: true,
     supplyRate: supplyRate0,
@@ -423,7 +435,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const collSecondAssetData: Partial<FluidAssetData> = {
     symbol: collAsset1.symbol,
     address: collAsset1.address,
-    price: prices[collAsset1.address],
+    price: prices[tokenPrices ? collAsset1.symbol : collAsset1.address],
     totalSupply: new Dec(totalSupplyShares).mul(token1PerSupplyShare).toString(),
     canBeSupplied: true,
     supplyRate: supplyRate1,
@@ -444,7 +456,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
     symbol: debtAsset.symbol,
-    price: prices[debtAsset.address],
+    price: prices[tokenPrices ? debtAsset.symbol : debtAsset.address],
     address: debtAsset.address,
     totalBorrow: data.totalBorrowVault.toString(),
     canBeBorrowed: true,
@@ -476,7 +488,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
   const totalSupplySharesInVault = assetAmountInEth(data.totalSupplyVault.toString());
-  const collSharePrice = new Dec(oraclePrice).mul(prices[debtAsset.address]).toString();
+  const collSharePrice = new Dec(oraclePrice).mul(prices[tokenPrices ? debtAsset.symbol : debtAsset.address]).toString();
   const totalSupplyVaultUsd = new Dec(totalSupplySharesInVault).mul(collSharePrice).toString();
   const maxSupplySharesUsd = new Dec(maxSupplyShares).mul(collSharePrice).toString();
 
@@ -537,7 +549,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
   const debtAsset0 = getAssetInfoByAddress(data.borrowToken0, network);
   const debtAsset1 = getAssetInfoByAddress(data.borrowToken1, network);
@@ -568,13 +580,18 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
   const oraclePrice = new Dec(1).div(new Dec(data.oraclePriceOperate).div(oracleScale)).toString();
 
-  const prices = await getChainLinkPricesForTokens([collAsset.address, debtAsset0.address, debtAsset1.address], network, provider);
+  let prices: Record<string, string> = {};
+  if (tokenPrices) {
+    prices = tokenPrices;
+  } else {
+    prices = await getChainLinkPricesForTokens([collAsset.address, debtAsset0.address, debtAsset1.address], network, provider);
+  }
 
   const supplyRate = new Dec(data.supplyRateVault).div(100).toString();
   const collAssetData: Partial<FluidAssetData> = {
     symbol: collAsset.symbol,
     address: collAsset.address,
-    price: prices[collAsset.address],
+    price: prices[tokenPrices ? collAsset.symbol : collAsset.address],
     totalSupply: data.totalSupplyVault.toString(),
     canBeSupplied: true,
     supplyRate,
@@ -589,7 +606,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const debtAsset0Data: Partial<FluidAssetData> = {
     symbol: debtAsset0.symbol,
     address: debtAsset0.address,
-    price: prices[debtAsset0.address],
+    price: prices[tokenPrices ? debtAsset0.symbol : debtAsset0.address],
     totalBorrow: new Dec(totalBorrowShares).mul(token0PerBorrowShare).toString(),
     canBeBorrowed: true,
     borrowRate: borrowRate0,
@@ -606,7 +623,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const debtAsset1Data: Partial<FluidAssetData> = {
     symbol: debtAsset1.symbol,
     address: debtAsset1.address,
-    price: prices[debtAsset1.address],
+    price: prices[tokenPrices ? debtAsset1.symbol : debtAsset1.address],
     totalBorrow: new Dec(totalBorrowShares).mul(token1PerBorrowShare).toString(),
     canBeBorrowed: true,
     borrowRate: borrowRate1,
@@ -641,7 +658,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const liquidationMaxLimit = new Dec(data.liquidationMaxLimit).div(100).toString();
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
-  const debtSharePrice = new Dec(oraclePrice).mul(prices[collAsset.address]).toString();
+  const debtSharePrice = new Dec(oraclePrice).mul(prices[tokenPrices ? collAsset.symbol : collAsset.address]).toString();
 
   const totalBorrowSharesInVault = assetAmountInEth(data.totalBorrowVault.toString());
 
@@ -701,7 +718,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const collAsset0 = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset1 = getAssetInfoByAddress(data.supplyToken1, network);
   const debtAsset0 = getAssetInfoByAddress(data.borrowToken0, network);
@@ -713,9 +730,14 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
   const oraclePrice = new Dec(data.oraclePriceOperate).div(oracleScale).toString();
 
-  const prices = await getChainLinkPricesForTokens(
-    [collAsset0.address, collAsset1.address, debtAsset0.address, debtAsset1.address],
-    network, provider);
+  let prices: Record<string, string> = {};
+  if (tokenPrices) {
+    prices = tokenPrices;
+  } else {
+    prices = await getChainLinkPricesForTokens(
+      [collAsset0.address, collAsset1.address, debtAsset0.address, debtAsset1.address],
+      network, provider);
+  }
 
   const {
     supplyDexFee,
@@ -763,7 +785,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const collAsset0Data: Partial<FluidAssetData> = {
     symbol: collAsset0.symbol,
     address: collAsset0.address,
-    price: prices[collAsset0.address],
+    price: prices[tokenPrices ? collAsset0.symbol : collAsset0.address],
     totalSupply: new Dec(totalSupplyShares).mul(token0PerSupplyShare).toString(),
     canBeSupplied: true,
     supplyRate: supplyRate0,
@@ -780,7 +802,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const collAsset1Data: Partial<FluidAssetData> = {
     symbol: collAsset1.symbol,
     address: collAsset1.address,
-    price: prices[collAsset1.address],
+    price: prices[tokenPrices ? collAsset1.symbol : collAsset1.address],
     totalSupply: new Dec(totalSupplyShares).mul(token1PerSupplyShare).toString(),
     canBeSupplied: true,
     supplyRate: supplyRate1,
@@ -797,7 +819,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const debtAsset0Data: Partial<FluidAssetData> = {
     symbol: debtAsset0.symbol,
     address: debtAsset0.address,
-    price: prices[debtAsset0.address],
+    price: prices[tokenPrices ? debtAsset0.symbol : debtAsset0.address],
     totalBorrow: new Dec(totalBorrowShares).mul(token0PerBorrowShare).toString(),
     canBeBorrowed: true,
     borrowRate: borrowRate0,
@@ -814,7 +836,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const debtAsset1Data: Partial<FluidAssetData> = {
     symbol: debtAsset1.symbol,
     address: debtAsset1.address,
-    price: prices[debtAsset1.address],
+    price: prices[tokenPrices ? debtAsset1.symbol : debtAsset1.address],
     totalBorrow: new Dec(totalBorrowShares).mul(token1PerBorrowShare).toString(),
     canBeBorrowed: true,
     borrowRate: borrowRate1,
@@ -854,7 +876,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   const liqFactor = new Dec(data.liquidationThreshold).div(10_000).toString();
 
   const totalBorrowSharesInVault = assetAmountInEth(data.totalBorrowVault.toString());
-  const debtSharePrice = new Dec(quoteTokensPerShare).mul(prices[quoteToken.address]).toString();
+  const debtSharePrice = new Dec(quoteTokensPerShare).mul(prices[tokenPrices ? quoteToken.symbol : quoteToken.address]).toString();
   const totalBorrowVaultUsd = new Dec(totalBorrowSharesInVault).mul(debtSharePrice).toString();
   const maxBorrowSharesUsd = new Dec(maxBorrowShares).mul(debtSharePrice).toString();
   const borrowableUSD = new Dec(borrowableShares).mul(debtSharePrice).toString();
@@ -925,17 +947,17 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber) => {
+const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const vaultType = parseVaultType(+(data.vaultType.toString()));
   switch (vaultType) {
     case FluidVaultType.T1:
-      return parseT1MarketData(provider, data, network);
+      return parseT1MarketData(provider, data, network, tokenPrices);
     case FluidVaultType.T2:
-      return parseT2MarketData(provider, data, network);
+      return parseT2MarketData(provider, data, network, tokenPrices);
     case FluidVaultType.T3:
-      return parseT3MarketData(provider, data, network);
+      return parseT3MarketData(provider, data, network, tokenPrices);
     case FluidVaultType.T4:
-      return parseT4MarketData(provider, data, network);
+      return parseT4MarketData(provider, data, network, tokenPrices);
     default:
       throw new Error(`Unknown vault type: ${vaultType}`);
   }
@@ -1444,3 +1466,100 @@ export const getUserPositions = async (
   network: NetworkNumber,
   user: EthAddress,
 ) => _getUserPositions(getViemProvider(provider, network), network, user);
+
+const getTokenPricePortfolio = async (token: string, provider: PublicClient, network: NetworkNumber) => {
+  if (token === 'ETH') {
+    const ethFeedContract = ETHPriceFeedContractViem(provider, network);
+    return ethFeedContract.read.latestAnswer();
+  }
+  if (token === 'WBTC') {
+    const wbtcFeedContract = BTCPriceFeedContractViem(provider, network);
+    return wbtcFeedContract.read.latestAnswer();
+  }
+  if (token === 'wstETH') {
+    return getWstETHPrice(provider, network);
+  }
+  if (token === 'weETH') {
+    return getWeETHPrice(provider, network);
+  }
+
+  const isMainnet = isMainnetNetwork(network);
+  const chainLinkFeedAddress = getChainlinkAssetAddress(token, network);
+  if (isMainnet) {
+    const feedRegistryContract = FeedRegistryContractViem(provider, NetworkNumber.Eth);
+    return feedRegistryContract.read.latestAnswer([chainLinkFeedAddress, USD_QUOTE]);
+  }
+
+  const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
+  return feedRegistryContract.read.latestRoundData([chainLinkFeedAddress, USD_QUOTE]);
+};
+
+const tokensWithoutChainlinkPrices = ['sUSDS', 'USDA', 'ezETH', 'rsETH', 'weETHs', 'LBTC'];
+
+const handleTokenWithoutChainlinkPrice = (token: string, prices: Record<string, string>) => {
+  if (token === 'sUSDS') {
+    return new Dec('105276929').div(1e8).toString();
+  }
+  if (token === 'USDA') {
+    return new Dec('100000000').div(1e8).toString();
+  }
+  if (token === 'ezETH') {
+    return new Dec(prices.ETH).mul(1.049).toString();
+  }
+  if (token === 'rsETH') {
+    return new Dec(prices.wstETH).mul(1.0454).toString();
+  }
+  if (token === 'weETHs') {
+    return new Dec(prices.wstETH).mul(1.026).toString();
+  }
+  if (token === 'LBTC') {
+    return prices.WBTC;
+  }
+  return '0';
+};
+
+const getTokensPricesForPortfolio = async (tokens: string[], provider: PublicClient, network: NetworkNumber) => {
+  const tokensWithChainlinkPrices = tokens.filter((token) => !tokensWithoutChainlinkPrices.includes(token));
+  const pricesFromChainlink: Record<string, string> = {};
+  await Promise.all(tokensWithChainlinkPrices.map(async (token) => {
+    const price = await getTokenPricePortfolio(token, provider, network);
+    if (typeof price === 'string') pricesFromChainlink[token] = price;
+    else if (typeof price === 'bigint') pricesFromChainlink[token] = new Dec(price).div(1e8).toString();
+    else pricesFromChainlink[token] = new Dec(price[1]!.toString() as string).div(1e8).toString();
+  }));
+  tokens.forEach((token) => {
+    if (tokensWithoutChainlinkPrices.includes(token)) {
+      pricesFromChainlink[token] = handleTokenWithoutChainlinkPrice(token, pricesFromChainlink);
+    }
+  });
+
+  return pricesFromChainlink;
+};
+
+export const _getUserPositionsPortfolio = async (provider: PublicClient, network: NetworkNumber, user: EthAddress) => {
+  const view = FluidViewContractViem(provider, network);
+
+  const data = await view.read.getUserPositions([user]);
+  const tokens = Array.from(new Set(data[1].map((vaultData) => {
+    const vaultTokens = [getAssetInfoByAddress(vaultData.supplyToken0, network).symbol, getAssetInfoByAddress(vaultData.borrowToken0, network).symbol];
+    if (vaultData.supplyToken1 && !compareAddresses(ZERO_ADDRESS, vaultData.supplyToken1)) vaultTokens.push(getAssetInfoByAddress(vaultData.supplyToken1, network).symbol);
+    if (vaultData.borrowToken1 && !compareAddresses(ZERO_ADDRESS, vaultData.borrowToken1)) vaultTokens.push(getAssetInfoByAddress(vaultData.borrowToken1, network).symbol);
+    return vaultTokens;
+  }).flat()));
+
+  if (tokens.length === 0) return [];
+  // ETH and WBTC needed for other tokens prices
+  if (!tokens.includes('ETH')) tokens.push('ETH');
+  if (!tokens.includes('WBTC')) tokens.push('WBTC');
+
+  const tokenPrices = await getTokensPricesForPortfolio(tokens, provider, network);
+
+  const parsedMarketData = await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices)));
+
+  const userData = data[0].map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]) }));
+
+  return parsedMarketData.map((market, i) => ({
+    marketData: market,
+    userData: userData[i],
+  }));
+};

@@ -12,7 +12,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
-    "test": "mocha tests/fluid.ts",
+    "test": "mocha tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",

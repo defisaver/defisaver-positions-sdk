@@ -37,27 +37,17 @@ export interface PortfolioPositionsDataForAddress {
     [key in CompoundVersions]?: CompoundV2PositionData;
   };
   liquity: LiquityTroveInfo | {};
-}
-
-export interface PortfolioPositionsData {
-  [key: EthAddress]: PortfolioPositionsDataForAddress;
-}
-
-export interface PortfolioPositionsDataSlowerForAddress {
   crvUsd: {
     [key in CrvUSDVersions]?: CrvUSDUserData;
   };
   llamaLend: {
     [key in LlamaLendVersionsType]?: LlamaLendUserData;
   };
-  liquityV2: {
-    [key in LiquityV2Versions]?: Record<string, LiquityV2TroveData>;
-  };
   fluid: {
     [key: string]: FluidVaultData;
   }
 }
 
-export interface PortfolioPositionsDataSlower {
-  [key: EthAddress]: PortfolioPositionsDataSlowerForAddress;
+export interface PortfolioPositionsData {
+  [key: EthAddress]: PortfolioPositionsDataForAddress;
 }

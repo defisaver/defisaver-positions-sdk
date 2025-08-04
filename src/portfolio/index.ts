@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import {
   AaveMarkets,
-  CompoundMarkets, CrvUsdMarkets, EulerV2Markets, LiquityV2Markets, LlamaLendMarkets, MorphoBlueMarkets, SparkMarkets,
+  CompoundMarkets, CrvUsdMarkets, EulerV2Markets, LlamaLendMarkets, MorphoBlueMarkets, SparkMarkets,
 } from '../markets';
 import { _getMorphoBlueAccountData, _getMorphoBlueMarketData } from '../morphoBlue';
 import {
@@ -15,11 +15,9 @@ import {
   CompoundVersions,
   CrvUSDGlobalMarketData,
   EulerV2FullMarketData,
-  LiquityV2MarketData,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   PortfolioPositionsData,
-  PortfolioPositionsDataSlower,
   SparkMarketsData,
 } from '../types';
 import { _getCompoundV3AccountData, _getCompoundV3MarketsData } from '../compoundV3';
@@ -35,11 +33,12 @@ import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoun
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo } from '../liquity';
 import { _getLiquityV2MarketData, _getLiquityV2TroveData, _getLiquityV2UserTroveIds } from '../liquityV2';
-import { _getUserPositions } from '../fluid';
+import { _getUserPositionsPortfolio } from '../fluid';
 import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const isMainnet = network === NetworkNumber.Eth;
+  const isOpt = network === NetworkNumber.Opt;
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -48,6 +47,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const aaveV2Markets = [AaveVersions.AaveV2].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
 
   const client = getViemProvider(provider, network, {
     batch: {
@@ -72,6 +73,27 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const makerCdps: Record<string, CdpInfo[]> = {};
   const aaveV2MarketsData: Record<string, AaveV2MarketData> = {};
   const compoundV2MarketsData: Record<string, CompoundV2MarketsData> = {};
+  const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
+  const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
+
+  const positions: PortfolioPositionsData = {};
+  const allAddresses = [...addresses, ...summerFiAddresses];
+  for (const address of allAddresses) {
+    positions[address.toLowerCase() as EthAddress] = {
+      aaveV3: {},
+      morphoBlue: {},
+      compoundV3: {},
+      spark: {},
+      eulerV2: {},
+      maker: {},
+      aaveV2: {},
+      compoundV2: {},
+      liquity: {},
+      crvUsd: {},
+      llamaLend: {},
+      fluid: {},
+    };
+  }
 
   await Promise.all([
     ...morphoMarkets.map(async (market) => {
@@ -107,24 +129,25 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const marketData = await _getCompoundV2MarketsData(client, network);
       compoundV2MarketsData[market.value] = marketData;
     }),
+    ...crvUsdMarkets.map(async (market) => {
+      const marketData = await _getCurveUsdGlobalData(client, network, market);
+      crvUsdMarketsData[market.value] = marketData;
+    }),
+    ...llamaLendMarkets.map(async (market) => {
+      const marketData = await _getLlamaLendGlobalData(client, network, market);
+      llamaLendMarketsData[market.value] = marketData;
+    }),
+    ...addresses.map(async (address) => {
+      if (isOpt) return; // Fluid is not available on Optimism
+      const userPositions = await _getUserPositionsPortfolio(client, network, address);
+      for (const position of userPositions) {
+        if (new Dec(position.userData.suppliedUsd).gt(0)) {
+          positions[address.toLowerCase() as EthAddress].fluid[position.userData.nftId] = position.userData;
+        }
+      }
+    }),
   ]);
 
-  const allAddresses = [...addresses, ...summerFiAddresses];
-
-  const positions: PortfolioPositionsData = {};
-  for (const address of allAddresses) {
-    positions[address.toLowerCase() as EthAddress] = {
-      aaveV3: {},
-      morphoBlue: {},
-      compoundV3: {},
-      spark: {},
-      eulerV2: {},
-      maker: {},
-      aaveV2: {},
-      compoundV2: {},
-      liquity: {},
-    };
-  }
 
   await Promise.all([
     ...aaveV3Markets.map((market) => allAddresses.map(async (address) => {
@@ -175,62 +198,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const troveInfo = await _getLiquityTroveInfo(client, network, address);
       if (new Dec(troveInfo.collateral).gt(0)) positions[address.toLowerCase() as EthAddress].liquity = troveInfo;
     }),
-  ]);
-
-  return positions;
-}
-
-export async function getPortfolioDataSlower(provider: EthereumProvider, network: NetworkNumber, addresses: EthAddress[], isFork: boolean = false): Promise<PortfolioPositionsDataSlower> {
-  const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
-  const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
-  const liquityV2Markets = Object.values(LiquityV2Markets(network)).filter((market) => market.chainIds.includes(network));
-
-  const client = getViemProvider(provider, network, {
-    batch: {
-      multicall: {
-        batchSize: 2500000,
-      },
-    },
-  });
-
-  const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
-  const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
-  const liquityV2MarketsData: Record<string, LiquityV2MarketData> = {};
-
-  const positions: PortfolioPositionsDataSlower = {};
-  for (const address of addresses) {
-    positions[address.toLowerCase() as EthAddress] = {
-      crvUsd: {},
-      llamaLend: {},
-      liquityV2: {},
-      fluid: {},
-    };
-  }
-
-  await Promise.all([
-    ...crvUsdMarkets.map(async (market) => {
-      const marketData = await _getCurveUsdGlobalData(client, network, market);
-      crvUsdMarketsData[market.value] = marketData;
-    }),
-    ...llamaLendMarkets.map(async (market) => {
-      const marketData = await _getLlamaLendGlobalData(client, network, market);
-      llamaLendMarketsData[market.value] = marketData;
-    }),
-    ...liquityV2Markets.map(async (market) => {
-      const marketData = await _getLiquityV2MarketData(client, network, market);
-      liquityV2MarketsData[market.value] = marketData;
-    }),
-    ...addresses.map(async (address) => {
-      const userPositions = await _getUserPositions(client, network, address);
-      for (const position of userPositions) {
-        if (new Dec(position.userData.suppliedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].fluid[position.userData.nftId] = position.userData;
-        }
-      }
-    }),
-  ]);
-
-  await Promise.all([
     ...crvUsdMarkets.map((market) => addresses.map(async (address) => {
       const accData = await _getCurveUsdUserData(client, network, address, market, crvUsdMarketsData[market.value].activeBand);
       if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
@@ -242,26 +209,6 @@ export async function getPortfolioDataSlower(provider: EthereumProvider, network
       if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
         positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { ...accData, borrowRate: llamaLendMarketsData[market.value].borrowRate };
       }
-    })).flat(),
-    ...liquityV2Markets.map((market) => addresses.map(async (address) => {
-      const troveIds = await _getLiquityV2UserTroveIds(client, network, market, liquityV2MarketsData[market.value].marketData.troveNFTAddress, isFork, address);
-      return Promise.all(troveIds.troves.map(async (troveId) => {
-        const troveData = await _getLiquityV2TroveData(client, network, {
-          selectedMarket: market,
-          assetsData: liquityV2MarketsData[market.value].assetsData,
-          troveId: troveId.troveId,
-          allMarketsData: liquityV2MarketsData,
-        }, false);
-        if (new Dec(troveData.suppliedUsd).gt(0)) {
-          if (positions[address.toLowerCase() as EthAddress].liquityV2[market.value]) {
-            positions[address.toLowerCase() as EthAddress].liquityV2[market.value]![troveId.troveId] = troveData;
-          } else {
-            positions[address.toLowerCase() as EthAddress].liquityV2[market.value] = {
-              [troveId.troveId]: troveData,
-            };
-          }
-        }
-      }));
     })).flat(),
   ]);
 

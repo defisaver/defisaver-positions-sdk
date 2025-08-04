@@ -30,20 +30,38 @@ export const getCompPrice = async (client: Client) => {
   return new Dec(price.toString()).div(1e8).toString();
 };
 
-export const getWstETHPrice = async (client: Client) => {
-  const wstETHFeedContract = WstETHPriceFeedContractViem(client, NetworkNumber.Eth);
-  const ethFeedContract = ETHPriceFeedContractViem(client, NetworkNumber.Eth);
+export const getWstETHPrice = async (client: Client, network: NetworkNumber = NetworkNumber.Eth) => {
+  const wstETHFeedContract = WstETHPriceFeedContractViem(client, network);
+  const ethFeedContract = ETHPriceFeedContractViem(client, network);
 
-  const [ethPriceWei, wstETHRateWei] = await Promise.all([
+  const [ethPriceWei, wstETHRateWei, decimals] = await Promise.all([
     ethFeedContract.read.latestAnswer(),
     wstETHFeedContract.read.latestRoundData(),
+    wstETHFeedContract.read.decimals(),
   ]);
 
   const ethPrice = new Dec(ethPriceWei.toString()).div(1e8);
 
-  const wstETHRate = new Dec(wstETHRateWei[1].toString()).div(1e8);
+  const wstETHRate = getEthAmountForDecimals(wstETHRateWei[1].toString(), decimals);
 
   return new Dec(ethPrice).mul(wstETHRate).toString();
+};
+
+export const getWeETHPrice = async (client: Client, network: NetworkNumber = NetworkNumber.Eth) => {
+  const weETHFeedContract = WeETHPriceFeedContractViem(client, network);
+  const ethFeedContract = ETHPriceFeedContractViem(client, network);
+
+  const [ethPriceWei, weETHRateWei, decimals] = await Promise.all([
+    ethFeedContract.read.latestAnswer(),
+    weETHFeedContract.read.latestRoundData(),
+    weETHFeedContract.read.decimals(),
+  ]);
+
+  const ethPrice = new Dec(ethPriceWei.toString()).div(1e8);
+
+  const weETHRate = getEthAmountForDecimals(weETHRateWei[1].toString(), decimals);
+
+  return new Dec(ethPrice).mul(weETHRate).toString();
 };
 
 export const getWstETHChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
