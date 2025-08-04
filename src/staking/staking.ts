@@ -133,6 +133,7 @@ export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumb
     if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep');
     if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
+    if (asset === 'USDe') return await getApyFromDfsApi('USDe');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
@@ -154,8 +155,6 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
 
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
-
-const USDE_REWARD_APY = '12';
 
 export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
   const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
@@ -211,7 +210,8 @@ export const calculateNetApy = ({
       }
 
       if (usedAsset.symbol === 'USDe' && isEligible) {
-        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, USDE_REWARD_APY, 'year', true);
+        // @ts-ignore
+        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, assetData.supplyIncentives?.[0]?.apy || '0', 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }

@@ -206,6 +206,18 @@ export async function getAaveV3MarketData(web3: Web3, network: NetworkNumber, ma
       });
     }
 
+    if (_market.symbol === 'USDe') {
+      const merklApy = await getStakingApy(_market.symbol, defaultWeb3);
+      if (!_market.supplyIncentives) {
+        _market.supplyIncentives = [];
+      }
+      _market.supplyIncentives.push({
+        apy: merklApy || '0',
+        token: _market.symbol,
+        incentiveKind: 'reward',
+      });
+    }
+
     if (!rewardForMarket) return;
     rewardForMarket.aIncentiveData.rewardsTokenInformation.forEach(supplyRewardData => {
       if (supplyRewardData) {
