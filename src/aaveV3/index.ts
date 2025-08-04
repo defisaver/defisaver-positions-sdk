@@ -198,7 +198,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     }
 
     if (_market.symbol === 'USDe') {
-      const merklApy = await getStakingApy(_market.symbol, defaultWeb3);
+      const merklApy = await getStakingApy(_market.symbol);
       if (!_market.supplyIncentives) {
         _market.supplyIncentives = [];
       }

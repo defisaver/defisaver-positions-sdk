@@ -257,7 +257,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
 
-    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
-    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerBase, selectedMarket);
+    await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
 });

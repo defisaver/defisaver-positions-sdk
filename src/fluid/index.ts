@@ -1408,7 +1408,7 @@ export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, netw
     const deposited = userPosition?.underlyingAssets;
 
     if (Number(deposited) > 0) {
-      const fTokenAddress = getFTokenAddress(fTokenData.symbol, network);
+      const fTokenAddress = fTokenData.tokenAddress;
       acc.push(parseFDepositTokenData(fTokenData, userPosition, fTokenAddress));
     }
 

@@ -91,4 +91,10 @@ describe('Fluid', () => {
     const network = NetworkNumber.Eth;
     const allUserPositions = await sdk.fluid.getUserPositions(provider, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
   });
+
+  it('get all user deposit data', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const allUserPositions = await sdk.fluid.getAllUserEarnPositionsWithFTokens(provider, network, '0x21dc459fba0b1ea037cd221d35b928be1c26141a');
+  });
 });
