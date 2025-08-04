@@ -1,31 +1,30 @@
 import 'dotenv/config';
-import Web3 from 'web3';
-import { getWeb3Instance } from './utils/getWeb3Instance';
 import * as sdk from '../src';
 import { FluidMainnetVersion, FluidMarketData, FluidVersions } from '../src';
-import { EthAddress, NetworkNumber } from '../src/types/common';
+import { EthAddress, EthereumProvider, NetworkNumber } from '../src/types/common';
 import { getFluidPositionWithMarket, getUserPositions } from '../src/fluid';
+import { getProvider } from './utils/getProvider';
 
 const { assert } = require('chai');
 const util = require('util');
 
 
 describe('Fluid', () => {
-  let web3: Web3;
-  let web3Base: Web3;
-  let web3Arb: Web3;
+  let provider: EthereumProvider;
+  let providerBase: EthereumProvider;
+  let providerArb: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
-    web3Base = getWeb3Instance('RPCBASE');
-    web3Arb = getWeb3Instance('RPCARB');
+    provider = getProvider('RPC');
+    providerBase = getProvider('RPCBASE');
+    providerArb = getProvider('RPCARB');
   });
 
   const testWhaleAddress = '0x01d1f55d94a53a9517c07f793f35320FAA0D2DCf';
 
-  const fetchUserNftIds = async (user: EthAddress, network: NetworkNumber, _web3: Web3) => sdk.fluid.getFluidVaultIdsForUser(_web3, network, user);
+  const fetchUserNftIds = async (user: EthAddress, network: NetworkNumber, _provider: EthereumProvider) => sdk.fluid.getFluidVaultIdsForUser(_provider, network, user);
 
-  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, marketVersion: FluidVersions) => {
-    const marketData = await sdk.fluid.getFluidMarketData(_web3, network, sdk.markets.FluidMarkets(network)[marketVersion], web3);
+  const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, marketVersion: FluidVersions) => {
+    const marketData = await sdk.fluid.getFluidMarketData(_provider, network, sdk.markets.FluidMarkets(network)[marketVersion]);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -39,15 +38,15 @@ describe('Fluid', () => {
     return marketData;
   };
 
-  const fetchAllMarketData = async (network: NetworkNumber, _web3: Web3) => {
-    const marketData = await sdk.fluid.getAllFluidMarketDataChunked(network, _web3, web3);
+  const fetchAllMarketData = async (network: NetworkNumber, _provider: EthereumProvider) => {
+    const marketData = await sdk.fluid.getAllFluidMarketDataChunked(network, _provider);
     // console.log(marketData);
 
     return marketData;
   };
 
   const fetchUserPosition = async (marketData: FluidMarketData, vaultId: string) => {
-    const accountData = await sdk.fluid.getFluidPosition(web3, NetworkNumber.Eth, vaultId, marketData);
+    const accountData = await sdk.fluid.getFluidPosition(provider, NetworkNumber.Eth, vaultId, marketData);
 
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
@@ -55,7 +54,7 @@ describe('Fluid', () => {
   };
 
   const fetchUserPositionWithMarket = async (vaultId: string) => {
-    const data = await getFluidPositionWithMarket(web3, NetworkNumber.Eth, vaultId, web3);
+    const data = await getFluidPositionWithMarket(provider, NetworkNumber.Eth, vaultId);
 
     // console.log(util.inspect(data, { showHidden: false, depth: null, colors: true }));
   };
@@ -64,12 +63,12 @@ describe('Fluid', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const allUserPositions = await getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf', web3);
+    const allUserPositions = await getUserPositions(provider, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
   });
 
   it('can fetch user nft ids on Ethereum', async function () {
     this.timeout(10000);
-    const nftIds = await fetchUserNftIds(testWhaleAddress, NetworkNumber.Eth, web3);
+    const nftIds = await fetchUserNftIds(testWhaleAddress, NetworkNumber.Eth, provider);
     // console.log(nftIds);
   });
 
@@ -77,40 +76,25 @@ describe('Fluid', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3, FluidMainnetVersion.FLUID_ETH_USDC_1);
+    const marketData = await fetchMarketData(network, provider, FluidMainnetVersion.FLUID_ETH_USDC_1);
   });
 
   it('can fetch all market data on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const allMarketData = await fetchAllMarketData(network, web3);
+    const allMarketData = await fetchAllMarketData(network, provider);
   });
-  //
-  //   const allMarketData = await fetchAllMarketData(network, web3);
-  // });
 
-  // it('can fetch user nft ids on Arbitrum', async function () {
-  //   this.timeout(10000);
-  //   const nftIds = await fetchUserNftIds(testWhaleAddress, NetworkNumber.Arb, web3Arb);
-  //   console.log(nftIds);
-  // });
-
-  //   it('can fetch all market data on Arbitrum', async function () {
-  //     this.timeout(10000);
-  //     const network = NetworkNumber.Arb;
-  //
-  //     const allMarketData = await fetchAllMarketData(network, web3Arb);
-  //   });
-  //   it('can fetch all market data on Base', async function () {
-  //     this.timeout(10000);
-  //     const network = NetworkNumber.Base;
-  //
-  //     const allMarketData = await fetchAllMarketData(network, web3Base);
-  //   });
   it('get all user positions', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
-    const allUserPositions = await sdk.fluid.getUserPositions(web3, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf', web3);
+    const allUserPositions = await sdk.fluid.getUserPositions(provider, network, '0x01d1f55d94a53a9517c07f793f35320faa0d2dcf');
+  });
+
+  it('get all user deposit data', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const allUserPositions = await sdk.fluid.getAllUserEarnPositionsWithFTokens(provider, network, '0x21dc459fba0b1ea037cd221d35b928be1c26141a');
   });
 });

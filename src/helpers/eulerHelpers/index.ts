@@ -1,8 +1,7 @@
 import Dec from 'decimal.js';
-import Web3 from 'web3';
 import { assetAmountInWei } from '@defisaver/tokens';
 import {
-  EthAddress, NetworkNumber,
+  EthAddress, EthereumProvider, NetworkNumber,
 } from '../../types/common';
 import {
   calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS,
@@ -11,12 +10,11 @@ import { calculateInterestEarned } from '../../staking';
 import {
   EulerV2AggregatedPositionData,
   EulerV2AssetsData,
-  EulerV2Market,
   EulerV2UsedAssets,
 } from '../../types';
-import { EulerV2ViewContract } from '../../contracts';
+import { EulerV2ViewContractViem } from '../../contracts';
 import { borrowOperations } from '../../constants';
-import { multicall } from '../../multicall';
+import { getViemProvider } from '../../services/viem';
 
 export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => {
   let borrowUnstable = 0;
@@ -180,41 +178,41 @@ const getLiquidityChanges = (action: string, amount: string, isBorrowOperation: 
   return { liquidityAdded, liquidityRemoved };
 };
 
-export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: string, amount: string, asset: string, vaultAddress: EthAddress }[], web3: Web3, network: NetworkNumber) => {
-  const eulerV2ViewContract = EulerV2ViewContract(web3, network);
-  const multicallData: any[] = [];
-  const apyAfterValuesEstimationParams: any[] = [];
+export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: string, amount: string, asset: string, vaultAddress: EthAddress }[], provider: EthereumProvider, network: NetworkNumber) => {
+  const client = getViemProvider(provider, network, { batch: { multicall: true } });
+  const eulerV2ViewContract = EulerV2ViewContractViem(client, network);
+  const apyAfterValuesEstimationParams: {
+    vault: EthAddress;
+    isBorrowOperation: boolean;
+    liquidityAdded: BigInt;
+    liquidityRemoved: BigInt;
+  }[] = [];
   actions.forEach(({
     action, amount, asset, vaultAddress,
   }) => {
     const amountInWei = assetAmountInWei(amount, asset);
     const isBorrowOperation = borrowOperations.includes(action);
     const { liquidityAdded, liquidityRemoved } = getLiquidityChanges(action, amountInWei, isBorrowOperation);
-    apyAfterValuesEstimationParams.push([
-      vaultAddress,
-      borrowOperations.includes(action),
-      liquidityAdded,
-      liquidityRemoved,
-    ]);
-    multicallData.push({
-      target: eulerV2ViewContract.options.address,
-      abiItem: eulerV2ViewContract.options.jsonInterface.find(({ name }) => name === 'getVaultInfoFull'),
-      params: [vaultAddress],
-      // @DEV gas usage is HUGE if vault has a lot of collaterals, so be careful, this can break if they add more collaterals
-      gasLimit: 10_000_000,
+    apyAfterValuesEstimationParams.push({
+      vault: vaultAddress,
+      isBorrowOperation: borrowOperations.includes(action),
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityRemoved: BigInt(liquidityRemoved),
     });
   });
-  multicallData.push({
-    target: eulerV2ViewContract.options.address,
-    abiItem: eulerV2ViewContract.options.jsonInterface.find(({ name }) => name === 'getApyAfterValuesEstimation'),
-    params: [apyAfterValuesEstimationParams],
-  });
-  const multicallRes = await multicall(multicallData, web3, network);
+
+  const res = await Promise.all([
+    ...actions.map(({ vaultAddress }) => eulerV2ViewContract.read.getVaultInfoFull([vaultAddress])),
+    // @ts-ignore
+    eulerV2ViewContract.read.getApyAfterValuesEstimation([apyAfterValuesEstimationParams]),
+  ]);
   const numOfActions = actions.length;
   const data: any = {};
   for (let i = 0; i < numOfActions; i += 1) {
-    const _interestRate = multicallRes[numOfActions].estimatedBorrowRates[i];
-    const vaultInfo = multicallRes[i][0];
+    // @ts-ignore
+    const _interestRate = res[numOfActions].estimatedBorrowRates[i];
+    // @ts-ignore
+    const vaultInfo = res[i][0];
     const decimals = vaultInfo.decimals;
     const borrowRate = getEulerV2BorrowRate(_interestRate);
 
@@ -232,4 +230,31 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
     };
   }
   return data;
+};
+
+const xorLastByte = (address: string, xorValue: string): EthAddress => {
+  // Extract the last byte (2 hex characters)
+  const lastByte = address.slice(-2);
+
+  // XOR the last byte with the given xorValue
+
+  // eslint-disable-next-line no-bitwise
+  const xorResult = [...lastByte].map((char, i) => (parseInt(char, 16) ^ parseInt(xorValue[i], 16)).toString(16),
+  ).join('');
+
+  // Return the full address with the last byte XORed
+  return `0x${address.slice(0, -2)}${xorResult.padStart(2, '0')}`;
+};
+
+export const getEulerV2SubAccounts = (address: EthAddress): EthAddress[] => {
+  // Clean the address by removing "0x"
+  const cleanAddress = address.toLowerCase().replace(/^0x/, '');
+
+  // XOR the last byte with 0x01, 0x02, and 0x03
+  const xorWith01 = xorLastByte(cleanAddress, '01');
+  const xorWith02 = xorLastByte(cleanAddress, '02');
+  const xorWith03 = xorLastByte(cleanAddress, '03');
+
+  // Return an array with all three modified addresses
+  return [xorWith01, xorWith02, xorWith03];
 };

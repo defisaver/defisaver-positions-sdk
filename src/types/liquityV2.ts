@@ -34,7 +34,7 @@ export interface LiquityV2MarketInfo {
   value: LiquityV2Versions,
   debtToken: string,
   collateralToken: string,
-  marketAddress: string,
+  marketAddress: EthAddress,
   protocolName: string,
   isLegacy: boolean,
 }

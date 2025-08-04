@@ -1,20 +1,20 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  LiquityActivePoolContract, LiquityCollSurplusPoolContract, LiquityPriceFeedContract, LiquityTroveManagerContract, LiquityViewContract,
+  LiquityActivePoolContractViem, LiquityCollSurplusPoolContractViem, LiquityPriceFeedContractViem, LiquityTroveManagerContractViem, LiquityViewContractViem,
 } from '../contracts';
-import { multicall } from '../multicall';
 import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
 
-export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const _getLiquityAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -24,90 +24,76 @@ export const getLiquityAccountBalances = async (web3: Web3, network: NetworkNumb
     return balances;
   }
 
-  const viewContract = LiquityViewContract(web3, network, block);
-  const troveInfo = await viewContract.methods.getTroveInfo(address).call({}, block);
+  const viewContract = LiquityViewContractViem(provider, network, block);
+  const troveInfo = await viewContract.read.getTroveInfo([address], setViemBlockNumber(block));
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo('ETH', network).address.toLowerCase() : 'ETH']: troveInfo[1],
+      [addressMapping ? getAssetInfo('ETH', network).address.toLowerCase() : 'ETH']: troveInfo[1].toString(),
     },
     debt: {
-      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: troveInfo[2],
+      [addressMapping ? getAssetInfo('LUSD', network).address.toLowerCase() : 'LUSD']: troveInfo[2].toString(),
     },
   };
 
   return balances;
 };
 
-const _getDebtInFront = async (viewContract: any, address: string, accumulatedSum = '0', iterations = 2000) => viewContract.methods.getDebtInFront(address, accumulatedSum, iterations).call();
+export const getLiquityAccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => _getLiquityAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address);
 
-export const getDebtInFront = async (viewContract: any, address: string, accumulatedSum = '0', iterations = 2000): Promise<string> => {
-  const { debt, next } = await _getDebtInFront(viewContract, address, accumulatedSum, iterations);
+const _getDebtInFront = async (viewContract: any, address: EthAddress, accumulatedSum = '0', iterations = 2000): Promise<string> => {
+  const res = await viewContract.read.getDebtInFront([address, accumulatedSum, iterations]);
+  const debt = res[1].toString();
+  const next = res[0];
   if (next === ZERO_ADDRESS) return assetAmountInEth(debt, 'LUSD');
-  return getDebtInFront(viewContract, next, debt, iterations);
+  return _getDebtInFront(viewContract, next, debt, iterations);
 };
 
-export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, address: string): Promise<LiquityTroveInfo> => {
-  const viewContract = LiquityViewContract(web3, network);
-  const collSurplusPoolContract = LiquityCollSurplusPoolContract(web3, network);
-  const troveManagerContract = LiquityTroveManagerContract(web3, network);
-  const priceFeedContract = LiquityPriceFeedContract(web3, network);
-  const activePoolContract = LiquityActivePoolContract(web3, network);
+export const getDebtInFront = async (provider: EthereumProvider, address: EthAddress): Promise<string> => {
+  const client = getViemProvider(provider, NetworkNumber.Eth);
+  const viewContract = LiquityViewContractViem(client, NetworkNumber.Eth);
+  return _getDebtInFront(viewContract, address);
+};
 
-  const multicallData = [
-    {
-      target: viewContract.options.address,
-      abiItem: viewContract.options.jsonInterface.find(({ name }) => name === 'getTroveInfo'),
-      params: [address],
-    },
-    {
-      target: collSurplusPoolContract.options.address,
-      abiItem: collSurplusPoolContract.options.jsonInterface.find(({ name }) => name === 'getCollateral'),
-      params: [address],
-    },
-    {
-      target: troveManagerContract.options.address,
-      abiItem: troveManagerContract.options.jsonInterface.find(({ name }) => name === 'getBorrowingRateWithDecay'),
-      params: [],
-    },
-    {
-      target: priceFeedContract.options.address,
-      abiItem: priceFeedContract.options.jsonInterface.find(({ name }) => name === 'fetchPrice'),
-      params: [],
-    },
-    {
-      target: activePoolContract.options.address,
-      abiItem: activePoolContract.options.jsonInterface.find(({ name }) => name === 'getETH'),
-      params: [],
-    },
-    {
-      target: activePoolContract.options.address,
-      abiItem: activePoolContract.options.jsonInterface.find(({ name }) => name === 'getLUSDDebt'),
-      params: [],
-    },
-  ];
+export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNumber, address: EthAddress): Promise<LiquityTroveInfo> => {
+  const viewContract = LiquityViewContractViem(provider, network);
+  const collSurplusPoolContract = LiquityCollSurplusPoolContractViem(provider, network);
+  const troveManagerContract = LiquityTroveManagerContractViem(provider, network);
+  const priceFeedContract = LiquityPriceFeedContractViem(provider, network);
+  const activePoolContract = LiquityActivePoolContractViem(provider, network);
 
-  const [multiRes, debtInFront] = await Promise.all([
-    multicall(multicallData, web3, network),
-    getDebtInFront(viewContract, address),
-  ]);
-
-  const recoveryMode = multiRes[0][6];
-  const totalETH = multiRes[4][0];
-  const totalLUSD = multiRes[5][0];
-
-  const payload = {
-    troveStatus: LIQUITY_TROVE_STATUS_ENUM[+multiRes[0][0].toString()],
-    collateral: assetAmountInEth(multiRes[0][1]),
-    debtInAsset: assetAmountInEth(multiRes[0][2]),
-    TCRatio: assetAmountInEth(multiRes[0][4]),
-    recoveryMode,
-    claimableCollateral: assetAmountInEth(multiRes[1][0]),
-    borrowingRateWithDecay: assetAmountInEth(multiRes[2][0]),
-    assetPrice: assetAmountInEth(multiRes[3][0]),
+  const [
+    troveInfo,
+    collSurplusInfo,
+    borrowingRateWithDecay,
+    assetPrice,
     totalETH,
     totalLUSD,
     debtInFront,
+  ] = await Promise.all([
+    viewContract.read.getTroveInfo([address]),
+    collSurplusPoolContract.read.getCollateral([address]),
+    troveManagerContract.read.getBorrowingRateWithDecay(),
+    priceFeedContract.read.fetchPrice(),
+    activePoolContract.read.getETH(),
+    activePoolContract.read.getLUSDDebt(),
+    _getDebtInFront(viewContract, address),
+  ]);
+
+  const recoveryMode = troveInfo[6];
+
+  const payload = {
+    troveStatus: LIQUITY_TROVE_STATUS_ENUM[+(troveInfo[0].toString())],
+    collateral: assetAmountInEth(troveInfo[1].toString()),
+    debtInAsset: assetAmountInEth(troveInfo[2].toString()),
+    TCRatio: assetAmountInEth(troveInfo[4].toString()),
+    recoveryMode,
+    claimableCollateral: assetAmountInEth(collSurplusInfo.toString()),
+    borrowingRateWithDecay: assetAmountInEth(borrowingRateWithDecay.toString()),
+    assetPrice: assetAmountInEth(assetPrice.toString()),
+    totalETH: totalETH.toString(),
+    totalLUSD: totalLUSD.toString(),
+    debtInFront: debtInFront.toString(),
     minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
@@ -115,3 +101,5 @@ export const getLiquityTroveInfo = async (web3: Web3, network: NetworkNumber, ad
 
   return payload;
 };
+
+export const getLiquityTroveInfo = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress): Promise<LiquityTroveInfo> => _getLiquityTroveInfo(getViemProvider(provider, network, { batch: { multicall: true } }), network, address);
