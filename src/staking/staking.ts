@@ -227,7 +227,12 @@ export const calculateNetApy = ({
       if (assetData.incentiveBorrowApy) {
         // take COMP/AAVE yield into account
         const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveBorrowApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+
+        if (assetData.incentiveBorrowToken === 'COMP') {
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        } else {
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+        }
       }
     }
 
