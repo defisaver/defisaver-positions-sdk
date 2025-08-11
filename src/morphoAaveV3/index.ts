@@ -216,7 +216,7 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
 
   const [scaledBalanceResponse, morphoRewards] = await Promise.allSettled([
     multicall(scaledBalanceMulticall, web3, network),
-    fetch('https://api.morpho.xyz/rewards/emissions'),
+    fetch('https://api.morpho.xyz/rewards/emissions', { signal: AbortSignal.timeout(5000) }),
   ]);
 
   if (scaledBalanceResponse.status !== 'fulfilled') {
@@ -226,6 +226,8 @@ export const getMorphoAaveV3MarketsData = async (web3: Web3, network: NetworkNum
   let morphoRewardsData: any = null;
   if (morphoRewards.status === 'fulfilled') {
     morphoRewardsData = morphoRewards.value.ok ? await morphoRewards.value.json() : null;
+  } else {
+    console.error('External API Failure: Morpho Aave v3 rewards data fetch failed');
   }
 
   const assetsData: MorphoAaveV3AssetData[] = await Promise.all(loanInfo.map(async (info, i: number) => {
