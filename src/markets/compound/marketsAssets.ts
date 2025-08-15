@@ -71,7 +71,7 @@ export const v3USDSCollAssets = {
   [NetworkNumber.Eth]: v3USDSCollAssetsEth,
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
-  [NetworkNumber.Base]: v3USDSCollAssetsBase,
+  [NetworkNumber.Base]: [],
 };
 
 export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];

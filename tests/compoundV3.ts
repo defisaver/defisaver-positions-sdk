@@ -257,12 +257,12 @@ describe('Compound v3', () => {
     // await fetchAccountBalances(network, web3Base, 4256022, '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf');
   });
 
-  it('can fetch market and account data for USDS Market on Base', async function () {
-    this.timeout(10000);
-    const network = NetworkNumber.Base;
-    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
-
-    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
-    await fetchAccountData(network, web3Base, marketData, selectedMarket);
-  });
+  // it('can fetch market and account data for USDS Market on Base', async function () {
+  //   this.timeout(10000);
+  //   const network = NetworkNumber.Base;
+  //   const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
+  //
+  //   const marketData = await fetchMarketData(network, web3Base, selectedMarket);
+  //   await fetchAccountData(network, web3Base, marketData, selectedMarket);
+  // });
 });
