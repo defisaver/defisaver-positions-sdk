@@ -1,3 +1,4 @@
+import { ZERO_ADDRESS } from '../../constants';
 import { getConfigContractAddress } from '../../contracts';
 import { CompoundBulkerOptions, CompoundMarketData, CompoundVersions } from '../../types';
 import { NetworkNumber } from '../../types/common';
@@ -86,10 +87,10 @@ export const COMPOUND_V2: CompoundMarketData = {
   baseAsset: '',
   collAssets: compoundV2CollateralAssets.map(a => a.underlyingAsset),
   baseMarket: '',
-  baseMarketAddress: '',
+  baseMarketAddress: ZERO_ADDRESS,
   secondLabel: '',
   bulkerName: '',
-  bulkerAddress: '',
+  bulkerAddress: ZERO_ADDRESS,
   bulkerOptions: BULKER_OPTIONS[NetworkNumber.Eth][CompoundVersions.CompoundV2],
   // icon: SvgAdapter(protocolIcons.compound),
 };

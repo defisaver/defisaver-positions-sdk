@@ -1,18 +1,17 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import {
-  assetAmountInEth, assetAmountInWei, getAssetInfo, getAssetInfoByAddress,
+  assetAmountInEth, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
-import { CompV3ViewContract } from '../contracts';
-import { multicall } from '../multicall';
+import { Client } from 'viem';
+import { CompV3ViewContractViem } from '../contracts';
 import {
   CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
 } from '../types';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  getStakingApy, getStETHByWstETHMultiple, getWstETHByStETH, STAKING_ASSETS,
+  getStakingApy, STAKING_ASSETS,
 } from '../staking';
 import { ethToWeth, wethToEth } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
@@ -26,6 +25,7 @@ import {
 import {
   getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
 } from '../services/priceService';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
 
@@ -40,53 +40,29 @@ const getBaseAssetPriceFunction = (asset: string) => {
   }
 };
 
-export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultWeb3: Web3): Promise<CompoundV3MarketsData> => {
-  const baseAssetPrice = await getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultWeb3);
-  const compPrice = await getCompPrice(defaultWeb3);
-  const contract = CompV3ViewContract(web3, network);
-  const CompV3ViewAddress = contract.options.address;
-  const calls = [
-    {
-      target: CompV3ViewAddress,
-      abiItem: contract.options.jsonInterface.find((props) => props.name === 'getFullBaseTokenInfo'),
-      params: [selectedMarket.baseMarketAddress],
-    },
-    {
-      target: CompV3ViewAddress,
-      abiItem: contract.options.jsonInterface.find((props) => props.name === 'getFullCollInfos'),
-      params: [selectedMarket.baseMarketAddress],
-      gasLimit: 3000000,
-    },
-  ];
-  const data = await multicall(calls, web3, network);
+export const _getCompoundV3MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: Client): Promise<CompoundV3MarketsData> => {
+  const contract = CompV3ViewContractViem(provider, network);
+
+  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos] = await Promise.all([
+    getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultProvider),
+    getCompPrice(defaultProvider),
+    contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress]),
+    contract.read.getFullCollInfos([selectedMarket.baseMarketAddress]),
+  ]);
+
   const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
 
-  const colls = data[1].colls
+  const colls = collInfos
     .filter((coll: any) => supportedAssetsAddresses.includes(coll.tokenAddr.toLowerCase()))
     .map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
 
   for (const coll of colls) {
-    if (coll.symbol === 'wstETH') {
-      // eslint-disable-next-line no-await-in-loop
-      const [[totalSupplyAlternative, supplyCapAlternative], priceAlternative] = await Promise.all([
-        getStETHByWstETHMultiple([
-          assetAmountInWei(coll.totalSupply, 'wstETH'),
-          assetAmountInWei(coll.supplyCap, 'wstETH'),
-        ], defaultWeb3),
-        getWstETHByStETH(assetAmountInWei(1, 'stETH'), defaultWeb3),
-      ]);
-      coll.totalSupplyAlternative = assetAmountInEth(totalSupplyAlternative, 'stETH');
-      coll.supplyCapAlternative = assetAmountInEth(supplyCapAlternative, 'stETH');
-      coll.priceAlternative = assetAmountInEth(priceAlternative, 'wstETH');
-      // const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
-      // eslint-disable-next-line no-await-in-loop
-    }
     if (STAKING_ASSETS.includes(coll.symbol)) {
-      coll.incentiveSupplyApy = await getStakingApy(coll.symbol, defaultWeb3);
+      coll.incentiveSupplyApy = await getStakingApy(coll.symbol);
       coll.incentiveSupplyToken = coll.symbol;
     }
   }
-  const base = formatBaseData(data[0].baseToken, network, baseAssetPrice);
+  const base = formatBaseData(baseTokenInfo, network, baseAssetPrice);
 
   const payload: CompoundV3AssetsData = {};
 
@@ -106,6 +82,8 @@ export const getCompoundV3MarketsData = async (web3: Web3, network: NetworkNumbe
 
   return { assetsData: payload };
 };
+
+export const getCompoundV3MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3MarketsData> => _getCompoundV3MarketsData(getViemProvider(provider, network), network, selectedMarket, getViemProvider(defaultProvider, network));
 
 export const EMPTY_COMPOUND_V3_DATA = {
   usedAssets: {},
@@ -136,7 +114,7 @@ export const EMPTY_USED_ASSET = {
   debt: '0',
 };
 
-export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
+export const _getCompoundV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -154,16 +132,16 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
     [COMPOUND_V3_USDCe(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDCe(network),
   })[marketAddress.toLowerCase()];
 
-  const loanInfoContract = CompV3ViewContract(web3, network, block);
-  const loanInfo = await loanInfoContract.methods.getLoanData(market.baseMarketAddress, address).call({}, block);
+  const loanInfoContract = CompV3ViewContractViem(provider, network, block);
+  const loanInfo = await loanInfoContract.read.getLoanData([market.baseMarketAddress, address], setViemBlockNumber(block));
   const baseAssetInfo = getAssetInfo(wethToEth(market.baseAsset), network);
 
   balances = {
     collateral: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.depositAmount,
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.depositAmount.toString(),
     },
     debt: {
-      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.borrowAmount,
+      [addressMapping ? baseAssetInfo.address.toLowerCase() : baseAssetInfo.symbol]: loanInfo.borrowAmount.toString(),
     },
   };
 
@@ -181,11 +159,13 @@ export const getCompoundV3AccountBalances = async (web3: Web3, network: NetworkN
   return balances;
 };
 
-export const getCompoundV3AccountData = async (
-  web3: Web3,
+export const getCompoundV3AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, marketAddress: EthAddress): Promise<PositionBalances> => _getCompoundV3AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, marketAddress);
+
+export const _getCompoundV3AccountData = async (
+  provider: Client,
   network: NetworkNumber,
-  address: string,
-  proxyAddress: string,
+  address: EthAddress,
+  proxyAddress: EthAddress,
   extractedState: ({
     selectedMarket: CompoundMarketData,
     assetsData: CompoundV3AssetsData,
@@ -201,25 +181,13 @@ export const getCompoundV3AccountData = async (
     lastUpdated: Date.now(),
   };
 
-  const contract = CompV3ViewContract(web3, network);
-  const CompV3ViewAddress = contract.options.address;
+  const contract = CompV3ViewContractViem(provider, network);
 
-  const calls = [
-    {
-      target: CompV3ViewAddress,
-      abiItem: contract.options.jsonInterface.find((props) => props.name === 'getLoanData'),
-      params: [selectedMarket.baseMarketAddress, address],
-    },
-    {
-      target: CompV3ViewAddress,
-      abiItem: contract.options.jsonInterface.find((props) => props.name === 'isAllowed'),
-      params: [selectedMarket.baseMarketAddress, address, proxyAddress || ZERO_ADDRESS],
-    },
-  ];
 
-  const data: any[] = await multicall(calls, web3, network);
-
-  const loanData = data[0][0];
+  const [loanData, isAllowed] = await Promise.all([
+    contract.read.getLoanData([selectedMarket.baseMarketAddress, address]),
+    contract.read.isAllowed([selectedMarket.baseMarketAddress, address, (proxyAddress || ZERO_ADDRESS)]),
+  ]);
 
   const usedAssets: CompoundV3UsedAssets = {};
 
@@ -228,14 +196,14 @@ export const getCompoundV3AccountData = async (
   usedAssets[baseAssetSymbol] = { ...EMPTY_USED_ASSET, symbol: baseAssetSymbol, collateral: false };
   if (loanData.depositAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isSupplied = true;
-    usedAssets[baseAssetSymbol].supplied = assetAmountInEth(loanData.depositAmount, baseAssetInfo.symbol);
-    usedAssets[baseAssetSymbol].suppliedUsd = new Dec(assetAmountInEth(loanData.depositValue, baseAssetInfo.symbol)).mul(assetsData[baseAssetSymbol].price).toString();
+    usedAssets[baseAssetSymbol].supplied = assetAmountInEth(loanData.depositAmount.toString(), baseAssetInfo.symbol);
+    usedAssets[baseAssetSymbol].suppliedUsd = new Dec(assetAmountInEth(loanData.depositValue.toString(), baseAssetInfo.symbol)).mul(assetsData[baseAssetSymbol].price).toString();
   }
   if (loanData.borrowAmount.toString() !== '0') {
     usedAssets[baseAssetSymbol].isBorrowed = true;
-    usedAssets[baseAssetSymbol].borrowed = assetAmountInEth(loanData.borrowAmount, baseAssetInfo.symbol);
+    usedAssets[baseAssetSymbol].borrowed = assetAmountInEth(loanData.borrowAmount.toString(), baseAssetInfo.symbol);
     usedAssets[baseAssetSymbol].borrowedUsd = new Dec(
-      assetAmountInEth(loanData.borrowValue, baseAssetInfo.symbol),
+      assetAmountInEth(loanData.borrowValue.toString(), baseAssetInfo.symbol),
     )
       .mul(assetsData[baseAssetSymbol].price)
       .toString();
@@ -270,7 +238,7 @@ export const getCompoundV3AccountData = async (
     ...getCompoundV3AggregatedData({
       usedAssets, assetsData, network, selectedMarket,
     }),
-    isAllowed: data[1][0],
+    isAllowed,
   };
 
   // Calculate borrow limits per asset
@@ -284,8 +252,19 @@ export const getCompoundV3AccountData = async (
   return payload;
 };
 
-export const getCompoundV3FullPositionData = async (web3: Web3, network: NetworkNumber, address: string, proxyAddress: string, selectedMarket: CompoundMarketData, mainnetWeb3: Web3): Promise<CompoundV3PositionData> => {
-  const marketData = await getCompoundV3MarketsData(web3, network, selectedMarket, mainnetWeb3);
-  const positionData = await getCompoundV3AccountData(web3, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
+export const getCompoundV3AccountData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  proxyAddress: EthAddress,
+  extractedState: ({
+    selectedMarket: CompoundMarketData,
+    assetsData: CompoundV3AssetsData,
+  }),
+): Promise<CompoundV3PositionData> => _getCompoundV3AccountData(getViemProvider(provider, network), network, address, proxyAddress, extractedState);
+
+export const getCompoundV3FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, proxyAddress: EthAddress, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3PositionData> => {
+  const marketData = await getCompoundV3MarketsData(provider, network, selectedMarket, defaultProvider);
+  const positionData = await getCompoundV3AccountData(provider, network, address, proxyAddress, { selectedMarket, assetsData: marketData.assetsData });
   return positionData;
 };
