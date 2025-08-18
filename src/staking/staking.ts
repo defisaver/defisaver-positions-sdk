@@ -2,11 +2,12 @@ import Dec from 'decimal.js';
 import memoize from 'memoizee';
 import { MMAssetsData, MMUsedAssets } from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
+import { DEFAULT_TIMEOUT } from '../services/utils';
 
 const getSsrApy = async () => {
   try {
     const res = await fetch('https://fe.defisaver.com/api/sky/data',
-      { signal: AbortSignal.timeout(5000) });
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     const data = await res.json();
     return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
   } catch (e) {
@@ -29,7 +30,7 @@ const getSuperOETHApy = async () => {
           chainId: 8453,
         },
       }),
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
     });
 
     const data = await res.json();
@@ -43,7 +44,7 @@ const getSuperOETHApy = async () => {
 const getApyFromDfsApi = async (asset: string) => {
   try {
     const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`,
-      { signal: AbortSignal.timeout(5000) });
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
     return String(data.apy);

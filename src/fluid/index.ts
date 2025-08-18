@@ -22,7 +22,9 @@ import {
 import {
   BTCPriceFeedContractViem, DFSFeedRegistryContractViem, ETHPriceFeedContractViem, FeedRegistryContractViem, FluidViewContractViem,
 } from '../contracts';
-import { compareAddresses, getEthAmountForDecimals, isMainnetNetwork } from '../services/utils';
+import {
+  compareAddresses, DEFAULT_TIMEOUT, getEthAmountForDecimals, isMainnetNetwork,
+} from '../services/utils';
 import {
   getFluidAggregatedData,
   mergeAssetData,
@@ -257,7 +259,7 @@ const getTradingApy = async (poolAddress: EthAddress) => {
   let res;
   try {
     res = await fetch(`https://api.fluid.instadapp.io/v2/1/dexes/${poolAddress}/apy`,
-      { signal: AbortSignal.timeout(2000) });
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
   } catch (e) {
     console.error('External API Failure: Fluid Trading Apy');
     return '0';
