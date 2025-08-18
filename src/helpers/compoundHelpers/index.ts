@@ -1,6 +1,5 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import Web3 from 'web3';
 import {
   BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundVersions,
 } from '../../types';
@@ -10,8 +9,9 @@ import {
   aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { EthAddress, NetworkNumber } from '../../types/common';
-import { CompoundLoanInfoContract, CompV3ViewContract } from '../../contracts';
+import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import { CompoundLoanInfoContractViem, CompV3ViewContractViem } from '../../contracts';
+import { getViemProvider } from '../../services/viem';
 
 export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
@@ -185,8 +185,9 @@ export const getCompoundV3AggregatedData = ({
   return payload;
 };
 
-export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: string, amount: string, asset: string }], web3: Web3) => {
-  const compViewContract = CompoundLoanInfoContract(web3, NetworkNumber.Eth);
+export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider) => {
+  const client = getViemProvider(provider, NetworkNumber.Eth);
+  const compViewContract = CompoundLoanInfoContractViem(client, NetworkNumber.Eth);
   const params = actions.map(({ action, asset, amount }) => {
     const isBorrowOperation = borrowOperations.includes(action);
     const amountInWei = assetAmountInWei(amount, asset);
@@ -201,15 +202,15 @@ export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: 
       liquidityTaken = action === 'withdraw' ? amountInWei : '0';
     }
     return {
-      cTokenAddr: assetInfo.address,
-      liquidityAdded,
-      liquidityTaken,
+      cTokenAddr: assetInfo.address as EthAddress,
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityTaken: BigInt(liquidityTaken),
       isBorrowOperation,
     };
   });
-  const data = await compViewContract.methods.getApyAfterValuesEstimation(
-    params,
-  ).call();
+  const data = await compViewContract.read.getApyAfterValuesEstimation(
+    [params],
+  );
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
   data.forEach((d) => {
     const asset = wethToEth(getAssetInfoByAddress(d.cTokenAddr).underlyingAsset);
@@ -221,8 +222,9 @@ export const getApyAfterValuesEstimationCompoundV2 = async (actions: [{ action: 
   return rates;
 };
 
-export const getApyAfterValuesEstimationCompoundV3 = async (selectedMarket: CompoundMarketData, action: string, asset: string, amount: string, account: EthAddress, web3: Web3, network: NetworkNumber) => {
-  const compV3ViewContract = CompV3ViewContract(web3, network);
+export const getApyAfterValuesEstimationCompoundV3 = async (selectedMarket: CompoundMarketData, action: string, asset: string, amount: string, account: EthAddress, provider: EthereumProvider, network: NetworkNumber) => {
+  const client = getViemProvider(provider, NetworkNumber.Eth);
+  const compV3ViewContract = CompV3ViewContractViem(client, network);
   const isBorrowOperation = borrowOperations.includes(action);
   const amountInWei = assetAmountInWei(amount, asset);
   let liquidityAdded;
@@ -234,16 +236,16 @@ export const getApyAfterValuesEstimationCompoundV3 = async (selectedMarket: Comp
     liquidityAdded = action === 'collateral' ? amountInWei : '0';
     liquidityTaken = action === 'withdraw' ? amountInWei : '0';
   }
-  const data = await compV3ViewContract.methods.getApyAfterValuesEstimation(
+  const [_, supplyRate, borrowRate] = await compV3ViewContract.read.getApyAfterValuesEstimation([
     selectedMarket.baseMarketAddress,
     account,
-    liquidityAdded,
-    liquidityTaken,
-  ).call();
+    BigInt(liquidityAdded),
+    BigInt(liquidityTaken),
+  ]);
   return {
-    supplyRate: aprToApy(new Dec(data.supplyRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
+    supplyRate: aprToApy(new Dec(supplyRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
       .toString()),
-    borrowRate: aprToApy(new Dec(data.borrowRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
+    borrowRate: aprToApy(new Dec(borrowRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
       .toString()),
   };
 };

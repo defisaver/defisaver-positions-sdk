@@ -1,20 +1,21 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import Web3 from 'web3';
 import {
   aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
+import {
+  EthereumProvider, MMAssetsData, MMUsedAssets, NetworkNumber,
+} from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
   MorphoBluePublicAllocatorItem,
   MorphoBlueRealloactionMarketData,
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
-import { MorphoBlueViewContract } from '../../contracts';
-import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
+import { MorphoBlueViewContractViem } from '../../contracts';
 import { compareAddresses } from '../../services/utils';
+import { getViemProvider } from '../../services/viem';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
@@ -96,10 +97,17 @@ export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => 
   return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
 };
 
-export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, actions: { action: string, amount: string, asset: string }[], web3: Web3, network: NetworkNumber) => {
-  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, actions: { action: string, amount: string, asset: string }[], provider: EthereumProvider, network: NetworkNumber) => {
+  const client = getViemProvider(provider, network);
+  const morphoBlueViewContract = MorphoBlueViewContractViem(client, network);
   const lltvInWei = assetAmountInWei(selectedMarket.lltv, 'ETH');
-  const marketData: MarketParamsStruct = [selectedMarket.loanToken, selectedMarket.collateralToken, selectedMarket.oracle, selectedMarket.irm, lltvInWei];
+  const marketData = {
+    loanToken: selectedMarket.loanToken,
+    collateralToken: selectedMarket.collateralToken,
+    oracle: selectedMarket.oracle,
+    irm: selectedMarket.irm,
+    lltv: BigInt(lltvInWei),
+  };
 
   const params = actions.map(({ action, asset, amount }) => {
     const isBorrowOperation = borrowOperations.includes(action);
@@ -114,17 +122,17 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
       liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
     }
     return {
-      liquidityAdded,
-      liquidityRemoved,
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityRemoved: BigInt(liquidityRemoved),
       isBorrowOperation,
     };
   });
-  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation(
+  const data = await morphoBlueViewContract.read.getApyAfterValuesEstimation([
     marketData,
     params,
-  ).call();
-  const borrowRate = getBorrowRate(data.borrowRate, data.market.totalBorrowShares);
-  const supplyRate = getSupplyRate(data.market.totalSupplyAssets, data.market.totalBorrowAssets, data.borrowRate, data.market.fee);
+  ]);
+  const borrowRate = getBorrowRate(data[0].toString(), data[1].totalBorrowShares.toString());
+  const supplyRate = getSupplyRate(data[1].totalSupplyAssets.toString(), data[1].totalBorrowAssets.toString(), data[0].toString(), data[1].fee.toString());
   return { borrowRate, supplyRate };
 };
 

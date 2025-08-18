@@ -1,88 +1,7 @@
 import Dec from 'decimal.js';
-import Web3 from 'web3';
 import memoize from 'memoizee';
-import {
-  CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
-} from '../contracts';
-import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../types/common';
-import { ContractEventLog } from '../types/contracts/generated/types';
-import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants';
-import { multicall } from '../multicall';
-import { aprToApy } from '../moneymarket';
-
-const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
-  try {
-    const tokenRebasedEvents: ContractEventLog<{
-      [key: string]: any
-    }>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
-    tokenRebasedEvents.sort((a, b) => b.blockNumber - a.blockNumber); // sort from highest to lowest block number
-    const movingAverage = 7;
-    const aprs = tokenRebasedEvents.slice(0, movingAverage).map(({ returnValues: event }) => {
-      const preShareRate = new Dec(event.preTotalEther.toString()).div(event.preTotalShares.toString());
-      const postShareRate = new Dec(event.postTotalEther.toString()).div(event.postTotalShares.toString());
-      return new Dec(SECONDS_PER_YEAR).mul(new Dec(postShareRate).sub(preShareRate).div(preShareRate))
-        .div(event.timeElapsed.toString()).mul(100)
-        .toNumber();
-    });
-    return aprToApy(aprs.reduce((a, b) => a + b, 0) / aprs.length);
-  } catch (e) {
-    console.warn('Failed to fetch stETH APY from events, falling back to Lido API');
-    try {
-      const res = await fetch('https://eth-api.lido.fi/v1/protocol/steth/apr/sma',
-        { signal: AbortSignal.timeout(5000) });
-      const data = await res.json();
-      return aprToApy(data.data.smaApr);
-    } catch (error) {
-      console.error('External API Failure: Lido API', error);
-      return '0';
-    }
-  }
-};
-const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  let currentBlock = blockNumber;
-  if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
-  const blockDiff = 6 * 24 * 60 * 60 / AVG_BLOCK_TIME;
-  const pastBlock = (currentBlock as number) - blockDiff;
-  const contract = CbEthContract(web3, NetworkNumber.Eth);
-  const [pastRate, currentRate] = await Promise.all([
-    contract.methods.exchangeRate().call({}, pastBlock),
-    contract.methods.exchangeRate().call({}, currentBlock),
-  ]);
-  const apr = new Dec(currentRate.toString()).sub(pastRate.toString()).div(currentRate.toString())
-    .mul(BLOCKS_IN_A_YEAR / blockDiff)
-    .mul(100)
-    .toString();
-  return aprToApy(apr);
-};
-
-
-const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  let currentBlock = blockNumber;
-  if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
-  const blockDiff = 8 * 24 * 60 * 60 / AVG_BLOCK_TIME;
-  const pastBlock = (currentBlock as number) - blockDiff;
-  const contract = REthContract(web3, NetworkNumber.Eth);
-  const [pastRate, currentRate] = await Promise.all([
-    contract.methods.getExchangeRate().call({}, pastBlock),
-    contract.methods.getExchangeRate().call({}, currentBlock),
-  ]);
-  const apr = new Dec(currentRate.toString()).sub(pastRate.toString()).div(currentRate.toString())
-    .mul(BLOCKS_IN_A_YEAR / blockDiff)
-    .mul(100)
-    .toString();
-
-  return aprToApy(apr);
-};
-
-const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  const potContract = PotContract(web3, NetworkNumber.Eth);
-  return new Dec(await potContract.methods.dsr().call())
-    .div(new Dec(1e27))
-    .pow(SECONDS_PER_YEAR)
-    .sub(1)
-    .mul(100)
-    .toString();
-};
+import { MMAssetsData, MMUsedAssets } from '../types/common';
+import { BLOCKS_IN_A_YEAR } from '../constants';
 
 const getSsrApy = async () => {
   try {
@@ -134,14 +53,14 @@ const getApyFromDfsApi = async (asset: string) => {
   }
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep'];
 
-export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = memoize(async (asset: string) => {
   try {
-    if (asset === 'stETH' || asset === 'wstETH') return await getStETHApy(web3, fromBlock, blockNumber);
-    if (asset === 'cbETH') return await getCbETHApy(web3, blockNumber);
-    if (asset === 'rETH') return await getREthApy(web3, blockNumber);
-    if (asset === 'sDAI') return await getDsrApy(web3);
+    if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
+    if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
+    if (asset === 'rETH') return await getApyFromDfsApi('rETH');
+    if (asset === 'sDAI') return await getApyFromDfsApi('sDAI');
     if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
     if (asset === 'weETH') return await getApyFromDfsApi('weETH');
     if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
@@ -155,7 +74,10 @@ export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumb
     if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July');
     if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July');
     if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug');
+    if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep');
+    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
+    if (asset === 'USDe') return await getApyFromDfsApi('USDe');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
@@ -178,7 +100,41 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean }) => {
+export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
+  const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
+  const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
+  const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
+  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
+  const totalAmountSupplied = new Dec(USDeUSDAmountSupplied).add(sUSDeUSDAmountSupplied).toString();
+  const percentageInUSDe = new Dec(USDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
+  if (percentageInUSDe < 0.45 || percentageInUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in USDe
+  const percentageInSUSDe = new Dec(sUSDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
+  if (percentageInSUSDe < 0.45 || percentageInSUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in sUSDe
+
+  const allowedBorrowAssets = ['USDC', 'USDT', 'USDS'];
+  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
+  if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const totalAmountBorrowed = Object.values(usedAssets).reduce((acc, asset) => {
+    if (asset.isBorrowed) {
+      return acc.add(asset.borrowedUsd);
+    }
+    return acc;
+  }, new Dec(0)).toString();
+
+  const borrowPercentage = new Dec(totalAmountBorrowed).div(totalAmountSupplied).toNumber();
+  if (borrowPercentage < 0.5) return { isEligible: false, eligibleUSDAmount: '0' }; // must be looped at least once
+
+  const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
+  const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
+
+  return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
+};
+
+export const calculateNetApy = ({
+  usedAssets, assetsData, isMorpho = false, isAave = false,
+}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean, isAave?: boolean }) => {
+  const { isEligible, eligibleUSDAmount } = isAave ? isEligibleForEthenaUSDeRewards(usedAssets) : { isEligible: true, eligibleUSDAmount: '0' };
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
     const assetData = assetsData[usedAsset.symbol];
@@ -194,6 +150,12 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
       if (assetData.incentiveSupplyApy) {
         // take COMP/AAVE yield into account
         const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+      }
+
+      if (usedAsset.symbol === 'USDe' && isEligible) {
+        // @ts-ignore
+        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, assetData.supplyIncentives?.[0]?.apy || '0', 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }
@@ -227,19 +189,4 @@ export const calculateNetApy = ({ usedAssets, assetsData, isMorpho = false }: { 
   const netApy = new Dec(totalInterestUsd).div(balance).times(100).toString();
 
   return { netApy, totalInterestUsd, incentiveUsd };
-};
-
-export const getWstETHByStETH = async (stETHAmount: string | number, web3: Web3) => wstETHContract(web3, NetworkNumber.Eth).methods.getWstETHByStETH(stETHAmount).call();
-
-export const getStETHByWstETH = async (wstETHAmount: string | number, web3: Web3) => wstETHContract(web3, NetworkNumber.Eth).methods.getStETHByWstETH(wstETHAmount).call();
-
-export const getStETHByWstETHMultiple = async (wstEthAmounts: string[] | number[], web3: Web3) => {
-  const contract = wstETHContract(web3, NetworkNumber.Eth);
-  const calls = wstEthAmounts.map((amount) => ({
-    target: contract.options.address,
-    abiItem: contract.options.jsonInterface.find((i) => i.name === 'getStETHByWstETH'),
-    params: [amount],
-  }));
-  const stEthAmounts = await multicall(calls, web3);
-  return stEthAmounts.map((arr) => arr[0]);
 };

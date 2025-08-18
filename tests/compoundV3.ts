@@ -1,27 +1,29 @@
 import 'dotenv/config';
-import Web3 from 'web3';
 
 import * as sdk from '../src';
 
-import { Blockish, EthAddress, NetworkNumber } from '../src/types/common';
-import { getWeb3Instance } from './utils/getWeb3Instance';
+import {
+  Blockish, EthAddress, EthereumProvider, NetworkNumber,
+} from '../src/types/common';
+import { getProvider } from './utils/getProvider';
+import { ZERO_ADDRESS } from '../src/constants';
 
 const { assert } = require('chai');
 
 describe('Compound v3', () => {
-  let web3: Web3;
-  let web3Base: Web3;
-  let web3Opt: Web3;
-  let web3Arb: Web3;
+  let provider: EthereumProvider;
+  let providerBase: EthereumProvider;
+  let providerOpt: EthereumProvider;
+  let providerArb: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
-    web3Opt = getWeb3Instance('RPCOPT');
-    web3Base = getWeb3Instance('RPCBASE');
-    web3Arb = getWeb3Instance('RPCARB');
+    provider = getProvider('RPC');
+    providerOpt = getProvider('RPCOPT');
+    providerBase = getProvider('RPCBASE');
+    providerArb = getProvider('RPCARB');
   });
 
-  const fetchMarketData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CompoundMarketData) => {
-    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_web3, network, selectedMarket, web3);
+  const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, selectedMarket: sdk.CompoundMarketData) => {
+    const marketData = await sdk.compoundV3.getCompoundV3MarketsData(_provider, network, selectedMarket, provider);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
       const keys: (keyof typeof tokenData)[] = [
@@ -33,24 +35,24 @@ describe('Compound v3', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.CompoundV3MarketsData, selectedMarket: sdk.CompoundMarketData) => {
-    const accountData = await sdk.compoundV3.getCompoundV3AccountData(_web3, network, '0x8f02A8ecD8734381795FF251360DBf1730Cb46E6', '', { selectedMarket, assetsData: marketData.assetsData });
+  const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.CompoundV3MarketsData, selectedMarket: sdk.CompoundMarketData) => {
+    const accountData = await sdk.compoundV3.getCompoundV3AccountData(_provider, network, '0x8f02A8ecD8734381795FF251360DBf1730Cb46E6', ZERO_ADDRESS, { selectedMarket, assetsData: marketData.assetsData });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3, selectedMarket: sdk.CompoundMarketData) => {
-    const positionData = await sdk.compoundV3.getCompoundV3FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', '', selectedMarket, web3);
+  const fetchFullPositionData = async (network: NetworkNumber, _provider: EthereumProvider, selectedMarket: sdk.CompoundMarketData) => {
+    const positionData = await sdk.compoundV3.getCompoundV3FullPositionData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', ZERO_ADDRESS, selectedMarket, provider);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish, marketAddr: EthAddress) => {
-    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
+  const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, blockNumber: Blockish, marketAddr: EthAddress) => {
+    const balances = await sdk.compoundV3.getCompoundV3AccountBalances(_provider, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketAddr);
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -64,8 +66,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    const marketData = await fetchMarketData(network, web3, selectedMarket);
-    await fetchAccountData(network, web3, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
   it('can fetch full position data for ETH Market on Ethereum', async function () {
@@ -73,7 +75,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    await fetchFullPositionData(network, web3, selectedMarket);
+    await fetchFullPositionData(network, provider, selectedMarket);
   });
 
   it('can fetch market and account data for USDC Market on Ethereum', async function () {
@@ -81,8 +83,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDC];
 
-    const marketData = await fetchMarketData(network, web3, selectedMarket);
-    await fetchAccountData(network, web3, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
   it('can fetch full position data for USDC Market on Ethereum', async function () {
@@ -90,7 +92,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDC];
 
-    await fetchFullPositionData(network, web3, selectedMarket);
+    await fetchFullPositionData(network, provider, selectedMarket);
   });
 
   it('can fetch market and account data for USDT Market on Ethereum', async function () {
@@ -98,8 +100,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
 
-    const marketData = await fetchMarketData(network, web3, selectedMarket);
-    await fetchAccountData(network, web3, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
   it('can fetch full position data for USDT Market on Ethereum', async function () {
@@ -107,7 +109,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
 
-    await fetchFullPositionData(network, web3, selectedMarket);
+    await fetchFullPositionData(network, provider, selectedMarket);
   });
 
   it('can fetch market and account data for wstETH Market on Ethereum', async function () {
@@ -115,8 +117,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3wstETH];
 
-    const marketData = await fetchMarketData(network, web3, selectedMarket);
-    await fetchAccountData(network, web3, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
   it('can fetch full position data for wstETH Market on Ethereum', async function () {
@@ -124,7 +126,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3wstETH];
 
-    await fetchFullPositionData(network, web3, selectedMarket);
+    await fetchFullPositionData(network, provider, selectedMarket);
   });
 
   it('can fetch market and account data for wstETH Market on Ethereum', async function () {
@@ -132,8 +134,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
 
-    const marketData = await fetchMarketData(network, web3, selectedMarket);
-    await fetchAccountData(network, web3, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
   it('can fetch full position data for wstETH Market on Ethereum', async function () {
@@ -141,21 +143,21 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Eth;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
 
-    await fetchFullPositionData(network, web3, selectedMarket);
+    await fetchFullPositionData(network, provider, selectedMarket);
   });
 
   it('can fetch latest account balances for ETH Market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 'latest', '0xa17581a9e3356d9a858b789d68b4d866e593ae94');
+    await fetchAccountBalances(network, provider, 'latest', '0xa17581a9e3356d9a858b789d68b4d866e593ae94');
   });
 
   it('can fetch past account balances for USDC Market on Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 18000000, '0xc3d688B66703497DAA19211EEdff47f25384cdc3');
+    await fetchAccountBalances(network, provider, 18000000, '0xc3d688B66703497DAA19211EEdff47f25384cdc3');
   });
 
   // Arbitrum
@@ -165,8 +167,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Arb;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
-    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
   });
 
   it('can fetch market and account data for USDT Market on Arbitrum', async function () {
@@ -174,8 +176,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Arb;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
 
-    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
-    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
   });
 
   it('can fetch market and account data for USDC Market on Arbitrum', async function () {
@@ -183,8 +185,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Arb;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDC];
 
-    const marketData = await fetchMarketData(network, web3Arb, selectedMarket);
-    await fetchAccountData(network, web3Arb, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
   });
 
   // Optimism
@@ -194,8 +196,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Opt;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    const marketData = await fetchMarketData(network, web3Opt, selectedMarket);
-    await fetchAccountData(network, web3Opt, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerOpt, selectedMarket);
+    await fetchAccountData(network, providerOpt, marketData, selectedMarket);
   });
 
   it('can fetch market and account data for USDT Market on Optimism', async function () {
@@ -203,8 +205,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Opt;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDT];
 
-    const marketData = await fetchMarketData(network, web3Opt, selectedMarket);
-    await fetchAccountData(network, web3Opt, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerOpt, selectedMarket);
+    await fetchAccountData(network, providerOpt, marketData, selectedMarket);
   });
 
   // Base
@@ -214,8 +216,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
-    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerBase, selectedMarket);
+    await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
 
   it('can fetch full position data for ETH Market on Base', async function () {
@@ -223,7 +225,7 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3ETH];
 
-    await fetchFullPositionData(network, web3Base, selectedMarket);
+    await fetchFullPositionData(network, providerBase, selectedMarket);
   });
 
   it('can fetch market and account data for USDbC Market on Base', async function () {
@@ -231,8 +233,8 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDbC];
 
-    const marketData = await fetchMarketData(network, web3Base, selectedMarket);
-    await fetchAccountData(network, web3Base, marketData, selectedMarket);
+    const marketData = await fetchMarketData(network, providerBase, selectedMarket);
+    await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
 
   it('can fetch full position data for USDC Market on Base', async function () {
@@ -240,20 +242,22 @@ describe('Compound v3', () => {
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDbC];
 
-    await fetchFullPositionData(network, web3Base, selectedMarket);
+    await fetchFullPositionData(network, providerBase, selectedMarket);
   });
 
   it('can fetch latest account balances for ETH Market on Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
 
-    await fetchAccountBalances(network, web3Base, 'latest', '0x46e6b214b524310239732D51387075E0e70970bf');
+    await fetchAccountBalances(network, providerBase, 'latest', '0x46e6b214b524310239732D51387075E0e70970bf');
   });
 
-  it('can fetch past account balances for USDC Market on Base', async function () {
+  it('can fetch market and account data for USDS Market on Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3USDS];
 
-    // await fetchAccountBalances(network, web3Base, 4256022, '0x9c4ec768c28520B50860ea7a15bd7213a9fF58bf');
+    const marketData = await fetchMarketData(network, providerBase, selectedMarket);
+    await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
 });

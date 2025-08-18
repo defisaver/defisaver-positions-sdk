@@ -1,22 +1,21 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
-import Web3 from 'web3';
+import { Client } from 'viem';
 import {
-  BandData, LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
+  LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
 } from '../types';
-import { multicall } from '../multicall';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { getConfigContractAbi, getConfigContractAddress, LlamaLendViewContract } from '../contracts';
+import { LlamaLendViewContractViem } from '../contracts';
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
-import { getAbiItem, getEthAmountForDecimals, wethToEth } from '../services/utils';
-import { USD_QUOTE } from '../constants';
+import { getEthAmountForDecimals, wethToEth } from '../services/utils';
 import { getLlamaLendMarketFromControllerAddress } from '../markets/llamaLend';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
-const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
-  const contract = LlamaLendViewContract(web3, network);
+const getAndFormatBands = async (provider: Client, network: NetworkNumber, selectedMarket: LlamaLendMarketData, _minBand: string, _maxBand: string) => {
+  const contract = LlamaLendViewContractViem(provider, network);
   const minBand = parseInt(_minBand, 10);
   const maxBand = parseInt(_maxBand, 10);
   const pivots: number[] = [];
@@ -39,42 +38,41 @@ const getAndFormatBands = async (web3: Web3, network: NetworkNumber, selectedMar
     } else {
       start = pivots[index - 1] + 1;
     }
-    // @ts-ignore
-    const pivotedBandsData = await contract.methods.getBandsData(selectedMarket.controllerAddress, start, pivot).call();
+    const pivotedBandsData = await contract.read.getBandsData([selectedMarket.controllerAddress, BigInt(start), BigInt(pivot)]);
     return pivotedBandsData;
   }))).flat();
 
-  return bandsData.map((band: BandData) => ({
-    id: band.id,
-    collAmount: assetAmountInEth(band.collAmount),
-    debtAmount: assetAmountInEth(band.debtAmount),
-    lowPrice: assetAmountInEth(band.lowPrice),
-    highPrice: assetAmountInEth(band.highPrice),
+  return bandsData.map((band) => ({
+    id: band.id.toString(),
+    collAmount: assetAmountInEth(band.collAmount.toString()),
+    debtAmount: assetAmountInEth(band.debtAmount.toString()),
+    lowPrice: assetAmountInEth(band.lowPrice.toString()),
+    highPrice: assetAmountInEth(band.highPrice.toString()),
   }));
 };
 
-export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber, selectedMarket: LlamaLendMarketData, defaultWeb3: Web3): Promise<LlamaLendGlobalMarketData> => {
-  const contract = LlamaLendViewContract(web3, network);
+export const _getLlamaLendGlobalData = async (provider: Client, network: NetworkNumber, selectedMarket: LlamaLendMarketData): Promise<LlamaLendGlobalMarketData> => {
+  const contract = LlamaLendViewContractViem(provider, network);
 
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
-  const data = await contract.methods.globalData(selectedMarket.controllerAddress).call();
+  const data = await contract.read.globalData([selectedMarket.controllerAddress]);
 
   // all prices are in 18 decimals
-  const oraclePrice = getEthAmountForDecimals(data.oraclePrice, 18);
+  const oraclePrice = getEthAmountForDecimals(data.oraclePrice.toString(), 18);
   const collPriceUsd = collAsset === 'crvUSD' ? '1' : new Dec(1).mul(oraclePrice).toDP(18).toString();
   const debtPriceUsd = debtAsset === 'crvUSD' ? '1' : new Dec(1).div(oraclePrice).toDP(18).toString();
 
-  const totalDebt = assetAmountInEth(data.totalDebt, debtAsset);
-  const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
+  const totalDebt = assetAmountInEth(data.totalDebt.toString(), debtAsset);
+  const totalDebtSupplied = assetAmountInEth(data.debtTokenTotalSupply.toString(), debtAsset);
   const utilization = new Dec(totalDebtSupplied).gt(0)
     ? new Dec(totalDebt).div(totalDebtSupplied).mul(100).toString()
     : '0';
-  const ammPrice = assetAmountInEth(data.ammPrice, debtAsset);
+  const ammPrice = assetAmountInEth(data.ammPrice.toString(), debtAsset);
 
-  const rate = assetAmountInEth(data.ammRate);
-  const futureRate = assetAmountInEth(data.monetaryPolicyRate);
+  const rate = assetAmountInEth(data.ammRate.toString());
+  const futureRate = assetAmountInEth(data.monetaryPolicyRate.toString());
 
   const exponentRate = new Dec(rate).mul(365).mul(86400);
   const exponentFutureRate = new Dec(futureRate).mul(365).mul(86400);
@@ -83,9 +81,9 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   const futureBorrowRate = new Dec(new Dec(2.718281828459).pow(exponentFutureRate).minus(1)).mul(100)
     .toString();
 
-  const bandsData = await getAndFormatBands(web3, network, selectedMarket, data.minBand, data.maxBand);
-  const cap = assetAmountInEth(data.debtTokenTotalSupply, debtAsset);
-  const leftToBorrow = getEthAmountForDecimals(data.debtTokenLeftToBorrow, 18);
+  const bandsData = await getAndFormatBands(provider, network, selectedMarket, data.minBand.toString(), data.maxBand.toString());
+  const cap = assetAmountInEth(data.debtTokenTotalSupply.toString(), debtAsset);
+  const leftToBorrow = getEthAmountForDecimals(data.debtTokenLeftToBorrow.toString(), 18);
 
   const debtInAYearBN = new Dec(totalDebt).mul(new Dec(2.718281828459).pow(exponentRate).toNumber());
   const lendRate = debtInAYearBN.minus(totalDebt).div(cap).mul(100).toString();
@@ -112,27 +110,27 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
   };
 
   if (STAKING_ASSETS.includes(collAsset)) {
-    assetsData[collAsset].incentiveSupplyApy = await getStakingApy(collAsset, defaultWeb3);
+    assetsData[collAsset].incentiveSupplyApy = await getStakingApy(collAsset);
     assetsData[collAsset].incentiveSupplyToken = collAsset;
   }
 
   return {
-    A: data.A,
-    loanDiscount: data.loanDiscount,
-    activeBand: data.activeBand,
-    monetaryPolicyRate: data.monetaryPolicyRate,
-    ammRate: data.ammRate,
-    minBand: data.minBand,
-    maxBand: data.maxBand,
+    A: data.A.toString(),
+    loanDiscount: data.loanDiscount.toString(),
+    activeBand: data.activeBand.toString(),
+    monetaryPolicyRate: data.monetaryPolicyRate.toString(),
+    ammRate: data.ammRate.toString(),
+    minBand: data.minBand.toString(),
+    maxBand: data.maxBand.toString(),
     assetsData,
     totalDebt,
     totalDebtSupplied,
     utilization,
     ammPrice,
-    oraclePrice: assetAmountInEth(data.oraclePrice, debtAsset),
-    basePrice: assetAmountInEth(data.basePrice, debtAsset),
-    minted: assetAmountInEth(data.minted, debtAsset),
-    redeemed: assetAmountInEth(data.redeemed, debtAsset),
+    oraclePrice: assetAmountInEth(data.oraclePrice.toString(), debtAsset),
+    basePrice: assetAmountInEth(data.basePrice.toString(), debtAsset),
+    minted: assetAmountInEth(data.minted.toString(), debtAsset),
+    redeemed: assetAmountInEth(data.redeemed.toString(), debtAsset),
     borrowRate,
     lendRate,
     futureBorrowRate,
@@ -140,6 +138,12 @@ export const getLlamaLendGlobalData = async (web3: Web3, network: NetworkNumber,
     leftToBorrow,
   };
 };
+
+export const getLlamaLendGlobalData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  selectedMarket: LlamaLendMarketData,
+): Promise<LlamaLendGlobalMarketData> => _getLlamaLendGlobalData(getViemProvider(provider, network), network, selectedMarket);
 
 const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied: string, collSupplied: string, healthPercent: string) => {
   // if bands are equal, that can only be [0,0] which means user doesn't have loan (min number of bands is 4)
@@ -155,7 +159,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied:
   return LlamaLendStatus.Nonexistant;
 };
 
-export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
+export const _getLlamaLendAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -165,49 +169,58 @@ export const getLlamaLendAccountBalances = async (web3: Web3, network: NetworkNu
     return balances;
   }
 
-  const contract = LlamaLendViewContract(web3, network, block);
+  const contract = LlamaLendViewContractViem(provider, network, block);
 
   const selectedMarket = getLlamaLendMarketFromControllerAddress(controllerAddress, network);
-  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call({}, block);
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address], setViemBlockNumber(block));
 
   balances = {
     collateral: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.collAsset), network).address.toLowerCase() : wethToEth(selectedMarket.collAsset)]: data.marketCollateralAmount.toString(),
     },
     debt: {
-      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount,
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtAmount.toString(),
     },
   };
 
   return balances;
 };
 
-export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
-  const contract = LlamaLendViewContract(web3, network);
+export const getLlamaLendAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  controllerAddress: EthAddress,
+): Promise<PositionBalances> => _getLlamaLendAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, controllerAddress);
+
+export const _getLlamaLendUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData, marketData: LlamaLendGlobalMarketData): Promise<LlamaLendUserData> => {
+  const contract = LlamaLendViewContractViem(provider, network);
   const { assetsData } = marketData;
 
-  const data = await contract.methods.userData(selectedMarket.controllerAddress, address).call();
+  const data = await contract.read.userData([selectedMarket.controllerAddress, address]);
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
 
   const collPrice = assetsData[collAsset].price;
   const debtPrice = assetsData[debtAsset].price;
 
-  const health = assetAmountInEth(data.health);
+  const health = assetAmountInEth(data.health.toString());
   const healthPercent = new Dec(health).mul(100).toString();
 
-  const collSupplied = assetAmountInEth(data.marketCollateralAmount, collAsset);
+  const collSupplied = assetAmountInEth(data.marketCollateralAmount.toString(), collAsset);
   const collSuppliedUsd = new Dec(collSupplied).mul(collPrice).toString();
 
-  const debtSupplied = assetAmountInEth(data.debtTokenCollateralAmount, debtAsset);
+  const debtSupplied = assetAmountInEth(data.debtTokenCollateralAmount.toString(), debtAsset);
   const debtSuppliedUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
-  const debtSuppliedForYield = assetAmountInEth(data.debtTokenSuppliedAssets, debtAsset);
+  const debtSuppliedForYield = assetAmountInEth(data.debtTokenSuppliedAssets.toString(), debtAsset);
   const debtSuppliedForYieldUsd = new Dec(debtSupplied).mul(debtPrice).toString();
 
-  const debtBorrowed = assetAmountInEth(data.debtAmount, debtAsset);
+  const debtBorrowed = assetAmountInEth(data.debtAmount.toString(), debtAsset);
   const debtBorrowedUsd = new Dec(debtBorrowed).mul(debtPrice).toString();
-  const shares = assetAmountInEth(data.debtTokenSuppliedShares, debtAsset);
+  const shares = assetAmountInEth(data.debtTokenSuppliedShares.toString(), debtAsset);
 
   const usedAssets: LlamaLendUsedAssets = {
     [collAsset]: {
@@ -237,39 +250,47 @@ export const getLlamaLendUserData = async (web3: Web3, network: NetworkNumber, a
     },
   };
 
-  const priceHigh = assetAmountInEth(data.priceHigh);
-  const priceLow = assetAmountInEth(data.priceLow);
+  const priceHigh = assetAmountInEth(data.priceHigh.toString());
+  const priceLow = assetAmountInEth(data.priceLow.toString());
 
-  const _userBands = data.loanExists ? (await getAndFormatBands(web3, network, selectedMarket, data.bandRange[0], data.bandRange[1])) : [];
+  const _userBands = data.loanExists ? (await getAndFormatBands(provider, network, selectedMarket, data.bandRange[0].toString(), data.bandRange[1].toString())) : [];
 
-  const status = data.loanExists ? getStatusForUser(data.bandRange, marketData.activeBand, debtSupplied, collSupplied, healthPercent) : LlamaLendStatus.Nonexistant;
+  const status = data.loanExists ? getStatusForUser(data.bandRange.map(b => b.toString()), marketData.activeBand, debtSupplied, collSupplied, healthPercent) : LlamaLendStatus.Nonexistant;
 
   const userBands = _userBands.map((band, index) => ({
     ...band,
-    userDebtAmount: assetAmountInEth(data.usersBands[0][index], debtAsset),
-    userCollAmount: assetAmountInEth(data.usersBands[1][index], collAsset),
+    userDebtAmount: assetAmountInEth(data.usersBands[0][index].toString(), debtAsset),
+    userCollAmount: assetAmountInEth(data.usersBands[1][index].toString(), collAsset),
   })).sort((a, b) => parseInt(b.id, 10) - parseInt(a.id, 10));
 
   return {
     ...data,
-    debtAmount: assetAmountInEth(data.debtAmount, debtAsset),
+    debtAmount: assetAmountInEth(data.debtAmount.toString(), debtAsset),
     health,
     healthPercent,
     priceHigh,
     priceLow,
-    liquidationDiscount: assetAmountInEth(data.liquidationDiscount),
-    numOfBands: data.N,
+    liquidationDiscount: assetAmountInEth(data.liquidationDiscount.toString()),
+    numOfBands: data.N.toString(),
     usedAssets,
     status,
     ...getLlamaLendAggregatedData({
-      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N, assetsData,
+      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N.toString(), assetsData,
     }),
     userBands,
   };
 };
 
-export const getLlamaLendFullPositionData = async (web3: Web3, network: NetworkNumber, address: string, selectedMarket: LlamaLendMarketData, defaultWeb3: Web3): Promise<LlamaLendUserData> => {
-  const marketData = await getLlamaLendGlobalData(web3, network, selectedMarket, defaultWeb3);
-  const positionData = await getLlamaLendUserData(web3, network, address, selectedMarket, marketData);
+export const getLlamaLendUserData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  selectedMarket: LlamaLendMarketData,
+  marketData: LlamaLendGlobalMarketData,
+): Promise<LlamaLendUserData> => _getLlamaLendUserData(getViemProvider(provider, network), network, address, selectedMarket, marketData);
+
+export const getLlamaLendFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, selectedMarket: LlamaLendMarketData): Promise<LlamaLendUserData> => {
+  const marketData = await getLlamaLendGlobalData(provider, network, selectedMarket);
+  const positionData = await getLlamaLendUserData(provider, network, address, selectedMarket, marketData);
   return positionData;
 };

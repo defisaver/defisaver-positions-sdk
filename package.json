@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "1.0.26",
+  "version": "2.0.0",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -8,35 +8,33 @@
   "scripts": {
     "build:esm": "rm -rf esm && tsc -p tsconfig.esm.json",
     "build:cjs": "rm -rf cjs && tsc -p tsconfig.cjs.json",
-    "build": "npm run lint && npm run generate-contracts && npm run build:cjs && npm run build:esm",
-    "dev": "npm run generate-contracts && tsc -p tsconfig.json --watch",
+    "build": "npm run lint && npm run build:cjs && npm run build:esm",
+    "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
-    "generate-contracts": "node scripts/generateContracts.js",
     "test": "mocha tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
-    "build-test": "npm run build && npm run test",
     "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.6.14",
-    "@ethersproject/bignumber": "^5.7.0",
-    "@morpho-org/morpho-aave-v3-sdk": "^1.5.3",
+    "@defisaver/tokens": "^1.6.20",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
-    "decimal.js": "^10.4.3",
+    "decimal.js": "^10.6.0",
     "lodash": "^4.17.21",
-    "memoizee": "^0.4.17"
+    "memoizee": "^0.4.17",
+    "viem": "^2.31.4"
   },
   "devDependencies": {
     "@defisaver/eslint-config": "^1.0.1",
+    "@metamask/eth-json-rpc-middleware": "^15.0.1",
+    "@metamask/eth-json-rpc-provider": "^4.1.6",
     "@types/chai": "^5.0.0",
     "@types/mocha": "^10.0.9",
-    "@types/web3": "^1.0.20",
     "chai": "^4.3.8",
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
@@ -44,11 +42,6 @@
     "mocha": "^10.2.0",
     "nock": "^14.0.0",
     "ts-node": "^10.9.2",
-    "typechain": "^8.3.1",
-    "typechain-target-web3-v1-3mihai3": "^6.0.2",
     "typescript": "^5.2.2"
-  },
-  "peerDependencies": {
-    "web3": "^1.10.2"
   }
 }

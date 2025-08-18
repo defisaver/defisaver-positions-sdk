@@ -1,26 +1,27 @@
 import { assetAmountInEth, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import Dec from 'decimal.js';
-import Web3 from 'web3';
+import { Client } from 'viem';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { aprToApy } from '../moneymarket';
 import { compareAddresses, handleWbtcLegacy, wethToEth } from '../services/utils';
 import {
-  Blockish, EthAddress, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { CompoundLoanInfoContract, ComptrollerContract } from '../contracts';
+import { CompoundLoanInfoContractViem, ComptrollerContractViem } from '../contracts';
 import { compoundV2CollateralAssets } from '../markets';
 import {
   CompoundV2AssetsData, CompoundV2MarketsData, CompoundV2PositionData, CompoundV2UsedAsset, CompoundV2UsedAssets,
 } from '../types';
 import { getCompoundV2AggregatedData } from '../helpers/compoundHelpers';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const compAddress = '0xc00e94cb662c3520282e6f5717214004a7f26888';
 
-export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumber): Promise<CompoundV2MarketsData> => {
+export const _getCompoundV2MarketsData = async (provider: Client, network: NetworkNumber): Promise<CompoundV2MarketsData> => {
   const cAddresses = compoundV2CollateralAssets.map(a => a.address);
 
-  const loanInfoContract = CompoundLoanInfoContract(web3, network);
-  const loanInfo = await loanInfoContract.methods.getFullTokensInfo(cAddresses).call();
+  const loanInfoContract = CompoundLoanInfoContractViem(provider, network);
+  const loanInfo = await loanInfoContract.read.getFullTokensInfo([cAddresses as EthAddress[]]);
 
   const compPrice = loanInfo.find(m => compareAddresses(m.underlyingTokenAddress, compAddress))!.price.toString();
 
@@ -81,6 +82,8 @@ export const getCompoundV2MarketsData = async (web3: Web3, network: NetworkNumbe
   return { assetsData: payload };
 };
 
+export const getCompoundV2MarketsData = async (provider: EthereumProvider, network: NetworkNumber): Promise<CompoundV2MarketsData> => _getCompoundV2MarketsData(getViemProvider(provider, network), network);
+
 export const EMPTY_COMPOUND_DATA = {
   usedAssets: {},
   suppliedUsd: '0',
@@ -95,20 +98,20 @@ export const EMPTY_COMPOUND_DATA = {
   borrowStableSupplyUnstable: false,
 };
 
-export const getCollateralAssetsAddresses = async (web3: Web3, network: NetworkNumber, account: string) => {
-  const contract = ComptrollerContract(web3, network);
+const getCollateralAssetsAddresses = async (provider: Client, network: NetworkNumber, account: EthAddress) => {
+  const contract = ComptrollerContractViem(provider, network);
 
-  return contract.methods.getAssetsIn(account).call();
+  return contract.read.getAssetsIn([account]);
 };
 
-export const getAllMarketAddresses = async (web3: Web3, network: NetworkNumber, block: Blockish) => {
-  const contract = ComptrollerContract(web3, network);
+const getAllMarketAddresses = async (provider: Client, network: NetworkNumber, block: Blockish) => {
+  const contract = ComptrollerContractViem(provider, network);
 
-  return contract.methods.getAllMarkets().call({}, block);
+  return contract.read.getAllMarkets(setViemBlockNumber(block));
 };
 
 
-export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const _getCompoundV2AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -118,12 +121,12 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
-  const assets = await getAllMarketAddresses(web3, network, block);
+  const assets = await getAllMarketAddresses(provider, network, block);
   const assetInfo = assets.map(a => getAssetInfoByAddress(a, network));
-  const loanInfoContract = CompoundLoanInfoContract(web3, network, block);
-  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, assets).call({}, block);
+  const loanInfoContract = CompoundLoanInfoContractViem(provider, network, block);
+  const loanInfo = await loanInfoContract.read.getTokenBalances([address, assets], setViemBlockNumber(block));
 
-  loanInfo.balances.forEach((weiAmount: any, i: number) => {
+  loanInfo[0].forEach((weiAmount: any, i: number) => {
     const asset = wethToEth(
       assetInfo[i].symbol === 'cWBTC Legacy'
         ? `${assetInfo[i].underlyingAsset} Legacy`
@@ -137,7 +140,7 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
       },
     };
   });
-  loanInfo.borrows.forEach((weiAmount: any, i: number) => {
+  loanInfo[1].forEach((weiAmount: any, i: number) => {
     const asset = wethToEth(
       assetInfo[i].symbol === 'cWBTC Legacy'
         ? `${assetInfo[i].underlyingAsset} Legacy`
@@ -156,18 +159,28 @@ export const getCompoundV2AccountBalances = async (web3: Web3, network: NetworkN
   return balances;
 };
 
-export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumber, address: string, assetsData: CompoundV2AssetsData): Promise<CompoundV2PositionData> => {
+export const getCompoundV2AccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+): Promise<PositionBalances> => _getCompoundV2AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address);
+
+export const _getCompoundV2AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, assetsData: CompoundV2AssetsData): Promise<CompoundV2PositionData> => {
   if (!address) throw new Error('No address provided');
 
   let payload = { ...EMPTY_COMPOUND_DATA, lastUpdated: Date.now() };
 
-  const loanInfoContract = CompoundLoanInfoContract(web3, network);
-  const loanInfo = await loanInfoContract.methods.getTokenBalances(address, compoundV2CollateralAssets.map(a => a.address)).call();
-  const collateralAssetsAddresses = await getCollateralAssetsAddresses(web3, network, address);
+  const loanInfoContract = CompoundLoanInfoContractViem(provider, network);
+  const [loanInfo, collateralAssetsAddresses] = await Promise.all([
+    loanInfoContract.read.getTokenBalances([address, compoundV2CollateralAssets.map(a => a.address) as EthAddress[]]),
+    getCollateralAssetsAddresses(provider, network, address),
+  ]);
 
   const usedAssets = {} as CompoundV2UsedAssets;
 
-  loanInfo.balances.forEach((weiAmount: string, i: number) => {
+  loanInfo[0].forEach((weiAmount: BigInt, i: number) => {
     const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
       ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
       : compoundV2CollateralAssets[i].underlyingAsset;
@@ -185,7 +198,7 @@ export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumbe
     };
   });
 
-  loanInfo.borrows.forEach((weiAmount, i) => {
+  loanInfo[1].forEach((weiAmount, i) => {
     if (weiAmount.toString() === '0') return;
     const asset = compoundV2CollateralAssets[i].symbol === 'cWBTC Legacy'
       ? `${compoundV2CollateralAssets[i].underlyingAsset} Legacy`
@@ -213,8 +226,15 @@ export const getCompoundV2AccountData = async (web3: Web3, network: NetworkNumbe
   return payload;
 };
 
-export const getCompoundV2FullPositionData = async (web3: Web3, network: NetworkNumber, address: string): Promise<CompoundV2PositionData> => {
-  const marketData = await getCompoundV2MarketsData(web3, network);
-  const positionData = await getCompoundV2AccountData(web3, network, address, marketData.assetsData);
+export const getCompoundV2AccountData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  address: EthAddress,
+  assetsData: CompoundV2AssetsData,
+): Promise<CompoundV2PositionData> => _getCompoundV2AccountData(getViemProvider(provider, network), network, address, assetsData);
+
+export const getCompoundV2FullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress): Promise<CompoundV2PositionData> => {
+  const marketData = await getCompoundV2MarketsData(provider, network);
+  const positionData = await getCompoundV2AccountData(provider, network, address, marketData.assetsData);
   return positionData;
 };

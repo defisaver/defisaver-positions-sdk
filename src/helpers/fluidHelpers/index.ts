@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth } from '@defisaver/tokens';
 import {
   FluidAggregatedVaultData, FluidAssetData,
-  FluidAssetsData, FluidUsedAsset,
+  FluidAssetsData, FluidDexBorrowDataStructOutput, FluidDexSupplyDataStructOutput, FluidUsedAsset,
   FluidUsedAssets,
   FluidVaultType,
   InnerFluidMarketData,
@@ -10,7 +10,6 @@ import {
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { MMAssetsData } from '../../types/common';
-import { FluidView } from '../../types/contracts/generated';
 import { getEthAmountForDecimals } from '../../services/utils';
 
 const calculateNetApyDex = ({ marketData, suppliedUsd, borrowedUsd }: { marketData: InnerFluidMarketData, suppliedUsd: string, borrowedUsd: string }) => {
@@ -121,7 +120,7 @@ interface DexSupplyData {
   reservesSupplyToken1: string
 }
 
-export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructOutput, collAsset0: string, collAsset1: string): DexSupplyData => {
+export const parseDexSupplyData = (dexSupplyData: FluidDexSupplyDataStructOutput, collAsset0: string, collAsset1: string): DexSupplyData => {
   const {
     dexPool, // address of the dex pool
     dexId, // id of the dex pool
@@ -146,31 +145,31 @@ export const parseDexSupplyData = (dexSupplyData: FluidView.DexSupplyDataStructO
     supplyToken1Reserves, // token1 reserves in the dex pool
   } = dexSupplyData;
 
-  const maxSupplyShares = getEthAmountForDecimals(maxSupplySharesWei, 18);
+  const maxSupplyShares = getEthAmountForDecimals(maxSupplySharesWei.toString(), 18);
   const fee = new Dec(_fee).div(100).toString();
 
-  const token0PerSupplyShare = assetAmountInEth(token0PerSupplyShareWei, collAsset0);
-  const token1PerSupplyShare = assetAmountInEth(token1PerSupplyShareWei, collAsset1);
+  const token0PerSupplyShare = assetAmountInEth(token0PerSupplyShareWei.toString(), collAsset0);
+  const token1PerSupplyShare = assetAmountInEth(token1PerSupplyShareWei.toString(), collAsset1);
 
-  const withdrawable0 = assetAmountInEth(token0Withdrawable, collAsset0);
-  const withdrawable1 = assetAmountInEth(token1Withdrawable, collAsset1);
-  const utilizationSupply0 = assetAmountInEth(token0Utilization, collAsset0);
-  const utilizationSupply1 = assetAmountInEth(token1Utilization, collAsset1);
+  const withdrawable0 = assetAmountInEth(token0Withdrawable.toString(), collAsset0);
+  const withdrawable1 = assetAmountInEth(token1Withdrawable.toString(), collAsset1);
+  const utilizationSupply0 = assetAmountInEth(token0Utilization.toString(), collAsset0);
+  const utilizationSupply1 = assetAmountInEth(token1Utilization.toString(), collAsset1);
 
   const supplyRate0 = new Dec(token0SupplyRate).div(100).toString();
   const supplyRate1 = new Dec(token1SupplyRate).div(100).toString();
 
-  const totalSupplyShares = getEthAmountForDecimals(totalSupplySharesWei, 18); // in shares
+  const totalSupplyShares = getEthAmountForDecimals(totalSupplySharesWei.toString(), 18); // in shares
 
-  const withdrawableShares = getEthAmountForDecimals(sharesWithdrawable, 18);
+  const withdrawableShares = getEthAmountForDecimals(sharesWithdrawable.toString(), 18);
   const withdrawableToken0 = new Dec(withdrawableShares).mul(token0PerSupplyShare).div(1e18).toString();
   const withdrawableToken1 = new Dec(withdrawableShares).mul(token1PerSupplyShare).div(1e18).toString();
 
-  const totalSupplyToken0 = assetAmountInEth(token0Supplied, collAsset0);
-  const totalSupplyToken1 = assetAmountInEth(token1Supplied, collAsset1);
+  const totalSupplyToken0 = assetAmountInEth(token0Supplied.toString(), collAsset0);
+  const totalSupplyToken1 = assetAmountInEth(token1Supplied.toString(), collAsset1);
 
-  const reservesSupplyToken0 = assetAmountInEth(supplyToken0Reserves, collAsset0);
-  const reservesSupplyToken1 = assetAmountInEth(supplyToken1Reserves, collAsset1);
+  const reservesSupplyToken0 = assetAmountInEth(supplyToken0Reserves.toString(), collAsset0);
+  const reservesSupplyToken1 = assetAmountInEth(supplyToken1Reserves.toString(), collAsset1);
 
   return {
     maxSupplyShares,
@@ -216,7 +215,7 @@ interface DexBorrowData {
   reservesBorrowToken1: string
 }
 
-export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructOutput, debtAsset0: string, debtAsset1: string): DexBorrowData => {
+export const parseDexBorrowData = (dexBorrowData: FluidDexBorrowDataStructOutput, debtAsset0: string, debtAsset1: string): DexBorrowData => {
   const {
     dexPool,
     dexId,
@@ -241,31 +240,31 @@ export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructO
     borrowToken1Reserves,
   } = dexBorrowData;
 
-  const maxBorrowShares = getEthAmountForDecimals(maxBorrowSharesWei, 18);
+  const maxBorrowShares = getEthAmountForDecimals(maxBorrowSharesWei.toString(), 18);
   const fee = new Dec(_fee).div(100).toString();
 
-  const token0PerBorrowShare = assetAmountInEth(token0PerBorrowShareWei, debtAsset0);
-  const token1PerBorrowShare = assetAmountInEth(token1PerBorrowShareWei, debtAsset1);
+  const token0PerBorrowShare = assetAmountInEth(token0PerBorrowShareWei.toString(), debtAsset0);
+  const token1PerBorrowShare = assetAmountInEth(token1PerBorrowShareWei.toString(), debtAsset1);
 
-  const borrowable0 = assetAmountInEth(token0Borrowable, debtAsset0);
-  const borrowable1 = assetAmountInEth(token1Borrowable, debtAsset1);
-  const utilizationBorrow0 = assetAmountInEth(token0Utilization, debtAsset0);
-  const utilizationBorrow1 = assetAmountInEth(token1Utilization, debtAsset1);
+  const borrowable0 = assetAmountInEth(token0Borrowable.toString(), debtAsset0);
+  const borrowable1 = assetAmountInEth(token1Borrowable.toString(), debtAsset1);
+  const utilizationBorrow0 = assetAmountInEth(token0Utilization.toString(), debtAsset0);
+  const utilizationBorrow1 = assetAmountInEth(token1Utilization.toString(), debtAsset1);
 
   const borrowRate0 = new Dec(token0BorrowRate).div(100).toString();
   const borrowRate1 = new Dec(token1BorrowRate).div(100).toString();
 
-  const totalBorrowShares = getEthAmountForDecimals(totalBorrowSharesWei, 18); // in shares
+  const totalBorrowShares = getEthAmountForDecimals(totalBorrowSharesWei.toString(), 18); // in shares
 
-  const borrowableShares = getEthAmountForDecimals(sharesBorrowable, 18);
+  const borrowableShares = getEthAmountForDecimals(sharesBorrowable.toString(), 18);
   const borrowableToken0 = new Dec(borrowableShares).mul(token0PerBorrowShare).div(1e18).toString();
   const borrowableToken1 = new Dec(borrowableShares).mul(token1PerBorrowShare).div(1e18).toString();
 
-  const totalBorrowToken0 = assetAmountInEth(token0Borrowed, debtAsset0);
-  const totalBorrowToken1 = assetAmountInEth(token1Borrowed, debtAsset1);
+  const totalBorrowToken0 = assetAmountInEth(token0Borrowed.toString(), debtAsset0);
+  const totalBorrowToken1 = assetAmountInEth(token1Borrowed.toString(), debtAsset1);
 
-  const reservesBorrowToken0 = assetAmountInEth(borrowToken0Reserves, debtAsset0);
-  const reservesBorrowToken1 = assetAmountInEth(borrowToken1Reserves, debtAsset1);
+  const reservesBorrowToken0 = assetAmountInEth(borrowToken0Reserves.toString(), debtAsset0);
+  const reservesBorrowToken1 = assetAmountInEth(borrowToken1Reserves.toString(), debtAsset1);
 
   return {
     borrowableShares,
@@ -284,7 +283,7 @@ export const parseDexBorrowData = (dexBorrowData: FluidView.DexBorrowDataStructO
     borrowableToken1,
     totalBorrowToken0,
     totalBorrowToken1,
-    quoteTokensPerShare: getEthAmountForDecimals(quoteTokensPerShare, 27),
+    quoteTokensPerShare: getEthAmountForDecimals(quoteTokensPerShare.toString(), 27),
     reservesBorrowToken0,
     reservesBorrowToken1,
   };

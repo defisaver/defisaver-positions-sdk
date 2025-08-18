@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   MMPositionData, NetworkNumber,
 } from './common';
 
@@ -20,13 +21,13 @@ export interface EulerV2Market {
   asset: string,
   value: EulerV2Versions,
   secondLabel: string,
-  marketAddress: string,
-  // icon: Function,
+  marketAddress: EthAddress,
 }
 
 export interface EulerV2PositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
+  suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
   incentiveUsd: string,

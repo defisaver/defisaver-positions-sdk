@@ -1,29 +1,62 @@
+import {
+  arbitrum, base, mainnet, optimism,
+} from 'viem/chains';
+
 const path = require('path');
-const Web3 = require('web3');
 const { loadFile, writeFile, detectCodeFormat } = require('magicast');
 const differenceWith = require('lodash/differenceWith');
 const { getAssetInfoByAddress } = require('@defisaver/tokens');
 
 const {
+  createPublicClient, http, getContract,
+} = require('viem');
+const {
   AaveProtocolDataProvider,
   AaveV3ProtocolDataProvider,
   SparkProtocolDataProvider,
-  MorphoAaveV2View,
   CompV3View,
   cUSDbCv3,
   cUSDCev3,
   cUSDCv3,
   cETHv3,
-  MorphoAaveV3ProxyEthMarket,
   cUSDTv3,
 } = require('../../src/config/contracts');
 
-const getWeb3 = (chainId) => new Web3(({
-  1: process.env.RPC,
-  10: process.env.RPCOPT,
-  8453: process.env.RPCBASE,
-  42161: process.env.RPCARB,
-})[chainId]);
+const getViemChain = (chainId) => {
+  switch (chainId) {
+    case 1:
+      return mainnet;
+    case 10:
+      return optimism;
+    case 42161:
+      return arbitrum;
+    case 8453:
+      return base;
+    default:
+      throw new Error(`Unsupported network: ${chainId}`);
+  }
+};
+
+const getRpc = (chainId) => {
+  switch (chainId) {
+    case 1:
+      return process.env.RPC;
+    case 10:
+      return process.env.RPCOPT;
+    case 42161:
+      return process.env.RPCARB;
+    case 8453:
+      return process.env.RPCBASE;
+    default:
+      throw new Error(`Unsupported network: ${chainId}`);
+  }
+};
+
+
+const getViem = (chainId) => createPublicClient({
+  transport: http(getRpc(chainId)),
+  chain: getViemChain(chainId),
+});
 
 const separateAssetsByExistence = (tokens, chainId, { addressExtractingMethod } = { addressExtractingMethod: (a) => a }) => {
   const checkExistence = (a) => getAssetInfoByAddress(a, chainId).symbol !== '?';
@@ -45,11 +78,13 @@ const aave = {
     },
     networks: [1],
     getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const protocolDataProviderContract = new web3.eth.Contract(
-        AaveProtocolDataProvider.abi, AaveProtocolDataProvider.networks[chainId].address,
-      );
-      const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+      const client = getViem(chainId);
+      const protocolDataProviderContract = getContract({
+        address: AaveProtocolDataProvider.networks[chainId].address,
+        abi: AaveProtocolDataProvider.abi,
+        client,
+      });
+      const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens();
 
       return separateAssetsByExistence(reserveTokens, chainId, { addressExtractingMethod: a => a.tokenAddress });
     },
@@ -64,48 +99,15 @@ const aave = {
     },
     networks: [1, 10, 8453, 42161],
     getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const protocolDataProviderContract = new web3.eth.Contract(
-        AaveV3ProtocolDataProvider.abi, AaveV3ProtocolDataProvider.networks[chainId].address,
-      );
-      const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+      const client = getViem(chainId);
+      const protocolDataProviderContract = getContract({
+        address: AaveV3ProtocolDataProvider.networks[chainId].address,
+        abi: AaveV3ProtocolDataProvider.abi,
+        client,
+      });
+      const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens();
 
       return separateAssetsByExistence(reserveTokens, chainId, { addressExtractingMethod: a => a.tokenAddress });
-    },
-  },
-};
-
-const morphoAave = {
-  V2: {
-    fileName: aaveFile,
-    variableName: {
-      1: 'morphoAaveV2AssetDefaultMarket',
-    },
-    networks: [1],
-    getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const morphoAaveV2ViewContract = new web3.eth.Contract(
-        MorphoAaveV2View.abi, MorphoAaveV2View.networks[chainId].address,
-      );
-      const reserveTokens = await morphoAaveV2ViewContract.methods.getAllMarketsInfo().call();
-
-      return separateAssetsByExistence(reserveTokens.marketInfo, chainId, { addressExtractingMethod: a => a.underlying });
-    },
-  },
-  V3: {
-    fileName: aaveFile,
-    variableName: {
-      1: 'morphoAaveV3AssetEthMarket',
-    },
-    networks: [1],
-    getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const morphoAaveV3ProxyEthContract = new web3.eth.Contract(
-        MorphoAaveV3ProxyEthMarket.abi, MorphoAaveV3ProxyEthMarket.networks[chainId].address,
-      );
-      const reserveTokens = await morphoAaveV3ProxyEthContract.methods.marketsCreated().call();
-
-      return separateAssetsByExistence(reserveTokens, chainId);
     },
   },
 };
@@ -139,11 +141,13 @@ const compound = {
     },
     networks: [1, 8453, 42161],
     getter: async (chainId, { marketAddress }) => {
-      const web3 = getWeb3(chainId);
-      const compV3ViewContract = new web3.eth.Contract(
-        CompV3View.abi, CompV3View.networks[chainId].address,
-      );
-      const tokens = await compV3ViewContract.methods.getFullCollInfos(marketAddress).call();
+      const client = getViem(chainId);
+      const compV3ViewContract = getContract({
+        address: CompV3View.networks[chainId].address,
+        abi: CompV3View.abi,
+        client,
+      });
+      const tokens = await compV3ViewContract.read.getFullCollInfos([marketAddress]);
 
       return separateAssetsByExistence(tokens, chainId, { addressExtractingMethod: (a) => a.tokenAddr });
     },
@@ -259,8 +263,6 @@ function createContent(data) {
       spark: await formatResponse(spark.V1),
       aaveV2: await formatResponse(aave.V2),
       aaveV3: await formatResponse(aave.V3),
-      morphoAaveV2: await formatResponse(morphoAave.V2),
-      morphoAaveV3: await formatResponse(morphoAave.V3),
       compoundV3: await formatResponse(compound.V3),
     };
 
