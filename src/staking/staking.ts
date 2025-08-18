@@ -42,8 +42,7 @@ export const getStakingApy = memoize(async (asset: string) => {
     if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
     if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
     if (asset === 'rETH') return await getApyFromDfsApi('rETH');
-    // TODO
-    if (asset === 'sDAI') return '0';
+    if (asset === 'sDAI') return await getApyFromDfsApi('sDAI');
     if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
     if (asset === 'weETH') return await getApyFromDfsApi('weETH');
     if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
