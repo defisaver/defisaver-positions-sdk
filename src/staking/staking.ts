@@ -2,37 +2,56 @@ import Dec from 'decimal.js';
 import memoize from 'memoizee';
 import { MMAssetsData, MMUsedAssets } from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
+import { DEFAULT_TIMEOUT } from '../services/utils';
 
 const getSsrApy = async () => {
-  const res = await fetch('https://fe.defisaver.com/api/sky/data');
-  const data = await res.json();
-  return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
+  try {
+    const res = await fetch('https://fe.defisaver.com/api/sky/data',
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
+    const data = await res.json();
+    return new Dec(data.data.skyData[0].sky_savings_rate_apy).mul(100).toString();
+  } catch (e) {
+    console.error('External API Failure: Failed to fetch SSR APY from external API', e);
+    return '0';
+  }
 };
 
 const getSuperOETHApy = async () => {
-  const res = await fetch('https://origin.squids.live/origin-squid/graphql', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      query: '\n    query OTokenApy($chainId: Int!, $token: String!) {\n  oTokenApies(\n    limit: 1\n    orderBy: timestamp_DESC\n    where: {chainId_eq: $chainId, otoken_containsInsensitive: $token}\n  ) {\n    apy7DayAvg\n    apy14DayAvg\n    apy30DayAvg\n    apr\n    apy\n  }\n}\n    ',
-      variables: {
-        token: '0xdbfefd2e8460a6ee4955a68582f85708baea60a3',
-        chainId: 8453,
+  try {
+    const res = await fetch('https://origin.squids.live/origin-squid/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    }),
-  });
+      body: JSON.stringify({
+        query: '\n    query OTokenApy($chainId: Int!, $token: String!) {\n  oTokenApies(\n    limit: 1\n    orderBy: timestamp_DESC\n    where: {chainId_eq: $chainId, otoken_containsInsensitive: $token}\n  ) {\n    apy7DayAvg\n    apy14DayAvg\n    apy30DayAvg\n    apr\n    apy\n  }\n}\n    ',
+        variables: {
+          token: '0xdbfefd2e8460a6ee4955a68582f85708baea60a3',
+          chainId: 8453,
+        },
+      }),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    });
 
-  const data = await res.json();
-  return new Dec(data.data.oTokenApies[0].apy).mul(100).toString();
+    const data = await res.json();
+    return new Dec(data.data.oTokenApies[0].apy).mul(100).toString();
+  } catch (e) {
+    console.error('External API Failure: Failed to fetch Super OETH APY from external API', e);
+    return '0';
+  }
 };
 
 const getApyFromDfsApi = async (asset: string) => {
-  const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`);
-  if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
-  const data = await res.json();
-  return String(data.apy);
+  try {
+    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`,
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
+    if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
+    const data = await res.json();
+    return String(data.apy);
+  } catch (e) {
+    console.error(`External API Failure: Failed to fetch APY for ${asset} from DFS API`, e);
+    return '0';
+  }
 };
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep'];

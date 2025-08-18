@@ -60,3 +60,5 @@ export const MAXUINT:string = '1157920892373161954235709850086879078532699846656
 export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
 
 export const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
+
+export const DEFAULT_TIMEOUT = 2000; // 2 seconds
