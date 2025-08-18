@@ -1,81 +1,7 @@
 import Dec from 'decimal.js';
-import Web3 from 'web3';
 import memoize from 'memoizee';
-import {
-  CbEthContract, LidoContract, PotContract, REthContract, wstETHContract,
-} from '../contracts';
-import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../types/common';
-import { ContractEventLog } from '../types/contracts/generated/types';
-import { BLOCKS_IN_A_YEAR, SECONDS_PER_YEAR, AVG_BLOCK_TIME } from '../constants';
-import { multicall } from '../multicall';
-import { aprToApy } from '../moneymarket';
-
-const getStETHApy = async (web3: Web3, fromBlock = 17900000, blockNumber: 'latest' | number = 'latest') => {
-  try {
-    const tokenRebasedEvents: ContractEventLog<{ [key: string]: any }>[] = await LidoContract(web3, NetworkNumber.Eth).getPastEvents('TokenRebased', { fromBlock, toBlock: blockNumber });
-    tokenRebasedEvents.sort((a, b) => b.blockNumber - a.blockNumber); // sort from highest to lowest block number
-    const movingAverage = 7;
-    const aprs = tokenRebasedEvents.slice(0, movingAverage).map(({ returnValues: event }) => {
-      const preShareRate = new Dec(event.preTotalEther.toString()).div(event.preTotalShares.toString());
-      const postShareRate = new Dec(event.postTotalEther.toString()).div(event.postTotalShares.toString());
-      return new Dec(SECONDS_PER_YEAR).mul(new Dec(postShareRate).sub(preShareRate).div(preShareRate))
-        .div(event.timeElapsed.toString()).mul(100)
-        .toNumber();
-    });
-    return aprToApy(aprs.reduce((a, b) => a + b, 0) / aprs.length);
-  } catch (e) {
-    console.warn('Failed to fetch stETH APY from events, falling back to Lido API');
-    const res = await fetch('https://eth-api.lido.fi/v1/protocol/steth/apr/sma');
-    const data = await res.json();
-    return aprToApy(data.data.smaApr);
-  }
-};
-
-const getCbETHApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  let currentBlock = blockNumber;
-  if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
-  const blockDiff = 6 * 24 * 60 * 60 / AVG_BLOCK_TIME;
-  const pastBlock = (currentBlock as number) - blockDiff;
-  const contract = CbEthContract(web3, NetworkNumber.Eth);
-  const [pastRate, currentRate] = await Promise.all([
-    contract.methods.exchangeRate().call({}, pastBlock),
-    contract.methods.exchangeRate().call({}, currentBlock),
-  ]);
-  const apr = new Dec(currentRate.toString()).sub(pastRate.toString()).div(currentRate.toString())
-    .mul(BLOCKS_IN_A_YEAR / blockDiff)
-    .mul(100)
-    .toString();
-  return aprToApy(apr);
-};
-
-
-const getREthApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  let currentBlock = blockNumber;
-  if (blockNumber === 'latest') currentBlock = await web3.eth.getBlockNumber();
-  const blockDiff = 8 * 24 * 60 * 60 / AVG_BLOCK_TIME;
-  const pastBlock = (currentBlock as number) - blockDiff;
-  const contract = REthContract(web3, NetworkNumber.Eth);
-  const [pastRate, currentRate] = await Promise.all([
-    contract.methods.getExchangeRate().call({}, pastBlock),
-    contract.methods.getExchangeRate().call({}, currentBlock),
-  ]);
-  const apr = new Dec(currentRate.toString()).sub(pastRate.toString()).div(currentRate.toString())
-    .mul(BLOCKS_IN_A_YEAR / blockDiff)
-    .mul(100)
-    .toString();
-
-  return aprToApy(apr);
-};
-
-const getDsrApy = async (web3: Web3, blockNumber: 'latest' | number = 'latest') => {
-  const potContract = PotContract(web3, NetworkNumber.Eth);
-  return new Dec(await potContract.methods.dsr().call())
-    .div(new Dec(1e27))
-    .pow(SECONDS_PER_YEAR)
-    .sub(1)
-    .mul(100)
-    .toString();
-};
+import { MMAssetsData, MMUsedAssets } from '../types/common';
+import { BLOCKS_IN_A_YEAR } from '../constants';
 
 const getSsrApy = async () => {
   const res = await fetch('https://fe.defisaver.com/api/sky/data');
@@ -111,12 +37,12 @@ const getApyFromDfsApi = async (asset: string) => {
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'PT eUSDe May', 'PT sUSDe July', 'PT USDe July', 'PT eUSDe Aug', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep'];
 
-export const getStakingApy = memoize(async (asset: string, web3: Web3, blockNumber: 'latest' | number = 'latest', fromBlock: number | undefined = undefined) => {
+export const getStakingApy = memoize(async (asset: string) => {
   try {
-    if (asset === 'stETH' || asset === 'wstETH') return await getStETHApy(web3, fromBlock, blockNumber);
-    if (asset === 'cbETH') return await getCbETHApy(web3, blockNumber);
-    if (asset === 'rETH') return await getREthApy(web3, blockNumber);
-    if (asset === 'sDAI') return await getDsrApy(web3);
+    if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
+    if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
+    if (asset === 'rETH') return await getApyFromDfsApi('rETH');
+    if (asset === 'sDAI') return await getApyFromDfsApi('sDAI');
     if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
     if (asset === 'weETH') return await getApyFromDfsApi('weETH');
     if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
@@ -245,19 +171,4 @@ export const calculateNetApy = ({
   const netApy = new Dec(totalInterestUsd).div(balance).times(100).toString();
 
   return { netApy, totalInterestUsd, incentiveUsd };
-};
-
-export const getWstETHByStETH = async (stETHAmount: string | number, web3: Web3) => wstETHContract(web3, NetworkNumber.Eth).methods.getWstETHByStETH(stETHAmount).call();
-
-export const getStETHByWstETH = async (wstETHAmount: string | number, web3: Web3) => wstETHContract(web3, NetworkNumber.Eth).methods.getStETHByWstETH(wstETHAmount).call();
-
-export const getStETHByWstETHMultiple = async (wstEthAmounts: string[] | number[], web3: Web3) => {
-  const contract = wstETHContract(web3, NetworkNumber.Eth);
-  const calls = wstEthAmounts.map((amount) => ({
-    target: contract.options.address,
-    abiItem: contract.options.jsonInterface.find((i) => i.name === 'getStETHByWstETH'),
-    params: [amount],
-  }));
-  const stEthAmounts = await multicall(calls, web3);
-  return stEthAmounts.map((arr) => arr[0]);
 };

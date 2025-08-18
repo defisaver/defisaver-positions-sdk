@@ -1,22 +1,21 @@
 import 'dotenv/config';
-import Web3 from 'web3';
-import nock from 'nock';
-import { getWeb3Instance } from './utils/getWeb3Instance';
 
 import * as sdk from '../src';
+import { getProvider } from './utils/getProvider';
+import { EthereumProvider } from '../src/types/common';
 
 const { assert } = require('chai');
 
 describe('Staking utils', () => {
-  let web3: Web3;
+  let provider: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
+    provider = getProvider('RPC');
   });
 
   it('can fetch APY for staking assets', async function () {
     this.timeout(20000);
     for (const asset of sdk.staking.STAKING_ASSETS) {
-      const apy = await sdk.staking.getStakingApy(asset, web3);
+      const apy = await sdk.staking.getStakingApy(asset);
       assert.isString(apy, `APY for ${asset} is not a string: ${apy}`);
       assert.isNotNaN(+apy, `APY for ${asset} is not a valid number: ${apy}`);
     }
@@ -24,18 +23,8 @@ describe('Staking utils', () => {
 
   it('returns 0 for APY of asset without yield', async () => {
     for (const asset of sdk.staking.STAKING_ASSETS) {
-      const apy = await sdk.staking.getStakingApy('DAI', web3);
+      const apy = await sdk.staking.getStakingApy('DAI');
       assert.equal(apy, '0');
     }
   });
-
-  // Commented out due to https://github.com/nock/nock/issues/2830
-  // it('returns 0 if API request fails', async () => {
-  //   nock('https://fe.defisaver.com')
-  //     .get('/api/staking/apy?asset=sUSDe')
-  //     .reply(500, { error: 'Internal Server Error' });
-  //   const apy = await sdk.staking.getStakingApy('sUSDe', web3);
-  //   assert.equal(apy, '0');
-  //   nock.cleanAll();
-  // });
 });
