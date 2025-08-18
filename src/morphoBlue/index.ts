@@ -1,10 +1,12 @@
-import Web3 from 'web3';
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
-  Blockish, EthAddress, MMUsedAssets, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, MMUsedAssets, NetworkNumber, PositionBalances,
 } from '../types/common';
-import { DFSFeedRegistryContract, FeedRegistryContract, MorphoBlueViewContract } from '../contracts';
+import {
+  DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContractViem,
+} from '../contracts';
 import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
 } from '../types';
@@ -15,8 +17,9 @@ import {
   getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
 } from '../helpers/morphoBlueHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
-export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber, selectedMarket: MorphoBlueMarketData, mainnetWeb3: Web3): Promise<MorphoBlueMarketInfo> {
+export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
   const {
     loanToken, collateralToken, oracle, irm, lltv, oracleType,
   } = selectedMarket;
@@ -27,31 +30,31 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
 
   const loanTokenFeedAddress = getChainlinkAssetAddress(loanTokenInfo.symbol, network);
 
-  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+  const morphoBlueViewContract = MorphoBlueViewContractViem(provider, network);
 
   let marketInfo;
   let loanTokenPrice;
   const isTokenUSDA = loanTokenInfo.symbol === 'USDA';
   const isMainnet = isMainnetNetwork(network);
   if (isMainnet) {
-    const feedRegistryContract = FeedRegistryContract(mainnetWeb3, NetworkNumber.Eth);
+    const feedRegistryContract = FeedRegistryContractViem(provider, NetworkNumber.Eth);
     const [_loanTokenPrice, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve('100000000') : feedRegistryContract.methods.latestAnswer(loanTokenFeedAddress, USD_QUOTE).call(),
-      morphoBlueViewContract.methods.getMarketInfoNotTuple(loanToken, collateralToken, oracle, irm, lltvInWei).call(),
+      isTokenUSDA ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
+      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
     loanTokenPrice = _loanTokenPrice;
   } else {
     // Currently only base network is supported
-    const feedRegistryContract = DFSFeedRegistryContract(web3, network);
+    const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
 
     const [loanTokenPriceRound, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve({ answer: '100000000' }) // Normalize to match the expected object structure
-        : feedRegistryContract.methods.latestRoundData(loanTokenFeedAddress, USD_QUOTE).call(),
-      morphoBlueViewContract.methods.getMarketInfoNotTuple(loanToken, collateralToken, oracle, irm, lltvInWei).call(),
+      isTokenUSDA ? Promise.resolve([0, '100000000']) // Normalize to match the expected object structure
+        : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]),
+      morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
-    loanTokenPrice = loanTokenPriceRound.answer;
+    loanTokenPrice = loanTokenPriceRound[1].toString();
   }
 
   let morphoSupplyApy = '0';
@@ -64,16 +67,16 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     console.error(e);
   }
 
-  const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets, marketInfo.totalBorrowAssets, marketInfo.borrowRate, marketInfo.fee);
-  const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate, marketInfo.totalBorrowShares);
-  const utillization = new Dec(marketInfo.totalBorrowAssets).div(marketInfo.totalSupplyAssets).mul(100).toString();
+  const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets.toString(), marketInfo.totalBorrowAssets.toString(), marketInfo.borrowRate.toString(), marketInfo.fee.toString());
+  const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate.toString(), marketInfo.totalBorrowShares.toString());
+  const utillization = new Dec(marketInfo.totalBorrowAssets.toString()).div(marketInfo.totalSupplyAssets.toString()).mul(100).toString();
 
   const oracleScaleFactor = new Dec(36).add(loanTokenInfo.decimals).sub(collateralTokenInfo.decimals).toString();
   const oracleScale = new Dec(10).pow(oracleScaleFactor).toString();
 
   const scale = new Dec(10).pow(loanTokenInfo.decimals).toString();
 
-  const oracleRate = new Dec(marketInfo.oracle).div(oracleScale).toString();
+  const oracleRate = new Dec(marketInfo.oracle.toString()).div(oracleScale).toString();
   const assetsData: MorphoBlueAssetsData = {};
   assetsData[wethToEth(loanTokenInfo.symbol)] = {
     symbol: wethToEth(loanTokenInfo.symbol),
@@ -81,8 +84,8 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     price: new Dec(loanTokenPrice).div(1e8).toString(),
     supplyRate,
     borrowRate: compoundedBorrowRate,
-    totalSupply: new Dec(marketInfo.totalSupplyAssets).div(scale).toString(),
-    totalBorrow: new Dec(marketInfo.totalBorrowAssets).div(scale).toString(),
+    totalSupply: new Dec(marketInfo.totalSupplyAssets.toString()).div(scale).toString(),
+    totalBorrow: new Dec(marketInfo.totalBorrowAssets.toString()).div(scale).toString(),
     canBeSupplied: true,
     canBeBorrowed: true,
     incentiveSupplyApy: morphoSupplyApy,
@@ -101,13 +104,13 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
     canBeBorrowed: false,
   };
   if (STAKING_ASSETS.includes(collateralTokenInfo.symbol)) {
-    assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol, mainnetWeb3);
+    assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol);
     assetsData[collateralTokenInfo.symbol].incentiveSupplyToken = collateralTokenInfo.symbol;
   }
 
   return {
     id: marketInfo.id,
-    fee: new Dec(marketInfo.fee).div(WAD).toString(),
+    fee: new Dec(marketInfo.fee.toString()).div(WAD).toString(),
     loanToken: wethToEth(loanTokenInfo.symbol),
     collateralToken: wethToEth(collateralTokenInfo.symbol),
     utillization,
@@ -119,7 +122,11 @@ export async function getMorphoBlueMarketData(web3: Web3, network: NetworkNumber
   };
 }
 
-export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
+export async function getMorphoBlueMarketData(provider: EthereumProvider, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
+  return _getMorphoBlueMarketData(getViemProvider(provider, network), network, selectedMarket);
+}
+
+export const _getMorphoBlueAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -129,64 +136,74 @@ export const getMorphoBlueAccountBalances = async (web3: Web3, network: NetworkN
     return balances;
   }
 
-  const viewContract = MorphoBlueViewContract(web3, network, block);
+  const viewContract = MorphoBlueViewContractViem(provider, network, block);
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
-  const lltvInWei = new Dec(lltv).mul(WAD).toString();
+  const lltvInWei = BigInt(new Dec(lltv).mul(WAD).toString());
   const marketObject = {
     loanToken, collateralToken, oracle, irm, lltv: lltvInWei,
   };
 
-  const loanInfo = await viewContract.methods.getUserInfo(marketObject, address).call({}, block);
+  const loanInfo = await viewContract.read.getUserInfo([marketObject, address], setViemBlockNumber(block));
   const loanTokenInfo = getAssetInfoByAddress(selectedMarket.loanToken, network);
   const collateralTokenInfo = getAssetInfoByAddress(selectedMarket.collateralToken, network);
 
   balances = {
     collateral: {
-      [addressMapping ? collateralTokenInfo.address.toLowerCase() : wethToEth(collateralTokenInfo.symbol)]: assetAmountInEth(loanInfo.collateral, collateralTokenInfo.symbol),
+      [addressMapping ? collateralTokenInfo.address.toLowerCase() : wethToEth(collateralTokenInfo.symbol)]: assetAmountInEth(loanInfo.collateral.toString(), collateralTokenInfo.symbol),
     },
     debt: {
-      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(loanInfo.borrowedInAssets, loanTokenInfo.symbol),
+      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(loanInfo.borrowedInAssets.toString(), loanTokenInfo.symbol),
     },
   };
 
   return balances;
 };
 
-export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumber, account: string, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
+export const getMorphoBlueAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  selectedMarket: MorphoBlueMarketData,
+): Promise<PositionBalances> => _getMorphoBlueAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, selectedMarket);
+
+export async function _getMorphoBlueAccountData(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
   const lltvInWei = new Dec(lltv).mul(WAD).toString();
-  const marketObject = {
-    loanToken, collateralToken, oracle, irm, lltv: lltvInWei,
-  };
-  const viewContract = MorphoBlueViewContract(web3, network);
-  const loanInfo = await viewContract.methods.getUserInfo(marketObject, account).call();
+  const viewContract = MorphoBlueViewContractViem(provider, network);
+  const loanInfo = (await viewContract.read.getUserInfo([
+    {
+      loanToken, collateralToken, oracle, irm, lltv: BigInt(lltvInWei),
+    },
+    account]));
   const usedAssets: MMUsedAssets = {};
 
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
-  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets, marketInfo.loanToken);
-  const loanTokenBorrowed = assetAmountInEth(loanInfo.borrowedInAssets, marketInfo.loanToken);
+  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets.toString(), marketInfo.loanToken);
+  const loanTokenBorrowed = assetAmountInEth(loanInfo.borrowedInAssets.toString(), marketInfo.loanToken);
   usedAssets[marketInfo.loanToken] = {
     symbol: loanTokenInfo.symbol,
     supplied: loanTokenSupplied,
     borrowed: loanTokenBorrowed,
-    isSupplied: new Dec(loanInfo.suppliedInAssets).gt(0),
-    isBorrowed: new Dec(loanInfo.borrowedInAssets).gt(0),
+    isSupplied: new Dec(loanInfo.suppliedInAssets.toString()).gt(0),
+    isBorrowed: new Dec(loanInfo.borrowedInAssets.toString()).gt(0),
     collateral: false,
     suppliedUsd: new Dec(loanTokenSupplied).mul(loanTokenInfo.price).toString(),
     borrowedUsd: new Dec(loanTokenBorrowed).mul(loanTokenInfo.price).toString(),
   };
 
   const collateralTokenInfo = marketInfo.assetsData[marketInfo.collateralToken];
-  const collateralTokenSupplied = assetAmountInEth(loanInfo.collateral, marketInfo.collateralToken);
+  const collateralTokenSupplied = assetAmountInEth(loanInfo.collateral.toString(), marketInfo.collateralToken);
   usedAssets[marketInfo.collateralToken] = {
     symbol: collateralTokenInfo.symbol,
     supplied: collateralTokenSupplied,
     borrowed: '0',
-    isSupplied: new Dec(loanInfo.collateral).gt(0),
+    isSupplied: new Dec(loanInfo.collateral.toString()).gt(0),
     isBorrowed: false,
     collateral: true,
     suppliedUsd: new Dec(collateralTokenSupplied).mul(collateralTokenInfo.price).toString(),
@@ -194,9 +211,13 @@ export async function getMorphoBlueAccountData(web3: Web3, network: NetworkNumbe
   };
 
   return {
-    supplyShares: loanInfo.supplyShares,
-    borrowShares: loanInfo.borrowShares,
+    supplyShares: loanInfo.supplyShares.toString(),
+    borrowShares: loanInfo.borrowShares.toString(),
     usedAssets,
     ...getMorphoBlueAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
   };
+}
+
+export async function getMorphoBlueAccountData(provider: EthereumProvider, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
+  return _getMorphoBlueAccountData(getViemProvider(provider, network), network, account, selectedMarket, marketInfo);
 }

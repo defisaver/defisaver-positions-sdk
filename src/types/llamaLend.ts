@@ -56,7 +56,7 @@ export interface LlamaLendMarketData {
   value: LlamaLendVersionsType,
   collAsset: string,
   baseAsset: string,
-  controllerAddress: string,
+  controllerAddress: EthAddress,
   vaultAddress: EthAddress,
   url: string,
 }
@@ -152,4 +152,6 @@ export interface LlamaLendUserData {
   suppliedForYieldUsd: string,
   safetyRatio: string,
   userBands: UserBandData[],
+  loanExists: boolean,
+  borrowRate?: string,
 }
