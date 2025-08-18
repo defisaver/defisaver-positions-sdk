@@ -19,6 +19,10 @@ export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPri
   const price = getEthAmountForDecimals(data.price, 8);
   return ({
     ...data,
+    borrowCollateralFactor: data.borrowCollateralFactor.toString(),
+    liquidateCollateralFactor: data.liquidateCollateralFactor.toString(),
+    liquidationFactor: data.liquidationFactor.toString(),
+    supplyReserved: data.supplyReserved.toString(),
     priceInBaseAsset: getEthAmountForDecimals(data.price, 8),
     price: new Dec(price).mul(baseAssetPrice).toString(),
     collateralFactor: getEthAmountForDecimals(data.borrowCollateralFactor, 18),
@@ -40,6 +44,13 @@ export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice
   const totalBorrow = getEthAmountForDecimals(new Dec(data.totalBorrow).mul(data.borrowIndex).toString(), 15 + assetInfo.decimals);
   return ({
     ...data,
+    baseBorrowMin: data.baseBorrowMin.toString(),
+    baseTrackingBorrowRewardsSpeed: data.baseTrackingBorrowRewardsSpeed.toString(),
+    baseTrackingSupplyRewardsSpeed: data.baseTrackingSupplyRewardsSpeed.toString(),
+    borrowIndex: data.borrowIndex.toString(),
+    supplyIndex: data.supplyIndex.toString(),
+    trackingBorrowIndex: data.trackingBorrowIndex.toString(),
+    trackingSupplyIndex: data.trackingSupplyIndex.toString(),
     supplyRate: aprToApy(new Dec(data.supplyRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)
       .toString()),
     borrowRate: aprToApy(new Dec(data.borrowRate).div(1e18).mul(SECONDS_PER_YEAR).mul(100)

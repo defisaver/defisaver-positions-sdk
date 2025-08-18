@@ -63,7 +63,9 @@ export interface CompoundV2AssetData extends CompoundAssetData {
 export interface CompoundV3AssetData extends CompoundAssetData {
   borrowCollateralFactor: string,
   liquidateCollateralFactor: string,
+  liquidationFactor: string,
   minDebt: string,
+  supplyReserved: string,
   liquidationRatio: string,
   supplyCap: string,
   priceInBaseAsset: string,
