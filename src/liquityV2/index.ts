@@ -243,6 +243,7 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
   if (selectedMarketTotalBorrow.eq(0)) return new Dec(0).toString();
 
   const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
+  const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
   const totalUnbackedDebt = Object.values(allMarketsUnbackedDebts).reduce((acc, val) => acc.plus(new Dec(val)), new Dec(0));
 
   // When totalUnbackedDebt is 0, redemptions will be proportional with the branch size and not to unbacked debt.
@@ -255,7 +256,8 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
 
     // Then calculate how much of that estimated amount would go to each branch
     const amountBeingRedeemedOnEachMarketByTotalBorrow = Object.entries(markets).map(([version, market]) => {
-      if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+      const { isLegacy: isLegacyMarket } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
+      if (version === selectedMarket && isLegacyMarket !== isLegacy) return new Dec(interestRateDebtInFront);
       const { assetsData } = market;
       const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
       const totalBorrow = new Dec(assetsData[debtToken].totalBorrow);
@@ -268,7 +270,8 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
   }
 
   const amountBeingRedeemedOnEachMarketByUnbackedDebt = Object.entries(markets).map(([version, market]) => {
-    if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+    const { isLegacy: isLegacyMarket } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
+    if (version === selectedMarket && isLegacyMarket !== isLegacy) return new Dec(interestRateDebtInFront);
     const { assetsData } = market;
     const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
     const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
