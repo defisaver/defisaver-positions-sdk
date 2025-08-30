@@ -1,20 +1,21 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
-import Web3 from 'web3';
 import {
   aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
-import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
+import {
+  EthereumProvider, MMAssetsData, MMUsedAssets, NetworkNumber,
+} from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
   MorphoBluePublicAllocatorItem,
   MorphoBlueRealloactionMarketData,
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
-import { MorphoBlueViewContract } from '../../contracts';
-import { MarketParamsStruct } from '../../types/contracts/generated/MorphoBlueView';
-import { compareAddresses } from '../../services/utils';
+import { MorphoBlueViewContractViem } from '../../contracts';
+import { compareAddresses, DEFAULT_TIMEOUT } from '../../services/utils';
+import { getViemProvider } from '../../services/viem';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
   const payload = {} as MorphoBlueAggregatedPositionData;
@@ -96,10 +97,17 @@ export const getBorrowRate = (borrowRate: string, totalBorrowShares: string) => 
   return new Dec(compound(borrowRate)).div(1e18).mul(100).toString();
 };
 
-export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, actions: { action: string, amount: string, asset: string }[], web3: Web3, network: NetworkNumber) => {
-  const morphoBlueViewContract = MorphoBlueViewContract(web3, network);
+export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMarketData, actions: { action: string, amount: string, asset: string }[], provider: EthereumProvider, network: NetworkNumber) => {
+  const client = getViemProvider(provider, network);
+  const morphoBlueViewContract = MorphoBlueViewContractViem(client, network);
   const lltvInWei = assetAmountInWei(selectedMarket.lltv, 'ETH');
-  const marketData: MarketParamsStruct = [selectedMarket.loanToken, selectedMarket.collateralToken, selectedMarket.oracle, selectedMarket.irm, lltvInWei];
+  const marketData = {
+    loanToken: selectedMarket.loanToken,
+    collateralToken: selectedMarket.collateralToken,
+    oracle: selectedMarket.oracle,
+    irm: selectedMarket.irm,
+    lltv: BigInt(lltvInWei),
+  };
 
   const params = actions.map(({ action, asset, amount }) => {
     const isBorrowOperation = borrowOperations.includes(action);
@@ -114,17 +122,17 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
       liquidityRemoved = action === 'withdraw' ? amountInWei : '0';
     }
     return {
-      liquidityAdded,
-      liquidityRemoved,
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityRemoved: BigInt(liquidityRemoved),
       isBorrowOperation,
     };
   });
-  const data = await morphoBlueViewContract.methods.getApyAfterValuesEstimation(
+  const data = await morphoBlueViewContract.read.getApyAfterValuesEstimation([
     marketData,
     params,
-  ).call();
-  const borrowRate = getBorrowRate(data.borrowRate, data.market.totalBorrowShares);
-  const supplyRate = getSupplyRate(data.market.totalSupplyAssets, data.market.totalBorrowAssets, data.borrowRate, data.market.fee);
+  ]);
+  const borrowRate = getBorrowRate(data[0].toString(), data[1].totalBorrowShares.toString());
+  const supplyRate = getSupplyRate(data[1].totalSupplyAssets.toString(), data[1].totalBorrowAssets.toString(), data[0].toString(), data[1].fee.toString());
   return { borrowRate, supplyRate };
 };
 
@@ -206,21 +214,30 @@ const REWARDS_QUERY = `
  * @returns The reallocatable liquidity and target borrow utilization
 */
 export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ reallocatableLiquidity: string, targetBorrowUtilization: string }> => {
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: MARKET_QUERY,
-      variables: { uniqueKey: marketId, chainId: network },
-    }),
-  });
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: MARKET_QUERY,
+        variables: { uniqueKey: marketId, chainId: network },
+      }),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    });
 
-  const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
-  const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+    const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
+    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
 
-  if (!marketData) throw new Error('Market data not found');
+    if (!marketData) throw new Error('Market data not found');
 
-  return { reallocatableLiquidity: marketData.reallocatableLiquidityAssets, targetBorrowUtilization: marketData.targetBorrowUtilization };
+    return {
+      reallocatableLiquidity: marketData.reallocatableLiquidityAssets,
+      targetBorrowUtilization: marketData.targetBorrowUtilization,
+    };
+  } catch (error) {
+    console.error('External API Failure: Morpho blue reallocatable liquidity', error);
+    throw new Error('Failed to fetch reallocatable liquidity');
+  }
 };
 
 /**
@@ -261,90 +278,96 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
  * @returns The vaults and withdrawals needed to reallocate liquidity
  */
 export const getReallocation = async (market: MorphoBlueMarketData, assetsData: MorphoBlueAssetsData, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ vaults: string[], withdrawals: (string | string[])[][][] }> => {
-  const { marketId, loanToken } = market;
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      query: MARKET_QUERY,
-      variables: { uniqueKey: marketId, chainId: network },
-    }),
-  });
+  try {
+    const { marketId, loanToken } = market;
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: MARKET_QUERY,
+        variables: { uniqueKey: marketId, chainId: network },
+      }),
+      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    });
 
-  const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
-  const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+    const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
+    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
 
-  if (!marketData) throw new Error('Market data not found');
+    if (!marketData) throw new Error('Market data not found');
 
-  const loanAssetInfo = getAssetInfoByAddress(loanToken, network);
-  const { totalBorrow, totalSupply } = assetsData[loanAssetInfo.symbol] || { totalBorrow: '0', totalSupply: '0' };
-  const totalBorrowWei = assetAmountInWei(totalBorrow!, loanAssetInfo.symbol);
-  const totalSupplyWei = assetAmountInWei(totalSupply!, loanAssetInfo.symbol);
+    const loanAssetInfo = getAssetInfoByAddress(loanToken, network);
+    const { totalBorrow, totalSupply } = assetsData[loanAssetInfo.symbol] || { totalBorrow: '0', totalSupply: '0' };
+    const totalBorrowWei = assetAmountInWei(totalBorrow!, loanAssetInfo.symbol);
+    const totalSupplyWei = assetAmountInWei(totalSupply!, loanAssetInfo.symbol);
 
-  const newTotalBorrowAssets = new Dec(totalBorrowWei).add(amountToBorrow).toString();
+    const newTotalBorrowAssets = new Dec(totalBorrowWei).add(amountToBorrow).toString();
 
-  const newUtil = new Dec(newTotalBorrowAssets).div(totalSupplyWei).toString();
-  const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
+    const newUtil = new Dec(newTotalBorrowAssets).div(totalSupplyWei).toString();
+    const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
 
-  if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
+    if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
 
-  const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, totalBorrowWei, totalSupplyWei, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
+    const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, totalBorrowWei, totalSupplyWei, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
 
-  const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
-    (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
-      const vaultAddress = item.vault.address;
-      acc[vaultAddress] = new Dec(acc[vaultAddress] || '0').add(item.assets).toString();
-      return acc;
-    },
-    {},
-  );
-
-  const sortedVaults = Object.entries(vaultTotalAssets).sort(
-    ([, a]: [string, string], [, b]: [string, string]) => new Dec(b || '0').sub(a || '0').toNumber(),
-  );
-
-  const withdrawalsPerVault: Record<string, [string[], string, string][]> = {};
-  let totalReallocated = '0';
-  for (const [vaultAddress] of sortedVaults) {
-    if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
-
-    const vaultAllocations = marketData.publicAllocatorSharedLiquidity.filter(
-      (item: MorphoBluePublicAllocatorItem) => compareAddresses(item.vault.address, vaultAddress),
+    const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
+      (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
+        const vaultAddress = item.vault.address;
+        acc[vaultAddress] = new Dec(acc[vaultAddress] || '0').add(item.assets).toString();
+        return acc;
+      },
+      {},
     );
-    for (const item of vaultAllocations) {
-      if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
-      const itemAmount = item.assets;
-      const leftToAllocate = new Dec(liquidityToAllocate).sub(totalReallocated).toString();
-      const amountToTake = new Dec(itemAmount).lt(leftToAllocate) ? itemAmount : leftToAllocate;
-      totalReallocated = new Dec(totalReallocated).add(amountToTake).toString();
-      const withdrawal: [string[], string, string] = [
-        [
-          item.allocationMarket.loanAsset.address,
-          item.allocationMarket.collateralAsset?.address,
-          item.allocationMarket.oracle?.address,
-          item.allocationMarket.irmAddress,
-          item.allocationMarket.lltv,
-        ],
-        amountToTake.toString(),
-        item.allocationMarket.uniqueKey,
-      ];
-      if (!withdrawalsPerVault[vaultAddress]) {
-        withdrawalsPerVault[vaultAddress] = [];
-      }
-      withdrawalsPerVault[vaultAddress].push(withdrawal);
-    }
-  }
 
-  const vaults = Object.keys(withdrawalsPerVault);
-  const withdrawals = vaults.map(
-    (vaultAddress) => withdrawalsPerVault[vaultAddress].sort(
-      (a, b) => a[2].localeCompare(b[2]),
-    ).map(w => [w[0], w[1]]),
-  );
-  return {
-    vaults,
-    withdrawals,
-  };
+    const sortedVaults = Object.entries(vaultTotalAssets).sort(
+      ([, a]: [string, string], [, b]: [string, string]) => new Dec(b || '0').sub(a || '0').toNumber(),
+    );
+
+    const withdrawalsPerVault: Record<string, [string[], string, string][]> = {};
+    let totalReallocated = '0';
+    for (const [vaultAddress] of sortedVaults) {
+      if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
+
+      const vaultAllocations = marketData.publicAllocatorSharedLiquidity.filter(
+        (item: MorphoBluePublicAllocatorItem) => compareAddresses(item.vault.address, vaultAddress),
+      );
+      for (const item of vaultAllocations) {
+        if (new Dec(totalReallocated).gte(liquidityToAllocate)) break;
+        const itemAmount = item.assets;
+        const leftToAllocate = new Dec(liquidityToAllocate).sub(totalReallocated).toString();
+        const amountToTake = new Dec(itemAmount).lt(leftToAllocate) ? itemAmount : leftToAllocate;
+        totalReallocated = new Dec(totalReallocated).add(amountToTake).toString();
+        const withdrawal: [string[], string, string] = [
+          [
+            item.allocationMarket.loanAsset.address,
+            item.allocationMarket.collateralAsset?.address,
+            item.allocationMarket.oracle?.address,
+            item.allocationMarket.irmAddress,
+            item.allocationMarket.lltv,
+          ],
+          amountToTake.toString(),
+          item.allocationMarket.uniqueKey,
+        ];
+        if (!withdrawalsPerVault[vaultAddress]) {
+          withdrawalsPerVault[vaultAddress] = [];
+        }
+        withdrawalsPerVault[vaultAddress].push(withdrawal);
+      }
+    }
+
+    const vaults = Object.keys(withdrawalsPerVault);
+    const withdrawals = vaults.map(
+      (vaultAddress) => withdrawalsPerVault[vaultAddress].sort(
+        (a, b) => a[2].localeCompare(b[2]),
+      ).map(w => [w[0], w[1]]),
+    );
+    return {
+      vaults,
+      withdrawals,
+    };
+  } catch (error) {
+    console.error('External API Failure: Morpho blue reallocation', error);
+    throw new Error('Failed to fetch reallocation data');
+  }
 };
 
 export const getRewardsForMarket = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth) => {

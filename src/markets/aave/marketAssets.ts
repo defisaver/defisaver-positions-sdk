@@ -7,19 +7,16 @@ export const aaveV1AssetsDefaultMarket: AssetData[] = [
 ].map((symbol) => getAssetInfo(symbol));
 
 export const aaveV2AssetsDefaultMarket = ['USDT', 'WBTC', 'ETH', 'YFI', 'ZRX', 'UNI', 'AAVE', 'BAT', 'BUSD', 'DAI', 'ENJ', 'KNCL', 'LINK', 'MANA', 'MKR', 'REN', 'SNX', 'SUSD', 'TUSD', 'USDC', 'CRV', 'GUSD', 'BAL', 'xSUSHI', 'RENFIL', 'RAI', 'AMPL', 'USDP', 'DPI', 'FRAX', 'FEI', 'stETH', 'ENS', 'UST', 'CVX', '1INCH', 'LUSD'];
-export const morphoAaveV2AssetDefaultMarket = ['DAI', 'ETH', 'USDC', 'USDT', 'WBTC', 'stETH', 'CRV'];
-
-export const morphoAaveV3AssetEthMarket = ['ETH', 'wstETH', 'DAI', 'USDC', 'WBTC', 'rETH', 'cbETH', 'sDAI', 'USDT'];
 
 export const aaveV3AssetsDefaultMarketEth = [
   'ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD', 'PYUSD', 'weETH', 'osETH', 'USDe', 'ETHx', 'sUSDe', 'tBTC', 'cbBTC', 'USDS', 'rsETH', 'LBTC', 'eBTC', 'RLUSD', 'PT eUSDe May', 'PT sUSDe July', 'USDtb',
-  'eUSDe', 'PT USDe July', 'PT eUSDe Aug',
+  'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'EURC', 'FBTC', 'PT sUSDe Sep', 'PT USDe Sep', 'tETH', 'ezETH',
 ];
 export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
 ];
-export const aaveV3AssetsDefaultMarketArb = ['DAI', 'LINK', 'USDC.e', 'WBTC', 'ETH', 'USDT', 'AAVE', 'EURS', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC', 'FRAX', 'ARB', 'weETH', 'GHO', 'ezETH', 'rsETH'];
-export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'wrsETH', 'LBTC', 'EURC', 'GHO'];
+export const aaveV3AssetsDefaultMarketArb = ['DAI', 'LINK', 'USDC.e', 'WBTC', 'ETH', 'USDT', 'AAVE', 'EURS', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC', 'FRAX', 'ARB', 'weETH', 'GHO', 'ezETH', 'rsETH', 'tBTC'];
+export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'GHO', 'wrsETH', 'LBTC', 'EURC', 'AAVE'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
@@ -29,7 +26,7 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
 } as const;
 
-export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS', 'USDC', 'ezETH', 'sUSDe', 'GHO', 'rsETH'];
+export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS', 'USDC', 'ezETH', 'sUSDe', 'GHO', 'rsETH', 'tETH'];
 
 export const aaveV3AssetsLidoMarket = {
   [NetworkNumber.Eth]: aaveV3AssetsLidoMarketEth,
