@@ -1,3 +1,4 @@
+import { ZERO_ADDRESS } from '../../constants';
 import { getConfigContractAddress } from '../../contracts';
 import { CompoundBulkerOptions, CompoundMarketData, CompoundVersions } from '../../types';
 import { NetworkNumber } from '../../types/common';
@@ -6,8 +7,10 @@ import {
   v3ETHCollAssets,
   v3USDbCCollAssets,
   v3USDCCollAssets,
-  v3USDCeCollAssets, v3USDSCollAssets,
-  v3USDTCollAssets, v3wstETHCollAssets,
+  v3USDCeCollAssets,
+  v3USDSCollAssets,
+  v3USDTCollAssets,
+  v3wstETHCollAssets,
 } from './marketsAssets';
 
 export {
@@ -55,13 +58,13 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDbC]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: STANDARD_BULKER_OPTIONS,
 
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
-    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Opt]: {
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
@@ -84,10 +87,10 @@ export const COMPOUND_V2: CompoundMarketData = {
   baseAsset: '',
   collAssets: compoundV2CollateralAssets.map(a => a.underlyingAsset),
   baseMarket: '',
-  baseMarketAddress: '',
+  baseMarketAddress: ZERO_ADDRESS,
   secondLabel: '',
   bulkerName: '',
-  bulkerAddress: '',
+  bulkerAddress: ZERO_ADDRESS,
   bulkerOptions: BULKER_OPTIONS[NetworkNumber.Eth][CompoundVersions.CompoundV2],
   // icon: SvgAdapter(protocolIcons.compound),
 };
@@ -188,7 +191,7 @@ export const COMPOUND_V3_WSTETH = (networkId: NetworkNumber): CompoundMarketData
 });
 
 export const COMPOUND_V3_USDS = (networkId: NetworkNumber): CompoundMarketData => ({
-  chainIds: [NetworkNumber.Eth],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Base],
   label: 'Compound V3 - USDS',
   shortLabel: 'v3',
   value: CompoundVersions.CompoundV3USDS,

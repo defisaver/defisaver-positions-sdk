@@ -1,12 +1,12 @@
-import Web3 from 'web3';
-
 import { assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
-  Blockish, NetworkNumber, PositionBalances,
+  Blockish, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { wethToEthByAddress } from '../services/utils';
+import { getViemProvider } from '../services/viem';
 
-export const getExchangeAccountBalances = async (web3: Web3, network: NetworkNumber, block: Blockish, addressMapping: boolean, subData: any): Promise<PositionBalances> => {
+export const _getExchangeAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, subData: any): Promise<PositionBalances> => {
   const fromToken = getAssetInfoByAddress(wethToEthByAddress(subData.fromToken, network), network);
 
   return {
@@ -15,3 +15,11 @@ export const getExchangeAccountBalances = async (web3: Web3, network: NetworkNum
     },
   };
 };
+
+export const getExchangeAccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  subData: any,
+): Promise<PositionBalances> => _getExchangeAccountBalances(getViemProvider(provider, network), network, block, addressMapping, subData);

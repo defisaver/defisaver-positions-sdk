@@ -1,5 +1,5 @@
 // General
-export type EthAddress = string;
+export type EthAddress = HexString;
 export type Blockish = number | 'latest';
 export type AssetSymbol = string;
 export type Amount = string | number;
@@ -49,11 +49,10 @@ export interface MMUsedAsset {
   borrowed: string,
   borrowedUsd: string,
   isBorrowed: boolean,
+  stableBorrowRate?: string,
   debt?: string,
   supplyRate?: string,
   borrowRate?: string,
-  discountedBorrowRate?: string,
-  stableBorrowRate?: string,
   interestMode?: string,
   collateral?: boolean,
 }
@@ -82,3 +81,7 @@ export interface PositionBalances {
   selling?: Balances,
   deposited?: Balances,
 }
+
+export type EthereumProvider = { request(...args: any): Promise<any> }; // TODO
+
+export type HexString = `0x${string}`;

@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -26,10 +27,10 @@ export interface CompoundMarketData {
   baseAsset: string,
   collAssets: readonly string[],
   baseMarket: string,
-  baseMarketAddress: string,
+  baseMarketAddress: EthAddress,
   secondLabel: string,
   bulkerName: string,
-  bulkerAddress: string,
+  bulkerAddress: EthAddress,
   bulkerOptions: CompoundBulkerOptions,
   // icon: Function,
 }
@@ -54,7 +55,6 @@ export type CompoundV3UsedAssets = CompoundUsedAssets<CompoundV3UsedAsset>;
 export interface CompoundAssetData extends MMAssetData {
   supplyCapAlternative?: string,
   totalSupplyAlternative?: string,
-  priceAlternative?: string,
   sortIndex?: number,
 }
 
@@ -63,7 +63,9 @@ export interface CompoundV2AssetData extends CompoundAssetData {
 export interface CompoundV3AssetData extends CompoundAssetData {
   borrowCollateralFactor: string,
   liquidateCollateralFactor: string,
+  liquidationFactor: string,
   minDebt: string,
+  supplyReserved: string,
   liquidationRatio: string,
   supplyCap: string,
   priceInBaseAsset: string,
@@ -117,6 +119,7 @@ export interface CompoundAggregatedPositionData {
 export interface CompoundPositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
+  suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
   incentiveUsd: string,

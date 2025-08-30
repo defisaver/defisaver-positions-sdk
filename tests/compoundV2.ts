@@ -1,22 +1,21 @@
 import 'dotenv/config';
-import Web3 from 'web3';
 
 import * as sdk from '../src';
 
-import { Blockish, NetworkNumber } from '../src/types/common';
-import { getWeb3Instance } from './utils/getWeb3Instance';
+import { Blockish, EthereumProvider, NetworkNumber } from '../src/types/common';
+import { getProvider } from './utils/getProvider';
 
 const { assert } = require('chai');
 
 
 describe('Compound v2', () => {
-  let web3: Web3;
+  let provider: EthereumProvider;
   before(async () => {
-    web3 = getWeb3Instance('RPC');
+    provider = getProvider('RPC');
   });
 
-  const fetchMarketData = async (network: NetworkNumber, _web3: Web3) => {
-    const marketData = await sdk.compoundV2.getCompoundV2MarketsData(_web3, network);
+  const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider) => {
+    const marketData = await sdk.compoundV2.getCompoundV2MarketsData(_provider, network);
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
@@ -29,24 +28,24 @@ describe('Compound v2', () => {
     return marketData;
   };
 
-  const fetchAccountData = async (network: NetworkNumber, _web3: Web3, marketData: sdk.CompoundV2MarketsData) => {
-    const accountData = await sdk.compoundV2.getCompoundV2AccountData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketData.assetsData);
+  const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.CompoundV2MarketsData) => {
+    const accountData = await sdk.compoundV2.getCompoundV2AccountData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', marketData.assetsData);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchFullPositionData = async (network: NetworkNumber, _web3: Web3) => {
-    const positionData = await sdk.compoundV2.getCompoundV2FullPositionData(_web3, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchFullPositionData = async (network: NetworkNumber, _provider: EthereumProvider) => {
+    const positionData = await sdk.compoundV2.getCompoundV2FullPositionData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', // ...
     ]);
   };
 
-  const fetchAccountBalances = async (network: NetworkNumber, _web3: Web3, blockNumber: Blockish) => {
-    const balances = await sdk.compoundV2.getCompoundV2AccountBalances(_web3, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
+  const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, blockNumber: Blockish) => {
+    const balances = await sdk.compoundV2.getCompoundV2AccountBalances(_provider, network, blockNumber, false, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649');
     // console.log(balances);
     assert.containsAllKeys(balances, [
       'collateral', 'debt',
@@ -57,28 +56,28 @@ describe('Compound v2', () => {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchMarketData(network, web3);
-    await fetchAccountData(network, web3, marketData);
+    const marketData = await fetchMarketData(network, provider);
+    await fetchAccountData(network, provider, marketData);
   });
 
   it('can fetch full position data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchFullPositionData(network, web3);
+    await fetchFullPositionData(network, provider);
   });
 
   it('can fetch latest account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 'latest');
+    await fetchAccountBalances(network, provider, 'latest');
   });
 
   it('can fetch past account balances for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    await fetchAccountBalances(network, web3, 18000000);
+    await fetchAccountBalances(network, provider, 18000000);
   });
 });

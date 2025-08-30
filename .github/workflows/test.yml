@@ -29,9 +29,6 @@ jobs:
       - name: Prep dependencies
         run: npm i
 
-      - name: Generate contracts
-        run: npm run generate-contracts
-
       - name: Lint
         run: npm run lint-check
 

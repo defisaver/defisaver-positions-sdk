@@ -1,11 +1,11 @@
 import {
   LlamaLendVersions, LlamaLendVersionsType, LLVersionsArb, LLVersionsEth,
 } from '../../types';
-import { NetworkNumber } from '../../types/common';
+import { EthAddress, NetworkNumber } from '../../types/common';
 
 type LLAddresses = {
-  controllerAddress: string,
-  vaultAddress: string
+  controllerAddress: EthAddress,
+  vaultAddress: EthAddress,
   controllerId: number,
 };
 
