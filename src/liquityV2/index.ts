@@ -283,15 +283,15 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
   return amountBeingRedeemedOnEachMarketByUnbackedDebt.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
-export const getDebtInFrontForInterestRateIncludingNewDebtLiquityV2 = async (newDebt: string, markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
+export const getDebtInFrontForInterestRateIncludingNewDebtLiquityV2 = async (newDebt: string, markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, interestRate: string) => {
   const marketsWithNewDebt = JSON.parse(JSON.stringify(markets));
   const selectedMarketDebtToken = LiquityV2Markets(network)[selectedMarket].debtToken;
   const currentTotalBorrow = new Dec(marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow);
   marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow = currentTotalBorrow.add(newDebt).toString();
 
   const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
-  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(marketsWithNewDebt, isLegacy, web3, network);
-  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, network, isLegacy, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(marketsWithNewDebt, isLegacy, provider, network);
+  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(provider, network, isLegacy, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
 
   return calculateDebtInFrontLiquityV2(marketsWithNewDebt, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };
