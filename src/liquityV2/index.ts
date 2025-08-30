@@ -256,6 +256,18 @@ export const getDebtInFrontForInterestRateLiquityV2 = async (markets: Record<Liq
   return calculateDebtInFrontLiquityV2(markets, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };
 
+export const getDebtInFrontForInterestRateIncludingNewDebtLiquityV2 = async (newDebt: string, markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, interestRate: string) => {
+  const marketsWithNewDebt = JSON.parse(JSON.stringify(markets));
+  const selectedMarketDebtToken = LiquityV2Markets(network)[selectedMarket].debtToken;
+  const currentTotalBorrow = new Dec(marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow);
+  marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow = currentTotalBorrow.add(newDebt).toString();
+
+  const allMarketsUnbackedDebts = await getAllMarketsUnbackedDebts(marketsWithNewDebt, web3, network);
+  const interestRateDebtInFront = new Dec(await getDebtInFrontForInterestRateSingleMarketLiquityV2(viewContract, LiquityV2Markets(network)[selectedMarket].marketAddress, interestRate));
+
+  return calculateDebtInFrontLiquityV2(marketsWithNewDebt, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
+};
+
 export const getLiquityV2TroveData = async (
   web3: Web3,
   network: NetworkNumber,
