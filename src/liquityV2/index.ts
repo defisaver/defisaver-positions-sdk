@@ -200,20 +200,46 @@ export const getAllMarketsUnbackedDebts = async (markets: Record<LiquityV2Versio
 };
 
 export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, allMarketsUnbackedDebts: Record<LiquityV2Versions, string>, interestRateDebtInFront: string): string => {
-  const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
-  if (selectedMarketUnbackedDebt.eq(0)) return 'N/A';
+  // Sanity check to avoid division by 0. Very unlikely to ever happen.
+  const selectedMarketTotalBorrow = new Dec(markets[selectedMarket].assetsData[LiquityV2Markets(NetworkNumber.Eth)[selectedMarket].debtToken].totalBorrow);
+  if (selectedMarketTotalBorrow.eq(0)) return new Dec(0).toString();
 
-  const amountBeingReedemedOnEachMarket = Object.entries(markets).map(([version, market]) => {
+  const selectedMarketUnbackedDebt = new Dec(allMarketsUnbackedDebts[selectedMarket]);
+  const totalUnbackedDebt = Object.values(allMarketsUnbackedDebts).reduce((acc, val) => acc.plus(new Dec(val)), new Dec(0));
+
+  // When totalUnbackedDebt is 0, redemptions will be proportional with the branch size and not to unbacked debt.
+  // When unbacked debt is 0 for branch, next redemption call won't touch that branch, so in order to estimate total debt in front we will:
+  // - First add up all the unbacked debt from other branches, as that will be the only debt that will be redeemed on the fist redemption call
+  // - Perform split the same way as we would do when totalUnbackedDebt == 0, this would represent the second call to the redemption function
+  if (selectedMarketUnbackedDebt.eq(0)) {
+    // Special case if the branch debt in front is 0, it means that all debt in front is unbacked debt from other branches.
+    if (new Dec(interestRateDebtInFront).eq(0)) return totalUnbackedDebt.toString();
+
+    // Then calculate how much of that estimated amount would go to each branch
+    const amountBeingRedeemedOnEachMarketByTotalBorrow = Object.entries(markets).map(([version, market]) => {
+      if (version === selectedMarket) return new Dec(interestRateDebtInFront);
+      const { assetsData } = market;
+      const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
+      const totalBorrow = new Dec(assetsData[debtToken].totalBorrow);
+      const amountToRedeem = new Dec(interestRateDebtInFront).mul(totalBorrow).div(selectedMarketTotalBorrow);
+      return Dec.min(amountToRedeem, totalBorrow);
+    });
+
+    const redemptionAmount = amountBeingRedeemedOnEachMarketByTotalBorrow.reduce((acc, val) => acc.plus(val), new Dec(0));
+    return totalUnbackedDebt.plus(redemptionAmount).toString();
+  }
+
+  const amountBeingRedeemedOnEachMarketByUnbackedDebt = Object.entries(markets).map(([version, market]) => {
     if (version === selectedMarket) return new Dec(interestRateDebtInFront);
     const { assetsData } = market;
     const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
     const unbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
     const totalBorrow = new Dec(assetsData[debtToken].totalBorrow);
-    const amountToReedem = new Dec(interestRateDebtInFront).mul(unbackedDebt).div(selectedMarketUnbackedDebt);
-    return Dec.min(amountToReedem, totalBorrow);
+    const amountToRedeem = new Dec(interestRateDebtInFront).mul(unbackedDebt).div(selectedMarketUnbackedDebt);
+    return Dec.min(amountToRedeem, totalBorrow);
   });
 
-  return amountBeingReedemedOnEachMarket.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
+  return amountBeingRedeemedOnEachMarketByUnbackedDebt.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
 export const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, web3: Web3, network: NetworkNumber, viewContract: any, troveId: string) => {
