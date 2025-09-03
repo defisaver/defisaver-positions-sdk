@@ -12,11 +12,13 @@ describe('Aave v3', () => {
   let providerBase: EthereumProvider;
   let providerOpt: EthereumProvider;
   let providerArb: EthereumProvider;
+  let providerLinea: EthereumProvider;
   before(async () => {
     provider = getProvider('RPC');
     providerOpt = getProvider('RPCOPT');
     providerBase = getProvider('RPCBASE');
     providerArb = getProvider('RPCARB');
+    providerLinea = getProvider('RPCLINEA');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveVersions.AaveV3) => {
@@ -214,5 +216,36 @@ describe('Aave v3', () => {
     const network = NetworkNumber.Base;
 
     await fetchAccountBalances(network, providerBase, 4256022);
+  });
+
+  // Linea
+
+  it('can fetch market and account data for Linea', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Linea;
+
+    const marketData = await fetchMarketData(network, providerLinea);
+    await fetchAccountData(network, providerLinea, marketData);
+  });
+
+  it('can fetch full position data for Linea', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Linea;
+
+    await fetchFullPositionData(network, providerLinea);
+  });
+
+  it('can fetch latest account balances for Linea', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Linea;
+
+    await fetchAccountBalances(network, providerLinea, 'latest');
+  });
+
+  it('can fetch past account balances for Linea', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Linea;
+
+    await fetchAccountBalances(network, providerLinea, 22819963);
   });
 });
