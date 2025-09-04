@@ -59,7 +59,6 @@ export const getConfigContractAbi = <TKey extends ConfigKey>(name: TKey, network
 
 export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: HexString) => (client: Client, network: NetworkNumber, block?: Blockish) => {
   const address = (_address || getConfigContractAddress(name, network, block));
-  console.log(address);
   const abi = getConfigContractAbi(name, network, block) as typeof configRaw[TKey]['abi'];
   return getContract({
     address,
