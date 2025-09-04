@@ -21,7 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.6.29-dev-linea-3",
+    "@defisaver/tokens": "^1.6.29-dev-linea-4",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.6.0",
