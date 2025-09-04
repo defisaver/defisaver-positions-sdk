@@ -64,7 +64,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
 
   const isL2 = isLayer2Network(network);
-
+  console.log(_addresses);
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
