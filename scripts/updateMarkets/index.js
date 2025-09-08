@@ -1,5 +1,5 @@
 import {
-  arbitrum, base, mainnet, optimism,
+  arbitrum, base, mainnet, optimism, linea,
 } from 'viem/chains';
 
 const path = require('path');
@@ -32,6 +32,8 @@ const getViemChain = (chainId) => {
       return arbitrum;
     case 8453:
       return base;
+    case 59144:
+      return linea;
     default:
       throw new Error(`Unsupported network: ${chainId}`);
   }
@@ -47,6 +49,8 @@ const getRpc = (chainId) => {
       return process.env.RPCARB;
     case 8453:
       return process.env.RPCBASE;
+    case 59144:
+      return process.env.RPCLINEA;
     default:
       throw new Error(`Unsupported network: ${chainId}`);
   }
