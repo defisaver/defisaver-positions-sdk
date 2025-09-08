@@ -8,4 +8,5 @@ export const sparkAssetsDefaultMarket = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Arb]: [],
+  [NetworkNumber.Linea]: [],
 } as const;

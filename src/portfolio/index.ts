@@ -38,7 +38,7 @@ import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<PortfolioPositionsData> {
   const isMainnet = network === NetworkNumber.Eth;
-  const isOpt = network === NetworkNumber.Opt;
+  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -142,7 +142,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     }),
     ...addresses.map(async (address) => {
       try {
-        if (isOpt) return; // Fluid is not available on Optimism
+        if (!isFluidSupported) return; // Fluid is not available on Optimism
         const userPositions = await _getUserPositionsPortfolio(client, network, address);
         for (const position of userPositions) {
           if (new Dec(position.userData.suppliedUsd).gt(0)) {
