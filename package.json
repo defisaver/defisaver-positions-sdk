@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "2.0.14",
+  "version": "2.0.15-dev",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
