@@ -74,6 +74,7 @@ export interface IncentiveData {
   token: string,
   apy: string,
   incentiveKind?: 'staking' | 'reward';
+  description?: string;
 }
 
 export interface AaveV3AssetData extends AaveAssetData {
@@ -89,8 +90,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFlashLoanEnabled: boolean,
   assetId: string | number | null,
   liquidationBonus: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
