@@ -9,7 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.5.5",
+    "@defisaver/tokens": "^1.7.1",
     "lodash": "^4.17.21",
     "magicast": "0.3.2",
     "ts-morph": "^21.0.1",

@@ -1,16 +1,14 @@
+import path from 'path';
+import { loadFile, writeFile, detectCodeFormat } from 'magicast';
+import differenceWith from 'lodash/differenceWith';
+import { getAssetInfoByAddress } from '@defisaver/tokens';
 import {
   arbitrum, base, mainnet, optimism, linea,
 } from 'viem/chains';
-
-const path = require('path');
-const { loadFile, writeFile, detectCodeFormat } = require('magicast');
-const differenceWith = require('lodash/differenceWith');
-const { getAssetInfoByAddress } = require('@defisaver/tokens');
-
-const {
+import {
   createPublicClient, http, getContract,
-} = require('viem');
-const {
+} from 'viem';
+import {
   AaveProtocolDataProvider,
   AaveV3ProtocolDataProvider,
   SparkProtocolDataProvider,
@@ -20,7 +18,7 @@ const {
   cUSDCv3,
   cETHv3,
   cUSDTv3,
-} = require('../../src/config/contracts');
+} from '../../src/config/contracts';
 
 const getViemChain = (chainId) => {
   switch (chainId) {
