@@ -108,7 +108,7 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
       .filter((o: any) => o.liveCampaigns > 0);
     return relevantOpportunities.reduce((acc, opportunity) => {
       const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
-      const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
+      const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
       if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
         const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;
         if (!acc[supplyAToken]) acc[supplyAToken] = {};
