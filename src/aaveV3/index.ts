@@ -26,7 +26,7 @@ import {
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveEligibilityId, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getMeritCampaigns } from './merit';
@@ -179,22 +179,21 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
 
     if (isStakingAsset) {
-      _market.incentiveSupplyApy = await getStakingApy(_market.symbol);
-      _market.incentiveSupplyToken = _market.symbol;
+      const yieldApy = await getStakingApy(_market.symbol);
       _market.supplyIncentives.push({
         apy: _market.incentiveSupplyApy || '0',
         token: _market.symbol,
-        incentiveKind: 'staking',
+        incentiveKind: IncentiveKind.Staking,
         description: `Native ${_market.symbol} yield.`,
       });
       if (_market.canBeBorrowed) {
         // when borrowing assets whose value increases over time
-        _market.incentiveBorrowApy = new Dec(_market.incentiveSupplyApy).mul(-1).toString();
+        _market.incentiveBorrowApy = new Dec(yieldApy).mul(-1).toString();
         _market.incentiveBorrowToken = _market.symbol;
         _market.borrowIncentives.push({
           apy: _market.incentiveBorrowApy,
           token: _market.incentiveBorrowToken,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
           description: `Due to the native yield of ${_market.symbol}, the value of the debt would increase over time.`,
         });
       }
@@ -202,23 +201,29 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
 
     const aTokenAddress = (_market as any).aTokenAddress.toLowerCase(); // DEV: Should aTokenAddress be in AaveV3AssetData type?
     if (merkleRewardsMap[aTokenAddress]?.supply) {
-      const { apy, rewardTokenSymbol, description } = merkleRewardsMap[aTokenAddress].supply;
+      const {
+        apy, rewardTokenSymbol, description, identifier,
+      } = merkleRewardsMap[aTokenAddress].supply;
       _market.supplyIncentives.push({
         apy,
         token: rewardTokenSymbol,
-        incentiveKind: 'reward',
+        incentiveKind: IncentiveKind.Reward,
         description,
+        eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
 
     const vTokenAddress = (_market as any).vTokenAddress.toLowerCase(); // DEV: Should vTokenAddress be in AaveV3AssetData type?
     if (merkleRewardsMap[vTokenAddress]?.borrow) {
-      const { apy, rewardTokenSymbol, description } = merkleRewardsMap[vTokenAddress].borrow;
+      const {
+        apy, rewardTokenSymbol, description, identifier,
+      } = merkleRewardsMap[vTokenAddress].borrow;
       _market.borrowIncentives.push({
         apy,
         token: rewardTokenSymbol,
-        incentiveKind: 'reward',
+        incentiveKind: IncentiveKind.Reward,
         description,
+        eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
 
@@ -264,7 +269,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         _market.supplyIncentives.push({
           token: getAaveUnderlyingSymbol(supplyRewardData.rewardTokenSymbol),
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
           description: 'Eligible for protocol-level incentives.',
         });
       }
@@ -289,7 +294,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         _market.borrowIncentives.push({
           token: getAaveUnderlyingSymbol(borrowRewardData.rewardTokenSymbol),
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
           description: 'Eligible for protocol-level incentives.',
         });
       }

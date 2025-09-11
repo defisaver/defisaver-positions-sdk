@@ -69,7 +69,7 @@ type MerklOpportunity = {
   };
 };
 
-type RewardInfo = { apy: string; rewardTokenSymbol: string, description: string };
+type RewardInfo = { apy: string; rewardTokenSymbol: string, description: string, identifier: string };
 type MerkleRewardMap = Record<EthAddress, { supply?: RewardInfo; borrow?: RewardInfo }>;
 
 export const getAaveUnderlyingSymbol = (_symbol = '') => {
@@ -104,10 +104,11 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
     const opportunities = await res.json() as MerklOpportunity[];
     const relevantOpportunities = opportunities
-      .filter((o: any) => o.chainId === chainId)
-      .filter((o: any) => o.liveCampaigns > 0);
+      .filter((o: MerklOpportunity) => o.chainId === chainId)
+      .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
     return relevantOpportunities.reduce((acc, opportunity) => {
       const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
+      if (rewardToken.symbol === 'aEthUSDe') console.log(opportunity.identifier);
       const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
       if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
         const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;
@@ -117,6 +118,7 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
           // rewardToken: rewardToken.address,
           rewardTokenSymbol: rewardToken.symbol,
           description,
+          identifier: opportunity.identifier,
         };
       }
       if (opportunity.action === OpportunityAction.BORROW && opportunity.explorerAddress) {
@@ -127,6 +129,7 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
           // rewardToken: rewardToken.address,
           rewardTokenSymbol: rewardToken.symbol,
           description,
+          identifier: opportunity.identifier,
         };
       }
       return acc;
