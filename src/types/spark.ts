@@ -1,8 +1,8 @@
 import {
   EthAddress,
+  IncentiveData,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
-import { IncentiveData } from './aave';
 
 export enum SparkVersions {
   SparkV1 = 'v1default',

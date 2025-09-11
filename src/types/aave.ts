@@ -1,4 +1,5 @@
 import {
+  IncentiveData,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -68,13 +69,6 @@ export interface AaveAssetData extends MMAssetData {
 export interface AaveV2AssetData extends AaveAssetData {
   priceInEth: string,
   isFrozen: boolean,
-}
-
-export interface IncentiveData {
-  token: string,
-  apy: string,
-  incentiveKind?: 'staking' | 'reward';
-  description?: string;
 }
 
 export interface AaveV3AssetData extends AaveAssetData {
