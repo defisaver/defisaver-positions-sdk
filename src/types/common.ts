@@ -1,3 +1,20 @@
+export enum IncentiveKind {
+  Staking = 'staking',
+  Reward = 'reward',
+}
+
+export enum IncentiveEligibilityId {
+  AaveV3EthenaLiquidLeverage = '0x8772bb231f3af13ead41d7ecf6abd60f5f716ec8BORROW_BL',
+}
+
+export interface IncentiveData {
+  token: string,
+  apy: string,
+  incentiveKind?: IncentiveKind;
+  description?: string;
+  eligibilityId?: IncentiveEligibilityId;
+}
+
 // General
 export type EthAddress = HexString;
 export type Blockish = number | 'latest';
@@ -34,6 +51,8 @@ export interface MMAssetData {
   incentiveSupplyToken?: string,
   borrowRateP2P?: string,
   supplyRateP2P?: string,
+  supplyIncentives?: IncentiveData[];
+  borrowIncentives?: IncentiveData[];
 }
 
 export interface MMAssetsData {

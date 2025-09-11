@@ -106,7 +106,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
     usedAssets,
     assetsData,
-    isAave: true,
   });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
