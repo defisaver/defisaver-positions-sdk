@@ -104,8 +104,8 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
     const opportunities = await res.json() as MerklOpportunity[];
     const relevantOpportunities = opportunities
-      .filter((o: any) => o.chainId === chainId)
-      .filter((o: any) => o.liveCampaigns > 0);
+      .filter((o: MerklOpportunity) => o.chainId === chainId)
+      .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
     return relevantOpportunities.reduce((acc, opportunity) => {
       const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
       const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;

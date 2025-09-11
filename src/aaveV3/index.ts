@@ -177,8 +177,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
 
     if (isStakingAsset) {
-      _market.incentiveSupplyApy = await getStakingApy(_market.symbol);
-      _market.incentiveSupplyToken = _market.symbol;
+      const yieldApy = await getStakingApy(_market.symbol);
       _market.supplyIncentives.push({
         apy: _market.incentiveSupplyApy || '0',
         token: _market.symbol,
@@ -187,7 +186,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       });
       if (_market.canBeBorrowed) {
         // when borrowing assets whose value increases over time
-        _market.incentiveBorrowApy = new Dec(_market.incentiveSupplyApy).mul(-1).toString();
+        _market.incentiveBorrowApy = new Dec(yieldApy).mul(-1).toString();
         _market.incentiveBorrowToken = _market.symbol;
         _market.borrowIncentives.push({
           apy: _market.incentiveBorrowApy,
