@@ -29,11 +29,10 @@ Record<string, {
 > = {
   [NetworkNumber.Eth]: {
     [AaveVersions.AaveV3]: {
-      // 'ethereum-sgho': { supplyTokens: ['sGHO'], rewardTokenSymbol: 'sGHO', action: 'stake' },
-      // 'ethereum-stkgho': { supplyTokens: ['stkGHO'], rewardTokenSymbol: 'stkGHO', action: 'stake' },
       'ethereum-supply-ethx': { rewardTokenSymbol: 'SD', action: 'supply', supplyTokens: ['ETHx'] },
       'ethereum-supply-rlusd': { rewardTokenSymbol: 'aEthRLUSD', action: 'supply', supplyTokens: ['RLUSD'] },
-      'ethereum-borrow-eurc': { rewardTokenSymbol: 'aEthEURC', action: 'borrow', borrowTokens: ['EURC'] },
+      // Campaign disabled here as it's present on Merkl API:
+      // 'ethereum-borrow-eurc': { rewardTokenSymbol: 'aEthEURC', action: 'borrow', borrowTokens: ['EURC'] },
     },
     [AaveVersions.AaveV3Lido]: {},
     [AaveVersions.AaveV3Etherfi]: {},
@@ -49,28 +48,6 @@ Record<string, {
       'base-borrow-usdc': { rewardTokenSymbol: 'USDC', action: 'borrow', borrowTokens: ['USDC'] },
       'base-borrow-gho': { rewardTokenSymbol: 'GHO', action: 'borrow', borrowTokens: ['GHO'] },
       'base-borrow-eurc': { rewardTokenSymbol: 'EURC', action: 'borrow', borrowTokens: ['EURC'] },
-      // DEV: Campaigns for specific users, no APY:
-      // 'base-supply-usdc': { rewardTokenSymbol: 'USDC', action: 'supply' },
-      // 'base-supply-gho': { rewardTokenSymbol: 'GHO', action: 'supply' },
-      // 'base-supply-cbbtc-borrow-multiple': {
-      //   rewardTokenSymbol: 'cbBTC',
-      //   action: 'supply',
-      //   message: 'You must supply cbBTC and borrow USDC, GHO, EURC or wETH to receive Merit rewards. Holding some assets or positions on other protocols may impact the amount of rewards you are eligible for. Please check the forum post for the full eligibility criteria.',
-      //   supplyTokens: ['cbBTC'],
-      //   borrowTokens: ['USDC', 'GHO', 'EURC', 'ETH'],
-      // },
-      // 'base-supply-wsteth-borrow-multiple': {
-      //   rewardTokenSymbol: 'wstETH',
-      //   action: 'supply',
-      //   message: 'You must supply wstETH and borrow USDC, GHO, EURC or wETH to receive Merit rewards. Holding some assets or positions on other protocols may impact the amount of rewards you are eligible for. Please check the forum post for the full eligibility criteria.',
-      //   supplyTokens: ['wstETH'],
-      //   borrowTokens: ['USDC', 'GHO', 'EURC', 'ETH'],
-      // },
-      // 'base-supply-eth-borrow-multiple': {
-      //   rewardTokenSymbol: 'ETH',
-      //   action: 'supply',
-      //   message: 'Supplying ETH alone earns 1.25%, supplying ETH and borrowing USDC or EURC earns 1.50%, supplying ETH and borrowing GHO earns 1.75%. Some assets holding or positions on other protocols may impact the amount of rewards you are eligible for. Please check the forum post for the full eligibility criteria.',
-      // },
     },
   },
   [NetworkNumber.Linea]: {
