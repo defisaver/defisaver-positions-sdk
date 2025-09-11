@@ -29,7 +29,7 @@ import {
   Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
-import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkle';
+import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkl';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -162,6 +162,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         isolationModeBorrowingEnabled: tokenMarket.isolationModeBorrowingEnabled,
         isFlashLoanEnabled: tokenMarket.isFlashLoanEnabled,
         aTokenAddress: tokenMarket.aTokenAddress,
+        vTokenAddress: tokenMarket.debtTokenAddress,
         supplyIncentives: [],
         borrowIncentives: [],
       });
@@ -208,16 +209,16 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       });
     }
 
-    // const aTokenDebtAddress = '0xTODO'; // variableDebtTokenAddress is not in loanInfo ATM
-    // if (merkleRewardsMap[aTokenDebtAddress]?.supply) {
-    //   const { apy, rewardTokenSymbol, description } = merkleRewardsMap[aTokenDebtAddress].supply;
-    //   _market.borrowIncentives.push({
-    //     apy,
-    //     token: rewardTokenSymbol,
-    //     incentiveKind: 'reward',
-    //     description,
-    //   });
-    // }
+    const vTokenAddress = (_market as any).vTokenAddress.toLowerCase(); // DEV: Should vTokenAddress be in AaveV3AssetData type?
+    if (merkleRewardsMap[vTokenAddress]?.borrow) {
+      const { apy, rewardTokenSymbol, description } = merkleRewardsMap[vTokenAddress].borrow;
+      _market.borrowIncentives.push({
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: 'reward',
+        description,
+      });
+    }
 
     if (!rewardForMarket) return;
     // @ts-ignore
