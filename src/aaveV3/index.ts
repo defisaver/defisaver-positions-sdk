@@ -29,6 +29,7 @@ import {
   Blockish, EthAddress, EthereumProvider, IncentiveEligibilityId, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { getMeritCampaigns } from './merit';
 import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkl';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
@@ -71,12 +72,13 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea];
 
   // eslint-disable-next-line prefer-const
-  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap] = await Promise.all([
+  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.isBorrowAllowed([marketAddress], setViemBlockNumber(blockNumber)), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null,
     getMerkleCampaigns(network),
+    getMeritCampaigns(network, market.value),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
@@ -222,6 +224,26 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         incentiveKind: IncentiveKind.Reward,
         description,
         eligibilityId: identifier as IncentiveEligibilityId,
+      });
+    }
+
+    if (meritRewardsMap.supply[_market.symbol]) {
+      const { apy, rewardTokenSymbol, description } = meritRewardsMap.supply[_market.symbol];
+      _market.supplyIncentives.push({
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
+      });
+    }
+
+    if (meritRewardsMap.borrow[_market.symbol]) {
+      const { apy, rewardTokenSymbol, description } = meritRewardsMap.borrow[_market.symbol];
+      _market.borrowIncentives.push({
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
       });
     }
 
