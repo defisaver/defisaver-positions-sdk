@@ -232,7 +232,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       _market.supplyIncentives.push({
         apy,
         token: rewardTokenSymbol,
-        incentiveKind: 'reward',
+        incentiveKind: IncentiveKind.Reward,
         description,
       });
     }
@@ -242,7 +242,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       _market.borrowIncentives.push({
         apy,
         token: rewardTokenSymbol,
-        incentiveKind: 'reward',
+        incentiveKind: IncentiveKind.Reward,
         description,
       });
     }
