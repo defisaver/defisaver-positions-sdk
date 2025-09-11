@@ -29,7 +29,7 @@ import {
   Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
-import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './rewards';
+import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkle';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -199,9 +199,9 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
 
     const aTokenAddress = (_market as any).aTokenAddress.toLowerCase(); // DEV: Should aTokenAddress be in AaveV3AssetData type?
     if (merkleRewardsMap[aTokenAddress]?.supply) {
-      const { apr, rewardTokenSymbol, description } = merkleRewardsMap[aTokenAddress].supply;
+      const { apy, rewardTokenSymbol, description } = merkleRewardsMap[aTokenAddress].supply;
       _market.supplyIncentives.push({
-        apy: aprToApy(apr),
+        apy,
         token: rewardTokenSymbol,
         incentiveKind: 'reward',
         description,
@@ -210,9 +210,9 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
 
     // const aTokenDebtAddress = '0xTODO'; // variableDebtTokenAddress is not in loanInfo ATM
     // if (merkleRewardsMap[aTokenDebtAddress]?.supply) {
-    //   const { apr, rewardTokenSymbol, description } = merkleRewardsMap[aTokenDebtAddress].supply;
+    //   const { apy, rewardTokenSymbol, description } = merkleRewardsMap[aTokenDebtAddress].supply;
     //   _market.borrowIncentives.push({
-    //     apy: aprToApy(apr),
+    //     apy,
     //     token: rewardTokenSymbol,
     //     incentiveKind: 'reward',
     //     description,

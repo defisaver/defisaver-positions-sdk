@@ -1,3 +1,4 @@
+import { aprToApy } from '../moneymarket';
 import { DEFAULT_TIMEOUT, wethToEth } from '../services/utils';
 import { EthAddress, NetworkNumber } from '../types/common';
 
@@ -25,6 +26,7 @@ type MerklOpportunity = {
   tags: [];
   id: string;
   explorerAddress?: EthAddress;
+  description?: string;
   tokens: {
     id: string;
     name: string;
@@ -46,7 +48,7 @@ type MerklOpportunity = {
         id: string;
         name: string;
         chainId: number;
-        address: string;
+        address: EthAddress;
         decimals: number;
         symbol: string;
         displaySymbol: string;
@@ -67,7 +69,7 @@ type MerklOpportunity = {
   };
 };
 
-type RewardInfo = { apr: number; rewardToken: EthAddress; rewardTokenSymbol: string, description: string };
+type RewardInfo = { apy: string; rewardTokenSymbol: string, description: string };
 type MerkleRewardMap = Record<EthAddress, { supply?: RewardInfo; borrow?: RewardInfo }>;
 
 export const getAaveUnderlyingSymbol = (_symbol = '') => {
@@ -83,6 +85,17 @@ export const getAaveUnderlyingSymbol = (_symbol = '') => {
   return wethToEth(symbol);
 };
 
+/**
+ * aEthLidoUSDC -> aUSDC
+ * USDC -> USDC
+ */
+export const formatAaveAsset = (_symbol: string) => {
+  if (_symbol.startsWith('a')) {
+    return `a${getAaveUnderlyingSymbol(_symbol)}`;
+  }
+  return _symbol;
+};
+
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
     const res = await fetch('https://api.merkl.xyz/v4/opportunities?mainProtocolId=aave', {
@@ -93,26 +106,27 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
     const relevantOpportunities = opportunities
       .filter((o: any) => o.chainId === chainId)
       .filter((o: any) => o.liveCampaigns > 0);
-    return relevantOpportunities.reduce((acc: any, opportunity: any) => {
+    return relevantOpportunities.reduce((acc, opportunity) => {
       const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
-      if (opportunity.action === OpportunityAction.LEND) {
-        const supplyAToken = opportunity.explorerAddress.toLowerCase() as EthAddress;
+      const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
+      if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
+        const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;
         if (!acc[supplyAToken]) acc[supplyAToken] = {};
         acc[supplyAToken].supply = {
-          apr: opportunity.apr,
-          rewardToken: rewardToken.address,
-          rewardTokenSymbol: getAaveUnderlyingSymbol(rewardToken.symbol),
-          description: `Eligible for incentives through Merkl. \n${opportunity.description}`,
+          apy: aprToApy(opportunity.apr),
+          // rewardToken: rewardToken.address,
+          rewardTokenSymbol: rewardToken.symbol,
+          description,
         };
       }
-      if (opportunity.action === OpportunityAction.BORROW) {
-        const borrowAToken = opportunity.explorerAddress.toLowerCase() as EthAddress;
+      if (opportunity.action === OpportunityAction.BORROW && opportunity.explorerAddress) {
+        const borrowAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;
         if (!acc[borrowAToken]) acc[borrowAToken] = {};
         acc[borrowAToken].borrow = {
-          apr: opportunity.apr,
-          rewardToken: rewardToken.address,
-          rewardTokenSymbol: getAaveUnderlyingSymbol(rewardToken.symbol),
-          description: `Eligible for incentives through Merkl. \n${opportunity.description}`,
+          apy: aprToApy(opportunity.apr),
+          // rewardToken: rewardToken.address,
+          rewardTokenSymbol: rewardToken.symbol,
+          description,
         };
       }
       return acc;
