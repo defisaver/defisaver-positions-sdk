@@ -45,14 +45,10 @@ export interface MMAssetData {
   canBeBorrowed: boolean,
   canBeSupplied: boolean,
   totalBorrow: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
   borrowRateP2P?: string,
   supplyRateP2P?: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export interface MMAssetsData {

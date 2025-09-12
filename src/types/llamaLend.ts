@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, IncentiveData, NetworkNumber } from './common';
 import { BandData, UserBandData } from './curveUsd';
 
 export enum LLVersionsEth {
@@ -71,6 +71,8 @@ export interface LlamaLendAssetData {
   canBeSupplied?: boolean,
   canBeBorrowed?: boolean,
   shares?: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
 }
 
 export type LlamaLendAssetsData = { [key: string]: LlamaLendAssetData };
