@@ -17,8 +17,6 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-        with:
-          ref: 'main'
 
       - name: Set node version
         uses: actions/setup-node@v4
