@@ -70,7 +70,7 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
 
   const payload: CompoundV3AssetsData = {};
 
-  const baseObj = { ...base, ...getIncentiveApys(base, compPrice) };
+  const baseObj = { ...base, ...(await getIncentiveApys(base, compPrice)) };
   const allAssets = [baseObj, ...colls];
 
   allAssets

@@ -3,12 +3,14 @@ import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisave
 import {
   BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundVersions,
 } from '../../types';
-import { getEthAmountForDecimals, handleWbtcLegacy, wethToEth } from '../../services/utils';
+import {
+  addToArrayIf, getEthAmountForDecimals, handleWbtcLegacy, wethToEth,
+} from '../../services/utils';
 import { BLOCKS_IN_A_YEAR, borrowOperations, SECONDS_PER_YEAR } from '../../constants';
 import {
   aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
-import { calculateNetApy } from '../../staking';
+import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../../staking';
 import {
   EthAddress, EthereumProvider, IncentiveData, IncentiveKind, NetworkNumber,
 } from '../../types/common';
@@ -78,24 +80,37 @@ export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice
   });
 };
 
-export const getIncentiveApys = (
+export const getIncentiveApys = async (
   baseData: CompoundV3AssetData & BaseAdditionalAssetData,
   compPrice: string,
-): {
+): Promise<{
   supplyIncentives: IncentiveData[],
   borrowIncentives: IncentiveData[],
-} => ({
+}> => ({
   supplyIncentives: [{
     token: 'COMP',
     apy: aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardSupplySpeed * +compPrice) / +baseData.price / +baseData.totalSupply).toString(),
     incentiveKind: IncentiveKind.Reward,
     description: 'Eligible for protocol-level COMP incentives.',
-  }],
+  },
+  ...addToArrayIf(STAKING_ASSETS.includes(baseData.symbol), {
+    apy: await getStakingApy(baseData.symbol),
+    token: baseData.symbol,
+    incentiveKind: IncentiveKind.Staking,
+    description: `Native ${baseData.symbol} yield.`,
+  }),
+  ],
   borrowIncentives: [{
     token: 'COMP',
     apy: aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardBorrowSpeed * +compPrice) / +baseData.price / +baseData.totalBorrow).toString(),
     incentiveKind: IncentiveKind.Reward,
     description: 'Eligible for protocol-level COMP incentives.',
+    ...addToArrayIf(STAKING_ASSETS.includes(baseData.symbol), {
+      apy: new Dec(await getStakingApy(baseData.symbol)).mul(-1).toString(),
+      token: baseData.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${baseData.symbol} yield.`,
+    }),
   }],
 });
 
