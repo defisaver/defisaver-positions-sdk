@@ -145,10 +145,10 @@ export const calculateNetApy = ({
         if (eligibilityCheck) {
           const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
           const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
-          acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         } else {
           const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
-          acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         }
       }
     }
