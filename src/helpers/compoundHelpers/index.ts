@@ -105,13 +105,14 @@ export const getIncentiveApys = async (
     apy: aprToApy((100 * SECONDS_PER_YEAR * +baseData.rewardBorrowSpeed * +compPrice) / +baseData.price / +baseData.totalBorrow).toString(),
     incentiveKind: IncentiveKind.Reward,
     description: 'Eligible for protocol-level COMP incentives.',
-    ...addToArrayIf(STAKING_ASSETS.includes(baseData.symbol), {
-      apy: new Dec(await getStakingApy(baseData.symbol)).mul(-1).toString(),
-      token: baseData.symbol,
-      incentiveKind: IncentiveKind.Staking,
-      description: `Native ${baseData.symbol} yield.`,
-    }),
-  }],
+  },
+  ...addToArrayIf(STAKING_ASSETS.includes(baseData.symbol), {
+    apy: new Dec(await getStakingApy(baseData.symbol)).mul(-1).toString(),
+    token: baseData.symbol,
+    incentiveKind: IncentiveKind.Staking,
+    description: `Due to the native yield of ${baseData.symbol}, the value of the debt would increase over time.`,
+  }),
+  ],
 });
 
 export const getCompoundV2AggregatedData = ({
