@@ -381,6 +381,8 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     borrowRate,
     supplyRate,
     oraclePrice,
+    incentiveSupplyRate: collAssetData.supplyIncentives[0]?.apy || '0',
+    incentiveBorrowRate: debtAssetData.borrowIncentives[0]?.apy || '0',
   };
 
   return {
