@@ -2,11 +2,7 @@
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { NetworkNumber } from '../types/common';
 import { aprToApy } from '../moneymarket';
-import { AaveVersions } from '../types';
-
-
-type RewardInfo = { apy: string; rewardTokenSymbol: string, description: string };
-type MeritTokenRewardMap = { supply: Record<string, RewardInfo>; borrow: Record<string, RewardInfo> };
+import { AaveVersions, MeritTokenRewardMap } from '../types';
 
 /**
  * Maps API keys to reward data & actions - hardcoded and needs to be maintained actively.
