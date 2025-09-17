@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, MMUsedAssets, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, MMAssetsData, MMUsedAssets, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContractViem,
@@ -11,7 +11,7 @@ import {
   MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
 } from '../types';
 import { USD_QUOTE, WAD } from '../constants';
-import { getStakingApy, STAKING_ASSETS } from '../staking';
+import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../staking';
 import { isMainnetNetwork, wethToEth } from '../services/utils';
 import {
   getBorrowRate, getMorphoBlueAggregatedPositionData, getRewardsForMarket, getSupplyRate,
@@ -184,16 +184,15 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
   const usedAssets: MMUsedAssets = {};
 
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
-  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets.toString(), marketInfo.loanToken);
   const loanTokenBorrowed = assetAmountInEth(loanInfo.borrowedInAssets.toString(), marketInfo.loanToken);
   usedAssets[marketInfo.loanToken] = {
     symbol: loanTokenInfo.symbol,
-    supplied: loanTokenSupplied,
+    supplied: '0',
     borrowed: loanTokenBorrowed,
-    isSupplied: new Dec(loanInfo.suppliedInAssets.toString()).gt(0),
+    isSupplied: false,
     isBorrowed: new Dec(loanInfo.borrowedInAssets.toString()).gt(0),
     collateral: false,
-    suppliedUsd: new Dec(loanTokenSupplied).mul(loanTokenInfo.price).toString(),
+    suppliedUsd: '0',
     borrowedUsd: new Dec(loanTokenBorrowed).mul(loanTokenInfo.price).toString(),
   };
 
@@ -220,4 +219,41 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
 
 export async function getMorphoBlueAccountData(provider: EthereumProvider, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBluePositionData> {
   return _getMorphoBlueAccountData(getViemProvider(provider, network), network, account, selectedMarket, marketInfo);
+}
+
+export async function getMorphoEarn(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo) {
+  const {
+    loanToken, collateralToken, oracle, irm, lltv,
+  } = selectedMarket;
+  const lltvInWei = new Dec(lltv).mul(WAD).toString();
+
+  const viewContract = MorphoBlueViewContractViem(provider, network);
+  const loanInfo = (await viewContract.read.getUserInfo([
+    {
+      loanToken, collateralToken, oracle, irm, lltv: BigInt(lltvInWei),
+    },
+    account]));
+
+  const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
+  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets.toString(), marketInfo.loanToken);
+
+  const usedAssets: MMUsedAssets = {
+    [marketInfo.loanToken]: {
+      symbol: loanTokenInfo.symbol,
+      supplied: loanTokenSupplied,
+      borrowed: '0',
+      isSupplied: new Dec(loanInfo.suppliedInAssets.toString()).gt(0),
+      isBorrowed: false,
+      collateral: false,
+      suppliedUsd: new Dec(loanTokenSupplied).mul(loanTokenInfo.price).toString(),
+      borrowedUsd: '0',
+    },
+  };
+
+  const { netApy } = calculateNetApy({ usedAssets, assetsData: marketInfo.assetsData as unknown as MMAssetsData });
+
+  return {
+    apy: netApy,
+    amount: loanTokenSupplied,
+  };
 }

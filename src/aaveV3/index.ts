@@ -2,7 +2,7 @@ import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tok
 import { Client } from 'viem';
 import Dec from 'decimal.js';
 import {
-  AaveIncentiveDataProviderV3ContractViem,
+  AaveIncentiveDataProviderV3ContractViem, AaveIncentivesControllerViem,
   AaveV3ViewContractViem,
   createViemContractFromConfigFunc,
 } from '../contracts';
@@ -26,7 +26,7 @@ import {
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, HexString, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
@@ -337,7 +337,8 @@ export const _getAaveV3AccountBalances = async (provider: Client, network: Netwo
   // @ts-ignore
   const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
+  // @ts-ignore
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
@@ -391,6 +392,8 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
 
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 
+  console.log(address, _addresses.slice(0, middleAddressIndex));
+  console.log(marketAddress, _addresses.slice(middleAddressIndex, _addresses.length));
   const [eModeCategory, tokenBalances1, tokenBalances2] = await Promise.all([
     lendingPoolContract.read.getUserEMode([address], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex) as EthAddress[]], setViemBlockNumber(blockNumber)),
@@ -485,4 +488,75 @@ export const getAaveV3FullPositionData = async (provider: EthereumProvider, netw
   const marketData = await getAaveV3MarketData(provider, network, market);
   const positionData = await getAaveV3AccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
+};
+
+// aTokens eligible for AAVE rewards
+export const REWARDABLE_ASSETS = [
+  '0x028171bCA77440897B824Ca71D1c56caC55b68A3', // DAI
+  '0x6C3c78838c761c6Ac7bE9F59fe808ea2A6E4379d',
+  '0xD37EE7e4f452C6638c96536e68090De8cBcdb583', // GUSD
+  '0x279AF5b99540c1A3A7E3CDd326e19659401eF99e',
+  '0xBcca60bB61934080951369a648Fb03DF4F96263C', // USDC
+  '0x619beb58998eD2278e08620f97007e1116D5D25b',
+  '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811', // USDT
+  '0x531842cEbbdD378f8ee36D171d6cC9C4fcf475Ec',
+  '0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656', // WBTC
+  '0x9c39809Dec7F95F5e0713634a4D0701329B3b4d2',
+  '0x030bA81f1c18d280636F32af80b9AAd02Cf0854e', // WETH
+  '0xF63B34710400CAd3e044cFfDcAb00a0f32E33eCf',
+  '0xa06bC25B5805d5F8d82847D191Cb4Af5A3e873E0', // LINK
+  '0x0b8f12b1788BFdE65Aa1ca52E3e9F3Ba401be16D',
+  '0x6C5024Cd4F8A59110119C56f8933403A539555EB', // SUSD
+  '0xdC6a3Ab17299D9C2A412B0e0a4C1f55446AE0817',
+  '0x5165d24277cD063F5ac44Efd447B27025e888f37', // YFI
+  '0x7EbD09022Be45AD993BAA1CEc61166Fcc8644d97',
+  '0xF256CC7847E919FAc9B808cC216cAc87CCF2f47a', // xSUSHI
+  '0xfAFEDF95E21184E3d880bd56D4806c4b8d31c69A',
+  '0xB9D7CB55f463405CDfBe4E90a6D2Df01C2B92BF1', // UNI
+  '0x5BdB050A92CADcCfCDcCCBFC17204a1C9cC0Ab73',
+  '0xc713e5E149D5D0715DcD1c156a020976e7E56B88', // MKR
+  '0xba728eAd5e496BE00DCF66F650b6d7758eCB50f8',
+  '0x101cc05f4A51C0319f570d5E146a8C625198e636', // TUSD
+  '0x01C0eb1f8c6F1C1bF74ae028697ce7AA2a8b0E92',
+  '0xc9BC48c72154ef3e5425641a3c747242112a46AF', // RAI
+  '0xB5385132EE8321977FfF44b60cDE9fE9AB0B4e6b',
+  '0x272F97b7a56a387aE942350bBC7Df5700f8a4576', // BAL
+  '0x13210D4Fe0d5402bd7Ecbc4B5bC5cFcA3b71adB0',
+  '0x2e8f4bdbe3d47d7d7de490437aea9915d930f1a3', // USDP
+  '0xfdb93b3b10936cf81fa59a02a7523b6e2149b2b7',
+  '0xA361718326c15715591c299427c62086F69923D9', // BUSD
+  '0xbA429f7011c9fa04cDd46a2Da24dc0FF0aC6099c',
+  '0xd4937682df3C8aEF4FE912A96A74121C0829E664', // FRAX
+  '0xfE8F19B17fFeF0fDbfe2671F248903055AFAA8Ca',
+  '0x683923dB55Fead99A79Fa01A27EeC3cB19679cC3', // FEI
+  '0xC2e10006AccAb7B45D9184FcF5b7EC7763f5BaAe',
+  '0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1', // CRV
+  '0x00ad8eBF64F141f1C81e9f8f792d3d1631c6c684',
+  '0x6F634c6135D2EBD550000ac92F494F9CB8183dAe', // DPI
+  '0x4dDff5885a67E4EffeC55875a3977D7E60F82ae0',
+] as const;
+
+export const getStakeAaveData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+  const stkAaveAddress = getAssetInfo('stkAAVE').address;
+  const stkGhoAddress = getAssetInfo('stkGHO').address;
+
+  const AaveIncentivesController = AaveIncentivesControllerViem(provider, network);
+  const stkAAVE = createViemContractFromConfigFunc('Erc20', stkAaveAddress as HexString)(provider, network);
+  const stkGHO = createViemContractFromConfigFunc('Erc20', stkGhoAddress as HexString)(provider, network);
+
+
+  const [aaveRewardsBalance, stkAAVEBalance, stkGHOBalance] = await Promise.all([
+    AaveIncentivesController.read.getRewardsBalance([REWARDABLE_ASSETS, address]),
+    stkAAVE.read.balanceOf([address]),
+    stkGHO.read.balanceOf([address]),
+  ]);
+
+  return {
+    activatedCooldown: '0',
+    activatedCooldownAmount: '0',
+    stkAaveRewardsBalance: '0',
+    aaveRewardsBalance,
+    stkAaveBalance: stkAAVEBalance,
+    stkGhoBalance: stkGHOBalance,
+  };
 };
