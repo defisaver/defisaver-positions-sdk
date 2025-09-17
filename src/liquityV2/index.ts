@@ -286,8 +286,11 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
   return amountBeingRedeemedOnEachMarketByUnbackedDebt.reduce((acc, val) => acc.plus(val), new Dec(0)).toString();
 };
 
+// @dev The amount redeemed on each branch depends on the unbacked debt of every branch (the difference between total borrow and stability pool deposits).
+// When new debt is generated on the selected market, the unbacked debt will increase, resulting in a higher redemption amount on that branch.
+// This function accepts the new debt that's about to be generated (e.g., trove creation) and estimates the debt in front based on the new state.
 export const getDebtInFrontForInterestRateIncludingNewDebtLiquityV2 = async (newDebt: string, markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, interestRate: string) => {
-  const marketsWithNewDebt = JSON.parse(JSON.stringify(markets));
+  const marketsWithNewDebt = structuredClone(markets);
   const selectedMarketDebtToken = LiquityV2Markets(network)[selectedMarket].debtToken;
   const currentTotalBorrow = new Dec(marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow);
   marketsWithNewDebt[selectedMarket].assetsData[selectedMarketDebtToken].totalBorrow = currentTotalBorrow.add(newDebt).toString();
@@ -298,7 +301,6 @@ export const getDebtInFrontForInterestRateIncludingNewDebtLiquityV2 = async (new
 
   return calculateDebtInFrontLiquityV2(marketsWithNewDebt, selectedMarket, allMarketsUnbackedDebts, interestRateDebtInFront.toString());
 };
-
 
 const getDebtInFrontLiquityV2 = async (markets: Record<LiquityV2Versions, LiquityV2MarketData>, selectedMarket: LiquityV2Versions, provider: Client, network: NetworkNumber, viewContract: any, troveId: string) => {
   const { isLegacy } = LiquityV2Markets(NetworkNumber.Eth)[selectedMarket];
