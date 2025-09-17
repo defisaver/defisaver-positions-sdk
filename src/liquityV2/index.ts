@@ -255,12 +255,15 @@ export const calculateDebtInFrontLiquityV2 = (markets: Record<LiquityV2Versions,
     if (new Dec(interestRateDebtInFront).eq(0)) return totalUnbackedDebt.toString();
 
     // Then calculate how much of that estimated amount would go to each branch
+    // Second redemption call - calculate proportional redemption based on updated total debt
     const amountBeingRedeemedOnEachMarketByTotalBorrow = Object.entries(markets).map(([version, market]) => {
       const { isLegacy: isLegacyMarket } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
       if (version === selectedMarket && isLegacyMarket !== isLegacy) return new Dec(interestRateDebtInFront);
       const { assetsData } = market;
       const { debtToken } = LiquityV2Markets(NetworkNumber.Eth)[version as LiquityV2Versions];
-      const totalBorrow = new Dec(assetsData[debtToken].totalBorrow);
+      // For other markets, subtract their unbacked debt as it will be cleared in first redemption call
+      const marketUnbackedDebt = new Dec(allMarketsUnbackedDebts[version as LiquityV2Versions]);
+      const totalBorrow = new Dec(assetsData[debtToken].totalBorrow).sub(marketUnbackedDebt);
       const amountToRedeem = new Dec(interestRateDebtInFront).mul(totalBorrow).div(selectedMarketTotalBorrow);
       return Dec.min(amountToRedeem, totalBorrow);
     });
