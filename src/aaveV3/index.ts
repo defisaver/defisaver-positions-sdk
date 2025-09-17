@@ -509,3 +509,8 @@ export const getAaveV3FullPositionData = async (provider: EthereumProvider, netw
   const positionData = await getAaveV3AccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };
+
+export {
+  getMeritCampaigns,
+  getMerkleCampaigns,
+};
