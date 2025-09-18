@@ -32,6 +32,30 @@ export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
   return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
 };
 
+export const isEligibleForAaveV3ArbitrumEthSupply = (usedAssets: MMUsedAssets) => {
+  const ETHAmountSupplied = usedAssets.ETH?.suppliedUsd || '0';
+  const ETHAmountBorrowed = usedAssets.ETH?.borrowedUsd || '0';
+  const delta = new Dec(ETHAmountSupplied).sub(ETHAmountBorrowed).toString();
+
+  return { isEligible: true, eligibleUSDAmount: Dec.max(delta, 0).toString() };
+};
+
+export const isEligibleForAaveV3ArbitrumETHLSBorrow = (usedAssets: MMUsedAssets) => {
+  const allowedBorrowAssets = ['ETH'];
+  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
+  if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const allowedSupplyAssets = ['wstETH', 'ezETH', 'weETH', 'rsETH'];
+  const anythingSuppliedNotAllowed = Object.values(usedAssets).some((asset) => asset.isSupplied && !allowedSupplyAssets.includes(asset.symbol));
+  if (anythingSuppliedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const ETHAmountBorrowed = usedAssets.ETH?.borrowedUsd || '0';
+
+  return { isEligible: true, eligibleUSDAmount: ETHAmountBorrowed };
+};
+
 export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets: MMUsedAssets) => { isEligible: boolean; eligibleUSDAmount: string } } = {
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeverage]: isEligibleForEthenaUSDeRewards,
+  [IncentiveEligibilityId.AaveV3ArbitrumEthSupply]: isEligibleForAaveV3ArbitrumEthSupply,
+  [IncentiveEligibilityId.AaveV3ArbitrumETHLSBorrow]: isEligibleForAaveV3ArbitrumETHLSBorrow,
 };

@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, IncentiveData, NetworkNumber } from './common';
 
 export interface FluidMarketInfo {
   chainIds: number[]
@@ -193,10 +193,8 @@ export interface FluidAssetData {
   symbol: string,
   address: string,
   price: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
   totalSupply: string,
   totalBorrow: string,
   canBeSupplied: boolean,

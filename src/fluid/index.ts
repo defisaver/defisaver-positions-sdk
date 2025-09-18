@@ -4,7 +4,9 @@ import {
   AssetData, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
+import {
+  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
+} from '../types/common';
 import {
   FluidAggregatedVaultData,
   FluidAssetData, FluidAssetsData,
@@ -298,14 +300,18 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     canBeBorrowed: false,
     supplyRate,
     borrowRate: '0',
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
 
   if (STAKING_ASSETS.includes(collAsset.symbol)) {
-    collAssetData.incentiveSupplyApy = await getStakingApy(collAsset.symbol);
-    collAssetData.incentiveSupplyToken = collAsset.symbol;
+    collAssetData.supplyIncentives.push({
+      apy: await getStakingApy(collAsset.symbol),
+      token: collAssetData.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAssetData.symbol} yield.`,
+    });
   }
-
-  const incentiveSupplyRate = collAssetData.incentiveSupplyApy;
 
   const debtAssetData: FluidAssetData = {
     symbol: debtAsset.symbol,
@@ -317,13 +323,17 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     canBeBorrowed: true,
     supplyRate: '0',
     borrowRate,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAssetData.symbol)) {
-    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol);
-    debtAssetData.incentiveBorrowToken = debtAsset.symbol;
+    debtAssetData.borrowIncentives.push({
+      apy: new Dec(await getStakingApy(debtAsset.symbol)).mul(-1).toString(),
+      token: debtAssetData.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAssetData.symbol}, the value of the debt would increase over time.`,
+    });
   }
-
-  const incentiveBorrowRate = debtAssetData.incentiveBorrowApy;
 
   const assetsData = {
     [collAsset.symbol]: collAssetData,
@@ -370,9 +380,9 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     liquidationMaxLimit,
     borrowRate,
     supplyRate,
-    incentiveSupplyRate,
-    incentiveBorrowRate,
     oraclePrice,
+    incentiveSupplyRate: collAssetData.supplyIncentives[0]?.apy || '0',
+    incentiveBorrowRate: debtAssetData.borrowIncentives[0]?.apy || '0',
   };
 
   return {
@@ -430,10 +440,16 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     withdrawable: withdrawable0,
     tokenPerSupplyShare: token0PerSupplyShare,
     supplyReserves: reservesSupplyToken0,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
-    collFirstAssetData.incentiveSupplyApy = await getStakingApy(collAsset0.symbol);
-    collFirstAssetData.incentiveSupplyToken = collAsset0.symbol;
+    collFirstAssetData.supplyIncentives!.push({
+      apy: await getStakingApy(collAsset0.symbol),
+      token: collAsset0.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset0.symbol} yield.`,
+    });
   }
 
   const collSecondAssetData: Partial<FluidAssetData> = {
@@ -447,14 +463,20 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationSupply1,
     tokenPerSupplyShare: token1PerSupplyShare,
     supplyReserves: reservesSupplyToken1,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collSecondAssetData.symbol!)) {
-    collSecondAssetData.incentiveSupplyApy = await getStakingApy(collAsset1.symbol);
-    collSecondAssetData.incentiveSupplyToken = collAsset1.symbol;
+    collSecondAssetData.supplyIncentives!.push({
+      apy: await getStakingApy(collAsset1.symbol),
+      token: collAsset1.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset1.symbol} yield.`,
+    });
   }
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collFirstAssetData.price!, collSecondAssetData.price!);
-  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.incentiveSupplyApy!, collSecondAssetData.incentiveSupplyApy!, collFirstAssetData.price!, collSecondAssetData.price!);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.supplyIncentives![0]?.apy || '0', collSecondAssetData.supplyIncentives![0]?.apy || '0', collFirstAssetData.price!, collSecondAssetData.price!);
   const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
@@ -465,13 +487,19 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     totalBorrow: data.totalBorrowVault.toString(),
     canBeBorrowed: true,
     borrowRate,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAssetData.symbol!)) {
-    debtAssetData.incentiveBorrowApy = await getStakingApy(debtAsset.symbol);
-    debtAssetData.incentiveBorrowToken = debtAsset.symbol;
+    debtAssetData.borrowIncentives!.push({
+      apy: new Dec(await getStakingApy(debtAsset.symbol)).mul(-1).toString(),
+      token: debtAsset.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAsset.symbol}, the value of the debt would increase over time.`,
+    });
   }
 
-  const incentiveBorrowRate = debtAssetData.incentiveBorrowApy;
+  const incentiveBorrowRate = new Dec(debtAssetData.borrowIncentives![0]?.apy || '0').mul(-1).toString();
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collFirstAssetData],
@@ -599,13 +627,19 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     totalSupply: data.totalSupplyVault.toString(),
     canBeSupplied: true,
     supplyRate,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collAssetData.symbol!)) {
-    collAssetData.incentiveSupplyApy = await getStakingApy(collAsset.symbol);
-    collAssetData.incentiveSupplyToken = collAsset.symbol;
+    collAssetData.supplyIncentives!.push({
+      apy: await getStakingApy(collAsset.symbol),
+      token: collAsset.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset.symbol} yield.`,
+    });
   }
 
-  const incentiveSupplyRate = collAssetData.incentiveSupplyApy;
+  const incentiveSupplyRate = collAssetData.supplyIncentives?.[0]?.apy || '0';
 
   const debtAsset0Data: Partial<FluidAssetData> = {
     symbol: debtAsset0.symbol,
@@ -618,10 +652,16 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationBorrow0,
     tokenPerBorrowShare: token0PerBorrowShare,
     borrowReserves: reservesBorrowToken0,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
-    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol);
-    debtAsset0Data.incentiveSupplyToken = debtAsset0.symbol;
+    debtAsset0Data.borrowIncentives!.push({
+      apy: new Dec(await getStakingApy(debtAsset0.symbol)).mul(-1).toString(),
+      token: debtAsset0.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAsset0.symbol}, the value of the debt would increase over time.`,
+    });
   }
 
   const debtAsset1Data: Partial<FluidAssetData> = {
@@ -635,13 +675,19 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationBorrow1,
     tokenPerBorrowShare: token1PerBorrowShare,
     borrowReserves: reservesBorrowToken1,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
-    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol);
-    debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
+    debtAsset1Data.borrowIncentives!.push({
+      apy: new Dec(await getStakingApy(debtAsset1.symbol)).mul(-1).toString(),
+      token: debtAsset1.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAsset1.symbol}, the value of the debt would increase over time.`,
+    });
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
-  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, new Dec(debtAsset0Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), new Dec(debtAsset1Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), debtAsset0Data.price!, debtAsset1Data.price!);
   const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
 
   const assetsData: FluidAssetsData = ([
@@ -797,10 +843,16 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     withdrawable: withdrawable0,
     tokenPerSupplyShare: token0PerSupplyShare,
     supplyReserves: reservesSupplyToken0,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collAsset0Data.symbol!)) {
-    collAsset0Data.incentiveSupplyApy = await getStakingApy(collAsset0.symbol);
-    collAsset0Data.incentiveSupplyToken = collAsset0.symbol;
+    collAsset0Data.supplyIncentives!.push({
+      apy: await getStakingApy(collAsset0.symbol),
+      token: collAsset0.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset0.symbol} yield.`,
+    });
   }
 
   const collAsset1Data: Partial<FluidAssetData> = {
@@ -814,10 +866,16 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationSupply1,
     tokenPerSupplyShare: token1PerSupplyShare,
     supplyReserves: reservesSupplyToken1,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collAsset1Data.symbol!)) {
-    collAsset1Data.incentiveSupplyApy = await getStakingApy(collAsset1.symbol);
-    collAsset1Data.incentiveSupplyToken = collAsset1.symbol;
+    collAsset1Data.supplyIncentives!.push({
+      apy: await getStakingApy(collAsset1.symbol),
+      token: collAsset1.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset1.symbol} yield.`,
+    });
   }
 
   const debtAsset0Data: Partial<FluidAssetData> = {
@@ -831,10 +889,16 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationBorrow0,
     tokenPerBorrowShare: token0PerBorrowShare,
     borrowReserves: reservesBorrowToken0,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
-    debtAsset0Data.incentiveSupplyApy = await getStakingApy(debtAsset0.symbol);
-    debtAsset0Data.incentiveSupplyToken = debtAsset0.symbol;
+    debtAsset0Data.borrowIncentives!.push({
+      apy: new Dec(await getStakingApy(debtAsset0.symbol)).mul(-1).toString(),
+      token: debtAsset0.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAsset0.symbol}, the value of the debt would increase over time.`,
+    });
   }
 
   const debtAsset1Data: Partial<FluidAssetData> = {
@@ -848,19 +912,25 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     utilization: utilizationBorrow1,
     tokenPerBorrowShare: token1PerBorrowShare,
     borrowReserves: reservesBorrowToken1,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
-    debtAsset1Data.incentiveSupplyApy = await getStakingApy(debtAsset1.symbol);
-    debtAsset1Data.incentiveSupplyToken = debtAsset1.symbol;
+    debtAsset1Data.borrowIncentives!.push({
+      apy: new Dec(await getStakingApy(debtAsset1.symbol)).mul(-1).toString(),
+      token: debtAsset1.symbol,
+      incentiveKind: IncentiveKind.Reward,
+      description: `Due to the native yield of ${debtAsset1.symbol}, the value of the debt would increase over time.`,
+    });
   }
   const marketInfo = getFluidMarketInfoById(+(data.vaultId.toString()), network);
 
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
-  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, debtAsset0Data.incentiveSupplyApy!, debtAsset1Data.incentiveSupplyApy!, debtAsset0Data.price!, debtAsset1Data.price!);
+  const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, new Dec(debtAsset0Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), new Dec(debtAsset1Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), debtAsset0Data.price!, debtAsset1Data.price!);
   const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collAsset0Data.price!, collAsset1Data.price!);
-  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.incentiveSupplyApy!, collAsset1Data.incentiveSupplyApy!, collAsset0Data.price!, collAsset1Data.price!);
+  const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.supplyIncentives![0]?.apy || '0', collAsset1Data.supplyIncentives![0]?.apy || '0', collAsset0Data.price!, collAsset1Data.price!);
   const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
 
   const assetsData: FluidAssetsData = ([

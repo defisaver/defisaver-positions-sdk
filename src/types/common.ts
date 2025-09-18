@@ -5,6 +5,8 @@ export enum IncentiveKind {
 
 export enum IncentiveEligibilityId {
   AaveV3EthenaLiquidLeverage = '0x8772bb231f3af13ead41d7ecf6abd60f5f716ec8BORROW_BL',
+  AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
+  AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
 }
 
 export interface IncentiveData {
@@ -45,14 +47,10 @@ export interface MMAssetData {
   canBeBorrowed: boolean,
   canBeSupplied: boolean,
   totalBorrow: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
   borrowRateP2P?: string,
   supplyRateP2P?: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export interface MMAssetsData {
