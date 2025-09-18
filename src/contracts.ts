@@ -106,3 +106,15 @@ export const LiquityV2ViewContractViem = createViemContractFromConfigFunc('Liqui
 export const LiquityV2LegacyViewContractViem = createViemContractFromConfigFunc('LiquityV2LegacyView');
 
 export const FluidViewContractViem = createViemContractFromConfigFunc('FluidView');
+
+export const AaveIncentivesControllerViem = createViemContractFromConfigFunc('AaveIncentivesController');
+export const AaveUmbrellaViewViem = createViemContractFromConfigFunc('AaveUmbrellaView');
+
+export const LiquityLQTYStakingViem = createViemContractFromConfigFunc('LiquityLQTYStaking');
+export const LiquityStabilityPoolViem = createViemContractFromConfigFunc('LiquityStabilityPool');
+
+export const UUPSViem = createViemContractFromConfigFunc('UUPS');
+export const SparkRewardsControllerViem = createViemContractFromConfigFunc('SparkRewardsController');
+
+export const AaveRewardsControllerViem = createViemContractFromConfigFunc('AaveRewardsController');
+export const LiquityV2sBoldVaultViem = createViemContractFromConfigFunc('LiquityV2sBoldVault');
