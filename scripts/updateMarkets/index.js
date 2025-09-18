@@ -1,16 +1,14 @@
+import 'dotenv/config';
+import path from 'path';
+import { loadFile, writeFile, detectCodeFormat } from 'magicast';
+import lodash from 'lodash';
+import { getAssetInfoByAddress } from '@defisaver/tokens';
 import {
   arbitrum, base, mainnet, optimism, linea,
 } from 'viem/chains';
 
-const path = require('path');
-const { loadFile, writeFile, detectCodeFormat } = require('magicast');
-const differenceWith = require('lodash/differenceWith');
-const { getAssetInfoByAddress } = require('@defisaver/tokens');
-
-const {
-  createPublicClient, http, getContract,
-} = require('viem');
-const {
+import { createPublicClient, http, getContract } from 'viem';
+import {
   AaveProtocolDataProvider,
   AaveV3ProtocolDataProvider,
   SparkProtocolDataProvider,
@@ -20,7 +18,8 @@ const {
   cUSDCv3,
   cETHv3,
   cUSDTv3,
-} = require('../../src/config/contracts');
+// eslint-disable-next-line import/extensions
+} from '../../esm/config/contracts.js';
 
 const getViemChain = (chainId) => {
   switch (chainId) {
@@ -143,7 +142,7 @@ const compound = {
         [cUSDTv3.networks[42161].address.toLowerCase()]: 'v3USDTCollAssetsArb',
       },
     },
-    networks: [1, 8453, 42161],
+    networks: [1, 10, 8453, 42161],
     getter: async (chainId, { marketAddress }) => {
       const client = getViem(chainId);
       const compV3ViewContract = getContract({
@@ -166,11 +165,13 @@ const spark = {
     },
     networks: [1],
     getter: async (chainId) => {
-      const web3 = getWeb3(chainId);
-      const protocolDataProviderContract = new web3.eth.Contract(
-        SparkProtocolDataProvider.abi, SparkProtocolDataProvider.networks[chainId].address,
-      );
-      const reserveTokens = await protocolDataProviderContract.methods.getAllReservesTokens().call();
+      const client = getViem(chainId);
+      const protocolDataProviderContract = getContract({
+        address: SparkProtocolDataProvider.networks[chainId].address,
+        abi: SparkProtocolDataProvider.abi,
+        client,
+      });
+      const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens();
 
       return separateAssetsByExistence(reserveTokens, chainId, { addressExtractingMethod: a => a.tokenAddress });
     },
@@ -186,7 +187,7 @@ async function setSymbolsToFile(fileName, variableName, assets, missingAddresses
   let currValues = Object.values(mod.exports[variableName]);
   currValues = currValues.slice(1); // Magicast will return length of the array on 0 index, so we need to remove the first item from `currValues`
 
-  const newSymbols = differenceWith(assets, currValues);
+  const newSymbols = lodash.differenceWith(assets, currValues);
 
   if (newSymbols.length > 0) {
     mod.exports[variableName] = assets;
