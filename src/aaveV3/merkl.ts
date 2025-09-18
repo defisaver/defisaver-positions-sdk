@@ -1,76 +1,9 @@
 import { aprToApy } from '../moneymarket';
 import { DEFAULT_TIMEOUT, wethToEth } from '../services/utils';
+import {
+  MerkleRewardMap, MerklOpportunity, OpportunityAction, OpportunityStatus,
+} from '../types';
 import { EthAddress, NetworkNumber } from '../types/common';
-
-enum OpportunityAction {
-  LEND = 'LEND',
-  BORROW = 'BORROW',
-}
-
-enum OpportunityStatus {
-  LIVE = 'LIVE',
-  PAST = 'PAST',
-  UPCOMING = 'UPCOMING',
-}
-
-type MerklOpportunity = {
-  chainId: number;
-  type: string;
-  identifier: EthAddress;
-  name: string;
-  status: OpportunityStatus;
-  action: OpportunityAction;
-  tvl: number;
-  apr: number;
-  dailyRewards: number;
-  tags: [];
-  id: string;
-  explorerAddress?: EthAddress;
-  description?: string;
-  tokens: {
-    id: string;
-    name: string;
-    chainId: number;
-    address: EthAddress;
-    decimals: number;
-    icon: string;
-    verified: boolean;
-    isTest: boolean;
-    price: number;
-    symbol: string;
-  }[];
-  rewardsRecord: {
-    id: string;
-    total: number;
-    timestamp: string;
-    breakdowns: {
-      token: {
-        id: string;
-        name: string;
-        chainId: number;
-        address: EthAddress;
-        decimals: number;
-        symbol: string;
-        displaySymbol: string;
-        icon: string;
-        verified: boolean;
-        isTest: boolean;
-        type: string;
-        isNative: boolean;
-        price: number;
-      };
-      amount: string;
-      value: number;
-      distributionType: string;
-      id: string;
-      campaignId: string;
-      dailyRewardsRecordId: string;
-    }[];
-  };
-};
-
-type RewardInfo = { apy: string; rewardTokenSymbol: string, description: string, identifier: string };
-type MerkleRewardMap = Record<EthAddress, { supply?: RewardInfo; borrow?: RewardInfo }>;
 
 export const getAaveUnderlyingSymbol = (_symbol = '') => {
   let symbol = _symbol
@@ -108,7 +41,6 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
       .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
     return relevantOpportunities.reduce((acc, opportunity) => {
       const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
-      if (rewardToken.symbol === 'aEthUSDe') console.log(opportunity.identifier);
       const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
       if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
         const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;

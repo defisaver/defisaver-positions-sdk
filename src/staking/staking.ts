@@ -117,24 +117,17 @@ export const calculateNetApy = ({
       const rate = assetData.supplyRate;
       const supplyInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
-      if (assetData.incentiveSupplyApy && !assetData.supplyIncentives) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-      }
 
-      if (assetData.supplyIncentives) {
-        for (const supplyIncentive of assetData.supplyIncentives) {
-          const { apy, eligibilityId } = supplyIncentive;
-          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
-          if (eligibilityCheck) {
-            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
-            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          } else {
-            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          }
+      for (const supplyIncentive of assetData.supplyIncentives) {
+        const { apy, eligibilityId } = supplyIncentive;
+        const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+        if (eligibilityCheck) {
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        } else {
+          const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         }
       }
     }
@@ -145,24 +138,17 @@ export const calculateNetApy = ({
       const rate = assetData.borrowRate;
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
-      if (assetData.incentiveBorrowApy && !assetData.borrowIncentives) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveBorrowApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
-      }
 
-      if (assetData.borrowIncentives) {
-        for (const borrowIncentive of assetData.borrowIncentives) {
-          const { apy, eligibilityId } = borrowIncentive;
-          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
-          if (eligibilityCheck) {
-            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
-            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
-          } else {
-            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
-          }
+      for (const borrowIncentive of assetData.borrowIncentives) {
+        const { apy, eligibilityId } = borrowIncentive;
+        const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+        if (eligibilityCheck) {
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        } else {
+          const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         }
       }
     }
