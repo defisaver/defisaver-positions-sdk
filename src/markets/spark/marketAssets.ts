@@ -1,6 +1,6 @@
 import { NetworkNumber } from '../../types/common';
 
-export const sparkAssetsDefaultMarketEth = ['DAI', 'sDAI', 'USDC', 'ETH', 'wstETH', 'WBTC', 'GNO', 'rETH', 'USDT', 'weETH', 'cbBTC', 'sUSDS', 'USDS', 'LBTC', 'tBTC', 'ezETH', 'rsETH'];
+export const sparkAssetsDefaultMarketEth = ['DAI', 'sDAI', 'USDC', 'ETH', 'wstETH', 'WBTC', 'GNO', 'rETH', 'USDT', 'weETH', 'cbBTC', 'sUSDS', 'USDS', 'LBTC', 'tBTC', 'ezETH', 'rsETH', 'PYUSD'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const sparkAssetsDefaultMarket = {
@@ -8,4 +8,5 @@ export const sparkAssetsDefaultMarket = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Arb]: [],
+  [NetworkNumber.Linea]: [],
 } as const;

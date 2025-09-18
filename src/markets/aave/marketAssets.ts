@@ -10,13 +10,15 @@ export const aaveV2AssetsDefaultMarket = ['USDT', 'WBTC', 'ETH', 'YFI', 'ZRX', '
 
 export const aaveV3AssetsDefaultMarketEth = [
   'ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD', 'PYUSD', 'weETH', 'osETH', 'USDe', 'ETHx', 'sUSDe', 'tBTC', 'cbBTC', 'USDS', 'rsETH', 'LBTC', 'eBTC', 'RLUSD', 'PT eUSDe May', 'PT sUSDe July', 'USDtb',
-  'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'EURC', 'FBTC', 'PT sUSDe Sep', 'PT USDe Sep', 'tETH', 'ezETH',
+  'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'EURC', 'FBTC', 'PT sUSDe Sep', 'PT USDe Sep', 'tETH', 'ezETH', 'XAUt', 'PT sUSDe Nov', 'PT USDe Nov',
 ];
 export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
 ];
 export const aaveV3AssetsDefaultMarketArb = ['DAI', 'LINK', 'USDC.e', 'WBTC', 'ETH', 'USDT', 'AAVE', 'EURS', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC', 'FRAX', 'ARB', 'weETH', 'GHO', 'ezETH', 'rsETH', 'tBTC'];
-export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'GHO', 'wrsETH', 'LBTC', 'EURC', 'AAVE'];
+export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'GHO', 'wrsETH', 'LBTC', 'EURC', 'AAVE', 'tBTC'];
+
+export const aaveV3AssetsDefaultMarketLinea = ['ETH', 'USDC', 'weETH', 'ezETH', 'USDT', 'wstETH', 'wrsETH', 'WBTC'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
@@ -24,6 +26,7 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Opt]: aaveV3AssetsDefaultMarketOpt,
   [NetworkNumber.Arb]: aaveV3AssetsDefaultMarketArb,
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
+  [NetworkNumber.Linea]: aaveV3AssetsDefaultMarketLinea,
 } as const;
 
 export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS', 'USDC', 'ezETH', 'sUSDe', 'GHO', 'rsETH', 'tETH'];
@@ -33,6 +36,7 @@ export const aaveV3AssetsLidoMarket = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
 } as const;
 
 export const aaveV3AssetsEtherfiMarketEth = ['weETH', 'USDC', 'PYUSD', 'FRAX'];
@@ -42,4 +46,5 @@ export const aaveV3AssetsEtherfiMarket = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
 } as const;

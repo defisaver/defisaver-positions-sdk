@@ -39,6 +39,7 @@ jobs:
           RPCBASE: ${{ secrets.RPCBASE }}
           RPCARB: ${{ secrets.RPCARB }}
           RPCOPT: ${{ secrets.RPCOPT }}
+          RPCLINEA: ${{ secrets.RPCLINEA }}
 
   on-failure:
     runs-on: ubuntu-latest

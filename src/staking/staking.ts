@@ -54,7 +54,7 @@ const getApyFromDfsApi = async (asset: string) => {
   }
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep'];
+export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov'];
 
 export const getStakingApy = memoize(async (asset: string) => {
   try {
@@ -79,6 +79,8 @@ export const getStakingApy = memoize(async (asset: string) => {
     if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
     if (asset === 'USDe') return await getApyFromDfsApi('USDe');
+    if (asset === 'PT sUSDe Nov') return await getApyFromDfsApi('PT sUSDe Nov');
+    if (asset === 'PT USDe Nov') return await getApyFromDfsApi('PT USDe Nov');
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }

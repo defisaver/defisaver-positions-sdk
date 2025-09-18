@@ -6,7 +6,7 @@ export const compoundV2CollateralAssets: AssetData[] = [
   'cTUSD', 'cLINK', 'cUSDP', 'cUNI', 'cCOMP', 'cMKR', 'cSUSHI', 'cAAVE', 'cYFI',
 ].map((symbol) => getAssetInfo(symbol));
 
-export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'weETH', 'deUSD', 'sdeUSD'];
+export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'weETH', 'deUSD', 'sdeUSD', 'rsETH'];
 export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH', 'wUSDM'];
 export const v3USDCCollAssetsBase = ['cbETH', 'ETH', 'wstETH', 'cbBTC', 'tBTC'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
@@ -17,6 +17,7 @@ export const v3USDCCollAssets = {
   [NetworkNumber.Opt]: v3USDCCollAssetsOpt,
   [NetworkNumber.Arb]: v3USDCCollAssetsArb,
   [NetworkNumber.Base]: v3USDCCollAssetsBase,
+  [NetworkNumber.Linea]: [],
 } as const;
 
 export const v3USDCeCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
@@ -27,6 +28,7 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: v3USDCeCollAssetsArb,
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
 } as const;
 
 export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC', 'ETHx', 'tETH', 'pufETH', 'wOETH'];
@@ -40,6 +42,7 @@ export const v3ETHCollAssets = {
   [NetworkNumber.Opt]: v3ETHCollAssetsOpt,
   [NetworkNumber.Arb]: v3ETHCollAssetsArb,
   [NetworkNumber.Base]: v3ETHCollAssetsBase,
+  [NetworkNumber.Linea]: [],
 } as const;
 
 export const v3USDbCCollAssetsBase = ['ETH', 'cbETH'];
@@ -50,9 +53,10 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
+  [NetworkNumber.Linea]: [],
 };
 
-export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD'];
+export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD'];
 export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
@@ -62,6 +66,7 @@ export const v3USDTCollAssets = {
   [NetworkNumber.Opt]: v3USDTCollAssetsOpt,
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
 };
 
 export const v3USDSCollAssetsEth = ['wstETH', 'ETH', 'sUSDS', 'cbETH', 'tBTC', 'USDe'];
@@ -72,6 +77,7 @@ export const v3USDSCollAssets = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDSCollAssetsBase,
+  [NetworkNumber.Linea]: [],
 };
 
 export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
@@ -81,4 +87,5 @@ export const v3wstETHCollAssets = {
   [NetworkNumber.Opt]: [],
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
 };
