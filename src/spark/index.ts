@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   ethToWeth, wethToEth, wethToEthByAddress,
@@ -139,6 +139,8 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
           collateralFactor: new Dec(market.ltv).div(10000).toString(),
           priceSource: market.priceSource,
         },
+        supplyIncentives: [],
+        borrowIncentives: [],
       });
     }));
 
@@ -146,40 +148,32 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
     /* eslint-disable no-param-reassign */
     const rewardForMarket = (rewardInfo as any)[market.underlyingTokenAddress];
     if (STAKING_ASSETS.includes(market.symbol)) {
-      market.incentiveSupplyApy = await getStakingApy(market.symbol);
-      market.incentiveSupplyToken = market.symbol;
-      if (!market.supplyIncentives) {
-        market.supplyIncentives = [];
-      }
-
+      const yieldApy = await getStakingApy(market.symbol);
       market.supplyIncentives.push({
-        apy: market.incentiveSupplyApy || '0',
+        apy: yieldApy,
         token: market.symbol,
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${market.symbol} yield.`,
       });
-    }
 
-    if (market.symbol === 'sDAI') {
-      market.incentiveSupplyApy = await getStakingApy('sDAI');
-      market.incentiveSupplyToken = 'sDAI';
-    }
+      if (market.canBeBorrowed) {
+        if (!market.borrowIncentives) {
+          market.borrowIncentives = [];
+        }
 
-    if (market.canBeBorrowed && market.incentiveSupplyApy) {
-      market.incentiveBorrowApy = market.incentiveSupplyApy;
-      market.incentiveBorrowToken = market.incentiveSupplyToken;
-      if (!market.borrowIncentives) {
-        market.borrowIncentives = [];
+        market.borrowIncentives.push({
+          apy: new Dec(yieldApy).mul(-1).toString(),
+          token: market.symbol,
+          incentiveKind: IncentiveKind.Reward,
+          description: `Due to the native yield of ${market.symbol}, the value of the debt would increase over time.`,
+        });
       }
-      market.borrowIncentives.push({
-        apy: market.incentiveBorrowApy,
-        token: market.incentiveBorrowToken!!,
-      });
     }
 
     if (!rewardForMarket) return;
     (rewardForMarket.aIncentiveData.rewardsTokenInformation as any[]).forEach(supplyRewardData => {
       if (supplyRewardData) {
         if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-        market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
         const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals)
           .toString();
@@ -189,21 +183,18 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
           .div(market.price)
           .div(market.totalSupply)
           .toString();
-        market.incentiveSupplyApy = new Dec(market.incentiveSupplyApy || '0').add(rewardApy).toString();
 
-        if (!market.supplyIncentives) {
-          market.supplyIncentives = [];
-        }
         market.supplyIncentives.push({
           token: supplyRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });
     (rewardForMarket.vIncentiveData.rewardsTokenInformation as any[]).forEach(borrowRewardData => {
       if (borrowRewardData) {
         if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-        market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
         const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals)
           .toString();
@@ -213,14 +204,11 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
           .div(market.price)
           .div(market.totalBorrowVar)
           .toString();
-        market.incentiveBorrowApy = new Dec(market.incentiveBorrowApy || '0').add(rewardApy).toString();
-
-        if (!market.borrowIncentives) {
-          market.borrowIncentives = [];
-        }
         market.borrowIncentives.push({
           token: borrowRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });

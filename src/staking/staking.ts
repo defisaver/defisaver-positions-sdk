@@ -1,8 +1,9 @@
 import Dec from 'decimal.js';
 import memoize from 'memoizee';
-import { MMAssetsData, MMUsedAssets } from '../types/common';
+import { IncentiveEligibilityId, MMAssetsData, MMUsedAssets } from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
+import { EligibilityMapping } from './eligibility';
 
 const getSsrApy = async () => {
   try {
@@ -103,41 +104,9 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
-  const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
-  const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
-  const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
-  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
-  const totalAmountSupplied = new Dec(USDeUSDAmountSupplied).add(sUSDeUSDAmountSupplied).toString();
-  const percentageInUSDe = new Dec(USDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInUSDe < 0.45 || percentageInUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in USDe
-  const percentageInSUSDe = new Dec(sUSDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInSUSDe < 0.45 || percentageInSUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in sUSDe
-
-  const allowedBorrowAssets = ['USDC', 'USDT', 'USDS'];
-  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
-  if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
-
-  const totalAmountBorrowed = Object.values(usedAssets).reduce((acc, asset) => {
-    if (asset.isBorrowed) {
-      return acc.add(asset.borrowedUsd);
-    }
-    return acc;
-  }, new Dec(0)).toString();
-
-  const borrowPercentage = new Dec(totalAmountBorrowed).div(totalAmountSupplied).toNumber();
-  if (borrowPercentage < 0.5) return { isEligible: false, eligibleUSDAmount: '0' }; // must be looped at least once
-
-  const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
-  const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
-
-  return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
-};
-
 export const calculateNetApy = ({
-  usedAssets, assetsData, isMorpho = false, isAave = false,
-}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean, isAave?: boolean }) => {
-  const { isEligible, eligibleUSDAmount } = isAave ? isEligibleForEthenaUSDeRewards(usedAssets) : { isEligible: true, eligibleUSDAmount: '0' };
+  usedAssets, assetsData,
+}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
     const assetData = assetsData[usedAsset.symbol];
@@ -145,36 +114,42 @@ export const calculateNetApy = ({
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;
       acc.suppliedUsd = new Dec(acc.suppliedUsd).add(amount).toString();
-      const rate = isMorpho
-        ? usedAsset.supplyRate === '0' ? assetData.supplyRateP2P : usedAsset.supplyRate
-        : assetData.supplyRate;
+      const rate = assetData.supplyRate;
       const supplyInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
-      if (assetData.incentiveSupplyApy) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-      }
 
-      if (usedAsset.symbol === 'USDe' && isEligible) {
-        // @ts-ignore
-        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, assetData.supplyIncentives?.[0]?.apy || '0', 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+      for (const supplyIncentive of assetData.supplyIncentives) {
+        const { apy, eligibilityId } = supplyIncentive;
+        const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+        if (eligibilityCheck) {
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        } else {
+          const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        }
       }
     }
 
     if (usedAsset.isBorrowed) {
       const amount = usedAsset.borrowedUsd;
       acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
-      const rate = isMorpho
-        ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
-        : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
+      const rate = assetData.borrowRate;
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
-      if (assetData.incentiveBorrowApy) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveBorrowApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+
+      for (const borrowIncentive of assetData.borrowIncentives) {
+        const { apy, eligibilityId } = borrowIncentive;
+        const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+        if (eligibilityCheck) {
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        } else {
+          const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        }
       }
     }
 

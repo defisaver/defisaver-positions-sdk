@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, MMUsedAssets, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, MMUsedAssets, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContractViem,
@@ -88,10 +88,18 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     totalBorrow: new Dec(marketInfo.totalBorrowAssets.toString()).div(scale).toString(),
     canBeSupplied: true,
     canBeBorrowed: true,
-    incentiveSupplyApy: morphoSupplyApy,
-    incentiveBorrowApy: morphoBorrowApy,
-    incentiveSupplyToken: 'MORPHO',
-    incentiveBorrowToken: 'MORPHO',
+    supplyIncentives: [{
+      token: 'MORPHO',
+      apy: morphoSupplyApy,
+      incentiveKind: IncentiveKind.Reward,
+      description: 'Eligible for protocol-level MORPHO incentives.',
+    }],
+    borrowIncentives: [{
+      token: 'MORPHO',
+      apy: morphoBorrowApy,
+      incentiveKind: IncentiveKind.Reward,
+      description: 'Eligible for protocol-level MORPHO incentives.',
+    }],
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
@@ -102,10 +110,16 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     borrowRate: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collateralTokenInfo.symbol)) {
-    assetsData[collateralTokenInfo.symbol].incentiveSupplyApy = await getStakingApy(collateralTokenInfo.symbol);
-    assetsData[collateralTokenInfo.symbol].incentiveSupplyToken = collateralTokenInfo.symbol;
+    assetsData[collateralTokenInfo.symbol].supplyIncentives = [{
+      apy: await getStakingApy(collateralTokenInfo.symbol),
+      token: collateralTokenInfo.symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collateralTokenInfo.symbol} yield.`,
+    }];
   }
 
   return {

@@ -4,7 +4,9 @@ import { Client, PublicClient } from 'viem';
 import {
   createViemContractFromConfigFunc, LiquityV2LegacyViewContractViem, LiquityV2ViewContractViem,
 } from '../contracts';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
+import {
+  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
+} from '../types/common';
 import {
   LIQUITY_V2_TROVE_STATUS_ENUM,
   LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2TroveData, LiquityV2UsedAssets,
@@ -63,6 +65,8 @@ export const _getLiquityV2MarketData = async (provider: Client, network: Network
     canBeBorrowed: true,
     leftToBorrowGlobal,
     leftToWithdrawGlobal: '0',
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   assetsData[collateralToken] = {
     symbol: collateralToken,
@@ -74,10 +78,16 @@ export const _getLiquityV2MarketData = async (provider: Client, network: Network
     canBeBorrowed: false,
     leftToBorrowGlobal: '0',
     leftToWithdrawGlobal,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
   if (STAKING_ASSETS.includes(collateralToken)) {
-    assetsData[collateralToken].incentiveSupplyApy = await getStakingApy(collateralToken);
-    assetsData[collateralToken].incentiveSupplyToken = collateralToken;
+    assetsData[collateralToken].supplyIncentives.push({
+      apy: await getStakingApy(collateralToken),
+      token: collateralToken,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collateralToken} yield.`,
+    });
   }
 
   return {
