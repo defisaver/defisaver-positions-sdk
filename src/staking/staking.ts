@@ -4,6 +4,7 @@ import { IncentiveEligibilityId, MMAssetsData, MMUsedAssets } from '../types/com
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { EligibilityMapping } from './eligibility';
+import { EulerV2UsedAsset } from '../types';
 
 const getSsrApy = async () => {
   try {
@@ -109,7 +110,7 @@ export const calculateNetApy = ({
 }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
-    const assetData = assetsData[usedAsset.symbol];
+    const assetData = assetsData[usedAsset.symbol] || assetsData[(usedAsset as EulerV2UsedAsset).vaultAddress?.toLowerCase() || ''];
 
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;
