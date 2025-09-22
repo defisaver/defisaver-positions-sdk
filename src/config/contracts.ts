@@ -1198,3 +1198,11 @@ export const LiquityV2sBoldVault = {
     }
   }
 } as const;
+export const StkAAVE = {
+  "abi": [{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"assets","outputs":[{"internalType":"uint128","name":"emissionPerSecond","type":"uint128"},{"internalType":"uint128","name":"lastUpdateTimestamp","type":"uint128"},{"internalType":"uint256","name":"index","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"account","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}],
+  "networks": {
+    "1": {
+      "address": "0x4da27a545c0c5B758a6BA100e3a049001de870f5",
+    }
+  }
+} as const;

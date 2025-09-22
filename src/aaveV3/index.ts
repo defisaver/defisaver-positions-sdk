@@ -6,6 +6,7 @@ import {
   AaveIncentivesControllerViem,
   AaveV3ViewContractViem,
   createViemContractFromConfigFunc,
+  StkAAVEViem,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
@@ -30,6 +31,7 @@ import {
   Blockish, EthAddress, EthereumProvider, HexString, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { SECONDS_PER_DAY, SECONDS_PER_YEAR } from '../constants';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -535,27 +537,50 @@ export const REWARDABLE_ASSETS = [
   '0x4dDff5885a67E4EffeC55875a3977D7E60F82ae0',
 ] as const;
 
+export const fetchYearlyMeritApyForStakingGho = async () => {
+  try {
+    const response = await fetch('https://apps.aavechan.com/api/merit/aprs', { signal: AbortSignal.timeout(5000) });
+    const data = await response.json();
+    const apr = data?.currentAPR?.actionsAPR?.['ethereum-stkgho'] || '0' as string;
+    const apy = aprToApy(apr);
+    const apyWithDFSBonus = new Dec(apy).mul(1.05).toString(); // 5% bonus for DFS users
+    return apyWithDFSBonus;
+  } catch (e) {
+    const message = 'External API Failure: Failed to fetch yearly merit APY for staking GHO';
+    console.error(message, e);
+    return '0';
+  }
+};
+
 export const getStakeAaveData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
-  const stkAaveAddress = getAssetInfo('stkAAVE').address;
-  const stkGhoAddress = getAssetInfo('stkGHO').address;
+  const stkGhoAddress = getAssetInfo('stkGHO').address as HexString;
+  const stkAaveAddress = getAssetInfo('stkAAVE').address as HexString;
 
   const AaveIncentivesController = AaveIncentivesControllerViem(provider, network);
-  const stkAAVE = createViemContractFromConfigFunc('Erc20', stkAaveAddress as HexString)(provider, network);
+  const stkAAVE = StkAAVEViem(provider, network);
   const stkGHO = createViemContractFromConfigFunc('Erc20', stkGhoAddress as HexString)(provider, network);
 
 
-  const [aaveRewardsBalance, stkAAVEBalance, stkGHOBalance] = await Promise.all([
+  const [aaveRewardsBalance, emissionsPerSecond, stkAAVEBalance, stkAAVETotalSupply, stkGHOBalance, ghoMeritApy] = await Promise.all([
     AaveIncentivesController.read.getRewardsBalance([REWARDABLE_ASSETS, address]),
+    stkAAVE.read.assets([stkAaveAddress]),
     stkAAVE.read.balanceOf([address]),
+    stkAAVE.read.totalSupply(),
     stkGHO.read.balanceOf([address]),
+    fetchYearlyMeritApyForStakingGho(),
   ]);
 
+
+  const stkAaveApy = new Dec(assetAmountInEth(emissionsPerSecond[0].toString(), 'GHO') || 0).mul(SECONDS_PER_YEAR).mul(100).div(assetAmountInEth(stkAAVETotalSupply.toString(), 'stkAAVE'))
+    .toString();
   return {
     activatedCooldown: '0',
     activatedCooldownAmount: '0',
     stkAaveRewardsBalance: '0',
-    aaveRewardsBalance,
-    stkAaveBalance: stkAAVEBalance,
-    stkGhoBalance: stkGHOBalance,
+    aaveRewardsBalance: assetAmountInEth(aaveRewardsBalance.toString(), 'AAVE'),
+    stkAaveBalance: assetAmountInEth(stkAAVEBalance.toString(), 'stkAAVE'),
+    stkGhoBalance: assetAmountInEth(stkGHOBalance.toString(), 'GHO'),
+    ghoMeritApy,
+    stkAaveApy,
   };
 };

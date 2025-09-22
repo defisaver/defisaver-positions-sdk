@@ -50,6 +50,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   positions: PortfolioPositionsData;
   stakingPositions: any;
   rewardsData: any;
+  markets: any;
 }> {
   const isMainnet = network === NetworkNumber.Eth;
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base].includes(network);
@@ -89,6 +90,18 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const compoundV2MarketsData: Record<string, CompoundV2MarketsData> = {};
   const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
+
+  const markets = {
+    morphoMarketsData,
+    compoundV3MarketsData,
+    sparkMarketsData,
+    eulerV2MarketsData,
+    aaveV3MarketsData,
+    aaveV2MarketsData,
+    compoundV2MarketsData,
+    crvUsdMarketsData,
+    llamaLendMarketsData,
+  };
 
   const positions: PortfolioPositionsData = {};
   const stakingPositions: any = {};
@@ -515,5 +528,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     positions,
     stakingPositions,
     rewardsData,
+    markets,
   };
 }

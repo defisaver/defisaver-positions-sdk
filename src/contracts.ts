@@ -118,3 +118,4 @@ export const SparkRewardsControllerViem = createViemContractFromConfigFunc('Spar
 
 export const AaveRewardsControllerViem = createViemContractFromConfigFunc('AaveRewardsController');
 export const LiquityV2sBoldVaultViem = createViemContractFromConfigFunc('LiquityV2sBoldVault');
+export const StkAAVEViem = createViemContractFromConfigFunc('StkAAVE');
