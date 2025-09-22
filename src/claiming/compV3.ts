@@ -7,7 +7,7 @@ import { ClaimType } from '../types/claiming';
 export const getCompoundV3Rewards = async (provider: Client, network: NetworkNumber, user: EthAddress, market: any) => {
   const compV3View = CompV3ViewContractViem(provider, network);
   const rewards = await compV3View.read.getRewardsOwed([market, user]);
-  if (!rewards || !rewards || rewards.owed.toString() === '0' || getAssetInfoByAddress(rewards.token).symbol !== 'COMP') return [];
+  if (!rewards || rewards.owed.toString() === '0' || getAssetInfoByAddress(rewards.token, network).symbol !== 'COMP') return [];
   return [{
     symbol: 'COMP',
     underlyingSymbol: 'COMP',
