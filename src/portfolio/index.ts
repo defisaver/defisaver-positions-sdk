@@ -5,6 +5,7 @@ import {
   CompoundMarkets,
   CrvUsdMarkets,
   EulerV2Markets,
+  LiquityV2Markets,
   LlamaLendMarkets,
   MorphoBlueMarkets,
   SparkMarkets,
@@ -20,6 +21,7 @@ import {
   CompoundVersions,
   CrvUSDGlobalMarketData,
   EulerV2FullMarketData,
+  LiquityV2MarketData,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   PortfolioPositionsData,
@@ -37,6 +39,7 @@ import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
+import { getLiquityV2Staking, _getLiquityV2MarketData, getLiquitySAndYBold } from '../liquityV2';
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 import { getUmbrellaData } from '../umbrella';
@@ -64,6 +67,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
+  const liquityV2Markets = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)) : [];
+  const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
 
   const client = getViemProvider(provider, network, {
     batch: {
@@ -90,6 +95,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const compoundV2MarketsData: Record<string, CompoundV2MarketsData> = {};
   const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
+  const liquityV2MarketsData: Record<string, LiquityV2MarketData> = {};
 
   const markets = {
     morphoMarketsData,
@@ -101,6 +107,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     compoundV2MarketsData,
     crvUsdMarketsData,
     llamaLendMarketsData,
+    liquityV2MarketsData,
   };
 
   const positions: PortfolioPositionsData = {};
@@ -138,6 +145,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       aaveV2: {},
       compoundV2: {},
       liquity: {},
+      liquityV2: {},
       fluid: {
         error: '',
         data: {},
@@ -192,6 +200,10 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...llamaLendMarkets.map(async (market) => {
       const marketData = await _getLlamaLendGlobalData(client, network, market);
       llamaLendMarketsData[market.value] = marketData;
+    }),
+    ...liquityV2Markets.map(async (market) => {
+      const marketData = await _getLiquityV2MarketData(client, network, market);
+      liquityV2MarketsData[market.value] = marketData;
     }),
 
     // === INDEPENDENT USER DATA (doesn't depend on market data) ===
@@ -258,6 +270,20 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         stakingPositions[address.toLowerCase()].umbrella = { error: `Error fetching Umbrella staking data for address ${address}`, data: null };
       }
     }),
+    // Liquity V2 staking
+    ...liquityV2MarketsStaking.map(market => addresses.map(async (address) => {
+      try {
+        if (!isMainnet) {
+          stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: '', data: null };
+          return;
+        }
+        const liquityV2StakingData = await getLiquityV2Staking(client, network, market.value, address);
+        stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: '', data: liquityV2StakingData };
+      } catch (error) {
+        console.error(`Error fetching Liquity V2 staking data for address ${address}, market ${market.value}:`, error);
+        stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: `Error fetching Liquity V2 staking data for address ${address}`, data: null };
+      }
+    })).flat(),
 
     // === REWARDS DATA (independent of market data) ===
     // Batch King rewards
@@ -522,6 +548,19 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: `Error fetching LlamaLend account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
+    // liquity sBold/yBold and staking options
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) {
+          stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: '', data: null };
+          return;
+        }
+        const data = await getLiquitySAndYBold(client, network, stakingPositions[address.toLowerCase()].liquityV2, address);
+        stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: '', data };
+      } catch (error) {
+        console.error(`Error fetching SBold/YBold data for address ${address}:`, error);
+      }
+    }),
   ]);
 
   return {
