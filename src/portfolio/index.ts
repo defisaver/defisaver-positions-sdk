@@ -377,7 +377,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       try {
         if (!isMainnet) {
           for (const address of addresses) {
-            rewardsData[address.toLowerCase()].king = { error: '', data: [] };
+            rewardsData[address.toLowerCase()].spk = { error: '', data: [] };
           }
           return;
         }
