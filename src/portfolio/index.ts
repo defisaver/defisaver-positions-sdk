@@ -39,7 +39,7 @@ import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
-import { getLiquityV2Staking, _getLiquityV2MarketData, getLiquitySAndYBold } from '../liquityV2';
+import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 import { getUmbrellaData } from '../umbrella';
@@ -234,8 +234,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...addresses.map(async (address) => {
       try {
         if (!isFluidSupported) return;
-        const fluidLendData = await _getAllUserEarnPositionsWithFTokens(client, network, address);
-        stakingPositions[address.toLowerCase()].fluid = fluidLendData;
+        stakingPositions[address.toLowerCase()].fluid = await _getAllUserEarnPositionsWithFTokens(client, network, address);
       } catch (error) {
         console.error(`Error fetching Fluid lend data for address ${address}:`, error);
         stakingPositions[address.toLowerCase()].fluid = { error: `Error fetching Fluid lend data for address ${address}`, data: null };
@@ -244,8 +243,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...addresses.map(async (address) => {
       try {
         if (!isMainnet) return;
-        const liquityStakingData = await getLiquityStakingData(client, network, address);
-        stakingPositions[address.toLowerCase()].liquity = liquityStakingData;
+        stakingPositions[address.toLowerCase()].liquity = await getLiquityStakingData(client, network, address);
       } catch (error) {
         console.error(`Error fetching Liquity staking data for address ${address}:`, error);
         stakingPositions[address.toLowerCase()].liquity = { error: `Error fetching Liquity staking data for address ${address}`, data: null };
@@ -263,8 +261,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...addresses.map(async (address) => {
       try {
         if (!isMainnet) return;
-        const umbrellaStakingData = await getUmbrellaData(client, network, address);
-        stakingPositions[address.toLowerCase()].umbrella = umbrellaStakingData;
+        stakingPositions[address.toLowerCase()].umbrella = await getUmbrellaData(client, network, address);
       } catch (error) {
         console.error(`Error fetching Umbrella staking data for address ${address}:`, error);
         stakingPositions[address.toLowerCase()].umbrella = { error: `Error fetching Umbrella staking data for address ${address}`, data: null };
@@ -559,6 +556,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: '', data };
       } catch (error) {
         console.error(`Error fetching SBold/YBold data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: `Error fetching sBold/yBold data for address ${address}`, data: null };
       }
     }),
   ]);
