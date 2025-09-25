@@ -430,17 +430,17 @@ const stabilityPoolAddrForMarket: Record<LiquityV2Versions, EthAddress> = {
   [LiquityV2Versions.LiquityV2Eth]: '0x5721cbbd64fc7Ae3Ef44A0A3F9a790A9264Cf9BF',
   [LiquityV2Versions.LiquityV2WstEth]: '0x9502b7c397e9aa22fe9db7ef7daf21cd2aebe56b',
   [LiquityV2Versions.LiquityV2REth]: '0xd442e41019b7f5c4dd78f50dc03726c446148695',
-  [LiquityV2Versions.LiquityV2EthLegacy]: '0x',
-  [LiquityV2Versions.LiquityV2REthLegacy]: '0x',
-  [LiquityV2Versions.LiquityV2WstEthLegacy]: '0x',
+  [LiquityV2Versions.LiquityV2EthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2REthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: ZERO_ADDRESS,
 };
 const activePoolAddrForMarket: Record<LiquityV2Versions, EthAddress> = {
   [LiquityV2Versions.LiquityV2Eth]: '0xeB5A8C825582965f1d84606E078620a84ab16AfE',
   [LiquityV2Versions.LiquityV2WstEth]: '0x531a8f99c70d6a56a7cee02d6b4281650d7919a0',
   [LiquityV2Versions.LiquityV2REth]: '0x9074d72cc82dad1e13e454755aa8f144c479532f',
-  [LiquityV2Versions.LiquityV2EthLegacy]: '0x',
-  [LiquityV2Versions.LiquityV2WstEthLegacy]: '0x',
-  [LiquityV2Versions.LiquityV2REthLegacy]: '0x',
+  [LiquityV2Versions.LiquityV2EthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2REthLegacy]: ZERO_ADDRESS,
 };
 
 function ceilDiv(a: string, b: string) {
@@ -487,13 +487,18 @@ const calculateStabilityPoolApy = (
 };
 
 const getYBoldApyApi = async () => {
-  const url = 'https://ydaemon.yearn.fi/1/vaults/0x23346B04a7f55b8760E5860AA5A77383D63491cD?strategiesDetails=withDetails&strategiesCondition=inQueue';
+  try {
+    const url = 'https://ydaemon.yearn.fi/1/vaults/0x23346B04a7f55b8760E5860AA5A77383D63491cD?strategiesDetails=withDetails&strategiesCondition=inQueue';
 
-  const yBoldData = await fetch(url)
-    .then(res => res.json())
-    .catch(console.error);
+    const yBoldData = await fetch(url)
+      .then(res => res.json())
+      .catch(console.error);
 
-  return new Dec(yBoldData.apr.netAPR).mul(100).toString();
+    return new Dec(yBoldData.apr.netAPR).mul(100).toString();
+  } catch (error) {
+    console.error('External API Failure: YBold ', error);
+    return '0';
+  }
 };
 
 export type sBoldYieldParameters = {

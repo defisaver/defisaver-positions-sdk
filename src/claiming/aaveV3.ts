@@ -6,7 +6,8 @@ import {
   AaveIncentiveDataProviderV3ContractViem,
   AaveRewardsControllerViem,
 } from '../contracts';
-import { compareAddresses, getEthAmountForDecimals, wethToEth } from '../services/utils';
+import { compareAddresses, getEthAmountForDecimals } from '../services/utils';
+import { getAaveUnderlyingSymbol } from '../helpers/aaveHelpers';
 
 type AaveReward = {
   amount: string;
@@ -14,21 +15,6 @@ type AaveReward = {
   underlyingAsset: string;
   rewardTokenAddress: string;
   aTokenAddresses: string[];
-};
-
-/**
- * won't cover all cases
- */
-export const getAaveUnderlyingSymbol = (_symbol = '') => {
-  let symbol = _symbol
-    .replace(/^aEthLido/, '')
-    .replace(/^aEthEtherFi/, '')
-    .replace(/^aEth/, '')
-    .replace(/^aArb/, '')
-    .replace(/^aOpt/, '')
-    .replace(/^aBas/, '');
-  if (symbol.startsWith('a')) symbol = symbol.slice(1);
-  return wethToEth(symbol);
 };
 
 const mapAaveRewardsToClaimableTokens = (aaveRewards: AaveReward[], marketAddress: EthAddress, walletAddress: EthAddress) => aaveRewards.map(reward => ({
@@ -118,9 +104,15 @@ export async function getUnclaimedRewardsForAllMarkets(
 }
 
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber, acceptMorpho: boolean = true): Promise<ClaimableToken[]> {
-  const res = await fetch(`https://api.merkl.xyz/v4/users/${account}/rewards?chainId=${network}`,
-    { signal: AbortSignal.timeout(3000) });
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(`https://api.merkl.xyz/v4/users/${account}/rewards?chainId=${network}`,
+      { signal: AbortSignal.timeout(3000) });
+    data = await res.json();
+  } catch (error) {
+    console.error('External API Failure: Aave Merit', error);
+    data = [];
+  }
 
   const claimableTokens: ClaimableToken[] = [];
 

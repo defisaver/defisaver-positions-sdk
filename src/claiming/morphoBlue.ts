@@ -1,10 +1,10 @@
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import Dec from 'decimal.js';
-import { ClaimableToken, ClaimType, MorphoClaimableToken } from '../types/claiming';
+import { ClaimableToken, ClaimType } from '../types/claiming';
 import { EthAddress, NetworkNumber } from '../types/common';
 import { createViemContractFromConfigFunc } from '../contracts';
-import { wethToEth } from '../services/utils';
+import { getMorphoUnderlyingSymbol } from '../helpers/morphoBlueHelpers';
 
 const MORPHO_ALLOWED_CONTRACTS = [
   '0x330eefa8a787552DC5cAd3C3cA644844B1E61Ddb',
@@ -17,20 +17,20 @@ const MORPHO_ALLOWED_TOKENS = [
   'MORPHO Legacy',
 ];
 
-export const getMorphoUnderlyingSymbol = (_symbol: string) => {
-  if (_symbol === 'MORPHO Legacy') return 'MORPHO';
-  return wethToEth(_symbol);
-};
-
 
 export const getMorphoBlueRewardsInfo = async (address: EthAddress) => {
   if (!address) return { claimable: '0' };
-  const res = await fetch(`https://rewards.morpho.org/v1/users/${address}/distributions`,
-    { signal: AbortSignal.timeout(3000) });
 
-  if (!res.ok) throw new Error(await res.text());
+  try {
+    const res = await fetch(`https://rewards.morpho.org/v1/users/${address}/distributions`,
+      { signal: AbortSignal.timeout(3000) });
 
-  return res.json();
+    if (!res.ok) throw new Error(await res.text());
+    return await res.json();
+  } catch (error) {
+    console.error('External API Failure: Morpho Merit', error);
+    return { claimable: '0' };
+  }
 };
 
 export const fetchMorphoBlueRewards = async (
