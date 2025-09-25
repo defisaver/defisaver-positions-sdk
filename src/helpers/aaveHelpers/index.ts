@@ -167,3 +167,18 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getApyAfterValuesEstimationInner(selectedMarket, actions, getViemProvider(provider, network), network);
+
+/**
+ * won't cover all cases
+ */
+export const getAaveUnderlyingSymbol = (_symbol = '') => {
+  let symbol = _symbol
+    .replace(/^aEthLido/, '')
+    .replace(/^aEthEtherFi/, '')
+    .replace(/^aEth/, '')
+    .replace(/^aArb/, '')
+    .replace(/^aOpt/, '')
+    .replace(/^aBas/, '');
+  if (symbol.startsWith('a')) symbol = symbol.slice(1);
+  return wethToEth(symbol);
+};

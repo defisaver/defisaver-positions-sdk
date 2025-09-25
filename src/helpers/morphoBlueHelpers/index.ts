@@ -14,7 +14,7 @@ import {
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
 import { MorphoBlueViewContractViem } from '../../contracts';
-import { compareAddresses, DEFAULT_TIMEOUT } from '../../services/utils';
+import { compareAddresses, DEFAULT_TIMEOUT, wethToEth } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
@@ -388,4 +388,9 @@ export const getRewardsForMarket = async (marketId: string, network: NetworkNumb
   const supplyAprPercent = new Dec(supplyApr).mul(100).toString();
   const borrowAprPercent = new Dec(borrowApr).mul(100).toString();
   return { supplyApy: aprToApy(supplyAprPercent), borrowApy: aprToApy(borrowAprPercent) };
+};
+
+export const getMorphoUnderlyingSymbol = (_symbol: string) => {
+  if (_symbol === 'MORPHO Legacy') return 'MORPHO';
+  return wethToEth(_symbol);
 };

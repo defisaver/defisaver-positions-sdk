@@ -2,10 +2,13 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
 import {
-  createViemContractFromConfigFunc, LiquityV2LegacyViewContractViem, LiquityV2ViewContractViem,
+  createViemContractFromConfigFunc,
+  LiquityV2LegacyViewContractViem,
+  LiquityV2sBoldVaultViem,
+  LiquityV2ViewContractViem,
 } from '../contracts';
 import {
-  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
+  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, HexString,
 } from '../types/common';
 import {
   LIQUITY_V2_TROVE_STATUS_ENUM,
@@ -14,10 +17,24 @@ import {
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getLiquityV2AggregatedPositionData } from '../helpers/liquityV2Helpers';
-import { compareAddresses, ethToWeth, MAXUINT } from '../services/utils';
-import { ZERO_ADDRESS } from '../constants';
+import {
+  compareAddresses,
+  ethToWeth,
+  getEthAmountForDecimals,
+  MAXUINT,
+} from '../services/utils';
+import { SECONDS_PER_YEAR, ZERO_ADDRESS } from '../constants';
 import { LiquityV2Markets } from '../markets';
 import { getViemProvider } from '../services/viem';
+
+export type SPYieldGainParameters = {
+  P: string;
+  aggWeightedDebtSum: string;
+  currentScale: string;
+  lastAggUpdateTime: string;
+  totalBoldDeposits: string;
+  yieldGainsPending: string;
+};
 
 const getLiquityV2ViewContract = (provider: Client, network: NetworkNumber, isLegacy: boolean) => {
   if (isLegacy) return LiquityV2LegacyViewContractViem(provider, network);
@@ -415,4 +432,227 @@ export const getLiquityV2ClaimableCollateral = async (collSurplusPoolAddress: Et
   const collSurplusPoolContract = createViemContractFromConfigFunc('LiquityV2CollSurplusPool', collSurplusPoolAddress)(client, network);
   const claimableCollateral = await collSurplusPoolContract.read.getCollateral([account]);
   return claimableCollateral.toString();
+};
+
+const stabilityPoolAddrForMarket: Record<LiquityV2Versions, EthAddress> = {
+  [LiquityV2Versions.LiquityV2Eth]: '0x5721cbbd64fc7Ae3Ef44A0A3F9a790A9264Cf9BF',
+  [LiquityV2Versions.LiquityV2WstEth]: '0x9502b7c397e9aa22fe9db7ef7daf21cd2aebe56b',
+  [LiquityV2Versions.LiquityV2REth]: '0xd442e41019b7f5c4dd78f50dc03726c446148695',
+  [LiquityV2Versions.LiquityV2EthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2REthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: ZERO_ADDRESS,
+};
+const activePoolAddrForMarket: Record<LiquityV2Versions, EthAddress> = {
+  [LiquityV2Versions.LiquityV2Eth]: '0xeB5A8C825582965f1d84606E078620a84ab16AfE',
+  [LiquityV2Versions.LiquityV2WstEth]: '0x531a8f99c70d6a56a7cee02d6b4281650d7919a0',
+  [LiquityV2Versions.LiquityV2REth]: '0x9074d72cc82dad1e13e454755aa8f144c479532f',
+  [LiquityV2Versions.LiquityV2EthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2WstEthLegacy]: ZERO_ADDRESS,
+  [LiquityV2Versions.LiquityV2REthLegacy]: ZERO_ADDRESS,
+};
+
+function ceilDiv(a: string, b: string) {
+  return new Dec(a).add(new Dec(b).sub(1)).div(b).toString();
+}
+const SP_YIELD_SPLIT = new Dec(75).mul(10 ** 16).toString(); // 75%
+
+const calcPendingSPYield = (
+  aggWeightedDebtSum: string,
+  lastAggUpdateTime: string,
+  currentTime: string,
+) => {
+  const a = new Dec(aggWeightedDebtSum).mul(
+    new Dec(currentTime).sub(new Dec(lastAggUpdateTime)),
+  ).toString();
+  const b = new Dec(SECONDS_PER_YEAR).mul(1000).mul(1e18).toString();
+  return new Dec(ceilDiv(a, b)).mul(SP_YIELD_SPLIT).div(1e18).toString();
+};
+
+
+const calculateStabilityPoolApy = (
+  spYieldGainParams: SPYieldGainParameters,
+) => {
+  const {
+    aggWeightedDebtSum, totalBoldDeposits, lastAggUpdateTime, yieldGainsPending,
+  } = spYieldGainParams;
+
+  if (new Dec(totalBoldDeposits).eq(0)) {
+    return '0';
+  }
+
+  const now = Date.now().toString();
+  const lastAggUpdateTimeScaled = new Dec(lastAggUpdateTime).mul(1000).toString();
+
+  const pendingSPYield = new Dec(calcPendingSPYield(
+    aggWeightedDebtSum,
+    lastAggUpdateTimeScaled,
+    now,
+  )).add(yieldGainsPending).toString();
+
+  const annualizedYield = new Dec(pendingSPYield).mul(SECONDS_PER_YEAR).mul(1000).div(new Dec(now).minus(lastAggUpdateTimeScaled))
+    .toString();
+  return new Dec(annualizedYield).div(totalBoldDeposits).mul(100).toString();
+};
+
+const getYBoldApyApi = async () => {
+  try {
+    const url = 'https://ydaemon.yearn.fi/1/vaults/0x23346B04a7f55b8760E5860AA5A77383D63491cD?strategiesDetails=withDetails&strategiesCondition=inQueue';
+
+    const yBoldData = await fetch(url)
+      .then(res => res.json())
+      .catch(console.error);
+
+    return new Dec(yBoldData.apr.netAPR).mul(100).toString();
+  } catch (error) {
+    console.error('External API Failure: YBold ', error);
+    return '0';
+  }
+};
+
+export type sBoldYieldParameters = {
+  WETH: string;
+  wsETH: string;
+  rETH: string;
+};
+
+const calculateSPApy = (
+  spYieldGainParams: sBoldYieldParameters, spAPYs: { apyEth: Dec.Value; apyWstEth: Dec.Value; apyREth: Dec.Value; },
+) => {
+  const {
+    WETH, wsETH, rETH,
+  } = spYieldGainParams;
+
+  const apy = new Dec(WETH).mul(spAPYs.apyEth).add(new Dec(wsETH).mul(spAPYs.apyWstEth)).add(new Dec(rETH).mul(spAPYs.apyREth))
+    .toString();
+  return apy;
+};
+
+export const getLiquityV2Staking = async (provider: Client, network: NetworkNumber, market: LiquityV2Versions, user: EthAddress) => {
+  const stabilityPoolView = createViemContractFromConfigFunc('LiquityV2StabilityPool', stabilityPoolAddrForMarket[market])(provider, network);
+  const activePoolView = createViemContractFromConfigFunc('LiquityV2ActivePool', activePoolAddrForMarket[market])(provider, network);
+
+  const debtTokenInfo = getAssetInfo(LiquityV2Markets(network)[market].debtToken, network);
+  const debtTokenContract = createViemContractFromConfigFunc('Erc20', debtTokenInfo.address as HexString)(provider, network);
+
+  const [
+    stabilityRewardColl,
+    stabilityRewardYield,
+    compoundedBoldDeposit,
+    totalBoldDeposits,
+    P,
+    currentScale,
+    yieldGainsPending,
+    debtTokenBalance,
+
+    aggWeightedDebtSum,
+    lastAggUpdateTime,
+  ] = await Promise.all([
+    stabilityPoolView.read.getDepositorCollGain([user]),
+    stabilityPoolView.read.getDepositorYieldGain([user]),
+    stabilityPoolView.read.getCompoundedBoldDeposit([user]),
+    stabilityPoolView.read.getTotalBoldDeposits(),
+    stabilityPoolView.read.P(),
+    stabilityPoolView.read.currentScale(),
+    stabilityPoolView.read.getYieldGainsPending(),
+    debtTokenContract.read.balanceOf([user]),
+
+    activePoolView.read.aggWeightedDebtSum(),
+    activePoolView.read.lastAggUpdateTime(),
+  ]);
+
+  const stabilityPoolYieldParams: SPYieldGainParameters = {
+    aggWeightedDebtSum: aggWeightedDebtSum.toString(),
+    lastAggUpdateTime: lastAggUpdateTime.toString(),
+    P: P.toString(),
+    currentScale: currentScale.toString(),
+    yieldGainsPending: yieldGainsPending.toString(),
+    totalBoldDeposits: totalBoldDeposits.toString(),
+  };
+
+  const stabilityPoolApy = calculateStabilityPoolApy(stabilityPoolYieldParams);
+
+  const stakedBOLDBalanceForUser = getEthAmountForDecimals(compoundedBoldDeposit.toString(), 18);
+  const stabilityRewardCollForUser = getEthAmountForDecimals(stabilityRewardColl.toString(), 18);
+  const stabilityRewardYieldForUser = getEthAmountForDecimals(stabilityRewardYield.toString(), 18);
+
+  return {
+    totalBOLDDeposited: getEthAmountForDecimals(totalBoldDeposits.toString(), 18),
+    stakedBOLDBalance: stakedBOLDBalanceForUser,
+    stabilityRewardColl: stabilityRewardCollForUser,
+    stabilityRewardYield: stabilityRewardYieldForUser,
+    showStakingBalances: !!(+stakedBOLDBalanceForUser || +stabilityRewardCollForUser || +stabilityRewardYieldForUser),
+    debtTokenBalance: getEthAmountForDecimals(debtTokenBalance.toString(), debtTokenInfo.decimals),
+    stabilityPoolApy,
+  };
+};
+
+export const getLiquitySAndYBold = async (provider: Client, network: NetworkNumber, markets: any, user: EthAddress) => {
+  const sBold = LiquityV2sBoldVaultViem(provider, network);
+  const yBold = createViemContractFromConfigFunc('Erc4626', '0x9F4330700a36B29952869fac9b33f45EEdd8A3d8')(provider, network);
+  const stYBold = createViemContractFromConfigFunc('Erc4626', '0x23346B04a7f55b8760E5860AA5A77383D63491cD')(provider, network);
+  const spAPYs = {
+    apyEth: markets[LiquityV2Versions.LiquityV2Eth].data.stabilityPoolApy,
+    apyWstEth: markets[LiquityV2Versions.LiquityV2WstEth].data.stabilityPoolApy,
+    apyREth: markets[LiquityV2Versions.LiquityV2REth].data.stabilityPoolApy,
+  };
+
+  const [
+    sBoldTotalAssets,
+    sBoldConvertToShares,
+    sBoldMaxWithdraw,
+
+    wethApy,
+    wsETHApy,
+    rETHApy,
+
+    yBoldTotalAssets,
+    yBoldMaxWithdraw,
+    stYBoldConvertToShares,
+
+    yBoldApy,
+
+    sBoldBalance,
+    yBoldBalance,
+    stYBoldBalance,
+  ] = await Promise.all([
+    sBold.read.totalAssets(),
+    sBold.read.convertToShares([BigInt(1e18)]),
+    sBold.read.maxWithdraw([user]),
+
+    sBold.read.sps([BigInt(0)]),
+    sBold.read.sps([BigInt(1)]),
+    sBold.read.sps([BigInt(2)]),
+
+    yBold.read.totalAssets(),
+    yBold.read.maxWithdraw([user]),
+    stYBold.read.convertToShares([BigInt(1e18)]),
+    getYBoldApyApi(),
+
+    sBold.read.balanceOf([user]),
+    yBold.read.balanceOf([user]),
+    stYBold.read.balanceOf([user]),
+  ]);
+
+  const spMarketRes = {
+    WETH: new Dec(wethApy[1]).div(10000).toString(),
+    wsETH: new Dec(wsETHApy[1]).div(10000).toString(),
+    rETH: new Dec(rETHApy[1]).div(10000).toString(),
+  };
+
+  const spApy = calculateSPApy(spMarketRes, spAPYs);
+
+  return {
+    spApy,
+    yBoldApy,
+    totalBoldDepositedSBold: assetAmountInEth(sBoldTotalAssets.toString(), 'sBOLD'),
+    boldRateSBold: assetAmountInEth(sBoldConvertToShares.toString(), 'sBOLD'),
+    maxWithdrawSBold: assetAmountInEth(sBoldMaxWithdraw.toString(), 'sBOLD'),
+    totalBoldDepositedYBold: assetAmountInEth(yBoldTotalAssets.toString(), 'yBOLD'),
+    boldRateYBold: assetAmountInEth(stYBoldConvertToShares.toString(), 'yBOLD'),
+    maxWithdrawYBold: assetAmountInEth(yBoldMaxWithdraw.toString(), 'yBOLD'),
+
+    sBoldBalance: assetAmountInEth(sBoldBalance.toString(), 'sBOLD'),
+    yBoldBalance: assetAmountInEth(yBoldBalance.toString(), 'yBOLD'),
+    stYBoldBalance: assetAmountInEth(stYBoldBalance.toString(), 'yBOLD'),
+  };
 };
