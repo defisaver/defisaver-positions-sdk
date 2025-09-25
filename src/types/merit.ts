@@ -1,0 +1,2 @@
+export type MeritRewardInfo = { apy: string; rewardTokenSymbol: string, description: string };
+export type MeritTokenRewardMap = { supply: Record<string, MeritRewardInfo>; borrow: Record<string, MeritRewardInfo> };
