@@ -184,15 +184,16 @@ export async function _getMorphoBlueAccountData(provider: Client, network: Netwo
   const usedAssets: MMUsedAssets = {};
 
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
+  const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets.toString(), marketInfo.loanToken);
   const loanTokenBorrowed = assetAmountInEth(loanInfo.borrowedInAssets.toString(), marketInfo.loanToken);
   usedAssets[marketInfo.loanToken] = {
     symbol: loanTokenInfo.symbol,
-    supplied: '0',
+    supplied: loanTokenSupplied,
     borrowed: loanTokenBorrowed,
-    isSupplied: false,
+    isSupplied: new Dec(loanInfo.suppliedInAssets.toString()).gt(0),
     isBorrowed: new Dec(loanInfo.borrowedInAssets.toString()).gt(0),
     collateral: false,
-    suppliedUsd: '0',
+    suppliedUsd: new Dec(loanTokenSupplied).mul(loanTokenInfo.price).toString(),
     borrowedUsd: new Dec(loanTokenBorrowed).mul(loanTokenInfo.price).toString(),
   };
 
