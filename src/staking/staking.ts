@@ -49,7 +49,7 @@ const getApyFromDfsApi = async (asset: string) => {
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
-    return String(data.apy);
+    return String(data.apy ?? '0');
   } catch (e) {
     console.error(`External API Failure: Failed to fetch APY for ${asset} from DFS API`, e);
     return '0';
