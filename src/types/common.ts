@@ -29,6 +29,7 @@ export enum NetworkNumber {
   Arb = 42161,
   Base = 8453,
   Linea = 59144,
+  Plasma = 9745,
 }
 export type Networkish = string | NetworkNumber;
 

@@ -18,6 +18,7 @@ export const v3USDCCollAssets = {
   [NetworkNumber.Arb]: v3USDCCollAssetsArb,
   [NetworkNumber.Base]: v3USDCCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const v3USDCeCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
@@ -29,6 +30,7 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Arb]: v3USDCeCollAssetsArb,
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC', 'ETHx', 'tETH', 'pufETH', 'wOETH'];
@@ -43,6 +45,7 @@ export const v3ETHCollAssets = {
   [NetworkNumber.Arb]: v3ETHCollAssetsArb,
   [NetworkNumber.Base]: v3ETHCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const v3USDbCCollAssetsBase = ['ETH', 'cbETH'];
@@ -54,6 +57,7 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
 export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD'];
@@ -67,6 +71,7 @@ export const v3USDTCollAssets = {
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
 export const v3USDSCollAssetsEth = ['wstETH', 'ETH', 'sUSDS', 'cbETH', 'tBTC', 'USDe'];
@@ -78,6 +83,7 @@ export const v3USDSCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDSCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
 export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
@@ -88,4 +94,5 @@ export const v3wstETHCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };

@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { NetworkNumber } from '../types/common';
 
-export const isLayer2Network = (networkId: NetworkNumber) => [NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea].includes(+networkId);
+export const isLayer2Network = (networkId: NetworkNumber) => [NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea, NetworkNumber.Plasma].includes(+networkId);
 
 export const addToObjectIf = (condition: any, item: any) => (condition ? item : {});
 

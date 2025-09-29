@@ -72,7 +72,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
-  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea];
+  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([

@@ -20,6 +20,8 @@ export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH',
 
 export const aaveV3AssetsDefaultMarketLinea = ['ETH', 'USDC', 'weETH', 'ezETH', 'USDT', 'wstETH', 'wrsETH', 'WBTC'];
 
+export const aaveV3AssetsDefaultMarketPlasma = ['ETH', 'USDT', 'sUSDe', 'USDe', 'weETH', 'XAUt'];
+
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Eth]: aaveV3AssetsDefaultMarketEth,
@@ -27,6 +29,7 @@ export const aaveV3AssetsDefaultMarket = {
   [NetworkNumber.Arb]: aaveV3AssetsDefaultMarketArb,
   [NetworkNumber.Base]: aaveV3AssetsDefaultMarketBase,
   [NetworkNumber.Linea]: aaveV3AssetsDefaultMarketLinea,
+  [NetworkNumber.Plasma]: aaveV3AssetsDefaultMarketPlasma,
 } as const;
 
 export const aaveV3AssetsLidoMarketEth = ['ETH', 'wstETH', 'USDS', 'USDC', 'ezETH', 'sUSDe', 'GHO', 'rsETH', 'tETH'];
@@ -37,6 +40,7 @@ export const aaveV3AssetsLidoMarket = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const aaveV3AssetsEtherfiMarketEth = ['weETH', 'USDC', 'PYUSD', 'FRAX'];
@@ -47,4 +51,5 @@ export const aaveV3AssetsEtherfiMarket = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
