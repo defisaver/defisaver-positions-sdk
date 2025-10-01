@@ -119,4 +119,6 @@ export interface CrvUSDUserData {
   userBands: UserBandData[],
   loanExists: boolean,
   borrowRate?: string,
+  collateralPrice: string,
+  collRatio: string,
 }
