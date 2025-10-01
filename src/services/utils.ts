@@ -62,3 +62,39 @@ export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
 export const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
 
 export const DEFAULT_TIMEOUT = 2000; // 2 seconds
+
+/**
+ * Converts web3 hybrid response (that can be used as objects and arrays, so has duplicated values) to objects.
+ * @param value
+ */
+export const convertHybridArraysToObjects = (value: any): any => {
+  if (Array.isArray(value)) {
+    const keys = Object.keys(value);
+    const hasNamedKeys = keys.some((key) => Number.isNaN(Number(key)));
+
+    // If array has named keys, treat it as an object and keep only those
+    if (hasNamedKeys) {
+      const result: Record<string, any> = {};
+      for (const [key, val] of Object.entries(value)) {
+        if (Number.isNaN(Number(key))) {
+          result[key] = convertHybridArraysToObjects(val);
+        }
+      }
+      return result;
+    }
+
+    // Else, treat as a regular array
+    return value.map(convertHybridArraysToObjects);
+  }
+
+  // If it's an object (but not an array), recurse into its values
+  if (value && typeof value === 'object') {
+    const result: Record<string, any> = {};
+    for (const [key, val] of Object.entries(value)) {
+      result[key] = convertHybridArraysToObjects(val);
+    }
+    return result;
+  }
+
+  return value;
+};

@@ -178,6 +178,8 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
   const collSuppliedUsd = new Dec(collSupplied).mul(collPrice).toString();
   const crvUSDSupplied = assetAmountInEth(data.curveUsdCollateralAmount.toString(), debtAsset);
   const debtBorrowed = assetAmountInEth(data.debtAmount.toString(), debtAsset);
+
+  const collRatio = data.loanExists ? new Dec(collSuppliedUsd).div(debtBorrowed).toString() : '0';
   const usedAssets: CrvUSDUsedAssets = data.loanExists ? {
     [collAsset]: {
       isSupplied: true,
@@ -219,6 +221,8 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
 
   return {
     ...data,
+    collRatio,
+    collateralPrice: collPrice,
     debtAmount: assetAmountInEth(data.debtAmount.toString(), debtAsset),
     health,
     healthPercent,
