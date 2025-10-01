@@ -4,7 +4,7 @@ export enum IncentiveKind {
 }
 
 export enum IncentiveEligibilityId {
-  AaveV3EthenaLiquidLeverage = '0x8772bb231f3af13ead41d7ecf6abd60f5f716ec8BORROW_BL',
+  AaveV3EthenaLiquidLeverage = '0x7361e6f04060154e0268a8402b073cbf97e11ae3BORROW_BL',
   AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
   AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
 }
