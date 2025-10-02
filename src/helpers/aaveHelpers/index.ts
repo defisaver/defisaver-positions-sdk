@@ -103,13 +103,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
-    usedAssets,
-    assetsData,
-  });
-  payload.netApy = netApy;
-  payload.incentiveUsd = incentiveUsd;
-  payload.totalInterestUsd = totalInterestUsd;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
@@ -129,6 +122,15 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
   payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
+    usedAssets,
+    assetsData,
+    optionalData: { healthRatio: payload.healthRatio },
+  });
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
   return payload;
 };
 
@@ -167,3 +169,18 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getApyAfterValuesEstimationInner(selectedMarket, actions, getViemProvider(provider, network), network);
+
+/**
+ * won't cover all cases
+ */
+export const getAaveUnderlyingSymbol = (_symbol = '') => {
+  let symbol = _symbol
+    .replace(/^aEthLido/, '')
+    .replace(/^aEthEtherFi/, '')
+    .replace(/^aEth/, '')
+    .replace(/^aArb/, '')
+    .replace(/^aOpt/, '')
+    .replace(/^aBas/, '');
+  if (symbol.startsWith('a')) symbol = symbol.slice(1);
+  return wethToEth(symbol);
+};

@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import { IncentiveEligibilityId, MMUsedAssets } from '../types/common';
 
-export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
+export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets, { healthRatio }: { healthRatio: string }) => {
   const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
   const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
   const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
@@ -23,8 +23,7 @@ export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
     return acc;
   }, new Dec(0)).toString();
 
-  const borrowPercentage = new Dec(totalAmountBorrowed).div(totalAmountSupplied).toNumber();
-  if (borrowPercentage < 0.5) return { isEligible: false, eligibleUSDAmount: '0' }; // must be looped at least once
+  if (new Dec(healthRatio).gte(2.5)) return { isEligible: false, eligibleUSDAmount: '0' }; // health ratio must be below 2.5
 
   const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
   const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
@@ -54,7 +53,7 @@ export const isEligibleForAaveV3ArbitrumETHLSBorrow = (usedAssets: MMUsedAssets)
   return { isEligible: true, eligibleUSDAmount: ETHAmountBorrowed };
 };
 
-export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets: MMUsedAssets) => { isEligible: boolean; eligibleUSDAmount: string } } = {
+export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets: MMUsedAssets, optionalData: any) => { isEligible: boolean; eligibleUSDAmount: string } } = {
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeverage]: isEligibleForEthenaUSDeRewards,
   [IncentiveEligibilityId.AaveV3ArbitrumEthSupply]: isEligibleForAaveV3ArbitrumEthSupply,
   [IncentiveEligibilityId.AaveV3ArbitrumETHLSBorrow]: isEligibleForAaveV3ArbitrumETHLSBorrow,

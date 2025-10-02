@@ -195,7 +195,7 @@ const getChainLinkPricesForTokens = async (
 
       default:
         // @ts-ignore
-        if (results[i + offset].result[1]) {
+        if (results[i + offset].result?.[1]) {
           // @ts-ignore
           acc[token] = new Dec(results[i + offset].result[1]!.toString() as string).div(1e8).toString();
         } else if (results[i + offset].result) {

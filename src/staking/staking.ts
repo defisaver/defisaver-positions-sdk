@@ -4,6 +4,7 @@ import { IncentiveEligibilityId, MMAssetsData, MMUsedAssets } from '../types/com
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { EligibilityMapping } from './eligibility';
+import { EulerV2UsedAsset } from '../types';
 
 const getSsrApy = async () => {
   try {
@@ -48,7 +49,7 @@ const getApyFromDfsApi = async (asset: string) => {
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
-    return String(data.apy);
+    return String(data.apy ?? '0');
   } catch (e) {
     console.error(`External API Failure: Failed to fetch APY for ${asset} from DFS API`, e);
     return '0';
@@ -105,11 +106,11 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
 };
 
 export const calculateNetApy = ({
-  usedAssets, assetsData,
-}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData }) => {
+  usedAssets, assetsData, optionalData,
+}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, optionalData?: any }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
-    const assetData = assetsData[usedAsset.symbol];
+    const assetData = assetsData[usedAsset.symbol] || assetsData[(usedAsset as EulerV2UsedAsset).vaultAddress?.toLowerCase() || ''];
 
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;
@@ -122,7 +123,7 @@ export const calculateNetApy = ({
         const { apy, eligibilityId } = supplyIncentive;
         const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
         if (eligibilityCheck) {
-          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
           const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
           acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         } else {
@@ -143,7 +144,7 @@ export const calculateNetApy = ({
         const { apy, eligibilityId } = borrowIncentive;
         const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
         if (eligibilityCheck) {
-          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets);
+          const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
           const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
           acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         } else {

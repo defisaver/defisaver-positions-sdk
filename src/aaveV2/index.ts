@@ -106,7 +106,8 @@ export const _getAaveV2AccountBalances = async (provider: Client, network: Netwo
   // @ts-ignore
   const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
+  // @ts-ignore
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
