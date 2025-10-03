@@ -88,6 +88,17 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
+  [NetworkNumber.Plasma]: {
+    // Non-existing markets, keeping it because of typescript
+    [CompoundVersions.CompoundV3USDC]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3ETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+  },
 };
 
 export const COMPOUND_V2: CompoundMarketData = {

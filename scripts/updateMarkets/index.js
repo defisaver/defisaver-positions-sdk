@@ -4,7 +4,7 @@ import { loadFile, writeFile, detectCodeFormat } from 'magicast';
 import lodash from 'lodash';
 import { getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  arbitrum, base, mainnet, optimism, linea,
+  arbitrum, base, mainnet, optimism, linea, plasma,
 } from 'viem/chains';
 
 import { createPublicClient, http, getContract } from 'viem';
@@ -33,6 +33,8 @@ const getViemChain = (chainId) => {
       return base;
     case 59144:
       return linea;
+    case 9745:
+      return plasma;
     default:
       throw new Error(`Unsupported network: ${chainId}`);
   }
@@ -50,6 +52,8 @@ const getRpc = (chainId) => {
       return process.env.RPCBASE;
     case 59144:
       return process.env.RPCLINEA;
+    case 9745:
+      return process.env.RPCPLASMA;
     default:
       throw new Error(`Unsupported network: ${chainId}`);
   }

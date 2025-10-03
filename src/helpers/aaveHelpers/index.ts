@@ -4,7 +4,7 @@ import { Client } from 'viem';
 import {
   AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
-import { ethToWeth, wethToEth } from '../../services/utils';
+import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
   aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
@@ -57,7 +57,7 @@ export const aaveAnyGetEmodeMutableProps = (
     eModeCategoriesData,
     assetsData,
   }: AaveHelperCommon, _asset: string) => {
-  const asset = wethToEth(_asset);
+  const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
   const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
@@ -138,7 +138,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const params = actions.map(({ action, asset, amount }) => {
     const isDebtAsset = borrowOperations.includes(action);
     const amountInWei = assetAmountInWei(amount, asset);
-    const assetInfo = getAssetInfo(ethToWeth(asset), network);
+    const assetInfo = getAssetInfo(getWrappedNativeAssetFromUnwrapped(asset), network);
     let liquidityAdded;
     let liquidityTaken;
     if (isDebtAsset) {
@@ -159,7 +159,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const data = await viewContract.read.getApyAfterValuesEstimation([selectedMarket.providerAddress, params]);
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
   data.forEach((d: { reserveAddress: EthAddress, supplyRate: BigInt, variableBorrowRate: BigInt }) => {
-    const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
+    const asset = getNativeAssetFromWrapped(getAssetInfoByAddress(d.reserveAddress, network).symbol);
     rates[asset] = {
       supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
       borrowRate: aprToApy(new Dec(d.variableBorrowRate.toString()).div(1e25).toString()),
@@ -180,7 +180,9 @@ export const getAaveUnderlyingSymbol = (_symbol = '') => {
     .replace(/^aEth/, '')
     .replace(/^aArb/, '')
     .replace(/^aOpt/, '')
+    .replace(/^aLin/, '')
+    .replace(/^aPla/, '')
     .replace(/^aBas/, '');
   if (symbol.startsWith('a')) symbol = symbol.slice(1);
-  return wethToEth(symbol);
+  return getNativeAssetFromWrapped(symbol);
 };
