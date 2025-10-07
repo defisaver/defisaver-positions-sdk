@@ -1224,6 +1224,9 @@ export const AaveRewardsController = {
     },
     "59144": {
       "address": "0xc67bb8F2314fA0df50cBa314c6509A7bdAD500C0"
+    },
+    "9745": {
+      "address": "0x3A57eAa3Ca3794D66977326af7991eB3F6dD5a5A"
     }
   }
 } as const;
