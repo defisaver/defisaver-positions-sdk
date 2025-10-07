@@ -229,6 +229,11 @@ export const AaveV3View = {
             "address": "0xc9D6EfA6e08B66a5Cdc516Bcd5807c2fa69E0f2A"
           }
         },
+      },
+      "9745": {
+        "address": "0xD8E67968d8a0df4beCf2D50daE1e34d4d80C701C",
+        "createdBlock": 1880799,
+        "oldVersions": {},
       }
     }
   } as const;
@@ -249,6 +254,9 @@ export const AaveV3PoolAddressesProvider =  {
       },
       "59144": {
         "address": "0x89502c3731F69DDC95B65753708A07F8Cd0373F4"
+      },
+      "9745": {
+        "address": "0x061D8e131F26512348ee5FA42e2DF1bA9d6505E9"
       }
     }
   } as const;
@@ -285,6 +293,9 @@ export const AaveV3LendingPool =  {
       },
       "59144": {
         "address": "0xc47b8C00b0f69a36fa203Ffeac0334874574a8Ac"
+      },
+      "9745": {
+        "address": "0x925a2A7214Ed92428B5b1B090F80b25700095e12"
       }
     }
   } as const;
@@ -321,6 +332,9 @@ export const AaveV3ProtocolDataProvider =  {
       },
       "59144": {
         "address": "0x47cd4b507B81cB831669c71c7077f4daF6762FF4"
+      },
+      "9745": {
+        "address": "0xf2D6E38B407e31E7E7e4a16E6769728b76c7419F"
       }
     }
   } as const;
@@ -357,6 +371,9 @@ export const AaveUiIncentiveDataProviderV3 =  {
       },
       "59144": {
         "address": "0x117684358D990E42Eb1649E7e8C4691951dc1E71"
+      },
+      "9745": {
+        "address": "0xcb85C501B3A5e9851850d66648d69B26A4c90942"
       }
     }
   } as const;
@@ -1207,6 +1224,9 @@ export const AaveRewardsController = {
     },
     "59144": {
       "address": "0xc67bb8F2314fA0df50cBa314c6509A7bdAD500C0"
+    },
+    "9745": {
+      "address": "0x3A57eAa3Ca3794D66977326af7991eB3F6dD5a5A"
     }
   }
 } as const;

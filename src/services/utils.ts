@@ -2,16 +2,12 @@ import Dec from 'decimal.js';
 import { getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { NetworkNumber } from '../types/common';
 
-export const isLayer2Network = (networkId: NetworkNumber) => [NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea].includes(+networkId);
+export const isLayer2Network = (networkId: NetworkNumber) => [NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea, NetworkNumber.Plasma].includes(+networkId);
 
 export const addToObjectIf = (condition: any, item: any) => (condition ? item : {});
 
 
 export const addToArrayIf = (condition: any, ...items: any[]) => (condition ? items : []);
-
-export const ethToWeth = (maybeEth: any) => maybeEth?.replace(/^ETH$/, 'WETH');
-
-export const wethToEth = (maybeWeth: any) => maybeWeth?.replace(/^WETH$/, 'ETH');
 
 export const stEthToWstEth = (maybeStEth: any) => maybeStEth?.replace(/^stETH$/, 'wstETH');
 
@@ -29,10 +25,6 @@ export const getWeiAmountForDecimals = (amount: string | number, decimals: numbe
 export const getEthAmountForDecimals = (amount: string | number, decimals: string | number) => new Dec(amount).div(10 ** +decimals).toString();
 
 export const handleWbtcLegacy = (asset: string) => (asset === 'WBTC Legacy' ? 'WBTC' : asset);
-
-export const wethToEthByAddress = (maybeWethAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(wethToEth(getAssetInfoByAddress(maybeWethAddr, chainId).symbol), chainId).address;
-
-export const ethToWethByAddress = (maybeEthAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(ethToWeth(getAssetInfoByAddress(maybeEthAddr, chainId).symbol), chainId).address;
 
 export const bytesToString = (hex: string) => Buffer.from(hex.replace(/^0x/, ''), 'hex')
   .toString()
@@ -97,4 +89,28 @@ export const convertHybridArraysToObjects = (value: any): any => {
   }
 
   return value;
+};
+
+export const ethToWeth = (maybeEth: string) => maybeEth?.replace(/^ETH$/, 'WETH');
+
+export const wethToEth = (maybeWeth: string) => maybeWeth?.replace(/^WETH$/, 'ETH');
+
+export const wethToEthByAddress = (maybeWethAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(wethToEth(getAssetInfoByAddress(maybeWethAddr, chainId).symbol), chainId).address;
+
+export const ethToWethByAddress = (maybeEthAddr: string, chainId = NetworkNumber.Eth) => getAssetInfo(ethToWeth(getAssetInfoByAddress(maybeEthAddr, chainId).symbol), chainId).address;
+
+export const xplToWxpl = (maybeXpl: string) => maybeXpl?.replace(/^XPL$/, 'WXPL');
+
+export const wxplToXpl = (maybeWxpl: string) => maybeWxpl?.replace(/^WXPL$/, 'XPL');
+
+export const getWrappedNativeAssetFromUnwrapped = (symbol: string) => {
+  if (symbol === 'ETH') return 'WETH';
+  if (symbol === 'XPL') return 'WXPL';
+  return symbol;
+};
+
+export const getNativeAssetFromWrapped = (symbol: string) => {
+  if (symbol === 'WETH') return 'ETH';
+  if (symbol === 'WXPL') return 'XPL';
+  return symbol;
 };

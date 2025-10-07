@@ -16,13 +16,6 @@ export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets, { healt
   const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
   if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
 
-  const totalAmountBorrowed = Object.values(usedAssets).reduce((acc, asset) => {
-    if (asset.isBorrowed) {
-      return acc.add(asset.borrowedUsd);
-    }
-    return acc;
-  }, new Dec(0)).toString();
-
   if (new Dec(healthRatio).gte(2.5)) return { isEligible: false, eligibleUSDAmount: '0' }; // health ratio must be below 2.5
 
   const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
@@ -57,4 +50,5 @@ export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets:
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeverage]: isEligibleForEthenaUSDeRewards,
   [IncentiveEligibilityId.AaveV3ArbitrumEthSupply]: isEligibleForAaveV3ArbitrumEthSupply,
   [IncentiveEligibilityId.AaveV3ArbitrumETHLSBorrow]: isEligibleForAaveV3ArbitrumETHLSBorrow,
+  [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasma]: isEligibleForEthenaUSDeRewards,
 };

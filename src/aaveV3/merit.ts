@@ -49,6 +49,9 @@ Record<string, {
   [NetworkNumber.Linea]: {
     [AaveVersions.AaveV3]: {},
   },
+  [NetworkNumber.Plasma]: {
+    [AaveVersions.AaveV3]: {},
+  },
 };
 
 /**

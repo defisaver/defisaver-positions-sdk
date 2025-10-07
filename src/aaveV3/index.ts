@@ -12,7 +12,7 @@ import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSi
 import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
-  ethToWeth, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
+  getWrappedNativeAssetFromUnwrapped, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
@@ -66,13 +66,13 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 };
 
 export async function _getAaveV3MarketData(provider: Client, network: NetworkNumber, market: AaveMarketInfo, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3MarketData> {
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+  const _addresses = market.assets.map(a => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
   const isL2 = isLayer2Network(network);
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
-  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea];
+  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
 
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
@@ -414,7 +414,7 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const lendingPoolContract = createViemContractFromConfigFunc(market.lendingPool, market.lendingPoolAddress)(provider, network);
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map((a: string[]) => getAssetInfo(ethToWeth(a), network).address);
+  const _addresses = market.assets.map((a: string) => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 

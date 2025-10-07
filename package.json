@@ -27,7 +27,7 @@
     "decimal.js": "^10.6.0",
     "lodash": "^4.17.21",
     "memoizee": "^0.4.17",
-    "viem": "^2.31.4"
+    "viem": "^2.37.9"
   },
   "devDependencies": {
     "@defisaver/eslint-config": "^1.0.1",
