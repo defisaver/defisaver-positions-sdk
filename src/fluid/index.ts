@@ -1572,19 +1572,22 @@ const tokensWithoutChainlinkPrices = ['sUSDS', 'USDA', 'ezETH', 'rsETH', 'weETHs
 
 const handleTokenWithoutChainlinkPrice = (token: string, prices: Record<string, string>) => {
   if (token === 'sUSDS') {
-    return new Dec('105276929').div(1e8).toString();
+    return new Dec('107057929').div(1e8).toString();
   }
   if (token === 'USDA') {
     return new Dec('100000000').div(1e8).toString();
   }
+  if (token === 'wstUSR') {
+    return new Dec('111280000').div(1e8).toString();
+  }
   if (token === 'ezETH') {
-    return new Dec(prices.ETH).mul(1.049).toString();
+    return new Dec(prices.ETH).mul(1.06).toString();
   }
   if (token === 'rsETH') {
-    return new Dec(prices.wstETH).mul(1.0454).toString();
+    return new Dec(prices.wstETH).mul(1.0557).toString();
   }
   if (token === 'weETHs') {
-    return new Dec(prices.wstETH).mul(1.026).toString();
+    return new Dec(prices.wstETH).mul(1.032).toString();
   }
   if (token === 'LBTC') {
     return prices.WBTC;
