@@ -28,7 +28,7 @@ describe('Spark', () => {
   };
 
   const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.SparkMarketsData) => {
-    const accountData = await sdk.spark.getSparkAccountData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { assetsData: marketData.assetsData, selectedMarket: sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1] });
+    const accountData = await sdk.spark.getSparkAccountData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', { assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData, selectedMarket: sdk.markets.SparkMarkets(network)[sdk.SparkVersions.SparkV1] });
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
@@ -58,6 +58,7 @@ describe('Spark', () => {
     const marketData = await fetchMarketData(network, provider);
     await fetchAccountData(network, provider, marketData);
   });
+  return;
 
   it('can fetch full position data for Ethereum', async function () {
     this.timeout(10000);

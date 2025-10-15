@@ -24,6 +24,7 @@ import {
   SparkPositionData,
   SparkUsedAsset,
   SparkUsedAssets,
+  EModeCategoriesData,
 } from '../types';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
@@ -68,19 +69,19 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
   const loanInfoContract = SparkViewContractViem(provider, network);
   const sparkIncentivesContract = SparkIncentiveDataProviderContractViem(provider, network);
 
-  const [loanInfo, _rewardInfo] = await Promise.all([
+  // eslint-disable-next-line prefer-const
+  let [loanInfo, rewardInfo] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address) as EthAddress[]]),
-    network === NetworkNumber.Opt ? sparkIncentivesContract.read.getReservesIncentivesData([marketAddress]) : [],
+    sparkIncentivesContract.read.getReservesIncentivesData([marketAddress]),
   ]);
 
-  let rewardInfo: any[] = [];
-  if (network === NetworkNumber.Opt) {
-    rewardInfo = rewardInfo.reduce((all, market) => {
-      // eslint-disable-next-line no-param-reassign
-      all[market.underlyingAsset] = market;
-      return all;
-    }, {});
-  }
+  rewardInfo = rewardInfo.reduce((all: any, market: any) => {
+    // eslint-disable-next-line no-param-reassign
+    all[market.underlyingAsset] = market;
+    return all;
+  }, {});
+
+  const eModeCategoriesData: EModeCategoriesData = {};
 
   const assetsData: SparkAssetData[] = await Promise.all(loanInfo
     .map(async (market, i) => {
@@ -98,6 +99,17 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
       if (new Dec(marketLiquidity).lt(0)) {
         marketLiquidity = '0';
       }
+
+      eModeCategoriesData[+market.emodeCategory.toString()] = {
+        id: +market.emodeCategory.toString(),
+        label: market.label,
+        liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
+        liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
+        collateralFactor: new Dec(market.ltv).div(10000).toString(),
+        collateralAssets: eModeCategoriesData[+market.emodeCategory.toString()] ? [...eModeCategoriesData[+market.emodeCategory.toString()].collateralAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+        borrowAssets: eModeCategoriesData[+market.emodeCategory.toString()] ? [...eModeCategoriesData[+market.emodeCategory.toString()].borrowAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+      };
+
       return ({
         symbol: selectedMarket.assets[i],
         isIsolated: new Dec(market.debtCeilingForIsolationMode.toString()).gt(0),
@@ -173,7 +185,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
     if (!rewardForMarket) return;
     (rewardForMarket.aIncentiveData.rewardsTokenInformation as any[]).forEach(supplyRewardData => {
       if (supplyRewardData) {
-        if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        if (+(supplyRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals)
           .toString();
@@ -194,7 +206,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
     });
     (rewardForMarket.vIncentiveData.rewardsTokenInformation as any[]).forEach(borrowRewardData => {
       if (borrowRewardData) {
-        if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
+        if (+(borrowRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals)
           .toString();
@@ -228,7 +240,10 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
       payload[assetData.symbol] = { ...assetData, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  eModeCategoriesData[0].collateralAssets = Object.values(payload).map(a => a.symbol);
+  eModeCategoriesData[0].borrowAssets = Object.values(payload).map(a => a.symbol);
+
+  return { assetsData: payload, eModeCategoriesData };
 };
 
 export const getSparkMarketsData = async (
@@ -317,7 +332,12 @@ export const getSparkAccountBalances = async (
   address: EthAddress,
 ): Promise<PositionBalances> => _getSparkAccountBalances(getViemProvider(provider, network, { batch: { multicall: true } }), network, block, addressMapping, address);
 
-export const _getSparkAccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
+export const _getSparkAccountData = async (
+  provider: Client,
+  network: NetworkNumber,
+  address: EthAddress,
+  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData, eModeCategoriesData: EModeCategoriesData },
+) => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -435,11 +455,11 @@ export const getSparkAccountData = async (
   provider: EthereumProvider,
   network: NetworkNumber,
   address: EthAddress,
-  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData },
+  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData, eModeCategoriesData: EModeCategoriesData },
 ) => _getSparkAccountData(getViemProvider(provider, network), network, address, extractedState);
 
 export const getSparkFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, market: SparkMarketData): Promise<SparkPositionData> => {
   const marketData = await getSparkMarketsData(provider, network, market);
-  const positionData = await getSparkAccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+  const positionData = await getSparkAccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };
