@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, IncentiveData, NetworkNumber } from './common';
 
 export interface FluidMarketInfo {
   chainIds: number[]
@@ -157,6 +157,7 @@ export enum FluidMainnetDepositToken {
   USDT = 'USDT',
   GHO = 'GHO',
   sUSDS = 'sUSDS',
+  USDtb = 'USDtb',
 }
 
 export enum FluidArbitrumDepositToken {
@@ -165,6 +166,8 @@ export enum FluidArbitrumDepositToken {
   USDC = 'USDC',
   USDT = 'USDT',
   ARB = 'ARB',
+  GHO = 'GHO',
+  sUSDS = 'sUSDS',
 }
 
 export enum FluidBaseDepositToken {
@@ -173,6 +176,7 @@ export enum FluidBaseDepositToken {
   wstETH = 'wstETH',
   EURC = 'EURC',
   sUSDS = 'sUSDS',
+  GHO = 'GHO',
 }
 
 export type FluidDepositTokenByNetwork = {
@@ -193,10 +197,8 @@ export interface FluidAssetData {
   symbol: string,
   address: string,
   price: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
   totalSupply: string,
   totalBorrow: string,
   canBeSupplied: boolean,

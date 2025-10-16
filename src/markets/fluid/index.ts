@@ -2421,6 +2421,7 @@ const FluidMainnetFTokenAddresses = {
   [FluidMainnetDepositToken.wstETH]: '0x2411802D8BEA09be0aF8fD8D08314a63e706b29C',
   [FluidMainnetDepositToken.GHO]: '0x6A29A46E21C730DcA1d8b23d637c101cec605C5B',
   [FluidMainnetDepositToken.sUSDS]: '0x2BBE31d63E6813E3AC858C04dae43FB2a72B0D11',
+  [FluidMainnetDepositToken.USDtb]: '0x15e8c742614b5D8Db4083A41Df1A14F5D2bFB400',
 };
 
 const FluidArbitrumFTokenAddresses = {
@@ -2429,6 +2430,8 @@ const FluidArbitrumFTokenAddresses = {
   [FluidArbitrumDepositToken.USDT]: '0x4A03F37e7d3fC243e3f99341d36f4b829BEe5E03',
   [FluidArbitrumDepositToken.wstETH]: '0x66C25Cd75EBdAA7E04816F643d8E46cecd3183c9',
   [FluidArbitrumDepositToken.ARB]: '0xbE3860FD4c3facDf8ad57Aa8c1A36D6dc4390a49',
+  [FluidArbitrumDepositToken.GHO]: '0x037dFf1C12805707d7c29F163E0F09fC9102657A',
+  [FluidArbitrumDepositToken.sUSDS]: '0x3459fcc94390C3372c0F7B4cD3F8795F0E5aFE96',
 };
 
 const FluidBaseFTokenAddresses = {
@@ -2437,6 +2440,7 @@ const FluidBaseFTokenAddresses = {
   [FluidBaseDepositToken.EURC]: '0x1943FA26360f038230442525Cf1B9125b5DCB401',
   [FluidBaseDepositToken.wstETH]: '0x896E39f0E9af61ECA9dD2938E14543506ef2c2b5',
   [FluidBaseDepositToken.sUSDS]: '0xf62e339f21d8018940f188F6987Bcdf02A849619',
+  [FluidBaseDepositToken.GHO]: '0x8DdbfFA3CFda2355a23d6B11105AC624BDbE3631',
 };
 
 export const FluidFTokens = (networkId: NetworkNumber) => {
