@@ -50,8 +50,6 @@ export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkA
       enteringTerms,
       canEnterCategory: !enteringTerms.includes(false),
       id: a.eModeCategory,
-      data: a.eModeCategoryData,
-      assets: a.eModeCategory === 0 ? [] : [...(categoriesMapping[a.eModeCategory]?.assets || []), a.symbol],
       enabledData: {
         ratio: afterEnteringCategory.ratio,
         liqRatio: afterEnteringCategory.liqRatio,
@@ -144,13 +142,6 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
         isFlashLoanEnabled: market.isFlashLoanEnabled,
         aTokenAddress: market.aTokenAddress,
-        eModeCategoryData: {
-          label: market.label,
-          liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
-          liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
-          collateralFactor: new Dec(market.ltv).div(10000).toString(),
-          priceSource: market.priceSource,
-        },
         supplyIncentives: [],
         borrowIncentives: [],
       });
