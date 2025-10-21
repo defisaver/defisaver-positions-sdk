@@ -1,7 +1,6 @@
 import Dec from 'decimal.js';
 import {
-  assetAmountInEth,
-  AssetData, getAssetInfo, getAssetInfoByAddress,
+  assetAmountInEth, AssetData, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
 import {
@@ -9,7 +8,8 @@ import {
 } from '../types/common';
 import {
   FluidAggregatedVaultData,
-  FluidAssetData, FluidAssetsData,
+  FluidAssetData,
+  FluidAssetsData,
   FluidFTokenDataStructOutput,
   FluidMarketData,
   FluidMarketInfo,
@@ -19,13 +19,21 @@ import {
   FluidUserPositionStructOutputStruct,
   FluidVaultData,
   FluidVaultDataStructOutputStruct,
-  FluidVaultType, InnerFluidMarketData,
+  FluidVaultType,
+  InnerFluidMarketData,
 } from '../types';
 import {
-  BTCPriceFeedContractViem, DFSFeedRegistryContractViem, ETHPriceFeedContractViem, FeedRegistryContractViem, FluidViewContractViem,
+  BTCPriceFeedContractViem,
+  DFSFeedRegistryContractViem,
+  ETHPriceFeedContractViem,
+  FeedRegistryContractViem,
+  FluidViewContractViem,
 } from '../contracts';
 import {
-  compareAddresses, DEFAULT_TIMEOUT, getEthAmountForDecimals, isMainnetNetwork,
+  compareAddresses,
+  DEFAULT_TIMEOUT,
+  getEthAmountForDecimals,
+  isMainnetNetwork,
 } from '../services/utils';
 import {
   getFluidAggregatedData,
@@ -105,7 +113,7 @@ const getChainLinkPricesForTokens = async (
     const chainLinkFeedAddress = getChainlinkAssetAddress(assetInfo.symbol, network);
 
     if (assetInfo.symbol === 'wstETH') return getWstETHChainLinkPriceCalls(client, network);
-    if (assetInfo.symbol === 'weETH') return getWeETHChainLinkPriceCalls(client, network);
+    if (assetInfo.symbol === 'weETH' && network !== NetworkNumber.Plasma) return getWeETHChainLinkPriceCalls(client, network);
 
     if (isMainnet) {
       const feedRegistryContract = FeedRegistryContractViem(client, NetworkNumber.Eth);
@@ -179,17 +187,29 @@ const getChainLinkPricesForTokens = async (
       }
 
       case 'weETH': {
-        const {
-          ethPrice,
-          weETHRate,
-        } = parseWeETHPriceCalls(
-          results[i + offset].result!.toString(),
+        if (network !== NetworkNumber.Plasma) {
+          const {
+            ethPrice,
+            weETHRate,
+          } = parseWeETHPriceCalls(
+            results[i + offset].result!.toString(),
+            // @ts-ignore
+            results[i + offset + 1].result[1]!.toString(),
+            results[i + offset + 2].result!.toString(),
+          );
+          offset += 2;
+          acc[token] = new Dec(ethPrice).mul(weETHRate).toString();
           // @ts-ignore
-          results[i + offset + 1].result[1]!.toString(),
-          results[i + offset + 2].result!.toString(),
-        );
-        offset += 2;
-        acc[token] = new Dec(ethPrice).mul(weETHRate).toString();
+        } else if (results[i + offset].result?.[1]) {
+          // For Plasma, use default chainlink feed (latestRoundData format)
+          // @ts-ignore
+          acc[token] = new Dec(results[i + offset].result[1]!.toString() as string).div(1e8).toString();
+        } else if (results[i + offset].result) {
+          // For Plasma, use default chainlink feed (latestAnswer format)
+          acc[token] = new Dec(results[i + offset].result!.toString() as string).div(1e8).toString();
+        } else {
+          acc[token] = '0';
+        }
         break;
       }
 
@@ -226,8 +246,13 @@ const getTokenPriceFromChainlink = async (asset: AssetData, network: NetworkNumb
   } else {
     // Currently only base network is supported
     const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
-    const roundPriceData = isTokenUSDA ? [0, '100000000'] : await feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]);
-    loanTokenPrice = roundPriceData[1].toString();
+    try {
+      const roundPriceData = isTokenUSDA ? [0, '100000000'] : await feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]);
+      loanTokenPrice = roundPriceData[1].toString();
+    } catch (err) {
+      console.error(`Error fetching price for ${asset.symbol} on ${network}: ${err}`);
+      loanTokenPrice = '0';
+    }
   }
 
   return new Dec(loanTokenPrice).div(1e8).toString();
@@ -1580,7 +1605,7 @@ const getTokenPricePortfolio = async (token: string, provider: PublicClient, net
   if (token === 'wstETH') {
     return getWstETHPrice(provider, network);
   }
-  if (token === 'weETH') {
+  if (token === 'weETH' && network !== NetworkNumber.Plasma) {
     return getWeETHPrice(provider, network);
   }
 

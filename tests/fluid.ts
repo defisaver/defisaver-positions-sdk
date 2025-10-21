@@ -1,6 +1,8 @@
 import 'dotenv/config';
 import * as sdk from '../src';
-import { FluidMainnetVersion, FluidMarketData, FluidVersions } from '../src';
+import {
+  FluidMainnetVersion, FluidMarketData, FluidPlasmaVersions, FluidVersions,
+} from '../src';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../src/types/common';
 import { getFluidPositionWithMarket, getUserPositions } from '../src/fluid';
 import { getProvider } from './utils/getProvider';
@@ -13,10 +15,12 @@ describe('Fluid', () => {
   let provider: EthereumProvider;
   let providerBase: EthereumProvider;
   let providerArb: EthereumProvider;
+  let providerPlasma: EthereumProvider;
   before(async () => {
     provider = getProvider('RPC');
     providerBase = getProvider('RPCBASE');
     providerArb = getProvider('RPCARB');
+    providerPlasma = getProvider('RPCPLASMA');
   });
 
   const testWhaleAddress = '0x01d1f55d94a53a9517c07f793f35320FAA0D2DCf';
@@ -102,5 +106,26 @@ describe('Fluid', () => {
     this.timeout(10000);
     const network = NetworkNumber.Arb;
     const data = await sdk.fluid.getFluidDepositData(providerArb, network, 'USDC', '0x21dc459fba0b1ea037cd221d35b928be1c26141a');
+  });
+
+  it('Fetch Plasma market data', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+    const marketData = await fetchMarketData(network, providerPlasma, FluidPlasmaVersions.FLUID_ETH_USDE_2_PLASMA);
+
+    console.log(marketData);
+  });
+
+  it('Fetch User positions for plasma', async function () {
+    this.timeout();
+    const network = NetworkNumber.Plasma;
+    const allUserPositions = await sdk.fluid.getUserPositions(providerPlasma, network, '0x68e2048a65eecb5b584ae3e43f4a5c8bc67406fc');
+  });
+
+  it('can fetch all market data on Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    const allMarketData = await fetchAllMarketData(network, providerPlasma);
   });
 });
