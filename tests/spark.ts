@@ -58,7 +58,6 @@ describe('Spark', () => {
     const marketData = await fetchMarketData(network, provider);
     await fetchAccountData(network, provider, marketData);
   });
-  return;
 
   it('can fetch full position data for Ethereum', async function () {
     this.timeout(10000);
