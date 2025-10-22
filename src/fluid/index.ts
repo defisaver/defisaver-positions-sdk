@@ -33,6 +33,7 @@ import {
   compareAddresses,
   DEFAULT_TIMEOUT,
   getEthAmountForDecimals,
+  getNativeAssetFromWrapped,
   isMainnetNetwork,
 } from '../services/utils';
 import {
@@ -299,8 +300,8 @@ const getTradingApy = async (poolAddress: EthAddress) => {
 };
 
 const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
-  const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
-  const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
+  const collAsset = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken0, network).symbol), network);
+  const debtAsset = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken0, network).symbol), network);
 
   const supplyRate = new Dec(data.supplyRateVault).div(100).toString();
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
@@ -417,9 +418,9 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 };
 
 const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
-  const collAsset0 = getAssetInfoByAddress(data.supplyToken0, network);
-  const collAsset1 = getAssetInfoByAddress(data.supplyToken1, network);
-  const debtAsset = getAssetInfoByAddress(data.borrowToken0, network);
+  const collAsset0 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken0, network).symbol), network);
+  const collAsset1 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken1, network).symbol), network);
+  const debtAsset = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken0, network).symbol), network);
 
   // 18 because collateral is represented in shares for which they use 18 decimals
   const oracleScaleFactor = new Dec(27).add(debtAsset.decimals).sub(18).toString();
@@ -607,9 +608,9 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 };
 
 const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
-  const collAsset = getAssetInfoByAddress(data.supplyToken0, network);
-  const debtAsset0 = getAssetInfoByAddress(data.borrowToken0, network);
-  const debtAsset1 = getAssetInfoByAddress(data.borrowToken1, network);
+  const collAsset = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken0, network).symbol), network);
+  const debtAsset0 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken0, network).symbol), network);
+  const debtAsset1 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken1, network).symbol), network);
 
   const {
     borrowableShares,
@@ -794,10 +795,10 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 };
 
 const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
-  const collAsset0 = getAssetInfoByAddress(data.supplyToken0, network);
-  const collAsset1 = getAssetInfoByAddress(data.supplyToken1, network);
-  const debtAsset0 = getAssetInfoByAddress(data.borrowToken0, network);
-  const debtAsset1 = getAssetInfoByAddress(data.borrowToken1, network);
+  const collAsset0 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken0, network).symbol), network);
+  const collAsset1 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.supplyToken1, network).symbol), network);
+  const debtAsset0 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken0, network).symbol), network);
+  const debtAsset1 = getAssetInfo(getNativeAssetFromWrapped(getAssetInfoByAddress(data.borrowToken1, network).symbol), network);
   const quoteToken = getAssetInfoByAddress(data.dexBorrowData.quoteToken, network);
 
   // 27 - 18 + 18
