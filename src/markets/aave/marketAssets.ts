@@ -20,7 +20,7 @@ export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH',
 
 export const aaveV3AssetsDefaultMarketLinea = ['ETH', 'USDC', 'weETH', 'ezETH', 'USDT', 'wstETH', 'wrsETH', 'WBTC'];
 
-export const aaveV3AssetsDefaultMarketPlasma = ['ETH', 'USDT', 'sUSDe', 'USDe', 'weETH', 'XAUt', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH'];
+export const aaveV3AssetsDefaultMarketPlasma = ['ETH', 'USDT', 'sUSDe', 'USDe', 'weETH', 'XAUt'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {
