@@ -1,6 +1,10 @@
 import Dec from 'decimal.js';
 import memoize from 'memoizee';
-import { IncentiveEligibilityId, MMAssetsData, MMUsedAssets } from '../types/common';
+import {
+  MMAssetsData,
+  MMUsedAssets,
+  NetworkNumber,
+} from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { EligibilityMapping } from './eligibility';
@@ -43,7 +47,7 @@ const getSuperOETHApy = async () => {
   }
 };
 
-const getApyFromDfsApi = async (asset: string, network: number = 1) => {
+const getApyFromDfsApi = async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
     const res = await fetch(`http://localhost:8888/api/staking/apy?asset=${asset}&network=${network}`,
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
@@ -58,7 +62,7 @@ const getApyFromDfsApi = async (asset: string, network: number = 1) => {
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH'];
 
-export const getStakingApy = memoize(async (asset: string, network: number = 1) => {
+export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
     if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
     if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
