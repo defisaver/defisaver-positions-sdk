@@ -456,7 +456,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...sparkMarkets.map((market) => allAddresses.map(async (address) => {
       try {
-        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData });
+        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData, eModeCategoriesData: sparkMarketsData[market.value].eModeCategoriesData });
         if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);
