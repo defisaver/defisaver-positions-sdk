@@ -49,7 +49,7 @@ const getSuperOETHApy = async () => {
 
 const getApyFromDfsApi = async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
-    const res = await fetch(`http://fe.defisaver.com/api/staking/apy?asset=${asset}&network=${network}`,
+    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}&network=${network}`,
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
