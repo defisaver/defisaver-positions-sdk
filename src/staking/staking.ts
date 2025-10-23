@@ -1,6 +1,10 @@
 import Dec from 'decimal.js';
 import memoize from 'memoizee';
-import { IncentiveEligibilityId, MMAssetsData, MMUsedAssets } from '../types/common';
+import {
+  MMAssetsData,
+  MMUsedAssets,
+  NetworkNumber,
+} from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { EligibilityMapping } from './eligibility';
@@ -43,9 +47,9 @@ const getSuperOETHApy = async () => {
   }
 };
 
-const getApyFromDfsApi = async (asset: string) => {
+const getApyFromDfsApi = async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
-    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`,
+    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}&network=${network}`,
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
@@ -58,7 +62,7 @@ const getApyFromDfsApi = async (asset: string) => {
 
 export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH'];
 
-export const getStakingApy = memoize(async (asset: string) => {
+export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
     if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
     if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
@@ -73,18 +77,18 @@ export const getStakingApy = memoize(async (asset: string) => {
     if (asset === 'pufETH') return await getApyFromDfsApi('pufETH');
     if (asset === 'wsuperOETHb') return await getSuperOETHApy();
     if (asset === 'sUSDS') return await getSsrApy();
-    if (asset === 'PT eUSDe May') return await getApyFromDfsApi('PT eUSDe May');
-    if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July');
-    if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July');
-    if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug');
-    if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep');
-    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
+    if (asset === 'PT eUSDe May') return await getApyFromDfsApi('PT eUSDe May', network);
+    if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July', network);
+    if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July', network);
+    if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug', network);
+    if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep', network);
+    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep', network);
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
     if (asset === 'USDe') return await getApyFromDfsApi('USDe');
-    if (asset === 'PT sUSDe Nov') return await getApyFromDfsApi('PT sUSDe Nov');
-    if (asset === 'PT USDe Nov') return await getApyFromDfsApi('PT USDe Nov');
-    if (asset === 'PT USDe Jan') return await getApyFromDfsApi('PT USDe Jan');
-    if (asset === 'PT sUSDe Jan') return await getApyFromDfsApi('PT sUSDe Jan');
+    if (asset === 'PT sUSDe Nov') return await getApyFromDfsApi('PT sUSDe Nov', network);
+    if (asset === 'PT USDe Nov') return await getApyFromDfsApi('PT USDe Nov', network);
+    if (asset === 'PT USDe Jan') return await getApyFromDfsApi('PT USDe Jan', network);
+    if (asset === 'PT sUSDe Jan') return await getApyFromDfsApi('PT sUSDe Jan', network);
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
