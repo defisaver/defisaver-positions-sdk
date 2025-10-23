@@ -218,7 +218,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
     /* eslint-enable no-param-reassign */
   }));
 
-  const payload: SparkAssetsData = {};
+  const filteredAssetsData: SparkAssetsData = {};
   // Sort by market size
   assetsData
     .sort((a, b) => {
@@ -228,13 +228,13 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
       return new Dec(bMarket).minus(aMarket).toNumber();
     })
     .forEach((assetData: SparkAssetData, i) => {
-      payload[assetData.symbol] = { ...assetData, sortIndex: i };
+      filteredAssetsData[assetData.symbol] = { ...assetData, sortIndex: i };
     });
 
-  eModeCategoriesData[0].collateralAssets = Object.values(payload).map(a => a.symbol);
-  eModeCategoriesData[0].borrowAssets = Object.values(payload).map(a => a.symbol);
+  eModeCategoriesData[0].collateralAssets = Object.values(filteredAssetsData).map(a => a.symbol);
+  eModeCategoriesData[0].borrowAssets = Object.values(filteredAssetsData).map(a => a.symbol);
 
-  return { assetsData: payload, eModeCategoriesData };
+  return { assetsData: filteredAssetsData, eModeCategoriesData };
 };
 
 export const getSparkMarketsData = async (
