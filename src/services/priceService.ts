@@ -2,12 +2,12 @@ import Dec from 'decimal.js';
 import { getAssetInfo } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
 import {
-  COMPPriceFeedContractViem,
   BTCPriceFeedContractViem,
+  COMPPriceFeedContractViem,
   ETHPriceFeedContractViem,
   USDCPriceFeedContractViem,
-  WstETHPriceFeedContractViem,
   WeETHPriceFeedContractViem,
+  WstETHPriceFeedContractViem,
 } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
 import { getEthAmountForDecimals } from './utils';
@@ -154,6 +154,6 @@ export const getEthPriceForFluid = async (client: PublicClient, network: Network
 export const getChainlinkAssetAddress = (symbol: string, network: NetworkNumber): EthAddress => {
   // Chainlink only has BTC/USD feed so we use that for BTC derivatives
   if (['WBTC', 'RENBTC'].includes(symbol?.toUpperCase())) return '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB';
-  if (symbol?.toUpperCase() === 'WETH') return getAssetInfo('ETH').addresses[network] as EthAddress;
+  if (symbol?.toUpperCase() === 'WETH' && network !== NetworkNumber.Plasma) return getAssetInfo('ETH').addresses[network] as EthAddress;
   return getAssetInfo(symbol).addresses[network] as EthAddress;
 };
