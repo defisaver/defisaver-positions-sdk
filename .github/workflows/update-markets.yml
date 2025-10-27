@@ -13,6 +13,7 @@ jobs:
       RPCBASE: ${{ secrets.RPCBASE }}
       RPCARB: ${{ secrets.RPCARB }}
       RPCLINEA: ${{ secrets.RPCLINEA }}
+      RPCPLASMA: ${{ secrets.RPCPLASMA }}
 
     steps:
       - name: Check out code

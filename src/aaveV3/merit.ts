@@ -49,6 +49,9 @@ Record<string, {
   [NetworkNumber.Linea]: {
     [AaveVersions.AaveV3]: {},
   },
+  [NetworkNumber.Plasma]: {
+    [AaveVersions.AaveV3]: {},
+  },
 };
 
 /**
@@ -57,12 +60,12 @@ Record<string, {
 export const fetchMeritRewardsData = async (): Promise<Record<string, number | null>> => {
   try {
     const response = await fetch('https://apps.aavechan.com/api/merit/aprs', {
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(5000),
     });
     const data = await response.json();
     return data.currentAPR.actionsAPR as Record<string, number | null>;
   } catch (error) {
-    console.error('Failed to fetch merit rewards data:', error);
+    console.error('External API Failure: Failed to fetch merit rewards data:', error);
     return {};
   }
 };

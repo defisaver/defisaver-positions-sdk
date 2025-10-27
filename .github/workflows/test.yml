@@ -40,6 +40,7 @@ jobs:
           RPCARB: ${{ secrets.RPCARB }}
           RPCOPT: ${{ secrets.RPCOPT }}
           RPCLINEA: ${{ secrets.RPCLINEA }}
+          RPCPLASMA: ${{ secrets.RPCPLASMA }}
 
   on-failure:
     runs-on: ubuntu-latest

@@ -1458,21 +1458,20 @@ export const getFluidTokenData = async (
   token: string,
 ) => _getFluidTokenData(getViemProvider(provider, network), network, token);
 
-const parseFDepositTokenData = (fTokenData: FluidFTokenDataStructOutput, userPosition: FluidUserEarnPositionStructOutput, fTokenAddress?: string) => {
-  const supplyRate = new Dec(fTokenData.supplyRate).div(100).toString();
-  const rewardsRate = new Dec(fTokenData.rewardsRate).div(1e12).toString();
+const parseFDepositTokenData = (fTokenData: FluidFTokenDataStructOutput, userPosition: FluidUserEarnPositionStructOutput, apiData: any, fTokenAddress?: string) => {
   const decimals = fTokenData.decimals.toString();
-
   const depositRate = new Dec(getEthAmountForDecimals(fTokenData.convertToShares.toString(), decimals)).toString();
   const withdrawRate = new Dec(getEthAmountForDecimals(fTokenData.convertToAssets.toString(), decimals)).toString();
-
+  const supplyRate = new Dec(apiData?.supplyRate || '0').div(100).toString();
+  const rewardRates = apiData?.rewards?.reduce((acc: Dec, item: any) => acc.add(new Dec(item.rate || '0').div(100)), new Dec(0)) || '0';
+  const stakeRate = new Dec(apiData?.asset?.stakingApr || '0').div(100).toString();
   return {
     fTokenAddress,
     fTokenSymbol: fTokenData.symbol,
     decimals,
     totalDeposited: getEthAmountForDecimals(fTokenData.totalAssets.toString(), decimals),
     withdrawable: getEthAmountForDecimals(fTokenData.withdrawable.toString(), decimals),
-    apy: new Dec(supplyRate).add(rewardsRate).toString(),
+    apy: new Dec(supplyRate).plus(rewardRates).plus(stakeRate).toString(),
     depositRate,
     withdrawRate,
     deposited: getEthAmountForDecimals(userPosition.underlyingAssets.toString(), decimals),
@@ -1483,9 +1482,21 @@ const parseFDepositTokenData = (fTokenData: FluidFTokenDataStructOutput, userPos
 export const _getFluidDepositData = async (provider: Client, network: NetworkNumber, token: string, address: EthAddress) => {
   const view = FluidViewContractViem(provider, network);
   const fTokenAddress = getFTokenAddress(token, network);
-  const [userPosition, fTokenData] = await view.read.getUserEarnPositionWithFToken([fTokenAddress, address]);
+  const [
+    [userPosition, fTokenData],
+    rewardsApiResponse,
+  ] = await Promise.all([
+    view.read.getUserEarnPositionWithFToken([fTokenAddress, address]),
+    fetch(`https://api.fluid.instadapp.io/v2/lending/${network}/tokens/${fTokenAddress}`),
+  ]);
+  let rewardsData = { rewards: [] };
+  if (!rewardsApiResponse.ok) {
+    console.log('External API Failure: Failed to fetch fluid rewards APY');
+  } else {
+    rewardsData = await rewardsApiResponse.json();
+  }
 
-  return parseFDepositTokenData(fTokenData, userPosition, fTokenAddress);
+  return parseFDepositTokenData(fTokenData, userPosition, rewardsData, fTokenAddress);
 };
 
 export const getFluidDepositData = async (
@@ -1497,7 +1508,22 @@ export const getFluidDepositData = async (
 
 export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, network: NetworkNumber, user: EthAddress) => {
   const view = FluidViewContractViem(provider, network);
-  const [userPositions, fTokensData] = await view.read.getAllUserEarnPositionsWithFTokens([user]);
+  const [
+    [userPositions, fTokensData],
+    rewardsApiResponse,
+  ] = await Promise.all([
+    view.read.getAllUserEarnPositionsWithFTokens([user]),
+    fetch(`https://api.fluid.instadapp.io/v2/lending/${network}/tokens`),
+  ]);
+
+  let rewardsData = {
+    data: [{ address: ZERO_ADDRESS, rewards: [] }],
+  };
+  if (!rewardsApiResponse.ok) {
+    console.log('External API Failure: Failed to fetch fluid rewards APY');
+  } else {
+    rewardsData = await rewardsApiResponse.json();
+  }
 
   const parsedRes = fTokensData.reduce<ReturnType<typeof parseFDepositTokenData>[]>((acc, fTokenData, i) => {
     const userPosition = userPositions[i];
@@ -1505,7 +1531,8 @@ export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, netw
 
     if (Number(deposited) > 0) {
       const fTokenAddress = fTokenData.tokenAddress;
-      acc.push(parseFDepositTokenData(fTokenData, userPosition, fTokenAddress));
+      const apiData = rewardsData.data.find((item: any) => compareAddresses(item.address, fTokenAddress));
+      acc.push(parseFDepositTokenData(fTokenData, userPosition, apiData, fTokenAddress));
     }
 
     return acc;
@@ -1572,19 +1599,22 @@ const tokensWithoutChainlinkPrices = ['sUSDS', 'USDA', 'ezETH', 'rsETH', 'weETHs
 
 const handleTokenWithoutChainlinkPrice = (token: string, prices: Record<string, string>) => {
   if (token === 'sUSDS') {
-    return new Dec('105276929').div(1e8).toString();
+    return new Dec('107057929').div(1e8).toString();
   }
   if (token === 'USDA') {
     return new Dec('100000000').div(1e8).toString();
   }
+  if (token === 'wstUSR') {
+    return new Dec('111280000').div(1e8).toString();
+  }
   if (token === 'ezETH') {
-    return new Dec(prices.ETH).mul(1.049).toString();
+    return new Dec(prices.ETH).mul(1.06).toString();
   }
   if (token === 'rsETH') {
-    return new Dec(prices.wstETH).mul(1.0454).toString();
+    return new Dec(prices.wstETH).mul(1.0557).toString();
   }
   if (token === 'weETHs') {
-    return new Dec(prices.wstETH).mul(1.026).toString();
+    return new Dec(prices.wstETH).mul(1.032).toString();
   }
   if (token === 'LBTC') {
     return prices.WBTC;

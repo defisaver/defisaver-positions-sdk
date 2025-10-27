@@ -7,6 +7,7 @@ export enum IncentiveEligibilityId {
   AaveV3EthenaLiquidLeverage = '0x7361e6f04060154e0268a8402b073cbf97e11ae3BORROW_BL',
   AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
   AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
+  AaveV3EthenaLiquidLeveragePlasma = '0x67264783f1e9a2af8627a235853057a6fc975bd2BORROW_BL',
 }
 
 export interface IncentiveData {
@@ -29,6 +30,7 @@ export enum NetworkNumber {
   Arb = 42161,
   Base = 8453,
   Linea = 59144,
+  Plasma = 9745,
 }
 export type Networkish = string | NetworkNumber;
 
