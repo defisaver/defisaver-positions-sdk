@@ -97,4 +97,10 @@ describe('Fluid', () => {
     const network = NetworkNumber.Eth;
     const allUserPositions = await sdk.fluid.getAllUserEarnPositionsWithFTokens(provider, network, '0x21dc459fba0b1ea037cd221d35b928be1c26141a');
   });
+
+  it('get deposit data for token', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const data = await sdk.fluid.getFluidDepositData(providerArb, network, 'USDC', '0x21dc459fba0b1ea037cd221d35b928be1c26141a');
+  });
 });

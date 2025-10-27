@@ -1,4 +1,5 @@
 import {
+  IncentiveData,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -70,12 +71,6 @@ export interface AaveV2AssetData extends AaveAssetData {
   isFrozen: boolean,
 }
 
-export interface IncentiveData {
-  token: string,
-  apy: string,
-  incentiveKind?: 'staking' | 'reward';
-}
-
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
@@ -89,8 +84,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFlashLoanEnabled: boolean,
   assetId: string | number | null,
   liquidationBonus: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;

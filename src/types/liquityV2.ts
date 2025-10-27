@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, IncentiveData, NetworkNumber } from './common';
 
 export enum LiquityV2Versions {
   LiquityV2Eth = 'liquityv2eth',
@@ -43,14 +43,14 @@ export interface LiquityV2AssetData {
   symbol: string,
   address: string,
   price: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
   totalSupply: string,
   totalBorrow: string,
   canBeSupplied: boolean,
   canBeBorrowed: boolean,
   leftToBorrowGlobal: string,
   leftToWithdrawGlobal: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
 }
 
 export type LiquityV2AssetsData = { [key: string]: LiquityV2AssetData };

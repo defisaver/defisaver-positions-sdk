@@ -52,7 +52,7 @@ export const AAVE_V2: AaveMarketInfo = {
 };
 
 export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
-  chainIds: [NetworkNumber.Eth, NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea],
+  chainIds: [NetworkNumber.Eth, NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea, NetworkNumber.Plasma],
   label: networkId === NetworkNumber.Eth ? 'Aave v3 Core' : 'Aave v3',
   shortLabel: 'v3',
   value: AaveVersions.AaveV3,
