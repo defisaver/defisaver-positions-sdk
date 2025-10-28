@@ -182,7 +182,8 @@ const getChainLinkPricesForTokens = async (
           ethPrice,
           wrsETHRate,
         } = parseWrsETHPriceCalls(
-          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset].result[1]!.toString(),
           // @ts-ignore
           results[i + offset + 1].result[1]!.toString(),
         );
@@ -196,7 +197,8 @@ const getChainLinkPricesForTokens = async (
           syrupUSDTRate,
           USDTRate,
         } = parseSyrupUSDTPriceCalls(
-          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset].result[1]!.toString(),
           // @ts-ignore
           results[i + offset + 1].result[1]!.toString(),
         );
@@ -209,7 +211,8 @@ const getChainLinkPricesForTokens = async (
           wstUSRRate,
           USRRate,
         } = parseWstUSRPriceCalls(
-          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset].result[1]!.toString(),
           // @ts-ignore
           results[i + offset + 1].result[1]!.toString(),
         );
