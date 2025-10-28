@@ -47,13 +47,22 @@ import { getFluidMarketInfoById, getFluidVersionsDataForNetwork, getFTokenAddres
 import { USD_QUOTE, ZERO_ADDRESS } from '../constants';
 import {
   getChainlinkAssetAddress,
+  getSyrupUSDTChainLinkPriceCalls,
+  getSyrupUSDTPrice,
   getWeETHChainLinkPriceCalls,
   getWeETHPrice,
+  getWsrETHChainLinkPriceCalls,
+  getWsrETHPrice,
   getWstETHChainLinkPriceCalls,
   getWstETHPrice,
   getWstETHPriceFluid,
+  getWstUSRChainLinkPriceCalls,
+  getWstUSRPrice,
+  parseSyrupUSDTPriceCalls,
   parseWeETHPriceCalls,
+  parseWrsETHPriceCalls,
   parseWstETHPriceCalls,
+  parseWstUSRPriceCalls,
 } from '../services/priceService';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getViemProvider } from '../services/viem';
@@ -115,6 +124,9 @@ const getChainLinkPricesForTokens = async (
 
     if (assetInfo.symbol === 'wstETH') return getWstETHChainLinkPriceCalls(client, network);
     if (assetInfo.symbol === 'weETH' && network !== NetworkNumber.Plasma) return getWeETHChainLinkPriceCalls(client, network);
+    if (assetInfo.symbol === 'wrsETH' && network === NetworkNumber.Plasma) return getWsrETHChainLinkPriceCalls(client, network);
+    if (assetInfo.symbol === 'syrupUSDT') return getSyrupUSDTChainLinkPriceCalls(client, network);
+    if (assetInfo.symbol === 'wstUSR') return getWstUSRChainLinkPriceCalls(client, network);
 
     if (isMainnet) {
       const feedRegistryContract = FeedRegistryContractViem(client, NetworkNumber.Eth);
@@ -162,6 +174,47 @@ const getChainLinkPricesForTokens = async (
         );
         offset += 2;
         acc[token] = new Dec(ethPrice).mul(wstETHRate).toString();
+        break;
+      }
+
+      case 'wrsETH': {
+        const {
+          ethPrice,
+          wrsETHRate,
+        } = parseWrsETHPriceCalls(
+          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset + 1].result[1]!.toString(),
+        );
+        offset += 1;
+        acc[token] = new Dec(ethPrice).mul(wrsETHRate).toString();
+        break;
+      }
+
+      case 'syrupUSDT': {
+        const {
+          syrupUSDTRate,
+          USDTRate,
+        } = parseSyrupUSDTPriceCalls(
+          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset + 1].result[1]!.toString(),
+        );
+        offset += 1;
+        acc[token] = new Dec(syrupUSDTRate).mul(USDTRate).toString();
+        break;
+      }
+      case 'wstUSR': {
+        const {
+          wstUSRRate,
+          USRRate,
+        } = parseWstUSRPriceCalls(
+          results[i + offset].result!.toString(),
+          // @ts-ignore
+          results[i + offset + 1].result[1]!.toString(),
+        );
+        offset += 1;
+        acc[token] = new Dec(wstUSRRate).mul(USRRate).toString();
         break;
       }
 
@@ -1620,6 +1673,18 @@ const getTokenPricePortfolio = async (token: string, provider: PublicClient, net
   }
   if (token === 'weETH' && network !== NetworkNumber.Plasma) {
     return getWeETHPrice(provider, network);
+  }
+
+  if (token === 'wrsETH') {
+    return getWsrETHPrice(provider, network);
+  }
+
+  if (token === 'syrupUSDT') {
+    return getSyrupUSDTPrice(provider, network);
+  }
+
+  if (token === 'wstUSR') {
+    return getWstUSRPrice(provider, network);
   }
 
   const isMainnet = isMainnetNetwork(network);
