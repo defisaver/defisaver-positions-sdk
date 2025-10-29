@@ -56,7 +56,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   markets: any;
 }> {
   const isMainnet = network === NetworkNumber.Eth;
-  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base].includes(network);
+  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
+  const isMorphoRewardsSupported = [NetworkNumber.Eth, NetworkNumber.Base].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -353,6 +354,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     // Batch Morpho Blue rewards
     (async () => {
+      if (!isMorphoRewardsSupported) return;
       try {
         const morphoRewards = await fetchMorphoBlueRewards(client, network, addresses);
         for (const address of addresses) {

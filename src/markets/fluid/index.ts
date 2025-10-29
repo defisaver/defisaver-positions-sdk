@@ -6,8 +6,10 @@ import {
   FluidBaseVersions,
   FluidMainnetDepositToken,
   FluidMainnetVersion,
-  FluidMarketInfo, FluidVaultType,
-  FluidVersions,
+  FluidMarketInfo,
+  FluidPlasmaDepositToken,
+  FluidPlasmaVersions,
+  FluidVaultType,
 } from '../../types';
 import { compareAddresses } from '../../services/utils';
 
@@ -2283,6 +2285,413 @@ export const FLUID_LBTC_SUSDS_22_BASE = (networkId: NetworkNumber = NetworkNumbe
   debtAsset0: 'sUSDS',
 });
 
+export const FLUID_ETH_USDT_1_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 1,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#1 (ETH / USDT)',
+  shortLabel: 'ETH/USDT',
+  value: FluidPlasmaVersions.FLUID_ETH_USDT_1_PLASMA,
+  url: 'eth-usdt-1-plasma',
+  marketAddress: '0xeAbBfca72F8a8bf14C4ac59e69ECB2eB69F0811C',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_ETH_USDE_2_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 2,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#2 (ETH / USDe)',
+  shortLabel: 'ETH/USDe',
+  value: FluidPlasmaVersions.FLUID_ETH_USDE_2_PLASMA,
+  url: 'eth-usde-2-plasma',
+  marketAddress: '0xbEC491FeF7B4f666b270F9D5E5C3f443cBf20991',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'ETH',
+  debtAsset0: 'USDe',
+});
+
+export const FLUID_WEETH_ETH_3_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 3,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#3 (weETH / ETH)',
+  shortLabel: 'weETH/ETH',
+  value: FluidPlasmaVersions.FLUID_WEETH_ETH_3_PLASMA,
+  url: 'weeth-eth-3-plasma',
+  marketAddress: '0xA0F83Fc5885cEBc0420ce7C7b139Adc80c4F4D91',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'weETH',
+  debtAsset0: 'ETH',
+});
+
+export const FLUID_SUSDE_USDT_4_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 4,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#4 (sUSDe / USDT)',
+  shortLabel: 'sUSDe/USDT',
+  value: FluidPlasmaVersions.FLUID_SUSDE_USDT_4_PLASMA,
+  url: 'susde-usdt-4-plasma',
+  marketAddress: '0x51197586F6A9e2571868b6ffaef308f3bdfEd3aE',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'sUSDe',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_WEETH_USDT_5_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 5,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#5 (weETH / USDT)',
+  shortLabel: 'weETH/USDT',
+  value: FluidPlasmaVersions.FLUID_WEETH_USDT_5_PLASMA,
+  url: 'weeth-usdt-5-plasma',
+  marketAddress: '0x1c2bB46f36561bc4F05A94BD50916496aa501078',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_WEETH_USDE_6_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T1,
+  id: 6,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#6 (weETH / USDe)',
+  shortLabel: 'weETH/USDe',
+  value: FluidPlasmaVersions.FLUID_WEETH_USDE_6_PLASMA,
+  url: 'weeth-usde-6-plasma',
+  marketAddress: '0x40D9b8417E6E1DcD358f04E3328bCEd061018A82',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'weETH',
+  debtAsset0: 'USDe',
+});
+
+export const FLUID_XAUT_USDT_7_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 7,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#7 (XAUt / USDT)',
+  shortLabel: 'XAUt/USDT',
+  value: FluidPlasmaVersions.FLUID_XAUT_USDT_7_PLASMA,
+  url: 'xaut-usdt-7-plasma',
+  marketAddress: '0x4045720a33193b4Fe66c94DFbc8D37B0b4D9B469',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'XAUt',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_XAUT_USDE_8_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 8,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#8 (XAUt / USDe)',
+  shortLabel: 'XAUt/USDe',
+  value: FluidPlasmaVersions.FLUID_XAUT_USDE_8_PLASMA,
+  url: 'xaut-usde-8-plasma',
+  marketAddress: '0xBFADEA65591235f38809076e14803Ac84AcF3F97',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'XAUt',
+  debtAsset0: 'USDe',
+});
+
+export const FLUID_USDE_USDT_9_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 9,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#9 (USDe / USDT)',
+  shortLabel: 'USDe/USDT',
+  value: FluidPlasmaVersions.FLUID_USDE_USDT_9_PLASMA,
+  url: 'usde-usdt-9-plasma',
+  marketAddress: '0xf55B8e9F0c51Ace009f4b41d03321675d4C643b3',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDe',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_USDAI_USDT_10_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 10,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#10 (USDai / USDT)',
+  shortLabel: 'USDai/USDT',
+  value: FluidPlasmaVersions.FLUID_USDAI_USDT_10_PLASMA,
+  url: 'usdai-usdt-10-plasma',
+  marketAddress: '0xdF16AdaF80584b2723F3BA1Eb7a601338Ba18c4e',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDai',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_ETH_WEETH_ETH_11_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T2,
+  id: 11,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#11 (ETH-weETH / ETH)',
+  shortLabel: 'ETH-weETH/ETH',
+  value: FluidPlasmaVersions.FLUID_ETH_WEETH_ETH_11_PLASMA,
+  url: 'eth-weeth-eth-11-plasma',
+  marketAddress: '0x0C8C77B7FF4c2aF7F6CEBbe67350A490E3DD6cB3',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'ETH',
+  collateralAsset1: 'weETH',
+  debtAsset0: 'ETH',
+});
+
+export const FLUID_SUSDE_USDT_USDT_12_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 12,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#12 (sUSDe-USDT / USDT)',
+  shortLabel: 'sUSDe-USDT/USDT',
+  value: FluidPlasmaVersions.FLUID_SUSDE_USDT_USDT_12_PLASMA,
+  url: 'susde-usdt-usdt-12-plasma',
+  marketAddress: '0xE16A6f5359ABB1f61cE71e25dD0932e3E00B00eB',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'sUSDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_USDE_USDT_USDT_13_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 13,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#13 (USDe-USDT / USDT)',
+  shortLabel: 'USDe-USDT/USDT',
+  value: FluidPlasmaVersions.FLUID_USDE_USDT_USDT_13_PLASMA,
+  url: 'usde-usdt-usdt-13-plasma',
+  marketAddress: '0x82B27fA821419F5689381b565a8B0786aA2548De',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDe',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_USDAI_USDT_USDT_14_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 14,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#14 (USDai-USDT / USDT)',
+  shortLabel: 'USDai-USDT/USDT',
+  value: FluidPlasmaVersions.FLUID_USDAI_USDT_USDT_14_PLASMA,
+  url: 'usdai-usdt-usdt-14-plasma',
+  marketAddress: '0x1982CC7b1570C2503282d0A0B41F69b3B28fdcc3',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDai',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 15,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#15 (USDT-syrupUSDT / USDT)',
+  shortLabel: 'USDT-syrupUSDT/USDT',
+  value: FluidPlasmaVersions.FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA,
+  url: 'usdt-syrupusdt-usdt-15-plasma',
+  marketAddress: '0xb4F3bf2d96139563777C0231899cE06EE95Cc946',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'USDT',
+  collateralAsset1: 'syrupUSDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_XPL_USDT_16_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 16,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#16 (XPL / USDT)',
+  shortLabel: 'XPL/USDT',
+  value: FluidPlasmaVersions.FLUID_XPL_USDT_16_PLASMA,
+  url: 'xpl-usdt-16-plasma',
+  marketAddress: '0xeAEf563015634a9d0EE6CF1357A3b205C35e028D',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'XPL',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_XPL_USDE_17_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 17,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#17 (XPL / USDe)',
+  shortLabel: 'XPL/USDe',
+  value: FluidPlasmaVersions.FLUID_XPL_USDE_17_PLASMA,
+  url: 'xpl-usde-17-plasma',
+  marketAddress: '0x3996464c0fCCa8183e13ea5E5e74375e2c8744Dd',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'XPL',
+  debtAsset0: 'USDe',
+});
+
+export const FLUID_WSTUSR_USDT_18_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 18,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#18 (wstUSR / USDT)',
+  shortLabel: 'wstUSR/USDT',
+  value: FluidPlasmaVersions.FLUID_WSTUSR_USDT_18_PLASMA,
+  url: 'wstusr-usdt-18-plasma',
+  marketAddress: '0xBc345229C1b52e4c30530C614BB487323BA38Da5',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'wstUSR',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_WSTUSR_USDT_USDT_19_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T2,
+  id: 19,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#19 (wstUSR-USDT / USDT)',
+  shortLabel: 'wstUSR-USDT/USDT',
+  value: FluidPlasmaVersions.FLUID_WSTUSR_USDT_USDT_19_PLASMA,
+  url: 'wstusr-usdt-usdt-19-plasma',
+  marketAddress: '0xF2c8F54447cbd591C396b0Dd7ac15FAF552d0FA4',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'wstUSR',
+  collateralAsset1: 'USDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_SYRUPUSDT_USDT_20_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: true,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: false,
+  type: FluidVaultType.T1,
+  id: 20,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#20 (syrupUSDT / USDT)',
+  shortLabel: 'syrupUSDT/USDT',
+  value: FluidPlasmaVersions.FLUID_SYRUPUSDT_USDT_20_PLASMA,
+  url: 'syrupusdt-usdt-20-plasma',
+  marketAddress: '0x92643E964CA4b2c165a95CA919b0A819acA6D5F1',
+  hasSmartCollateral: false,
+  hasSmartDebt: false,
+  collateralAsset0: 'syrupUSDT',
+  debtAsset0: 'USDT',
+});
+
+export const FLUID_ETH_WRSETH_ETH_21_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+  stableBased: false,
+  btcBased: false,
+  wstETHBased: false,
+  ethBased: true,
+  type: FluidVaultType.T2,
+  id: 21,
+  chainIds: [NetworkNumber.Plasma],
+  label: '#21 (ETH-wrsETH / ETH)',
+  shortLabel: 'ETH-wrsETH/ETH',
+  value: FluidPlasmaVersions.FLUID_ETH_WRSETH_ETH_21_PLASMA,
+  url: 'eth-wrseth-eth-plasma',
+  marketAddress: '0x6F72895Cf6904489Bcd862c941c3D02a3eE4f03e',
+  hasSmartCollateral: true,
+  hasSmartDebt: false,
+  collateralAsset0: 'ETH',
+  collateralAsset1: 'wrsETH',
+  debtAsset0: 'ETH',
+});
+
+
 export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidMainnetVersion.FLUID_ETH_USDC_1]: FLUID_ETH_USDC_1(networkId),
   [FluidMainnetVersion.FLUID_ETH_USDT_2]: FLUID_ETH_USDT_2(networkId),
@@ -2406,6 +2815,29 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidBaseVersions.FLUID_CBBTC_SUSDS_19_BASE]: FLUID_CBBTC_SUSDS_19_BASE(networkId),
   [FluidBaseVersions.FLUID_LBTC_USDC_21_BASE]: FLUID_LBTC_USDC_21_BASE(networkId),
   [FluidBaseVersions.FLUID_LBTC_SUSDS_22_BASE]: FLUID_LBTC_SUSDS_22_BASE(networkId),
+
+  // plasma
+  [FluidPlasmaVersions.FLUID_ETH_USDT_1_PLASMA]: FLUID_ETH_USDT_1_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_ETH_USDE_2_PLASMA]: FLUID_ETH_USDE_2_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_WEETH_ETH_3_PLASMA]: FLUID_WEETH_ETH_3_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_SUSDE_USDT_4_PLASMA]: FLUID_SUSDE_USDT_4_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_WEETH_USDT_5_PLASMA]: FLUID_WEETH_USDT_5_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_WEETH_USDE_6_PLASMA]: FLUID_WEETH_USDE_6_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_XAUT_USDT_7_PLASMA]: FLUID_XAUT_USDT_7_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_XAUT_USDE_8_PLASMA]: FLUID_XAUT_USDE_8_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDE_USDT_9_PLASMA]: FLUID_USDE_USDT_9_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDAI_USDT_10_PLASMA]: FLUID_USDAI_USDT_10_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_ETH_WEETH_ETH_11_PLASMA]: FLUID_ETH_WEETH_ETH_11_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_SUSDE_USDT_USDT_12_PLASMA]: FLUID_SUSDE_USDT_USDT_12_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDE_USDT_USDT_13_PLASMA]: FLUID_USDE_USDT_USDT_13_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDAI_USDT_USDT_14_PLASMA]: FLUID_USDAI_USDT_USDT_14_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA]: FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_XPL_USDT_16_PLASMA]: FLUID_XPL_USDT_16_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_XPL_USDE_17_PLASMA]: FLUID_XPL_USDE_17_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_WSTUSR_USDT_18_PLASMA]: FLUID_WSTUSR_USDT_18_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_WSTUSR_USDT_USDT_19_PLASMA]: FLUID_WSTUSR_USDT_USDT_19_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_SYRUPUSDT_USDT_20_PLASMA]: FLUID_SYRUPUSDT_USDT_20_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_ETH_WRSETH_ETH_21_PLASMA]: FLUID_ETH_WRSETH_ETH_21_PLASMA(networkId),
 });
 
 export const getFluidVersionsDataForNetwork = (network: NetworkNumber) => (
@@ -2443,6 +2875,12 @@ const FluidBaseFTokenAddresses = {
   [FluidBaseDepositToken.GHO]: '0x8DdbfFA3CFda2355a23d6B11105AC624BDbE3631',
 };
 
+const FluidPlasmaFTokenAddresses = {
+  [FluidPlasmaDepositToken.ETH]: '0x5E494e8912319cefb1d4Fa516807bB65A8CB9E40',
+  [FluidPlasmaDepositToken.USDT]: '0x1DD4b13fcAE900C60a350589BE8052959D2Ed27B',
+  [FluidPlasmaDepositToken.USDe]: '0xd8f824d4252caE7d5E49B95d47B0EfAfe6f2d570',
+};
+
 export const FluidFTokens = (networkId: NetworkNumber) => {
   switch (networkId) {
     case NetworkNumber.Eth:
@@ -2451,6 +2889,8 @@ export const FluidFTokens = (networkId: NetworkNumber) => {
       return FluidArbitrumFTokenAddresses;
     case NetworkNumber.Base:
       return FluidBaseFTokenAddresses;
+    case NetworkNumber.Plasma:
+      return FluidPlasmaFTokenAddresses;
     default:
       throw new Error('Invalid network id');
   }

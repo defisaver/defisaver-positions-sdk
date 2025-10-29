@@ -33,7 +33,7 @@ describe('Portfolio', () => {
     const network = NetworkNumber.Eth;
 
     const portfolioData = await fetchPortfolioData(network, provider);
-    console.log('Portfolio Data:', portfolioData);
+    // console.log('Portfolio Data:', portfolioData);
   });
 
   it('can fetch portfolio data for Arbitrum', async function () {

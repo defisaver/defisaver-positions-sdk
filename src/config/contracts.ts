@@ -987,7 +987,8 @@ export const ETHPriceFeed =  {
       "1": { "address": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419" },
       "10": { "address": "0x13e3Ee699D1909E989722E753853AE30b17e08c5" },
       "8453": { "address": "0x71041dddad3595F9CEd3DcCFBe3D1F4b0a16Bb70" },
-      "42161": { "address": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612" }
+      "42161": { "address": "0x639Fe6ab55C921f74e7fac1ee960C0B6293ba612" },
+      "9745": { "address": "0x43A7dd2125266c5c4c26EB86cd61241132426Fe7" },
     },
   } as const;
 export const BTCPriceFeed = {
@@ -996,7 +997,8 @@ export const BTCPriceFeed = {
       "1": { "address": "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c" },
       "10": { "address": "0xD702DD976Fb76Fffc2D3963D037dfDae5b04E593" },
       "8453": { "address": "0x64c911996D3c6aC71f9b455B1E8E7266BcbD848F" },
-      "42161": { "address": "0x6ce185860a4963106506C203335A2910413708e9" }
+      "42161": { "address": "0x6ce185860a4963106506C203335A2910413708e9" },
+      "9745": { "address": "0x3Bc5434dd1Fc6a1B68625e0269B9818cDd9E21B5" }
     },
 } as const;
 export const USDCPriceFeed =  {
@@ -1064,7 +1066,8 @@ export const DFSFeedRegistry =  {
     "abi": [{"inputs":[],"name":"NonContractCall","type":"error"},{"inputs":[],"name":"SenderNotAdmin","type":"error"},{"inputs":[],"name":"SenderNotOwner","type":"error"},{"inputs":[],"name":"adminVault","outputs":[{"internalType":"contract AdminVault","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"address","name":"","type":"address"}],"name":"aggregators","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"base","type":"address"},{"internalType":"address","name":"quote","type":"address"}],"name":"getFeed","outputs":[{"internalType":"address","name":"aggregator","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"kill","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"base","type":"address"},{"internalType":"address","name":"quote","type":"address"}],"name":"latestRoundData","outputs":[{"internalType":"uint80","name":"roundId","type":"uint80"},{"internalType":"int256","name":"answer","type":"int256"},{"internalType":"uint256","name":"startedAt","type":"uint256"},{"internalType":"uint256","name":"updatedAt","type":"uint256"},{"internalType":"uint80","name":"answeredInRound","type":"uint80"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"base","type":"address"},{"internalType":"address","name":"quote","type":"address"},{"internalType":"address","name":"aggregator","type":"address"}],"name":"setFeed","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address[]","name":"bases","type":"address[]"},{"internalType":"address[]","name":"quotes","type":"address[]"},{"internalType":"address[]","name":"aggregator","type":"address[]"}],"name":"setFeeds","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"_token","type":"address"},{"internalType":"address","name":"_receiver","type":"address"},{"internalType":"uint256","name":"_amount","type":"uint256"}],"name":"withdrawStuckFunds","outputs":[],"stateMutability":"nonpayable","type":"function"}],
     "networks": {
       "8453": { "address": "0x7dFF34190d0307fC234fc7E8C152C9715083eB02" },
-      "42161": { "address": "0x158E27De8B5E5bC3FA1C6D5b365a291c54f6b0Fd" }
+      "42161": { "address": "0x158E27De8B5E5bC3FA1C6D5b365a291c54f6b0Fd" },
+      "9745": { "address": "0x2226836ec16FF5974dFD8DF740CD461B42FAffD5" }
     }
   } as const;
 export const LlamaLendView =  {
@@ -1124,6 +1127,7 @@ export const FluidView =  {
     "networks": {
       "1": { "address": "0xc8df052bD7A8d76a34c09e758Dff3c6298C0115c" },
       "8453": { "address": "0x6cd4D6af4F292817eA2A2311F099dF26cd015028" },
+      "9745": { "address": "0x27C0BAe2338cE28097122393faF90375B9395dd1" },
       "42161": { "address": "0xf9e6d5568887ac8eC6fA33B7eefD2A176A958e71" }
     }
   } as const;

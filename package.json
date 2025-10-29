@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "2.1.16",
+  "version": "2.1.14",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -21,7 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.7.7",
+    "@defisaver/tokens": "^1.7.9",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.6.0",
