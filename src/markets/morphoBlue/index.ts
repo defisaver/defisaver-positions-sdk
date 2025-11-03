@@ -789,6 +789,87 @@ export const MORPHO_BLUE_WETH_EURC_860_BASE = (networkId: NetworkNumber = Networ
   protocolName: 'morpho-blue',
 });
 
+// Arbitrum
+export const MORPHO_BLUE_SYRUPUSDC_USDC_915_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Arb],
+  label: 'Morpho',
+  shortLabel: 'syrupUSDC/USDC',
+  value: MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915_Arb,
+  url: 'syrupusdcusdc-f86f3edd',
+  loanToken: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  collateralToken: '0x41CA7586cC1311807B4605fBB748a3B8862b42b5',
+  oracle: '0x8f30fF3d54e69D4dfD5E99a9937474FaDdf27009',
+  oracleType: MorphoBlueOracleType.CONTRACT_RATE,
+  irm: '0x66F30587FB8D4206918deb78ecA7d5eBbafD06DA',
+  lltv: 0.915,
+  marketId: '0xf86f3edd6f16cd8211f4d206866dc4ecd41be6211063ac11f8508e1b7112ef40',
+  protocolName: 'morpho-blue',
+});
+
+export const MorphoBlueWBTCUSDC_860_Arb = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Arb],
+  label: 'Morpho',
+  shortLabel: 'WBTC/USDC',
+  value: MorphoBlueVersions.MorphoBlueWBTCUSDC_860_Arb,
+  url: 'wbtcusdc-e6392ff1',
+  loanToken: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  collateralToken: '0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f',
+  oracle: '0x88193FcB705d29724A40Bb818eCAA47dD5F014d9',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x66F30587FB8D4206918deb78ecA7d5eBbafD06DA',
+  lltv: 0.86,
+  marketId: '0xe6392ff19d10454b099d692b58c361ef93e31af34ed1ef78232e07c78fe99169',
+  protocolName: 'morpho-blue',
+});
+
+export const MORPHO_BLUE_WSTETH_USDC_860_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Arb],
+  label: 'Morpho',
+  shortLabel: 'wstETH/USDC',
+  value: MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Arb,
+  url: 'wstethusdc-33e0c8ab',
+  loanToken: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  collateralToken: '0x5979D7b546E38E414F7E9822514be443A4800529',
+  oracle: '0x8e02a9b9Cc29d783b2fCB71C3a72651B591cae31',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x66F30587FB8D4206918deb78ecA7d5eBbafD06DA',
+  lltv: 0.86,
+  marketId: '0x33e0c8ab132390822b07e5dc95033cf250c963153320b7ffca73220664da2ea0',
+  protocolName: 'morpho-blue',
+});
+
+export const MORPHO_BLUE_ETH_USDC_860_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Arb],
+  label: 'Morpho',
+  shortLabel: 'ETH/USDC',
+  value: MorphoBlueVersions.MorphoBlueEthUSDC_860_Arb,
+  url: 'ethusdc-ca83d02b',
+  loanToken: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  collateralToken: '0x82aF49447D8a07e3bd95BD0d56f35241523fBab1',
+  oracle: '0x282FEB10549fde52bD61A6979424Ddf18A4971A2',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x66F30587FB8D4206918deb78ecA7d5eBbafD06DA',
+  lltv: 0.86,
+  marketId: '0xca83d02be579485cc10945c9597a6141e772f1cf0e0aa28d09a327b6cbd8642c',
+  protocolName: 'morpho-blue',
+});
+
+export const MORPHO_BLUE_SUSDS_USDC_945_ARB = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [NetworkNumber.Arb],
+  label: 'Morpho',
+  shortLabel: 'sUSDS/USDC',
+  value: MorphoBlueVersions.MorphoBluesUSDSUSDC_945_Arb,
+  url: 'susdsusdc-77fe2f7c',
+  loanToken: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+  collateralToken: '0xdDb46999F8891663a8F2828d25298f70416d7610',
+  oracle: '0x52CC7c3b27bb61D0a83785B5344acC919F8f7124',
+  oracleType: MorphoBlueOracleType.CONTRACT_RATE,
+  irm: '0x66F30587FB8D4206918deb78ecA7d5eBbafD06DA',
+  lltv: 0.945,
+  marketId: '0x77fe2f7c2dd6f4da6bc5f445b06052ff8df55cb70cfce9afc16ec3c69a5fd3a3',
+  protocolName: 'morpho-blue',
+});
+
 export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueWstEthUSDC]: MORPHO_BLUE_WSTETH_USDC(networkId),
   [MorphoBlueVersions.MorphoBlueSDAIUSDC]: MORPHO_BLUE_SDAI_USDC(networkId),
@@ -854,6 +935,13 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   // wstETH/WETH Base
   [MorphoBlueVersions.MorphoBlueWstEthEth_945_Base]: MORPHO_BLUE_WSTETH_ETH_945_BASE(networkId),
   [MorphoBlueVersions.MorphoBlueWstEthEth_965_Base]: MORPHO_BLUE_WSTETH_ETH_965_BASE(networkId),
+
+  // Arbitrum
+  [MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915_Arb]: MORPHO_BLUE_SYRUPUSDC_USDC_915_ARB(networkId),
+  [MorphoBlueVersions.MorphoBlueWBTCUSDC_860_Arb]: MorphoBlueWBTCUSDC_860_Arb(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Arb]: MORPHO_BLUE_WSTETH_USDC_860_ARB(networkId),
+  [MorphoBlueVersions.MorphoBlueEthUSDC_860_Arb]: MORPHO_BLUE_ETH_USDC_860_ARB(networkId),
+  [MorphoBlueVersions.MorphoBluesUSDSUSDC_945_Arb]: MORPHO_BLUE_SUSDS_USDC_945_ARB(networkId),
 }) as const;
 
 export const findMorphoBlueMarket = (collateralToken: string, loanToken: string, lltv: number, oracle: string, irm: string, network = NetworkNumber.Eth) => {
