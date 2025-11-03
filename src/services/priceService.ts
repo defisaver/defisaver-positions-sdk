@@ -4,13 +4,15 @@ import { Client, PublicClient } from 'viem';
 import {
   BTCPriceFeedContractViem,
   COMPPriceFeedContractViem,
+  DFSFeedRegistryContractViem,
   ETHPriceFeedContractViem,
   USDCPriceFeedContractViem,
   WeETHPriceFeedContractViem,
   WstETHPriceFeedContractViem,
 } from '../contracts';
-import { EthAddress, NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber, HexString } from '../types/common';
 import { getEthAmountForDecimals } from './utils';
+import { USD_QUOTE } from '../constants';
 
 export const getEthPrice = async (client: Client) => {
   const contract = ETHPriceFeedContractViem(client, NetworkNumber.Eth);
@@ -62,6 +64,48 @@ export const getWeETHPrice = async (client: Client, network: NetworkNumber = Net
   const weETHRate = getEthAmountForDecimals(weETHRateWei[1].toString(), decimals);
 
   return new Dec(ethPrice).mul(weETHRate).toString();
+};
+
+export const getWsrETHPrice = async (client: Client, network: NetworkNumber = NetworkNumber.Eth) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const [ethPriceWei, wrsETHRateWei] = await Promise.all([
+    feedRegistryContract.read.latestRoundData([getAssetInfo('WETH', network).address as HexString, USD_QUOTE]),
+    feedRegistryContract.read.latestRoundData([getAssetInfo('wrsETH', network).address as HexString, getAssetInfo('WETH', network).address as HexString]),
+  ]);
+
+  const ethPrice = new Dec(ethPriceWei[1].toString()).div(1e8);
+
+  const wrsETHRate = getEthAmountForDecimals(wrsETHRateWei[1].toString(), 18);
+
+  return new Dec(ethPrice).mul(wrsETHRate).toString();
+};
+
+export const getSyrupUSDTPrice = async (client: Client, network: NetworkNumber = NetworkNumber.Eth) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const [usdtPriceWei, syrupUSDTRateWei] = await Promise.all([
+    feedRegistryContract.read.latestRoundData([getAssetInfo('USDT', network).address as HexString, USD_QUOTE]),
+    feedRegistryContract.read.latestRoundData([getAssetInfo('syrupUSDT', network).address as HexString, getAssetInfo('USDT', network).address as HexString]),
+  ]);
+
+  const usdtPrice = new Dec(usdtPriceWei[1].toString()).div(1e8);
+
+  const syrupUSDTPrice = getEthAmountForDecimals(syrupUSDTRateWei[1].toString(), 18);
+
+  return new Dec(usdtPrice).mul(syrupUSDTPrice).toString();
+};
+
+export const getWstUSRPrice = async (client: Client, network: NetworkNumber = NetworkNumber.Eth) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const [usrPriceWei, wstUSRRateWei] = await Promise.all([
+    feedRegistryContract.read.latestRoundData([getAssetInfo('USR', network).address as HexString, USD_QUOTE]),
+    feedRegistryContract.read.latestRoundData([getAssetInfo('wstUSR', network).address as HexString, getAssetInfo('USR', network).address as HexString]),
+  ]);
+
+  const usrPrice = new Dec(usrPriceWei[1].toString()).div(1e8);
+
+  const wstUSRPrice = getEthAmountForDecimals(wstUSRRateWei[1].toString(), 18);
+
+  return new Dec(usrPrice).mul(wstUSRPrice).toString();
 };
 
 export const getWstETHChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
@@ -116,10 +160,85 @@ export const getWeETHChainLinkPriceCalls = (client: PublicClient, network: Netwo
   return calls;
 };
 
+export const getWsrETHChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const calls = [
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('WETH', network).address, USD_QUOTE],
+    },
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('wrsETH', network).address, getAssetInfo('WETH', network).address],
+    },
+  ];
+  return calls;
+};
+
+export const getSyrupUSDTChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const calls = [
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('USDT', network).address, USD_QUOTE],
+    },
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('syrupUSDT', network).address, getAssetInfo('USDT', network).address],
+    },
+  ];
+  return calls;
+};
+
+export const getWstUSRChainLinkPriceCalls = (client: PublicClient, network: NetworkNumber) => {
+  const feedRegistryContract = DFSFeedRegistryContractViem(client, network);
+  const calls = [
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('USR', network).address, USD_QUOTE],
+    },
+    {
+      address: feedRegistryContract.address,
+      abi: feedRegistryContract.abi,
+      functionName: 'latestRoundData',
+      args: [getAssetInfo('wstUSR', network).address, getAssetInfo('USR', network).address],
+    },
+  ];
+  return calls;
+};
+
 export const parseWstETHPriceCalls = (_ethPrice: string, wstETHrateAnswer: string, decimals: string) => {
   const ethPrice = new Dec(_ethPrice).div(1e8);
   const wstETHRate = getEthAmountForDecimals(wstETHrateAnswer, decimals);
   return { ethPrice, wstETHRate };
+};
+
+export const parseWrsETHPriceCalls = (ethPriceAnswer: string, wrsETHrateAnswer: string) => {
+  const ethPrice = new Dec(ethPriceAnswer).div(1e8);
+  const wrsETHRate = new Dec(wrsETHrateAnswer).div(1e18);
+  return { ethPrice, wrsETHRate };
+};
+
+export const parseSyrupUSDTPriceCalls = (usdtPriceAnswer: string, syrupUSDTRateAnswer: string) => {
+  const syrupUSDTRate = new Dec(syrupUSDTRateAnswer).div(1e8);
+  const USDTRate = new Dec(usdtPriceAnswer).div(1e18);
+  return { syrupUSDTRate, USDTRate };
+};
+
+export const parseWstUSRPriceCalls = (usrPrice: string, _wstUSRRate: string) => {
+  const wstUSRRate = new Dec(_wstUSRRate).div(1e8);
+  const USRRate = new Dec(usrPrice).div(1e18);
+  return { wstUSRRate, USRRate };
 };
 
 export const parseWeETHPriceCalls = (_ethPrice: string, weETHrateAnswer: string, decimals: string) => {

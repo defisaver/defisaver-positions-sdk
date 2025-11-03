@@ -1,3 +1,4 @@
+import { EModeCategoriesData } from './aave';
 import {
   EthAddress,
   IncentiveData,
@@ -20,8 +21,6 @@ export interface SparkEModeCategoryDataMapping {
   enteringTerms: boolean[],
   canEnterCategory: boolean,
   id: number,
-  data: SparkEModeCategoryData,
-  assets: string[],
   enabledData: {
     ratio: string,
     liqRatio: string,
@@ -55,7 +54,6 @@ export interface SparkAssetData extends MMAssetData {
   usageAsCollateralEnabled: boolean,
   isIsolated: boolean,
   eModeCategory: number,
-  eModeCategoryData: SparkEModeCategoryData,
   liquidationRatio: string,
 }
 
@@ -63,7 +61,7 @@ export interface SparkAssetsData {
   [token: string]: SparkAssetData,
 }
 
-export type SparkMarketsData = { assetsData: SparkAssetsData };
+export type SparkMarketsData = { assetsData: SparkAssetsData, eModeCategoriesData: EModeCategoriesData };
 
 export interface SparkUsedAsset extends MMUsedAsset {
   stableBorrowRate: string,
@@ -84,7 +82,7 @@ export interface SparkUsedAssets {
 export interface SparkHelperCommon {
   usedAssets: SparkUsedAssets,
   eModeCategory: number,
-  eModeCategories?: object,
+  eModeCategoriesData?: EModeCategoriesData,
   assetsData: SparkAssetsData,
   selectedMarket?: SparkMarketData,
   network?: NetworkNumber,

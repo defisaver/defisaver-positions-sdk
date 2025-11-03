@@ -182,7 +182,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
 
     if (isStakingAsset) {
-      const yieldApy = await getStakingApy(_market.symbol);
+      const yieldApy = await getStakingApy(_market.symbol, network as NetworkNumber);
       _market.supplyIncentives.push({
         apy: yieldApy,
         token: _market.symbol,

@@ -56,7 +56,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   markets: any;
 }> {
   const isMainnet = network === NetworkNumber.Eth;
-  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base].includes(network);
+  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
+  const isMorphoRewardsSupported = [NetworkNumber.Eth, NetworkNumber.Base].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -353,6 +354,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     // Batch Morpho Blue rewards
     (async () => {
+      if (!isMorphoRewardsSupported) return;
       try {
         const morphoRewards = await fetchMorphoBlueRewards(client, network, addresses);
         for (const address of addresses) {
@@ -456,7 +458,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...sparkMarkets.map((market) => allAddresses.map(async (address) => {
       try {
-        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData });
+        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData, eModeCategoriesData: sparkMarketsData[market.value].eModeCategoriesData });
         if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);

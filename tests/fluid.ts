@@ -113,7 +113,7 @@ describe('Fluid', () => {
     const network = NetworkNumber.Plasma;
     const marketData = await fetchMarketData(network, providerPlasma, FluidPlasmaVersions.FLUID_ETH_USDE_2_PLASMA);
 
-    console.log(marketData);
+    // console.log(marketData);
   });
 
   it('Fetch User positions for plasma', async function () {

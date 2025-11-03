@@ -3916,7 +3916,7 @@ export const FLUID_USDAI_USDT_10_PLASMA = (networkId: NetworkNumber = NetworkNum
   chainIds: [NetworkNumber.Plasma],
   label: '#10 (USDai / USDT)',
   shortLabel: 'USDai/USDT',
-  value: FluidPlasmaVersions.FLUID_USDE_USDT_10_PLASMA,
+  value: FluidPlasmaVersions.FLUID_USDAI_USDT_10_PLASMA,
   url: 'usdai-usdt-10-plasma',
   marketAddress: '0xdF16AdaF80584b2723F3BA1Eb7a601338Ba18c4e',
   hasSmartCollateral: false,
@@ -3925,7 +3925,7 @@ export const FLUID_USDAI_USDT_10_PLASMA = (networkId: NetworkNumber = NetworkNum
   debtAsset0: 'USDT',
 });
 
-export const FLUID_WEETH_ETH_ETH_11_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
+export const FLUID_ETH_WEETH_ETH_11_PLASMA = (networkId: NetworkNumber = NetworkNumber.Eth): FluidMarketInfo => ({
   stableBased: false,
   btcBased: false,
   wstETHBased: false,
@@ -3933,15 +3933,15 @@ export const FLUID_WEETH_ETH_ETH_11_PLASMA = (networkId: NetworkNumber = Network
   type: FluidVaultType.T2,
   id: 11,
   chainIds: [NetworkNumber.Plasma],
-  label: '#11 (weETH-ETH / ETH)',
-  shortLabel: 'weETH-ETH/ETH',
-  value: FluidPlasmaVersions.FLUID_WEETH_ETH_ETH_11_PLASMA,
-  url: 'weeth-eth-eth-11-plasma',
+  label: '#11 (ETH-weETH / ETH)',
+  shortLabel: 'ETH-weETH/ETH',
+  value: FluidPlasmaVersions.FLUID_ETH_WEETH_ETH_11_PLASMA,
+  url: 'eth-weeth-eth-11-plasma',
   marketAddress: '0x0C8C77B7FF4c2aF7F6CEBbe67350A490E3DD6cB3',
   hasSmartCollateral: true,
   hasSmartDebt: false,
-  collateralAsset0: 'weETH',
-  collateralAsset1: 'ETH',
+  collateralAsset0: 'ETH',
+  collateralAsset1: 'weETH',
   debtAsset0: 'ETH',
 });
 
@@ -4350,8 +4350,8 @@ export const FluidMarkets = (networkId: NetworkNumber) => ({
   [FluidPlasmaVersions.FLUID_XAUT_USDT_7_PLASMA]: FLUID_XAUT_USDT_7_PLASMA(networkId),
   [FluidPlasmaVersions.FLUID_XAUT_USDE_8_PLASMA]: FLUID_XAUT_USDE_8_PLASMA(networkId),
   [FluidPlasmaVersions.FLUID_USDE_USDT_9_PLASMA]: FLUID_USDE_USDT_9_PLASMA(networkId),
-  [FluidPlasmaVersions.FLUID_USDE_USDT_10_PLASMA]: FLUID_USDAI_USDT_10_PLASMA(networkId),
-  [FluidPlasmaVersions.FLUID_WEETH_ETH_ETH_11_PLASMA]: FLUID_WEETH_ETH_ETH_11_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_USDAI_USDT_10_PLASMA]: FLUID_USDAI_USDT_10_PLASMA(networkId),
+  [FluidPlasmaVersions.FLUID_ETH_WEETH_ETH_11_PLASMA]: FLUID_ETH_WEETH_ETH_11_PLASMA(networkId),
   [FluidPlasmaVersions.FLUID_SUSDE_USDT_USDT_12_PLASMA]: FLUID_SUSDE_USDT_USDT_12_PLASMA(networkId),
   [FluidPlasmaVersions.FLUID_USDE_USDT_USDT_13_PLASMA]: FLUID_USDE_USDT_USDT_13_PLASMA(networkId),
   [FluidPlasmaVersions.FLUID_USDAI_USDT_USDT_14_PLASMA]: FLUID_USDAI_USDT_USDT_14_PLASMA(networkId),
