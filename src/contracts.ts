@@ -67,6 +67,15 @@ export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: T
   });
 };
 
+export const getMorphoVaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('MorphoVault') as typeof configRaw['MorphoVault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
