@@ -1053,6 +1053,10 @@ export const MorphoBlueView =  {
             "address": "0xDBCACF59C5063da8B15481F88E7D70E13c92f2a1",
           },
         },
+      },
+      "42161": {
+        "address": "0xa3b8b400a2eFF0314fa9605E778692bd4Bd9f880",
+        "createdBlock": 394369307,
       }
     },
   } as const;

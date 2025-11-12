@@ -12,10 +12,12 @@ const { assert } = require('chai');
 describe('Morpho Blue', () => {
   let provider: EthereumProvider;
   let providerBase: EthereumProvider;
+  let providerArb: EthereumProvider;
 
   before(async () => {
     provider = getProvider('RPC');
     providerBase = getProvider('RPCBASE');
+    providerArb = getProvider('RPCARB');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, selectedMarket: sdk.MorphoBlueMarketData) => {
@@ -414,6 +416,14 @@ describe('Morpho Blue', () => {
     const marketData = await fetchMarketData(network, provider, selectedMarket);
     await fetchAccountData(network, provider, marketData, selectedMarket);
   });
+  it('can fetch sUSDS/USDT 96.5% market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBluesUSDSUSDT_965];
+
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
+  });
 
   // ###### BASE ######
 
@@ -547,6 +557,48 @@ describe('Morpho Blue', () => {
 
     const marketData = await fetchMarketData(network, providerBase, selectedMarket);
     await fetchAccountData(network, providerBase, marketData, selectedMarket);
+  });
+
+  // Arbitrum
+  it('can fetch syrupUSDC/USDC market and account data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915_Arb];
+
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
+  });
+  it('can fetch WBTC/USDC market and account data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWBTCUSDC_860_Arb];
+
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
+  });
+  it('can fetch wstETH/USDC market and account data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Arb];
+
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
+  });
+  it('can fetch ETH/USDC market and account data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueEthUSDC_860_Arb];
+
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
+  });
+  it('can fetch sUSDS/USDC market and account data for Arbitrum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Arb;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBluesUSDSUSDC_945_Arb];
+
+    const marketData = await fetchMarketData(network, providerArb, selectedMarket);
+    await fetchAccountData(network, providerArb, marketData, selectedMarket);
   });
 
   // utils

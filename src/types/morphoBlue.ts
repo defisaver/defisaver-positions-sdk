@@ -26,6 +26,7 @@ export enum MorphoBlueVersions {
   MorphoBlueLBTCCbBTC_945 = 'morphobluelbtccbbtc_945', // LBTC/cbBTC
   MorphoBlueUSRUSDC_915 = 'morphoblueusrusdc_915', // USR/USDC
   MorphoBlueSyrupUSDCUSDC_915 = 'morphobluesyrupusdcusdc_915', // syrupUSDC/USDC
+  MorphoBluesUSDSUSDT_965 = 'morphobluesusdsusdt_965', // sUSDS/USDT
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
@@ -62,6 +63,13 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthEURC_860_Base = 'morphobluewstetheurc_860_base', // wstETH/EURC
   MorphoBlueCbBTCEURC_860_Base = 'morphobluecbbtceurc_860_base', // cbBTC/EURC
   MorphoBlueWETHEURC_860_Base = 'morphobluewetheurc_860_base', // WETH/EURC
+
+  // ARBITRUM
+  MorphoBlueSyrupUSDCUSDC_915_Arb = 'morphobluesyrupusdcusdc_915_arb', // syrupUSDC/USDC
+  MorphoBlueWBTCUSDC_860_Arb = 'morphobluewbtcusdc_860_arb', // WBTC/USDC
+  MorphoBlueWstEthUSDC_860_Arb = 'morphobluewstethusdc_860_arb', // wstETH/USDC
+  MorphoBlueEthUSDC_860_Arb = 'morphoblueethusdc_860_arb', // ETH/USDC
+  MorphoBluesUSDSUSDC_945_Arb = 'morphobluesusdsusdc_945_arb', // sUSDS/USDC
 }
 
 export enum MorphoBlueOracleType {
