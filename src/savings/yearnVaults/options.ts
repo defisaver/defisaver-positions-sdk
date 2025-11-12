@@ -18,10 +18,10 @@ export const YEARN_VAULT_USDT: YearnVault = {
   asset: 'USDT',
 };
 
-export const YEARN_VAULTS: Record<string, YearnVault> = {
-  [YEARN_VAULT_DAI.type]: YEARN_VAULT_DAI,
-  [YEARN_VAULT_USDC.type]: YEARN_VAULT_USDC,
-  [YEARN_VAULT_USDT.type]: YEARN_VAULT_USDT,
+export const YEARN_VAULTS: Record<YearnVaultType, YearnVault> = {
+  [YearnVaultType.YearnVaultDAI]: YEARN_VAULT_DAI,
+  [YearnVaultType.YearnVaultUSDC]: YEARN_VAULT_USDC,
+  [YearnVaultType.YearnVaultUSDT]: YEARN_VAULT_USDT,
 };
 
 export const getYearnVault = (type: YearnVaultType): YearnVault => YEARN_VAULTS[type];
