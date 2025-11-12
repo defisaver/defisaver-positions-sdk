@@ -1,12 +1,12 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
 import { request as graphqlRequest } from 'graphql-request';
-import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
+import { assetAmountInEth } from '@defisaver/tokens';
 import * as morphoVaultsOptions from './options';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
 import { getViemProvider } from '../../services/viem';
 import { getMorphoVaultContractViem } from '../../contracts';
-import { MorphoVault } from '../../types';
+import { MorphoVault, SavingsVaultData } from '../../types';
 
 export {
   morphoVaultsOptions,
@@ -33,7 +33,7 @@ vaultByAddress(chainId: 1, address: "${vaultAddress}") {
 
 const MORPHO_BLUE_API = 'https://blue-api.morpho.org/graphql';
 
-export const _getMorphoVaultData = async (provider: Client, network: NetworkNumber, morphoVault: MorphoVault, account: EthAddress): Promise<any> => {
+export const _getMorphoVaultData = async (provider: Client, network: NetworkNumber, morphoVault: MorphoVault, account: EthAddress): Promise<SavingsVaultData> => {
   const morphoVaultContract = getMorphoVaultContractViem(provider, morphoVault.address);
   const [totalAssets, shares, totalSupply, decimals, decimalsOffset, vaultData] = await Promise.all([
     morphoVaultContract.read.totalAssets(),
@@ -58,7 +58,7 @@ export const _getMorphoVaultData = async (provider: Client, network: NetworkNumb
   };
 };
 
-export async function getMorphoVaultData(provider: EthereumProvider, network: NetworkNumber, morphoVault: MorphoVault, account: EthAddress): Promise<any> {
+export async function getMorphoVaultData(provider: EthereumProvider, network: NetworkNumber, morphoVault: MorphoVault, account: EthAddress): Promise<SavingsVaultData> {
   return _getMorphoVaultData(getViemProvider(provider, network, {
     batch: {
       multicall: {
