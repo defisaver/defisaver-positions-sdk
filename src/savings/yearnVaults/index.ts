@@ -11,36 +11,46 @@ export {
   yearnVaultsOptions,
 };
 
-export const _getYearnVaultData = async (provider: Client, network: NetworkNumber, yearnVault: YearnVault, account: EthAddress): Promise<SavingsVaultData> => {
+export const _getYearnVaultData = async (provider: Client, network: NetworkNumber, yearnVault: YearnVault, accounts: EthAddress[]): Promise<SavingsVaultData> => {
   const yearnVaultContract = getYearnVaultContractViem(provider, yearnVault.address);
   const viewContract = YearnViewContractViem(provider, network);
 
-  const [tokenSupply, underlyingSupply, yvAmountWei, poolLiquidity] = await Promise.all([
+  const yvAmountsWei: Record<EthAddress, bigint> = {};
+
+  const [tokenSupply, underlyingSupply, poolLiquidity] = await Promise.all([
     yearnVaultContract.read.totalSupply(),
     yearnVaultContract.read.totalAssets(),
-    yearnVaultContract.read.balanceOf([account]),
     viewContract.read.getPoolLiquidity([yearnVault.address]),
+    ...accounts.map(async (account) => {
+      const yvAmount = await yearnVaultContract.read.balanceOf([account]);
+      yvAmountsWei[account] = yvAmount;
+    }),
   ]);
 
   const exchangeRate = new Dec(underlyingSupply).div(tokenSupply).toString();
-  const underlyingAmountWei = new Dec(yvAmountWei).mul(exchangeRate).toString();
-  const supplied = assetAmountInEth(underlyingAmountWei, yearnVault.asset);
   const poolSize = assetAmountInEth(underlyingSupply.toString(), yearnVault.asset);
   const liquidity = assetAmountInEth(poolLiquidity.toString(), yearnVault.asset);
 
+  const supplied: Record<EthAddress, string> = {};
+  accounts.forEach((account) => {
+    const yvAmountWei = yvAmountsWei[account] || BigInt(0);
+    const underlyingAmountWei = new Dec(yvAmountWei).mul(exchangeRate).toString();
+    supplied[account.toLowerCase() as EthAddress] = assetAmountInEth(underlyingAmountWei, yearnVault.asset);
+  });
+
   return {
     poolSize,
-    supplied,
     liquidity,
+    supplied,
   };
 };
 
-export async function getYearnVaultData(provider: EthereumProvider, network: NetworkNumber, yearnVault: YearnVault, account: EthAddress): Promise<SavingsVaultData> {
+export async function getYearnVaultData(provider: EthereumProvider, network: NetworkNumber, yearnVault: YearnVault, accounts: EthAddress[]): Promise<SavingsVaultData> {
   return _getYearnVaultData(getViemProvider(provider, network, {
     batch: {
       multicall: {
         batchSize: 2500000,
       },
     },
-  }), network, yearnVault, account);
+  }), network, yearnVault, accounts);
 }

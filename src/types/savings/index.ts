@@ -1,3 +1,4 @@
+import { EthAddress } from '../common';
 import { MorphoVaultType } from './morphoVaults';
 import { YearnVaultType } from './yearnVaults';
 
@@ -6,8 +7,8 @@ export * from './yearnVaults';
 
 export interface SavingsVaultData {
   poolSize: string,
-  supplied: string,
   liquidity: string,
+  supplied: Record<EthAddress, string>,
 }
 
 export interface SavingsData {

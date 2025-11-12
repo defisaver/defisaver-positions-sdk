@@ -12,7 +12,7 @@ describe('Yearn Vaults', () => {
   });
 
   const fetchVaultData = async (network: NetworkNumber, _provider: EthereumProvider) => {
-    const vaultData = await sdk.savings.yearnVaults.getYearnVaultData(_provider, network, sdk.savings.yearnVaults.yearnVaultsOptions.getYearnVault(sdk.YearnVaultType.YearnVaultDAI), '0x3D6532c589A11117a4494d9725bb8518C731f1Be');
+    const vaultData = await sdk.savings.yearnVaults.getYearnVaultData(_provider, network, sdk.savings.yearnVaults.yearnVaultsOptions.getYearnVault(sdk.YearnVaultType.YearnVaultDAI), ['0x3D6532c589A11117a4494d9725bb8518C731f1Be']);
     console.log(vaultData);
     return vaultData;
   };

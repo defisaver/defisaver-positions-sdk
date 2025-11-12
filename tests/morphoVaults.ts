@@ -12,7 +12,7 @@ describe('Morpho Vaults', () => {
   });
 
   const fetchVaultData = async (network: NetworkNumber, _provider: EthereumProvider) => {
-    const vaultData = await sdk.savings.morphoVaults.getMorphoVaultData(_provider, network, sdk.savings.morphoVaults.morphoVaultsOptions.getMorphoVault(sdk.MorphoVaultType.MorphoVaultGauntletResolvUSDC), '0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF');
+    const vaultData = await sdk.savings.morphoVaults.getMorphoVaultData(_provider, network, sdk.savings.morphoVaults.morphoVaultsOptions.getMorphoVault(sdk.MorphoVaultType.MorphoVaultGauntletResolvUSDC), ['0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF']);
     console.log(vaultData);
     return vaultData;
   };
