@@ -10,13 +10,7 @@ export interface SavingsVaultData {
   liquidity: string,
   supplied: Record<EthAddress, string>,
   asset: string,
+  optionType: string,
 }
 
-export interface SavingsData {
-  morphoVaults: {
-    [key in MorphoVaultType]?: SavingsVaultData;
-  };
-  yearnVaults: {
-    [key in YearnVaultType]?: SavingsVaultData;
-  };
-}
+export type SavingsData = Partial<Record<MorphoVaultType | YearnVaultType, SavingsVaultData>>;

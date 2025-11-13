@@ -43,6 +43,7 @@ export const _getYearnVaultData = async (provider: Client, network: NetworkNumbe
     liquidity,
     supplied,
     asset: yearnVault.asset,
+    optionType: yearnVault.type,
   };
 };
 

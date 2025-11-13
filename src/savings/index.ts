@@ -16,21 +16,18 @@ export const getSavingsData = async (
   const morphoVaultsList = Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[];
   const yearnVaultsList = Object.keys(yearnVaults.yearnVaultsOptions.YEARN_VAULTS) as YearnVaultType[];
 
-  const savingsData: SavingsData = {
-    morphoVaults: {},
-    yearnVaults: {},
-  };
+  const savingsData: SavingsData = {};
 
   await Promise.all([
     ...morphoVaultsList.map(async (vaultKey) => {
       const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
       const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
-      savingsData.morphoVaults[vaultKey] = data;
+      savingsData[vaultKey] = data;
     }),
     ...yearnVaultsList.map(async (vaultKey) => {
       const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
       const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
-      savingsData.yearnVaults[vaultKey] = data;
+      savingsData[vaultKey] = data;
     }),
   ]);
 
