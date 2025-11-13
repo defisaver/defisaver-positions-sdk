@@ -9,6 +9,7 @@ export interface SavingsVaultData {
   poolSize: string,
   liquidity: string,
   supplied: Record<EthAddress, string>,
+  asset: string,
 }
 
 export interface SavingsData {

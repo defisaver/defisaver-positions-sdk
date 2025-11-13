@@ -65,6 +65,7 @@ export const _getMorphoVaultData = async (provider: Client, network: NetworkNumb
     poolSize,
     supplied,
     liquidity,
+    asset: morphoVault.asset,
   };
 };
 
