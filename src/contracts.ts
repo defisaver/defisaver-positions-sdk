@@ -139,3 +139,5 @@ export const LiquityV2sBoldVaultViem = createViemContractFromConfigFunc('Liquity
 export const StkAAVEViem = createViemContractFromConfigFunc('StkAAVE');
 
 export const YearnViewContractViem = createViemContractFromConfigFunc('YearnView');
+
+export const MakerDsrContractViem = createViemContractFromConfigFunc('MakerDsr');

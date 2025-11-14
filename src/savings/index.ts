@@ -1,11 +1,15 @@
-import { MorphoVaultType, SavingsData, YearnVaultType } from '../types';
+import {
+  MakerDsrType, MorphoVaultType, SavingsData, YearnVaultType,
+} from '../types';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import * as morphoVaults from './morphoVaults';
 import * as yearnVaults from './yearnVaults';
+import * as makerDsr from './makerDSR';
 
 export {
   morphoVaults,
   yearnVaults,
+  makerDsr,
 };
 
 export const getSavingsData = async (
@@ -29,6 +33,10 @@ export const getSavingsData = async (
       const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
       savingsData[vaultKey] = data;
     }),
+    (async () => {
+      const data = await makerDsr.getMakerDsrData(provider, network, accounts);
+      savingsData[MakerDsrType.MakerDsrVault] = data;
+    })(),
   ]);
 
   return savingsData;

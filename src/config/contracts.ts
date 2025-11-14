@@ -1272,3 +1272,11 @@ export const YearnView = {
     }
   }
 } as const;
+export const MakerDsr = {
+  "abi": [{"constant":true,"inputs":[],"name":"chi","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"pie","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"Pie","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"}],
+  "networks": {
+    "1": {
+      "address": "0x197e90f9fad81970ba7976f33cbd77088e5d7cf7",
+    }
+  }
+}
