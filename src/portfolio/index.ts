@@ -48,6 +48,7 @@ import { getCompoundV3Rewards } from '../claiming/compV3';
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { fetchMorphoBlueRewards } from '../claiming/morphoBlue';
 import { getKingRewards } from '../claiming/king';
+import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<{
   positions: PortfolioPositionsData;
@@ -161,6 +162,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       spk: {},
       king: {},
       morpho: {},
+      ethena: {},
     };
   }
 
@@ -397,6 +399,30 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         for (const address of addresses) {
           rewardsData[address.toLowerCase() as EthAddress].spk = {
             error: 'Error fetching Spark Airdrop rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    (async () => {
+      try {
+        if (!isMainnet) {
+          return;
+        }
+
+        const ethenaAirdropRewards = await fetchEthenaAirdropRewards(addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].ethena = {
+            error: '',
+            data: ethenaAirdropRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Ethena Airdrop rewards data:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].ethena = {
+            error: 'Error fetching Ethena Airdrop rewards data in batch',
             data: null,
           };
         }
