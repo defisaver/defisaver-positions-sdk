@@ -17,6 +17,8 @@ export enum ClaimType {
   SPARK_AIRDROP = 'SPARK_AIRDROP',
   /** Spark Airdrop */
   SPARK_WST_ETH_REWARDS = 'SPARK_WST_ETH_REWARDS', // TODO: This will be removed once we fully refactor spark rewards
+
+  ETHENA_AIRDROP = 'ETHENA_AIRDROP',
 }
 
 type _ClaimableTokenPartial = {
@@ -98,6 +100,8 @@ export type SparkAirdropClaimableToken = _ClaimableTokenPartial & {
 
 export type SparkWstEthRewardsClaimableToken = _ClaimableTokenPartial & { claimType: ClaimType.SPARK_WST_ETH_REWARDS };
 
+export type EthenaAirdropClaimableToken = _ClaimableTokenPartial & { claimType: ClaimType.ETHENA_AIRDROP };
+
 export type ClaimableToken =
     AaveRewardsClaimableToken
     | AaveMeritRewardsClaimableToken
@@ -106,4 +110,5 @@ export type ClaimableToken =
     | SparkRewardsClaimableToken
     | KingRewardsClaimableToken
     | SparkAirdropClaimableToken
-    | SparkWstEthRewardsClaimableToken;
+    | SparkWstEthRewardsClaimableToken
+    | EthenaAirdropClaimableToken;
