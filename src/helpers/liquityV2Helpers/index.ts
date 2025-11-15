@@ -13,8 +13,10 @@ export const calculateNetApyLiquityV2 = (usedAssets: LiquityV2UsedAssets, assets
     if (usedAsset.suppliedUsd) {
       const amount = usedAsset.suppliedUsd;
       acc.suppliedUsd = new Dec(acc.suppliedUsd).add(amount).toString();
-      if (assetData.incentiveSupplyApy) {
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
+
+      for (const supplyIncentive of assetData.supplyIncentives) {
+        const { apy } = supplyIncentive;
+        const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }

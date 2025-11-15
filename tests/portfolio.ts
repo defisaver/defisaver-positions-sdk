@@ -13,12 +13,14 @@ describe('Portfolio', () => {
   let providerOpt: EthereumProvider;
   let providerArb: EthereumProvider;
   let providerLinea: EthereumProvider;
+  let providerPlasma: EthereumProvider;
   before(async () => {
     provider = getProvider('RPC');
     providerOpt = getProvider('RPCOPT');
     providerBase = getProvider('RPCBASE');
     providerArb = getProvider('RPCARB');
     providerLinea = getProvider('RPCLINEA');
+    providerPlasma = getProvider('RPCPLASMA');
   });
 
   const fetchPortfolioData = async (network: NetworkNumber, _provider: EthereumProvider) => {
@@ -31,7 +33,7 @@ describe('Portfolio', () => {
     const network = NetworkNumber.Eth;
 
     const portfolioData = await fetchPortfolioData(network, provider);
-    console.log('Portfolio Data:', portfolioData);
+    // console.log('Portfolio Data:', portfolioData);
   });
 
   it('can fetch portfolio data for Arbitrum', async function () {
@@ -60,5 +62,12 @@ describe('Portfolio', () => {
     const network = NetworkNumber.Linea;
 
     const portfolioData = await fetchPortfolioData(network, providerLinea);
+  });
+
+  it('can fetch portfolio data for Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    const portfolioData = await fetchPortfolioData(network, providerPlasma);
   });
 });
