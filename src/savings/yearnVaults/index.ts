@@ -56,3 +56,19 @@ export async function getYearnVaultData(provider: EthereumProvider, network: Net
     },
   }), network, yearnVault, accounts);
 }
+
+export const _getYearnVaultExchangeRate = async (provider: Client, yearnVault: YearnVault): Promise<string> => {
+  const yearnVaultContract = getYearnVaultContractViem(provider, yearnVault.address);
+
+  const [tokenSupply, underlyingSupply] = await Promise.all([
+    yearnVaultContract.read.totalSupply(),
+    yearnVaultContract.read.totalAssets(),
+  ]);
+
+  const exchangeRate = new Dec(underlyingSupply).div(tokenSupply).toString();
+  return exchangeRate;
+};
+
+export async function getYearnVaultExchangeRate(provider: EthereumProvider, network: NetworkNumber, yearnVault: YearnVault): Promise<string> {
+  return _getYearnVaultExchangeRate(getViemProvider(provider, network), yearnVault);
+}
