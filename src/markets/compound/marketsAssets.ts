@@ -61,7 +61,7 @@ export const v3USDbCCollAssets = {
 };
 
 export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD'];
-export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
+export const v3USDTCollAssetsArb = ['ARB', 'ETH', 'wstETH', 'WBTC', 'GMX', 'tBTC'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
