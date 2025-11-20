@@ -10,4 +10,5 @@ export interface YearnVault {
   type: YearnVaultType;
   address: EthAddress;
   asset: string;
+  deploymentBlock: number;
 }

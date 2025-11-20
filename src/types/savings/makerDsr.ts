@@ -9,4 +9,5 @@ export interface MakerDsrVault {
   name: string;
   address: EthAddress;
   asset: string;
+  deploymentBlock: number;
 }
