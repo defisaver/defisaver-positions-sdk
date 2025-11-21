@@ -1526,9 +1526,22 @@ export const getAllFluidMarketDataChunked = async (
 export const _getFluidTokenData = async (provider: Client, network: NetworkNumber, token: string) => {
   const view = FluidViewContractViem(provider, network);
   const fTokenAddress = getFTokenAddress(token, network);
-  const data = await view.read.getFTokenData([fTokenAddress]);
-  const supplyRate = new Dec(data.supplyRate).div(100).toString();
-  const rewardsRate = new Dec(data.rewardsRate).div(1e12).toString();
+  const [
+    data,
+    rewardsApiResponse,
+  ] = await Promise.all([
+    await view.read.getFTokenData([fTokenAddress]),
+    fetch(`https://api.fluid.instadapp.io/v2/lending/${network}/tokens/${fTokenAddress}`),
+  ]);
+  let rewardsData = { rewards: [] } as any;
+  if (!rewardsApiResponse.ok) {
+    console.log('External API Failure: Failed to fetch fluid rewards APY');
+  } else {
+    rewardsData = await rewardsApiResponse.json();
+  }
+  const supplyRate = new Dec(rewardsData?.supplyRate || '0').div(100).toString();
+  const rewardRates = rewardsData?.rewards?.reduce((acc: Dec, item: any) => acc.add(new Dec(item.rate || '0').div(100)), new Dec(0)) || '0';
+  const stakeRate = new Dec(rewardsData?.asset?.stakingApr || '0').div(100).toString();
   const decimals = data.decimals.toString();
 
   const depositRate = new Dec(getEthAmountForDecimals(data.convertToShares.toString(), decimals)).toString();
@@ -1540,7 +1553,7 @@ export const _getFluidTokenData = async (provider: Client, network: NetworkNumbe
     decimals,
     totalDeposited: getEthAmountForDecimals(data.totalAssets.toString(), decimals),
     withdrawable: getEthAmountForDecimals(data.withdrawable.toString(), decimals),
-    apy: new Dec(supplyRate).add(rewardsRate).toString(),
+    apy: new Dec(supplyRate).plus(rewardRates).plus(stakeRate).toString(),
     depositRate,
     withdrawRate,
   };
