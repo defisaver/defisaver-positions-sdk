@@ -1436,8 +1436,7 @@ const parseUserData = (userPositionData: FluidUserPositionStructOutputStruct, va
 
 export const _getFluidMarketData = async (provider: PublicClient, network: NetworkNumber, market: FluidMarketInfo) => {
   const view = FluidViewContractViem(provider, network);
-
-  const data = await view.read.getVaultData([market.marketAddress]);
+  const { result: data } = await view.simulate.getVaultData([market.marketAddress]);
 
   return parseMarketData(provider, data, network);
 };
@@ -1476,7 +1475,7 @@ export const _getFluidPosition = async (
 ): Promise<FluidVaultData> => {
   const view = FluidViewContractViem(provider, network);
 
-  const data = await view.read.getPositionByNftId([BigInt(vaultId)]);
+  const { result: data } = await view.simulate.getPositionByNftId([BigInt(vaultId)]);
 
   const userPositionData = data[0];
 
@@ -1495,7 +1494,7 @@ export const getFluidPosition = async (
 
 export const _getFluidPositionWithMarket = async (provider: PublicClient, network: NetworkNumber, vaultId: string) => {
   const view = FluidViewContractViem(provider, network);
-  const data = await view.read.getPositionByNftId([BigInt(vaultId)]);
+  const { result: data } = await view.simulate.getPositionByNftId([BigInt(vaultId)]);
   const marketData = await parseMarketData(provider, data[1], network);
   const userData = parseUserData(data[0], marketData);
 
@@ -1514,8 +1513,8 @@ export const getFluidPositionWithMarket = async (
 export const _getAllFluidMarketDataChunked = async (network: NetworkNumber, provider: PublicClient) => {
   const versions = getFluidVersionsDataForNetwork(network);
   const view = FluidViewContractViem(provider, network);
-  const data = await Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress])));
-  return Promise.all(data.map(async (item, i) => parseMarketData(provider, item, network)));
+  const data = await Promise.all(versions.map((version) => view.simulate.getVaultData([version.marketAddress])));
+  return Promise.all(data.map(d => d.result).map(async (item, i) => parseMarketData(provider, item, network)));
 };
 
 export const getAllFluidMarketDataChunked = async (
@@ -1643,8 +1642,8 @@ export const getAllUserEarnPositionsWithFTokens = async (
 
 export const _getUserPositions = async (provider: PublicClient, network: NetworkNumber, user: EthAddress) => {
   const view = FluidViewContractViem(provider, network);
-
-  const data = await view.read.getUserPositions([user]);
+  const { result: data } = await view.simulate.getUserPositions([user]);
+  // const data = await view.read.getUserPositions([user]);
 
   const parsedMarketData = await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network)));
 
@@ -1749,7 +1748,7 @@ const getTokensPricesForPortfolio = async (tokens: string[], provider: PublicCli
 export const _getUserPositionsPortfolio = async (provider: PublicClient, network: NetworkNumber, user: EthAddress) => {
   const view = FluidViewContractViem(provider, network);
 
-  const data = await view.read.getUserPositions([user]);
+  const { result: data } = await view.simulate.getUserPositions([user]);
   const tokens = Array.from(new Set(data[1].map((vaultData) => {
     const vaultTokens = [getAssetInfoByAddress(vaultData.supplyToken0, network).symbol, getAssetInfoByAddress(vaultData.borrowToken0, network).symbol];
     if (vaultData.supplyToken1 && !compareAddresses(ZERO_ADDRESS, vaultData.supplyToken1)) vaultTokens.push(getAssetInfoByAddress(vaultData.supplyToken1, network).symbol);
