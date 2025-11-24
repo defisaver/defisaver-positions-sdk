@@ -4,7 +4,7 @@ export const MORPHO_VAULT_FLAGSHIP_ETH: MorphoVault = {
   type: MorphoVaultType.MorphoVaultFlagshipEth,
   name: 'Flagship ETH',
   address: '0x38989BBA00BDF8181F4082995b3DEAe96163aC5D',
-  asset: 'ETH',
+  asset: 'WETH',
   deploymentBlock: 18927491,
 };
 
@@ -28,7 +28,7 @@ export const MORPHO_VAULT_RE7_WETH: MorphoVault = {
   type: MorphoVaultType.MorphoVaultRe7Weth,
   name: 'RE7 WETH',
   address: '0x78Fc2c2eD1A4cDb5402365934aE5648aDAd094d0',
-  asset: 'ETH',
+  asset: 'WETH',
   deploymentBlock: 19121118,
 };
 
@@ -36,7 +36,7 @@ export const MORPHO_VAULT_GAUNTLET_WETH_CORE: MorphoVault = {
   type: MorphoVaultType.MorphoVaultGauntletWETHCore,
   name: 'Gauntlet WETH Core',
   address: '0x4881Ef0BF6d2365D3dd6499ccd7532bcdBCE0658',
-  asset: 'ETH',
+  asset: 'WETH',
   deploymentBlock: 19541126,
 };
 
@@ -44,7 +44,7 @@ export const MORPHO_VAULT_GAUNTLET_WETH_PRIME: MorphoVault = {
   type: MorphoVaultType.MorphoVaultGauntletWETHPrime,
   name: 'Gauntlet WETH Prime',
   address: '0x2371e134e3455e0593363cBF89d3b6cf53740618',
-  asset: 'ETH',
+  asset: 'WETH',
   deploymentBlock: 19372149,
 };
 
