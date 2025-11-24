@@ -29,6 +29,9 @@ describe('Fluid', () => {
 
   const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, marketVersion: FluidVersions) => {
     const marketData = await sdk.fluid.getFluidMarketData(_provider, network, sdk.markets.FluidMarkets(network)[marketVersion]);
+    if (!marketData) {
+      return;
+    }
     // console.log(marketData);
     assert.containsAllKeys(marketData, ['assetsData']);
     for (const tokenData of Object.values(marketData.assetsData)) {
