@@ -1118,7 +1118,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const marketInfo = getFluidMarketInfoById(+(data.vaultId.toString()), network);
   if (!marketInfo) {
-    console.error(`Market with address ${data.vault} not supported.`);
+    console.error(`Fluid market with address ${data.vault} not supported.`);
     return; // skip unsupported market
   }
   const vaultType = parseVaultType(+(data.vaultType.toString()));
