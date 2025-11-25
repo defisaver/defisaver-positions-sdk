@@ -218,9 +218,9 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...addresses.map(async (address) => {
       try {
         if (!isFluidSupported) return; // Fluid is not available on Optimism
-        const userPositions = await _getUserPositionsPortfolio(client, network, address);
+        const userPositions = (await _getUserPositionsPortfolio(client, network, address));
         for (const position of userPositions) {
-          if (new Dec(position.userData.suppliedUsd).gt(0)) {
+          if (position.userData && new Dec(position.userData.suppliedUsd).gt(0)) {
             positions[address.toLowerCase() as EthAddress].fluid.data[position.userData.nftId] = position.userData;
           }
         }

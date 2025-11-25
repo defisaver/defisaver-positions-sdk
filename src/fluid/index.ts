@@ -1116,6 +1116,11 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 };
 
 const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+  const marketInfo = getFluidMarketInfoById(+(data.vaultId.toString()), network);
+  if (!marketInfo) {
+    console.error(`Fluid market with address ${data.vault} not supported.`);
+    return; // skip unsupported market
+  }
   const vaultType = parseVaultType(+(data.vaultType.toString()));
   switch (vaultType) {
     case FluidVaultType.T1:
@@ -1497,6 +1502,9 @@ export const _getFluidPositionWithMarket = async (provider: PublicClient, networ
   const view = FluidViewContractViem(provider, network);
   const data = await view.read.getPositionByNftId([BigInt(vaultId)]);
   const marketData = await parseMarketData(provider, data[1], network);
+  if (!marketData) {
+    return;
+  }
   const userData = parseUserData(data[0], marketData);
 
   return {
@@ -1659,14 +1667,14 @@ export const _getUserPositions = async (provider: PublicClient, network: Network
 
   const data = await view.read.getUserPositions([user]);
 
-  const parsedMarketData = await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network)));
+  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network))));
 
-  const userData = data[0].map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]) }));
+  const userData = data[0].map((position, i) => (parsedMarketData[i] && { ...parseUserData(position, parsedMarketData[i]) }));
 
   return parsedMarketData.map((market, i) => ({
     marketData: market,
     userData: userData[i],
-  }));
+  })).filter(md => md.marketData !== undefined);
 };
 
 export const getUserPositions = async (
@@ -1745,10 +1753,14 @@ const getTokensPricesForPortfolio = async (tokens: string[], provider: PublicCli
   const tokensWithChainlinkPrices = tokens.filter((token) => !tokensWithoutChainlinkPrices.includes(token));
   const pricesFromChainlink: Record<string, string> = {};
   await Promise.all(tokensWithChainlinkPrices.map(async (token) => {
-    const price = await getTokenPricePortfolio(token, provider, network);
-    if (typeof price === 'string') pricesFromChainlink[token] = price;
-    else if (typeof price === 'bigint') pricesFromChainlink[token] = new Dec(price).div(1e8).toString();
-    else pricesFromChainlink[token] = new Dec(price[1]!.toString() as string).div(1e8).toString();
+    try {
+      const price = await getTokenPricePortfolio(token, provider, network);
+      if (typeof price === 'string') pricesFromChainlink[token] = price;
+      else if (typeof price === 'bigint') pricesFromChainlink[token] = new Dec(price).div(1e8).toString();
+      else pricesFromChainlink[token] = new Dec(price[1]!.toString() as string).div(1e8).toString();
+    } catch (error: any) {
+      console.error(`Error occured while fetching price for ${token}: ${error.message}`);
+    }
   }));
   tokens.forEach((token) => {
     if (tokensWithoutChainlinkPrices.includes(token)) {
@@ -1777,12 +1789,12 @@ export const _getUserPositionsPortfolio = async (provider: PublicClient, network
 
   const tokenPrices = await getTokensPricesForPortfolio(tokens, provider, network);
 
-  const parsedMarketData = await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices)));
+  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices))));
 
-  const userData = data[0].map((position, i) => ({ ...parseUserData(position, parsedMarketData[i]) }));
+  const userData = data[0].map((position, i) => (parsedMarketData[i] && { ...parseUserData(position, parsedMarketData[i]) }));
 
   return parsedMarketData.map((market, i) => ({
     marketData: market,
     userData: userData[i],
-  }));
+  })).filter(md => md.marketData !== undefined);
 };
