@@ -102,7 +102,7 @@ const getChainLinkPricesForTokens = async (
 
   const staticCalls = [
     {
-      address: ethFeedContract.address, //
+      address: ethFeedContract.address,
       abi: ethFeedContract.abi,
       functionName: 'latestAnswer',
       args: [],
@@ -1118,6 +1118,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
   const marketInfo = getFluidMarketInfoById(+(data.vaultId.toString()), network);
   if (!marketInfo) {
+    console.error(`Market with address ${data.vault} not supported.`);
     return; // skip unsupported market
   }
   const vaultType = parseVaultType(+(data.vaultType.toString()));
@@ -1782,5 +1783,5 @@ export const _getUserPositionsPortfolio = async (provider: PublicClient, network
   return parsedMarketData.map((market, i) => ({
     marketData: market,
     userData: userData[i],
-  })).filter(md => md.marketData !== undefined && md.userData !== undefined);
+  })).filter(md => md.marketData !== undefined);
 };
