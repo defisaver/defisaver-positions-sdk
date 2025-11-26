@@ -1,12 +1,14 @@
 // @ts-nocheck
 import { getConfigContractAddress } from '../../contracts';
 import { compareAddresses } from '../../services/utils';
-import {
-  AaveMarketInfo, AaveVersions,
-} from '../../types';
+import { AaveMarketInfo, AaveVersions, AaveVersionType } from '../../types';
 import { NetworkNumber } from '../../types/common';
 import {
-  aaveV1AssetsDefaultMarket, aaveV2AssetsDefaultMarket, aaveV3AssetsDefaultMarket, aaveV3AssetsEtherfiMarket, aaveV3AssetsLidoMarket,
+  aaveV1AssetsDefaultMarket,
+  aaveV2AssetsDefaultMarket,
+  aaveV3AssetsDefaultMarket,
+  aaveV3AssetsEtherfiMarket,
+  aaveV3AssetsLidoMarket,
 } from './marketAssets';
 
 export {
@@ -19,7 +21,7 @@ export {
 export const AAVE_V1: AaveMarketInfo = {
   chainIds: [NetworkNumber.Eth],
   label: 'Aave v1',
-  shortLabel: 'v1',
+  shortLabel: AaveVersionType.V1,
   url: '',
   value: AaveVersions.AaveV1,
   assets: aaveV1AssetsDefaultMarket.map((a) => a.underlyingAsset),
@@ -37,7 +39,7 @@ export const AAVE_V1: AaveMarketInfo = {
 export const AAVE_V2: AaveMarketInfo = {
   chainIds: [NetworkNumber.Eth],
   label: 'Aave v2',
-  shortLabel: 'v2',
+  shortLabel: AaveVersionType.V2,
   value: AaveVersions.AaveV2,
   url: 'default',
   assets: aaveV2AssetsDefaultMarket,
@@ -54,7 +56,7 @@ export const AAVE_V2: AaveMarketInfo = {
 export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Opt, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Linea, NetworkNumber.Plasma],
   label: networkId === NetworkNumber.Eth ? 'Aave v3 Core' : 'Aave v3',
-  shortLabel: 'v3',
+  shortLabel: AaveVersionType.V3,
   value: AaveVersions.AaveV3,
   url: 'default',
   assets: networkId ? aaveV3AssetsDefaultMarket[networkId] : [],
@@ -71,7 +73,7 @@ export const AAVE_V3 = (networkId: NetworkNumber): AaveMarketInfo => ({
 export const AAVE_V3_LIDO = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Aave v3 Prime',
-  shortLabel: 'v3',
+  shortLabel: AaveVersionType.V3,
   value: AaveVersions.AaveV3Lido,
   url: 'lido',
   assets: networkId ? aaveV3AssetsLidoMarket[networkId] : [],
@@ -88,7 +90,7 @@ export const AAVE_V3_LIDO = (networkId: NetworkNumber): AaveMarketInfo => ({
 export const AAVE_V3_ETHERFI = (networkId: NetworkNumber): AaveMarketInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Aave v3 EtherFi',
-  shortLabel: 'v3',
+  shortLabel: AaveVersionType.V3,
   value: AaveVersions.AaveV3Etherfi,
   url: 'etherfi',
   assets: networkId ? aaveV3AssetsEtherfiMarket[networkId] : [],
