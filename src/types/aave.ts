@@ -10,6 +10,13 @@ export enum AaveVersions {
   AaveV3Lido = 'v3lido',
   AaveV3Etherfi = 'v3etherfi',
 }
+
+export enum AaveVersionType {
+  V1 = 'v1',
+  V2 = 'v2',
+  V3 = 'v3',
+}
+
 export type AaveMarketInfo = {
   chainIds: NetworkNumber[],
   label: string,

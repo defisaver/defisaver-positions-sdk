@@ -14,6 +14,11 @@ export enum CompoundVersions {
   'CompoundV3wstETH' = 'v3-wstETH',
 }
 
+export enum CompoundVersionType {
+  V2 = 'v2',
+  V3 = 'v3',
+}
+
 export interface CompoundBulkerOptions {
   supply: number | string,
   withdraw: number | string,
