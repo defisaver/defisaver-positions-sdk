@@ -1,6 +1,9 @@
 import {
   EthAddress,
-  MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
+  MMAssetData,
+  MMPositionData,
+  MMUsedAsset,
+  NetworkNumber,
 } from './common';
 
 export enum CompoundVersions {
