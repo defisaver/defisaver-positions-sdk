@@ -43,7 +43,7 @@ export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNu
         .toString(),
       usageAsCollateralEnabled: market.usageAsCollateralEnabled,
       supplyCap: '0',
-      borrowCap: '0', // v2 doesnt have borrow cap but adding it for compatability with v3
+      borrowCap: '0', // v2 doesn't have borrow cap but adding it for compatability with v3
       totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
       isInactive: !market.isActive,
       isFrozen: market.isFrozen,

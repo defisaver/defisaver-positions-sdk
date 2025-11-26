@@ -1,6 +1,9 @@
 import {
   EthAddress,
-  MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
+  MMAssetData,
+  MMPositionData,
+  MMUsedAsset,
+  NetworkNumber,
 } from './common';
 
 export enum CompoundVersions {
@@ -12,6 +15,11 @@ export enum CompoundVersions {
   'CompoundV3USDT' = 'v3-USDT',
   'CompoundV3USDS' = 'v3-USDS',
   'CompoundV3wstETH' = 'v3-wstETH',
+}
+
+export enum CompoundVersionType {
+  V2 = 'v2',
+  V3 = 'v3',
 }
 
 export interface CompoundBulkerOptions {
