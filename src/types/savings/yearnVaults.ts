@@ -11,4 +11,5 @@ export interface YearnVault {
   address: EthAddress;
   asset: string;
   deploymentBlock: number;
+  isLegacy: boolean;
 }

@@ -22,4 +22,5 @@ export interface MorphoVault {
   address: EthAddress;
   asset: string;
   deploymentBlock: number;
+  isLegacy: boolean;
 }

@@ -10,4 +10,5 @@ export interface MakerDsrVault {
   address: EthAddress;
   asset: string;
   deploymentBlock: number;
+  isLegacy: boolean;
 }
