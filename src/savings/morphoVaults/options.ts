@@ -63,15 +63,6 @@ export const MORPHO_VAULT_BOOSTED_USDC: MorphoVault = {
   isLegacy: true,
 };
 
-export const MORPHO_VAULT_STEAKHOUSE_PYUSD: MorphoVault = {
-  type: MorphoVaultType.MorphoVaultSteakhousePYUSD,
-  name: 'Steakhouse PYUSD',
-  address: '0xbEEF02e5E13584ab96848af90261f0C8Ee04722a',
-  asset: 'PYUSD',
-  deploymentBlock: 19043398,
-  isLegacy: false,
-};
-
 export const MORPHO_VAULT_FLAGSHIP_USDT: MorphoVault = {
   type: MorphoVaultType.MorphoVaultFlagshipUSDT,
   name: 'Flagship USDT',
@@ -79,15 +70,6 @@ export const MORPHO_VAULT_FLAGSHIP_USDT: MorphoVault = {
   asset: 'USDT',
   deploymentBlock: 19127039,
   isLegacy: true,
-};
-
-export const MORPHO_VAULT_STEAKHOUSE_USDT: MorphoVault = {
-  type: MorphoVaultType.MorphoVaultSteakhouseUSDT,
-  name: 'Steakhouse USDT',
-  address: '0xbEef047a543E45807105E51A8BBEFCc5950fcfBa',
-  asset: 'USDT',
-  deploymentBlock: 19043398,
-  isLegacy: false,
 };
 
 export const MORPHO_VAULT_GAUNTLET_USDA_CORE: MorphoVault = {
@@ -117,6 +99,82 @@ export const MORPHO_VAULT_GAUNTLET_RESOLV_USDC: MorphoVault = {
   isLegacy: true,
 };
 
+// Steakhouse
+
+export const MORPHO_VAULT_STEAKHOUSE_USDT: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSteakhouseUSDT,
+  name: 'Steakhouse USDT',
+  address: '0xbEef047a543E45807105E51A8BBEFCc5950fcfBa',
+  asset: 'USDT',
+  deploymentBlock: 19043398,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_STEAKHOUSE_USDC: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSteakhouseUSDC,
+  name: 'Steakhouse USDC',
+  address: '0xbEef047a543E45807105E51A8BBEFCc5950fcfBa',
+  asset: 'USDC',
+  deploymentBlock: 18928285,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_STEAKHOUSE_ETH: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSteakhouseETH,
+  name: 'Steakhouse WETH',
+  address: '0xBEEf050ecd6a16c4e7bfFbB52Ebba7846C4b8cD4',
+  asset: 'WETH',
+  deploymentBlock: 19380443,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_STEAKHOUSE_PYUSD: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSteakhousePYUSD,
+  name: 'Steakhouse PYUSD',
+  address: '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
+  asset: 'PYUSD',
+  deploymentBlock: 19043398,
+  isLegacy: false,
+};
+
+// Smokehouse
+
+export const MORPHO_VAULT_SMOKEHOUSE_USDT: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSmokehouseUSDT,
+  name: 'Smokehouse USDT',
+  address: '0xA0804346780b4c2e3bE118ac957D1DB82F9d7484',
+  asset: 'USDT',
+  deploymentBlock: 21522238,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_SMOKEHOUSE_USDC: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSmokehouseUSDC,
+  name: 'Smokehouse USDC',
+  address: '0xBEeFFF209270748ddd194831b3fa287a5386f5bC',
+  asset: 'USDC',
+  deploymentBlock: 21337719,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_SMOKEHOUSE_DAI: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSmokehouseDAI,
+  name: 'Smokehouse DAI',
+  address: '0xbeeFfF68CC520D68f82641EFF84330C631E2490E',
+  asset: 'DAI',
+  deploymentBlock: 21343808,
+  isLegacy: false,
+};
+
+export const MORPHO_VAULT_SMOKEHOUSE_WSTETH: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSmokehouseWstEth,
+  name: 'Smokehouse wstETH',
+  address: '0x833AdaeF212c5cD3f78906B44bBfb18258F238F0',
+  asset: 'wstETH',
+  deploymentBlock: 21521419,
+  isLegacy: false,
+};
+
 export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
   [MorphoVaultType.MorphoVaultFlagshipEth]: MORPHO_VAULT_FLAGSHIP_ETH,
   [MorphoVaultType.MorphoVaultGauntletUSDCCore]: MORPHO_VAULT_GAUNTLET_USDC_CORE,
@@ -125,12 +183,22 @@ export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
   [MorphoVaultType.MorphoVaultGauntletWETHCore]: MORPHO_VAULT_GAUNTLET_WETH_CORE,
   [MorphoVaultType.MorphoVaultGauntletWETHPrime]: MORPHO_VAULT_GAUNTLET_WETH_PRIME,
   [MorphoVaultType.MorphoVaultBoostedUSDC]: MORPHO_VAULT_BOOSTED_USDC,
-  [MorphoVaultType.MorphoVaultSteakhousePYUSD]: MORPHO_VAULT_STEAKHOUSE_PYUSD,
   [MorphoVaultType.MorphoVaultFlagshipUSDT]: MORPHO_VAULT_FLAGSHIP_USDT,
-  [MorphoVaultType.MorphoVaultSteakhouseUSDT]: MORPHO_VAULT_STEAKHOUSE_USDT,
   [MorphoVaultType.MorphoVaultGauntletUSDACore]: MORPHO_VAULT_GAUNTLET_USDA_CORE,
   [MorphoVaultType.MorphoVaultGauntletUSDTPrime]: MORPHO_VAULT_GAUNTLET_USDT_PRIME,
   [MorphoVaultType.MorphoVaultGauntletResolvUSDC]: MORPHO_VAULT_GAUNTLET_RESOLV_USDC,
+
+  // Steakhouse
+  [MorphoVaultType.MorphoVaultSteakhouseUSDT]: MORPHO_VAULT_STEAKHOUSE_USDT,
+  [MorphoVaultType.MorphoVaultSteakhousePYUSD]: MORPHO_VAULT_STEAKHOUSE_PYUSD,
+  [MorphoVaultType.MorphoVaultSteakhouseUSDC]: MORPHO_VAULT_STEAKHOUSE_USDC,
+  [MorphoVaultType.MorphoVaultSteakhouseETH]: MORPHO_VAULT_STEAKHOUSE_ETH,
+
+  // Smokehouse
+  [MorphoVaultType.MorphoVaultSmokehouseUSDT]: MORPHO_VAULT_SMOKEHOUSE_USDT,
+  [MorphoVaultType.MorphoVaultSmokehouseUSDC]: MORPHO_VAULT_SMOKEHOUSE_USDC,
+  [MorphoVaultType.MorphoVaultSmokehouseDAI]: MORPHO_VAULT_SMOKEHOUSE_DAI,
+  [MorphoVaultType.MorphoVaultSmokehouseWstEth]: MORPHO_VAULT_SMOKEHOUSE_WSTETH,
 };
 
 export const getMorphoVault = (type: MorphoVaultType): MorphoVault => MORPHO_VAULTS[type];
