@@ -6,6 +6,7 @@ import * as skySavingsOptions from './options';
 import { DEFAULT_TIMEOUT } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 import { SKY_SAVINGS_OPTION } from './options';
+import { SkySavingsContractView } from '../../contracts';
 
 export { skySavingsOptions };
 
@@ -35,10 +36,20 @@ export const _getSkyOptionData = async (
 ): Promise<SavingsVaultData> => {
   const { data } = await fetchSkyData();
   const skyData = formatSkyProtocolData(data);
+  const skySavingsContract = SkySavingsContractView(provider, network);
+
+  const balances = await Promise.all(
+    accounts.map((account) => skySavingsContract.read.balanceOf([account])),
+  );
+
+  const supplied: Record<EthAddress, string> = {};
+  accounts.forEach((account, index) => {
+    supplied[account] = balances[index].toString();
+  });
 
   return {
     poolSize: skyData.savingsTVL,
-    supplied: {},
+    supplied,
     liquidity: skyData.savingsTVL,
     asset: SKY_SAVINGS_OPTION.asset,
     optionType: SKY_SAVINGS_OPTION.type,
