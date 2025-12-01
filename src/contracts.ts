@@ -85,6 +85,24 @@ export const getYearnVaultContractViem = (client: Client, address: HexString) =>
   });
 };
 
+export const getSparkSavingsVaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('SparkSavingsVault') as typeof configRaw['SparkSavingsVault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
+export const getErc20ContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('Erc20') as typeof configRaw['Erc20']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
