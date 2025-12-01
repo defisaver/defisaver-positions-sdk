@@ -2,17 +2,20 @@ import {
   MakerDsrType,
   MorphoVaultType,
   SavingsData,
+  SkySavingsType,
   YearnVaultType,
 } from '../types';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import * as morphoVaults from './morphoVaults';
 import * as yearnVaults from './yearnVaults';
 import * as makerDsr from './makerDSR';
+import * as skyOptions from './skyOptions';
 
 export {
   morphoVaults,
   yearnVaults,
   makerDsr,
+  skyOptions,
 };
 
 export const getSavingsData = async (
@@ -27,18 +30,38 @@ export const getSavingsData = async (
 
   await Promise.all([
     ...morphoVaultsList.map(async (vaultKey) => {
-      const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
-      const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
-      savingsData[vaultKey] = data;
+      try {
+        const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
+        const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching morpho vault ${vaultKey}:`, err);
+      }
     }),
     ...yearnVaultsList.map(async (vaultKey) => {
-      const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
-      const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
-      savingsData[vaultKey] = data;
+      try {
+        const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
+        const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
+      }
     }),
     (async () => {
-      const data = await makerDsr.getMakerDsrData(provider, network, accounts);
-      savingsData[MakerDsrType.MakerDsrVault] = data;
+      try {
+        const data = await makerDsr.getMakerDsrData(provider, network, accounts);
+        savingsData[MakerDsrType.MakerDsrVault] = data;
+      } catch (err) {
+        console.error('[getSavingsData] Error fetching maker DSR data:', err);
+      }
+    })(),
+    (async () => {
+      try {
+        const data = await skyOptions.getSkyOptionData(provider, network, accounts);
+        savingsData[SkySavingsType.SkySavings] = data;
+      } catch (err) {
+        console.error('[getSavingsData] Error fetching Sky savings data:', err);
+      }
     })(),
   ]);
 

@@ -7,6 +7,7 @@ import {
   DFSFeedRegistryContractViem,
   ETHPriceFeedContractViem,
   USDCPriceFeedContractViem,
+  USDSPriceFeedContractViem,
   WeETHPriceFeedContractViem,
   WstETHPriceFeedContractViem,
 } from '../contracts';
@@ -22,6 +23,12 @@ export const getEthPrice = async (client: Client) => {
 
 export const getUSDCPrice = async (client: Client) => {
   const contract = USDCPriceFeedContractViem(client, NetworkNumber.Eth);
+  const price = await contract.read.latestAnswer();
+  return new Dec(price.toString()).div(1e8).toString();
+};
+
+export const getUSDSPrice = async (client: Client) => {
+  const contract = USDSPriceFeedContractViem(client, NetworkNumber.Eth);
   const price = await contract.read.latestAnswer();
   return new Dec(price.toString()).div(1e8).toString();
 };

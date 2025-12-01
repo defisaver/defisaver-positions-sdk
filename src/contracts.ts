@@ -94,6 +94,7 @@ export const DFSFeedRegistryContractViem = createViemContractFromConfigFunc('DFS
 export const COMPPriceFeedContractViem = createViemContractFromConfigFunc('COMPPriceFeed');
 export const ETHPriceFeedContractViem = createViemContractFromConfigFunc('ETHPriceFeed');
 export const USDCPriceFeedContractViem = createViemContractFromConfigFunc('USDCPriceFeed');
+export const USDSPriceFeedContractViem = createViemContractFromConfigFunc('USDSPriceFeed');
 export const WstETHPriceFeedContractViem = createViemContractFromConfigFunc('WstETHPriceFeed');
 export const CompV3ViewContractViem = createViemContractFromConfigFunc('CompV3View');
 export const SparkViewContractViem = createViemContractFromConfigFunc('SparkView');
