@@ -8,7 +8,7 @@ import {
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import * as morphoVaults from './morphoVaults';
 import * as yearnVaults from './yearnVaults';
-import * as makerDsr from './makerDSR';
+import * as makerDsr from './makerDsr';
 import * as sparkSavingsVaults from './sparkSavingsVaults';
 
 export {
