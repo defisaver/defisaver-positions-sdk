@@ -3,19 +3,22 @@ import {
   MorphoVaultType,
   SavingsData,
   SkySavingsType,
+  SparkSavingsVaultType,
   YearnVaultType,
 } from '../types';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import * as morphoVaults from './morphoVaults';
 import * as yearnVaults from './yearnVaults';
-import * as makerDsr from './makerDSR';
+import * as makerDsr from './makerDsr';
 import * as skyOptions from './skyOptions';
+import * as sparkSavingsVaults from './sparkSavingsVaults';
 
 export {
   morphoVaults,
   yearnVaults,
   makerDsr,
   skyOptions,
+  sparkSavingsVaults,
 };
 
 export const getSavingsData = async (
@@ -25,6 +28,7 @@ export const getSavingsData = async (
 ) => {
   const morphoVaultsList = Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[];
   const yearnVaultsList = Object.keys(yearnVaults.yearnVaultsOptions.YEARN_VAULTS) as YearnVaultType[];
+  const sparkSavingsVaultsList = Object.keys(sparkSavingsVaults.sparkSavingsVaultsOptions.SPARK_SAVINGS_VAULTS) as SparkSavingsVaultType[];
 
   const savingsData: SavingsData = {};
 
@@ -42,6 +46,15 @@ export const getSavingsData = async (
       try {
         const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
         const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
+      }
+    }),
+    ...sparkSavingsVaultsList.map(async (vaultKey) => {
+      try {
+        const vault = sparkSavingsVaults.sparkSavingsVaultsOptions.getSparkSavingsVault(vaultKey);
+        const data = await sparkSavingsVaults.getSparkSavingsVaultData(provider, network, vault, accounts);
         savingsData[vaultKey] = data;
       } catch (err) {
         console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
