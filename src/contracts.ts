@@ -159,3 +159,5 @@ export const StkAAVEViem = createViemContractFromConfigFunc('StkAAVE');
 export const YearnViewContractViem = createViemContractFromConfigFunc('YearnView');
 
 export const MakerDsrContractViem = createViemContractFromConfigFunc('MakerDsr');
+
+export const SkySavingsContractView = createViemContractFromConfigFunc('SkySavings');

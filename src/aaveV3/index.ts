@@ -12,7 +12,11 @@ import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSi
 import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
-  getWrappedNativeAssetFromUnwrapped, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
+  getWrappedNativeAssetFromUnwrapped,
+  isEnabledOnBitmap,
+  isLayer2Network,
+  wethToEth,
+  wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
@@ -28,12 +32,19 @@ import {
   EModeCategoryDataMapping,
 } from '../types/aave';
 import {
-  Blockish, EthAddress, EthereumProvider, IncentiveEligibilityId, IncentiveKind, NetworkNumber, PositionBalances, HexString,
+  Blockish,
+  EthAddress,
+  EthereumProvider,
+  IncentiveEligibilityId,
+  IncentiveKind,
+  NetworkNumber,
+  PositionBalances,
+  HexString,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getMeritCampaigns } from './merit';
 import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkl';
-import { SECONDS_PER_DAY, SECONDS_PER_YEAR } from '../constants';
+import { SECONDS_PER_YEAR } from '../constants';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;

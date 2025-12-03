@@ -2,6 +2,7 @@ import {
   MakerDsrType,
   MorphoVaultType,
   SavingsData,
+  SkySavingsType,
   SparkSavingsVaultType,
   YearnVaultType,
 } from '../types';
@@ -9,12 +10,14 @@ import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import * as morphoVaults from './morphoVaults';
 import * as yearnVaults from './yearnVaults';
 import * as makerDsr from './makerDsr';
+import * as skyOptions from './skyOptions';
 import * as sparkSavingsVaults from './sparkSavingsVaults';
 
 export {
   morphoVaults,
   yearnVaults,
   makerDsr,
+  skyOptions,
   sparkSavingsVaults,
 };
 
@@ -31,23 +34,47 @@ export const getSavingsData = async (
 
   await Promise.all([
     ...morphoVaultsList.map(async (vaultKey) => {
-      const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
-      const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
-      savingsData[vaultKey] = data;
+      try {
+        const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
+        const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching morpho vault ${vaultKey}:`, err);
+      }
     }),
     ...yearnVaultsList.map(async (vaultKey) => {
-      const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
-      const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
-      savingsData[vaultKey] = data;
+      try {
+        const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
+        const data = await yearnVaults.getYearnVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
+      }
     }),
     ...sparkSavingsVaultsList.map(async (vaultKey) => {
-      const vault = sparkSavingsVaults.sparkSavingsVaultsOptions.getSparkSavingsVault(vaultKey);
-      const data = await sparkSavingsVaults.getSparkSavingsVaultData(provider, network, vault, accounts);
-      savingsData[vaultKey] = data;
+      try {
+        const vault = sparkSavingsVaults.sparkSavingsVaultsOptions.getSparkSavingsVault(vaultKey);
+        const data = await sparkSavingsVaults.getSparkSavingsVaultData(provider, network, vault, accounts);
+        savingsData[vaultKey] = data;
+      } catch (err) {
+        console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
+      }
     }),
     (async () => {
-      const data = await makerDsr.getMakerDsrData(provider, network, accounts);
-      savingsData[MakerDsrType.MakerDsrVault] = data;
+      try {
+        const data = await makerDsr.getMakerDsrData(provider, network, accounts);
+        savingsData[MakerDsrType.MakerDsrVault] = data;
+      } catch (err) {
+        console.error('[getSavingsData] Error fetching maker DSR data:', err);
+      }
+    })(),
+    (async () => {
+      try {
+        const data = await skyOptions.getSkyOptionData(provider, network, accounts);
+        savingsData[SkySavingsType.SkySavings] = data;
+      } catch (err) {
+        console.error('[getSavingsData] Error fetching Sky savings data:', err);
+      }
     })(),
   ]);
 
