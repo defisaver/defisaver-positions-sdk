@@ -5,7 +5,7 @@ export const YEARN_VAULT_DAI: YearnVault = {
   address: '0xdA816459F1AB5631232FE5e97a05BBBb94970c95',
   asset: 'DAI',
   deploymentBlock: 12796965,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const YEARN_VAULT_USDC: YearnVault = {
@@ -13,7 +13,7 @@ export const YEARN_VAULT_USDC: YearnVault = {
   address: '0xa354F35829Ae975e850e23e9615b11Da1B3dC4DE',
   asset: 'USDC',
   deploymentBlock: 13513457,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const YEARN_VAULT_USDT: YearnVault = {
@@ -21,7 +21,7 @@ export const YEARN_VAULT_USDT: YearnVault = {
   address: '0x3B27F92C0e212C671EA351827EDF93DB27cc0c65',
   asset: 'USDT',
   deploymentBlock: 14980240,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const YEARN_VAULTS: Record<YearnVaultType, YearnVault> = {
