@@ -1,32 +1,42 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
+import { assetAmountInEth } from '@defisaver/tokens';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
 import { SavingsVaultData } from '../../types';
 import * as skySavingsOptions from './options';
-import { DEFAULT_TIMEOUT } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 import { SKY_SAVINGS_OPTION } from './options';
 import { SkySavingsContractView } from '../../contracts';
 
 export { skySavingsOptions };
 
-const formatSkyProtocolData = (data: any) => ({
-  skySavingsApy: new Dec(data.skyData[0].sky_savings_rate_apy).mul(100).toString(),
-  savingsSuppliers: data.skyData[0].ssr_depositor_count,
-  savingsTVL: data.skyData[0].sky_savings_rate_tvl,
-});
-
-const fetchSkyData = async (proxyAddress?: string) => {
-  try {
-    const res = await fetch(
-      `https://fe.defisaver.com/api/sky/data?proxyAddress=${proxyAddress}`,
-      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) },
-    );
-    return await res.json();
-  } catch (err) {
-    console.error('External API failure: Failed to fetch Sky data from external API', err);
+/**
+ * Converts shares to assets using ERC4626 standard formula
+ * Formula: assets = shares * totalAssets / totalSupply
+ *
+ * @param shares - The amount of shares to convert
+ * @param totalAssets - Total assets in the vault
+ * @param totalSupply - Total supply of shares
+ * @returns The equivalent amount of assets
+ */
+const convertToAssets = (shares: bigint, totalAssets: bigint, totalSupply: bigint): bigint => {
+  // If no shares or no total supply, return 0 (or shares if totalSupply is 0 per ERC4626 spec)
+  if (shares === BigInt(0)) {
+    return BigInt(0);
   }
-  return {};
+
+  // Per ERC4626 spec: if totalSupply == 0, return shares (1:1 ratio)
+  if (totalSupply === BigInt(0)) {
+    return shares;
+  }
+
+  // Standard ERC4626 formula: assets = shares * totalAssets / totalSupply
+  return BigInt(
+    new Dec(shares.toString())
+      .mul(totalAssets.toString())
+      .div(totalSupply.toString())
+      .toFixed(0),
+  );
 };
 
 export const _getSkyOptionData = async (
@@ -34,23 +44,37 @@ export const _getSkyOptionData = async (
   network: NetworkNumber,
   accounts: EthAddress[],
 ): Promise<SavingsVaultData> => {
-  const { data } = await fetchSkyData();
-  const skyData = formatSkyProtocolData(data);
   const skySavingsContract = SkySavingsContractView(provider, network);
 
-  const balances = await Promise.all(
-    accounts.map((account) => skySavingsContract.read.balanceOf([account])),
-  );
+  const shares: Record<EthAddress, bigint> = {};
+
+  const [totalAssets, totalSupply] = await Promise.all([
+    skySavingsContract.read.totalAssets(),
+    skySavingsContract.read.totalSupply(),
+    ...accounts.map(async (account) => {
+      const share = await skySavingsContract.read.balanceOf([account]);
+      shares[account.toLowerCase() as EthAddress] = share;
+      return share;
+    }),
+  ]);
+
+  const poolSize = assetAmountInEth(totalAssets.toString(), SKY_SAVINGS_OPTION.asset);
 
   const supplied: Record<EthAddress, string> = {};
-  accounts.forEach((account, index) => {
-    supplied[account] = balances[index].toString();
+  accounts.forEach((account) => {
+    const normalizedAccount = account.toLowerCase() as EthAddress;
+    const share = shares[normalizedAccount] || BigInt(0);
+
+    // Use local convertToAssets for each account to convert sUSDS shares to USDS assets
+    const assetsWei = convertToAssets(share, totalAssets, totalSupply);
+    const suppliedAmount = assetAmountInEth(assetsWei.toString(), SKY_SAVINGS_OPTION.asset);
+    supplied[normalizedAccount] = suppliedAmount;
   });
 
   return {
-    poolSize: skyData.savingsTVL,
+    poolSize,
     supplied,
-    liquidity: skyData.savingsTVL,
+    liquidity: poolSize,
     asset: SKY_SAVINGS_OPTION.asset,
     optionType: SKY_SAVINGS_OPTION.type,
   };
