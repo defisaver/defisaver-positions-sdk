@@ -10,4 +10,5 @@ export interface SkySavingsOption {
   asset: string;
   address: EthAddress;
   isLegacy: boolean;
+  deploymentBlock: number;
 }

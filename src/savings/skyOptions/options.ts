@@ -6,4 +6,5 @@ export const SKY_SAVINGS_OPTION: SkySavingsOption = {
   asset: 'USDS',
   address: '0xa3931d71877C0E7a3148CB7Eb4463524FEc27fbD',
   isLegacy: false,
+  deploymentBlock: 20677434,
 };
