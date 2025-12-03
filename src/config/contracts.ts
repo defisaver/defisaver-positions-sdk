@@ -1291,3 +1291,6 @@ export const SkySavings = {
     }
   }
 } as const;
+export const YearnV3Vault = {
+  "abi": [{"stateMutability":"view","type":"function","name":"balanceOf","inputs":[{"name":"addr","type":"address"}],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"totalAssets","inputs":[],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"totalDebt","inputs":[],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"totalSupply","inputs":[],"outputs":[{"name":"","type":"uint256"}]}]
+} as const;

@@ -12,6 +12,7 @@ import * as yearnVaults from './yearnVaults';
 import * as makerDsr from './makerDsr';
 import * as skyOptions from './skyOptions';
 import * as sparkSavingsVaults from './sparkSavingsVaults';
+import * as yearnV3Vaults from './yearnV3Vaults';
 
 export {
   morphoVaults,
@@ -19,6 +20,7 @@ export {
   makerDsr,
   skyOptions,
   sparkSavingsVaults,
+  yearnV3Vaults,
 };
 
 export const getSavingsData = async (

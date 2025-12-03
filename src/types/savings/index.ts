@@ -3,6 +3,7 @@ import { MakerDsrType } from './makerDsr';
 import { MorphoVaultType } from './morphoVaults';
 import { SkySavingsType } from './sky';
 import { SparkSavingsVaultType } from './sparkSavingsVaults';
+import { YearnV3VaultType } from './yearnV3Vaults';
 import { YearnVaultType } from './yearnVaults';
 
 export * from './morphoVaults';
@@ -10,6 +11,7 @@ export * from './yearnVaults';
 export * from './makerDsr';
 export * from './sky';
 export * from './sparkSavingsVaults';
+export * from './yearnV3Vaults';
 
 export interface SavingsVaultData {
   poolSize: string,
@@ -19,4 +21,4 @@ export interface SavingsVaultData {
   optionType: string,
 }
 
-export type SavingsData = Partial<Record<MorphoVaultType | YearnVaultType | MakerDsrType | SkySavingsType | SparkSavingsVaultType, SavingsVaultData>>;
+export type SavingsData = Partial<Record<MorphoVaultType | YearnVaultType | MakerDsrType | SkySavingsType | SparkSavingsVaultType | YearnV3VaultType, SavingsVaultData>>;

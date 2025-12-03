@@ -103,6 +103,15 @@ export const getErc20ContractViem = (client: Client, address: HexString) => {
   });
 };
 
+export const getYearnV3VaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('YearnV3Vault') as typeof configRaw['YearnV3Vault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
