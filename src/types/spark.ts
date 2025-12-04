@@ -54,6 +54,7 @@ export interface SparkAssetData extends MMAssetData {
   usageAsCollateralEnabled: boolean,
   isIsolated: boolean,
   eModeCategory: number,
+  liquidationBonus: string,
   liquidationRatio: string,
 }
 
