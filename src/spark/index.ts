@@ -98,14 +98,15 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         marketLiquidity = '0';
       }
 
-      eModeCategoriesData[+market.emodeCategory.toString()] = {
-        id: +market.emodeCategory.toString(),
+      const emodeCategoryId = +market.emodeCategory.toString();
+      eModeCategoriesData[emodeCategoryId] = {
+        id: emodeCategoryId,
         label: market.label,
         liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
         liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
         collateralFactor: new Dec(market.ltv).div(10000).toString(),
-        collateralAssets: eModeCategoriesData[+market.emodeCategory.toString()] ? [...eModeCategoriesData[+market.emodeCategory.toString()].collateralAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
-        borrowAssets: eModeCategoriesData[+market.emodeCategory.toString()] ? [...eModeCategoriesData[+market.emodeCategory.toString()].borrowAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+        collateralAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].collateralAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+        borrowAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].borrowAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
       };
 
       return ({
@@ -113,7 +114,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         isIsolated: new Dec(market.debtCeilingForIsolationMode.toString()).gt(0),
         debtCeilingForIsolationMode: new Dec(market.debtCeilingForIsolationMode.toString()).div(100).toString(),
         isSiloed: market.isSiloedForBorrowing,
-        eModeCategory: +market.emodeCategory.toString(),
+        eModeCategory: emodeCategoryId,
         isolationModeTotalDebt: new Dec(market.isolationModeTotalDebt.toString()).div(100).toString(),
         assetId: Number(market.assetId),
         underlyingTokenAddress: market.underlyingTokenAddress,
@@ -121,6 +122,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         borrowRate: aprToApy(new Dec(market.borrowRateVariable.toString()).div(1e25).toString()),
         borrowRateStable: aprToApy(new Dec(market.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
+        liquidationBonus: eModeCategoriesData[emodeCategoryId].liquidationBonus,
         liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
         marketLiquidity,
         utilization: new Dec(market.totalBorrow.toString()).times(100).div(new Dec(market.totalSupply.toString())).toString(),
