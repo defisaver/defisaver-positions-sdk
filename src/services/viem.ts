@@ -1,6 +1,6 @@
 import { createPublicClient, custom } from 'viem';
 import {
-  arbitrum, base, mainnet, optimism, linea,
+  arbitrum, base, mainnet, optimism, linea, plasma,
 } from 'viem/chains';
 import { Blockish, EthereumProvider, NetworkNumber } from '../types/common';
 
@@ -16,6 +16,8 @@ export const getViemChain = (network: NetworkNumber) => {
       return base;
     case NetworkNumber.Linea:
       return linea;
+    case NetworkNumber.Plasma:
+      return plasma;
     default:
       throw new Error(`Unsupported network: ${network}`);
   }

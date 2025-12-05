@@ -8,7 +8,7 @@ import {
   SparkAssetsData, SparkHelperCommon, SparkMarketData, SparkUsedAssets,
 } from '../../types';
 import { calculateNetApy } from '../../staking';
-import { ethToWeth, wethToEth } from '../../services/utils';
+import { ethToWeth, getNativeAssetFromWrapped, wethToEth } from '../../services/utils';
 import { SparkViewContractViem } from '../../contracts';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
 import { borrowOperations } from '../../constants';
@@ -19,10 +19,10 @@ export const sparkIsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets:
 export const sparkGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: SparkUsedAssets }) => Object.values(usedAssets).filter(({ isSupplied, collateral }) => isSupplied && collateral);
 
 export const sparkGetSuppliableAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: SparkHelperCommon) => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
   };
 
   const collAccountAssets = sparkGetCollSuppliedAssets(data);
@@ -37,41 +37,44 @@ export const sparkGetSuppliableAssets = ({
 };
 
 export const sparkGetSuppliableAsCollAssets = ({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest
 }: SparkHelperCommon) => sparkGetSuppliableAssets({
-  usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+  usedAssets, eModeCategory, assetsData, selectedMarket, network, ...rest,
 }).filter(({ canBeCollateral }) => canBeCollateral);
 
 export const sparkGetEmodeMutableProps = ({
   eModeCategory,
+  eModeCategoriesData,
   assetsData,
 }: SparkHelperCommon, _asset: string) => {
-  const asset = wethToEth(_asset);
+  const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
+
   if (
     eModeCategory === 0
-    || assetData.eModeCategory !== eModeCategory
-    || new Dec(assetData?.eModeCategoryData?.collateralFactor || 0).eq(0)
+      || !eModeCategoryData.collateralAssets.includes(asset)
+      || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
   }
-  const { liquidationRatio, collateralFactor } = assetData.eModeCategoryData;
+  const { liquidationRatio, collateralFactor } = eModeCategoryData;
   return ({ liquidationRatio, collateralFactor });
 };
 
 export const sparkGetAggregatedPositionData = ({
   usedAssets,
   eModeCategory,
-  eModeCategories,
+  eModeCategoriesData,
   assetsData,
   selectedMarket,
   network,
   ...rest
 }: SparkHelperCommon): SparkAggregatedPositionData => {
   const data = {
-    usedAssets, eModeCategory, eModeCategories, assetsData, selectedMarket, network, ...rest,
+    usedAssets, eModeCategory, eModeCategoriesData, assetsData, selectedMarket, network, ...rest,
   };
   const payload = {} as SparkAggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);

@@ -299,6 +299,8 @@ const EMPTY_ASSET_DATA = {
   canBeBorrowed: false,
   supplyRate: '0',
   borrowRate: '0',
+  supplyIncentives: [],
+  borrowIncentives: [],
 };
 
 export const mergeAssetData = (existing: Partial<FluidAssetData> = {}, additional: Partial<FluidAssetData>): FluidAssetData => ({

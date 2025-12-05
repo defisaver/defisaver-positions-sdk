@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
 import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
@@ -25,7 +25,7 @@ export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNu
     loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]]),
     getEthPrice(provider),
   ]);
-  const markets = loanInfo
+  const markets: AaveV2AssetData[] = loanInfo
     .map((market, i) => ({
       symbol: selectedMarket.assets[i],
       underlyingTokenAddress: market.underlyingTokenAddress,
@@ -43,7 +43,7 @@ export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNu
         .toString(),
       usageAsCollateralEnabled: market.usageAsCollateralEnabled,
       supplyCap: '0',
-      borrowCap: '0', // v2 doesnt have borrow cap but adding it for compatability with v3
+      borrowCap: '0', // v2 doesn't have borrow cap but adding it for compatability with v3
       totalSupply: assetAmountInEth(market.totalSupply.toString(), selectedMarket.assets[i]),
       isInactive: !market.isActive,
       isFrozen: market.isFrozen,
@@ -55,16 +55,19 @@ export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNu
       totalBorrow: assetAmountInEth(market.totalBorrow.toString(), selectedMarket.assets[i]),
       totalBorrowVar: assetAmountInEth(market.totalBorrowVar.toString(), selectedMarket.assets[i]),
       priceInEth: new Dec(market.price.toString()).div(1e18).toString(),
-      incentiveSupplyToken: 'AAVE',
-      incentiveBorrowToken: 'AAVE',
-      incentiveSupplyApy: '0',
+      supplyIncentives: [],
+      borrowIncentives: [],
       price: new Dec(market.price.toString()).div(1e18).mul(ethPrice).toString(),
     }));
 
   const stEthMarket = markets.find(({ symbol }) => symbol === 'stETH');
   if (stEthMarket) {
-    stEthMarket.incentiveSupplyApy = await getStakingApy('stETH');
-    stEthMarket.incentiveSupplyToken = 'stETH';
+    stEthMarket.supplyIncentives.push({
+      apy: await getStakingApy('stETH'),
+      token: 'stETH',
+      incentiveKind: IncentiveKind.Staking,
+      description: 'Native stETH yield.',
+    });
   }
 
   const payload: AaveV2AssetsData = {};
@@ -103,7 +106,8 @@ export const _getAaveV2AccountBalances = async (provider: Client, network: Netwo
   // @ts-ignore
   const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
+  // @ts-ignore
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
