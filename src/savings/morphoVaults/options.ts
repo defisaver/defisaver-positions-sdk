@@ -166,15 +166,6 @@ export const MORPHO_VAULT_SMOKEHOUSE_DAI: MorphoVault = {
   isLegacy: false,
 };
 
-export const MORPHO_VAULT_SMOKEHOUSE_WSTETH: MorphoVault = {
-  type: MorphoVaultType.MorphoVaultSmokehouseWstEth,
-  name: 'Smokehouse wstETH',
-  address: '0x833AdaeF212c5cD3f78906B44bBfb18258F238F0',
-  asset: 'wstETH',
-  deploymentBlock: 21521419,
-  isLegacy: false,
-};
-
 export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
   [MorphoVaultType.MorphoVaultFlagshipEth]: MORPHO_VAULT_FLAGSHIP_ETH,
   [MorphoVaultType.MorphoVaultGauntletUSDCCore]: MORPHO_VAULT_GAUNTLET_USDC_CORE,
@@ -198,7 +189,6 @@ export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
   [MorphoVaultType.MorphoVaultSmokehouseUSDT]: MORPHO_VAULT_SMOKEHOUSE_USDT,
   [MorphoVaultType.MorphoVaultSmokehouseUSDC]: MORPHO_VAULT_SMOKEHOUSE_USDC,
   [MorphoVaultType.MorphoVaultSmokehouseDAI]: MORPHO_VAULT_SMOKEHOUSE_DAI,
-  [MorphoVaultType.MorphoVaultSmokehouseWstEth]: MORPHO_VAULT_SMOKEHOUSE_WSTETH,
 };
 
 export const getMorphoVault = (type: MorphoVaultType): MorphoVault => MORPHO_VAULTS[type];

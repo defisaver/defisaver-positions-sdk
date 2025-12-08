@@ -21,7 +21,6 @@ export enum MorphoVaultType {
   MorphoVaultSmokehouseUSDT = 'morpho_vault_smokehouse_usdt',
   MorphoVaultSmokehouseUSDC = 'morpho_vault_smokehouse_usdc',
   MorphoVaultSmokehouseDAI = 'morpho_vault_smokehouse_dai',
-  MorphoVaultSmokehouseWstEth = 'morpho_vault_smokehouse_wsteth',
 }
 
 export interface MorphoVault {
