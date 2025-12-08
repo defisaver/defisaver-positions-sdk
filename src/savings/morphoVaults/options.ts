@@ -113,7 +113,7 @@ export const MORPHO_VAULT_STEAKHOUSE_USDT: MorphoVault = {
 export const MORPHO_VAULT_STEAKHOUSE_USDC: MorphoVault = {
   type: MorphoVaultType.MorphoVaultSteakhouseUSDC,
   name: 'Steakhouse USDC',
-  address: '0xbEef047a543E45807105E51A8BBEFCc5950fcfBa',
+  address: '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
   asset: 'USDC',
   deploymentBlock: 18928285,
   isLegacy: false,
