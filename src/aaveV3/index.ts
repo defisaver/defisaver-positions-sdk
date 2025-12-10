@@ -86,30 +86,17 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const marketAddress = market.providerAddress;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
 
-  console.log({ marketAddress, blockNumber });
-  console.log('Fetching loan info...');
-  const loanInfo = await loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber));
-  console.log('Fetched loan info');
+  // eslint-disable-next-line prefer-const
+  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
+    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
+    loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber)),
+    loanInfoContract.read.isBorrowAllowed([marketAddress], setViemBlockNumber(blockNumber)), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
+    networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null,
+    getMerkleCampaigns(network),
+    getMeritCampaigns(network, market.value),
+  ]);
+  console.log('Fetched tokens, emodes, campaigns, incentives');
 
-  console.log('Fetching eModes info...');
-  const eModesInfo = await loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber));
-  console.log('Fetched eModes info');
-
-  console.log('Fetching borrow allowed status...');
-  let isBorrowAllowed = await loanInfoContract.read.isBorrowAllowed([marketAddress], setViemBlockNumber(blockNumber)); // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
-  console.log('Fetched borrow allowed status');
-
-  console.log('Fetching reward info...');
-  let rewardInfo = networksWithIncentives.includes(network) ? await aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null;
-  console.log('Fetched reward info');
-
-  console.log('Fetching Merkle campaigns...');
-  const merkleRewardsMap = await getMerkleCampaigns(network);
-  console.log('Fetched Merkle campaigns');
-
-  console.log('Fetching Merit campaigns...');
-  const meritRewardsMap = await getMeritCampaigns(network, market.value);
-  console.log('Fetched Merit campaigns');
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
   const eModeCategoriesData: EModeCategoriesData = {};
