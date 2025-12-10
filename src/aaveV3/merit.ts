@@ -62,8 +62,9 @@ export const fetchMeritRewardsData = async (): Promise<Record<string, number | n
     const response = await fetch('https://apps.aavechan.com/api/merit/aprs', {
       signal: AbortSignal.timeout(5000),
     });
+    if (!response.ok) throw new Error('Failed to fetch Merit rewards data');
     const data = await response.json();
-    return data.currentAPR.actionsAPR as Record<string, number | null>;
+    return (data?.currentAPR?.actionsAPR as Record<string, number | null>) || {};
   } catch (error) {
     console.error('External API Failure: Failed to fetch merit rewards data:', error);
     return {};
