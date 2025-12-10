@@ -131,7 +131,7 @@ export const MORPHO_VAULT_STEAKHOUSE_ETH: MorphoVault = {
 export const MORPHO_VAULT_STEAKHOUSE_PYUSD: MorphoVault = {
   type: MorphoVaultType.MorphoVaultSteakhousePYUSD,
   name: 'Steakhouse PYUSD',
-  address: '0xBEEF01735c132Ada46AA9aA4c54623cAA92A64CB',
+  address: '0xbEEF02e5E13584ab96848af90261f0C8Ee04722a',
   asset: 'PYUSD',
   deploymentBlock: 19043398,
   isLegacy: false,
