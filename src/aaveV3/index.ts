@@ -79,6 +79,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 export async function _getAaveV3MarketData(provider: Client, network: NetworkNumber, market: AaveMarketInfo, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
+  console.log('Fetched addresses');
   const isL2 = isLayer2Network(network);
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
@@ -94,6 +95,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     getMerkleCampaigns(network),
     getMeritCampaigns(network, market.value),
   ]);
+  console.log('Fetched tokens, emodes, campaigns, incentives');
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
   const eModeCategoriesData: EModeCategoriesData = {};
@@ -112,6 +114,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     };
   }
 
+  console.log('Parsed e modes info');
   if (networksWithIncentives.includes(network) && rewardInfo) {
     rewardInfo = rewardInfo.reduce((all: any, _market: any) => {
       // eslint-disable-next-line no-param-reassign
@@ -120,6 +123,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     }, {});
   }
 
+  console.log('Parsed reward info');
   const assetsData: AaveV3AssetData[] = await Promise.all(loanInfo
     .map(async (tokenMarket, i) => {
       const symbol = market.assets[i];
@@ -184,16 +188,17 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       });
     }),
   );
-
+  console.log('Parsed assets data');
   // Get incentives data
   await Promise.all(assetsData.map(async (_market: AaveV3AssetData, index) => {
     /* eslint-disable no-param-reassign */
     // @ts-ignore
     const rewardForMarket = rewardInfo?.[_market.underlyingTokenAddress];
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
-
+    console.log('Processing market', _market.symbol);
     if (isStakingAsset) {
       const yieldApy = await getStakingApy(_market.symbol, network as NetworkNumber);
+      console.log('Got yield apy', yieldApy);
       _market.supplyIncentives.push({
         apy: yieldApy,
         token: _market.symbol,
@@ -224,6 +229,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
+    console.log('Processed merkle a incentives');
 
     const vTokenAddress = (_market as any).vTokenAddress.toLowerCase(); // DEV: Should vTokenAddress be in AaveV3AssetData type?
     if (merkleRewardsMap[vTokenAddress]?.borrow) {
@@ -238,6 +244,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
+    console.log('Processed merkle v incentives');
 
     if (meritRewardsMap.supply[_market.symbol]) {
       const { apy, rewardTokenSymbol, description } = meritRewardsMap.supply[_market.symbol];
@@ -248,7 +255,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         description,
       });
     }
-
+    console.log('Processed merit supply incentives');
     if (meritRewardsMap.borrow[_market.symbol]) {
       const { apy, rewardTokenSymbol, description } = meritRewardsMap.borrow[_market.symbol];
       _market.borrowIncentives.push({
@@ -258,8 +265,9 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         description,
       });
     }
-
+    console.log('Processed merit borrow incentives');
     if (!rewardForMarket) return;
+    console.log('Reward for market', rewardForMarket);
     // @ts-ignore
     rewardForMarket.aIncentiveData.rewardsTokenInformation.forEach(supplyRewardData => {
       if (supplyRewardData) {
@@ -328,6 +336,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     borrowAssets: assetsData.map((a) => a.symbol),
   };
 
+  console.log('Parsed payload');
   return { assetsData: payload, eModeCategoriesData };
 }
 

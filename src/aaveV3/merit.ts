@@ -71,6 +71,7 @@ export const fetchMeritRewardsData = async (): Promise<Record<string, number | n
 };
 
 export const getMeritCampaigns = async (chainId: NetworkNumber, market: AaveVersions): Promise<MeritTokenRewardMap> => {
+  console.log('Fetching Merit campaigns');
   const meritData = await fetchMeritRewardsData();
   const relevantCampaigns = {
     supply: {},
