@@ -29,7 +29,7 @@ describe('Portfolio', () => {
   };
 
   it('can fetch portfolio data for Ethereum', async function () {
-    this.timeout(10000);
+    this.timeout(20000);
     const network = NetworkNumber.Eth;
 
     const portfolioData = await fetchPortfolioData(network, provider);

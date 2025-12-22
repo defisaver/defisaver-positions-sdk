@@ -112,15 +112,15 @@ export async function getAaveV4SpokeData(provider: EthereumProvider, network: Ne
   return _getAaveV4SpokeData(getViemProvider(provider, network), network, spoke, blockNumber);
 }
 
-export async function _getAaveV4AccountData(provider: Client, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<AaveV4AccountData> {
+export async function _getAaveV4AccountData(provider: Client, network: NetworkNumber, spokeData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<AaveV4AccountData> {
   const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
 
-  const loanData = await viewContract.read.getLoanData([marketData.address, address]);
+  const loanData = await viewContract.read.getLoanData([spokeData.address, address]);
 
   const healthFactor = new Dec(loanData.healthFactor).div(1e18).toString();
 
   const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
-    const reserveData = marketData.assetsData[wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)];
+    const reserveData = spokeData.assetsData[wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)];
     const price = reserveData.price;
     const supplied = assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
     const drawn = assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
@@ -148,7 +148,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
     healthFactor,
     ...aaveV4GetAggregatedPositionData({
       usedAssets,
-      assetsData: marketData.assetsData,
+      assetsData: spokeData.assetsData,
       network,
     }),
   };

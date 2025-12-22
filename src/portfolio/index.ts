@@ -2,6 +2,7 @@ import Dec from 'decimal.js';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import {
   AaveMarkets,
+  AaveV4Spokes,
   CompoundMarkets,
   CrvUsdMarkets,
   EulerV2Markets,
@@ -14,6 +15,7 @@ import { _getMorphoBlueAccountData, _getMorphoBlueMarketData, getMorphoEarn } fr
 import {
   AaveV2MarketData,
   AaveV3MarketData,
+  AaveV4SpokeData,
   AaveVersions,
   CdpInfo,
   CompoundV2MarketsData,
@@ -49,6 +51,7 @@ import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { fetchMorphoBlueRewards } from '../claiming/morphoBlue';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
+import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<{
   positions: PortfolioPositionsData;
@@ -71,6 +74,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
   const liquityV2Markets = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)) : [];
   const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
+  const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
   const client = getViemProvider(provider, network, {
     batch: {
@@ -98,6 +102,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
   const liquityV2MarketsData: Record<string, LiquityV2MarketData> = {};
+  const aaveV4SpokesData: Record<string, AaveV4SpokeData> = {};
 
   const markets = {
     morphoMarketsData,
@@ -110,6 +115,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     crvUsdMarketsData,
     llamaLendMarketsData,
     liquityV2MarketsData,
+    aaveV4SpokesData,
   };
 
   const positions: PortfolioPositionsData = {};
@@ -120,6 +126,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   for (const address of allAddresses) {
     positions[address.toLowerCase() as EthAddress] = {
       aaveV3: {},
+      aaveV4: {},
       morphoBlue: {},
       compoundV3: {},
       spark: {},
@@ -187,6 +194,10 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...aaveV3Markets.map(async (market) => {
       const marketData = await _getAaveV3MarketData(client, network, market);
       aaveV3MarketsData[market.value] = marketData;
+    }),
+    ...aaveV4Spokes.map(async (spoke) => {
+      const spokeData = await _getAaveV4SpokeData(client, network, spoke);
+      aaveV4SpokesData[spoke.value] = spokeData;
     }),
     ...aaveV2Markets.map(async (market) => {
       const marketData = await _getAaveV2MarketsData(client, network, market);
@@ -439,6 +450,15 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       } catch (error) {
         console.error(`Error fetching AaveV3 account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: `Error fetching AaveV3 account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...aaveV4Spokes.map((spoke) => allAddresses.map(async (address) => {
+      try {
+        const accData = await _getAaveV4AccountData(client, network, aaveV4SpokesData[spoke.value], address);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: `Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}`, data: null };
       }
     })).flat(),
     ...morphoMarkets.map((market) => addresses.map(async (address) => {
