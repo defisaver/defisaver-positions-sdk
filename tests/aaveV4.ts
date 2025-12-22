@@ -15,8 +15,14 @@ describe('Aave v4', () => {
 
   const fetchSpokeData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveV4SpokesType.AaveV4CoreSpoke) => {
     const marketData = await sdk.aaveV4.getAaveV4SpokeData(_provider, network, sdk.markets.AaveV4Spokes(network)[version] as sdk.AaveV4SpokeInfo);
-    console.log(marketData);
+    // console.log(marketData);
     return marketData;
+  };
+
+  const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, spokeData: sdk.AaveV4SpokeData) => {
+    const accountData = await sdk.aaveV4.getAaveV4AccountData(_provider, network, spokeData, '0x57cc7f1aFA33411D2411549c15a2D2BAcf316709');
+    console.log(accountData);
+    return accountData;
   };
 
   // Ethereum
@@ -26,5 +32,6 @@ describe('Aave v4', () => {
     const network = NetworkNumber.Eth;
 
     const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4CoreSpoke);
+    await fetchAccountData(network, provider, marketData);
   });
 });

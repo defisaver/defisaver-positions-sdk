@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, IncentiveData, NetworkNumber } from './common';
 
 export enum AaveV4SpokesType {
   AaveV4CoreSpoke = 'aave_v4_core_spoke',
@@ -71,11 +71,63 @@ export interface AaveV4ReserveAssetData {
   spokeActive: boolean,
   spokePaused: boolean,
   drawnRate: string,
+  supplyRate: string,
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
+export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;
+
 export interface AaveV4SpokeData {
-  assetsData: Record<string, AaveV4ReserveAssetData>,
+  assetsData: AaveV4AssetsData,
   oracle: EthAddress,
   oracleDecimals: number,
   address: EthAddress,
+}
+
+export interface AaveV4UsedReserveAsset {
+  symbol: string,
+  supplied: string,
+  suppliedUsd: string,
+  drawn: string,
+  drawnUsd: string,
+  premium: string,
+  premiumUsd: string,
+  borrowed: string,
+  borrowedUsd: string,
+  isSupplied: boolean,
+  isBorrowed: boolean,
+  collateral: boolean,
+}
+
+export interface AaveV4AggregatedPositionData {
+  suppliedUsd: string,
+  suppliedCollateralUsd: string,
+  borrowLimitUsd: string,
+  liquidationLimitUsd: string,
+  borrowedUsd: string,
+  drawnUsd: string,
+  premiumUsd: string,
+  leftToBorrowUsd: string,
+  ratio: string,
+  collRatio: string,
+  liqRatio: string,
+  liqPercent: string,
+  leveragedType: string,
+  leveragedAsset: string,
+  liquidationPrice: string,
+  leveragedLsdAssetRatio?: string,
+  minCollRatio: string,
+  collLiquidationRatio: string,
+  minHealthRatio: string,
+  netApy: string,
+  incentiveUsd: string,
+  totalInterestUsd: string,
+}
+
+export type AaveV4UsedReserveAssets = Record<string, AaveV4UsedReserveAsset>;
+
+export interface AaveV4AccountData extends AaveV4AggregatedPositionData {
+  usedAssets: AaveV4UsedReserveAssets,
+  healthFactor: string,
 }

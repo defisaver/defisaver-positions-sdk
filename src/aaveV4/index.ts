@@ -3,16 +3,22 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { getViemProvider } from '../services/viem';
 import {
+  AaveV4AccountData,
   AaveV4HubAssetOnChainData,
   AaveV4HubOnChainData,
   AaveV4ReserveAssetData, AaveV4ReserveAssetOnChain, AaveV4SpokeData, AaveV4SpokeInfo,
+  AaveV4UsedReserveAssets,
 } from '../types';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
+import {
+  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, NetworkNumber,
+} from '../types/common';
 import { AaveV4ViewContractViem } from '../contracts';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
+import { wethToEth } from '../services/utils';
+import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
 
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
-  console.log('hubData', hubData);
   return {
     assets: hubData.reduce((acc: Record<number, AaveV4HubAssetOnChainData>, assetOnChainData) => {
       acc[assetOnChainData.assetId] = {
@@ -24,10 +30,35 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
   };
 };
 
-const formatReserveAsset = (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, oracleDecimals: number): AaveV4ReserveAssetData => {
-  const assetInfo = getAssetInfoByAddress(reserveAsset.underlying);
+const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
+  const assetInfo = getAssetInfoByAddress(reserveAsset.underlying, network);
+  const symbol = wethToEth(assetInfo.symbol);
+
+  const isStakingAsset = STAKING_ASSETS.includes(symbol);
+  const supplyIncentives: IncentiveData[] = [];
+  const borrowIncentives: IncentiveData[] = [];
+
+  if (isStakingAsset) {
+    const yieldApy = await getStakingApy(symbol, network as NetworkNumber);
+    supplyIncentives.push({
+      apy: yieldApy,
+      token: symbol,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${symbol} yield.`,
+    });
+    if (reserveAsset.borrowable) {
+      // when borrowing assets whose value increases over time
+      borrowIncentives.push({
+        apy: new Dec(yieldApy).mul(-1).toString(),
+        token: symbol,
+        incentiveKind: IncentiveKind.Reward,
+        description: `Due to the native yield of ${symbol}, the value of the debt would increase over time.`,
+      });
+    }
+  }
+
   return ({
-    symbol: assetInfo.symbol,
+    symbol,
     underlying: reserveAsset.underlying,
     hub: reserveAsset.hub,
     assetId: reserveAsset.assetId,
@@ -38,15 +69,18 @@ const formatReserveAsset = (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: A
     collateralFactor: new Dec(reserveAsset.collateralFactor).div(10000).toNumber(),
     liquidationFee: new Dec(reserveAsset.liquidationFee).div(10000).toNumber(),
     price: new Dec(reserveAsset.price).div(new Dec(10).pow(oracleDecimals)).toString(),
-    totalSupplied: assetAmountInEth(reserveAsset.totalSupplied.toString(), assetInfo.symbol),
-    totalDrawn: assetAmountInEth(reserveAsset.totalDrawn.toString(), assetInfo.symbol),
-    totalPremium: assetAmountInEth(reserveAsset.totalPremium.toString(), assetInfo.symbol),
-    totalDebt: assetAmountInEth(reserveAsset.totalDebt.toString(), assetInfo.symbol),
-    supplyCap: assetAmountInEth(reserveAsset.supplyCap.toString(), assetInfo.symbol),
-    borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), assetInfo.symbol),
+    totalSupplied: assetAmountInEth(reserveAsset.totalSupplied.toString(), symbol),
+    totalDrawn: assetAmountInEth(reserveAsset.totalDrawn.toString(), symbol),
+    totalPremium: assetAmountInEth(reserveAsset.totalPremium.toString(), symbol),
+    totalDebt: assetAmountInEth(reserveAsset.totalDebt.toString(), symbol),
+    supplyCap: assetAmountInEth(reserveAsset.supplyCap.toString(), symbol),
+    borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
     spokePaused: reserveAsset.spokePaused,
     drawnRate: new Dec(hubAsset.drawnRate).div(new Dec(10).pow(27)).toString(),
+    supplyRate: '0', // To be implemented
+    supplyIncentives,
+    borrowIncentives,
   });
 };
 
@@ -61,7 +95,7 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
     }),
   ]);
 
-  const reserveAssetsArray = spokeData[1].map((reserveAssetOnChain: AaveV4ReserveAssetOnChain) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], +spokeData[0].oracleDecimals.toString()));
+  const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], +spokeData[0].oracleDecimals.toString(), network)));
 
   return {
     assetsData: reserveAssetsArray.reduce((acc: Record<string, AaveV4ReserveAssetData>, reserveAsset: AaveV4ReserveAssetData) => {
@@ -78,11 +112,46 @@ export async function getAaveV4SpokeData(provider: EthereumProvider, network: Ne
   return _getAaveV4SpokeData(getViemProvider(provider, network), network, spoke, blockNumber);
 }
 
-export async function _getAaveV4AccountData(provider: Client, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<any> {
+export async function _getAaveV4AccountData(provider: Client, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<AaveV4AccountData> {
   const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
 
   const loanData = await viewContract.read.getLoanData([marketData.address, address]);
-  console.log('loanData', loanData);
+
+  const healthFactor = new Dec(loanData.healthFactor).div(1e18).toString();
+
+  const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
+    const reserveData = marketData.assetsData[wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)];
+    const price = reserveData.price;
+    const supplied = assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
+    const drawn = assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
+    const premium = assetAmountInEth(usedReserveAsset.premium.toString(), reserveData.symbol);
+    const borrowed = assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
+    acc[reserveData.symbol] = {
+      symbol: reserveData.symbol,
+      supplied,
+      suppliedUsd: new Dec(supplied).mul(price).toString(),
+      drawn,
+      drawnUsd: new Dec(drawn).mul(price).toString(),
+      premium,
+      premiumUsd: new Dec(premium).mul(price).toString(),
+      borrowed,
+      borrowedUsd: new Dec(borrowed).mul(price).toString(),
+      isSupplied: !new Dec(supplied).eq(0),
+      isBorrowed: usedReserveAsset.isBorrowing,
+      collateral: usedReserveAsset.isUsingAsCollateral,
+    };
+    return acc;
+  }, {});
+
+  return {
+    usedAssets,
+    healthFactor,
+    ...aaveV4GetAggregatedPositionData({
+      usedAssets,
+      assetsData: marketData.assetsData,
+      network,
+    }),
+  };
 }
 
 export async function getAaveV4AccountData(provider: EthereumProvider, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<any> {
