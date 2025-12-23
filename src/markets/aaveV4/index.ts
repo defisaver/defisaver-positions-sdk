@@ -15,3 +15,5 @@ export const AAVE_V4_CORE_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
 export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4CoreSpoke]: AAVE_V4_CORE_SPOKE(networkId),
 }) as const;
+
+export const getAaveV4SpokeTypeInfo = (type: AaveV4SpokesType, network?: NetworkNumber) => ({ ...AaveV4Spokes(network ?? NetworkNumber.Eth) }[type]);
