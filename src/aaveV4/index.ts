@@ -30,7 +30,7 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
   };
 };
 
-const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
+const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, reserveId: number, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
   const assetInfo = getAssetInfoByAddress(reserveAsset.underlying, network);
   const symbol = wethToEth(assetInfo.symbol);
 
@@ -62,6 +62,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     underlying: reserveAsset.underlying,
     hub: reserveAsset.hub,
     assetId: reserveAsset.assetId,
+    reserveId,
     paused: reserveAsset.paused,
     frozen: reserveAsset.frozen,
     borrowable: reserveAsset.borrowable,
@@ -95,11 +96,11 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
     }),
   ]);
 
-  const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], +spokeData[0].oracleDecimals.toString(), network)));
+  const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
 
   return {
     assetsData: reserveAssetsArray.reduce((acc: Record<string, AaveV4ReserveAssetData>, reserveAsset: AaveV4ReserveAssetData) => {
-      acc[reserveAsset.symbol] = reserveAsset;
+      acc[`${reserveAsset.symbol}-${reserveAsset.reserveId}`] = reserveAsset;
       return acc;
     }, {}),
     oracle: spokeData[0].oracle,
@@ -118,16 +119,18 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
   const loanData = await viewContract.read.getLoanData([spokeData.address, address]);
 
   const healthFactor = new Dec(loanData.healthFactor).div(1e18).toString();
-
   const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
-    const reserveData = spokeData.assetsData[wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)];
+    const identifier = `${wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)}-${+usedReserveAsset.reserveId.toString()}`;
+    const reserveData = spokeData.assetsData[identifier];
     const price = reserveData.price;
     const supplied = assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
     const drawn = assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
     const premium = assetAmountInEth(usedReserveAsset.premium.toString(), reserveData.symbol);
     const borrowed = assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
-    acc[reserveData.symbol] = {
+    acc[identifier] = {
       symbol: reserveData.symbol,
+      assetId: reserveData.assetId,
+      reserveId: +usedReserveAsset.reserveId.toString(),
       supplied,
       suppliedUsd: new Dec(supplied).mul(price).toString(),
       drawn,

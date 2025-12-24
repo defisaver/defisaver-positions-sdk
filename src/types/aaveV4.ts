@@ -55,6 +55,7 @@ export interface AaveV4ReserveAssetData {
   underlying: EthAddress,
   hub: EthAddress,
   assetId: number,
+  reserveId: number,
   paused: boolean,
   frozen: boolean,
   borrowable: boolean,
@@ -87,6 +88,8 @@ export interface AaveV4SpokeData {
 
 export interface AaveV4UsedReserveAsset {
   symbol: string,
+  assetId: number,
+  reserveId: number,
   supplied: string,
   suppliedUsd: string,
   drawn: string,

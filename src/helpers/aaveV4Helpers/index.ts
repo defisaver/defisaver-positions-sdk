@@ -18,13 +18,13 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.borrowLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[symbol].collateralFactor),
+    ({ symbol, suppliedUsd, reserveId }: { symbol: string, suppliedUsd: string, reserveId: number }) => new Dec(suppliedUsd).mul(assetsData[`${symbol}-${reserveId}`].collateralFactor),
   );
   payload.liquidationLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
     // TODO: Verify if liquidation factor is available in Aave V4, currently using collateralFactor as placeholder
-    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => new Dec(suppliedUsd).mul(assetsData[symbol].collateralFactor),
+    ({ symbol, suppliedUsd, reserveId }: { symbol: string, suppliedUsd: string, reserveId: number }) => new Dec(suppliedUsd).mul(assetsData[`${symbol}-${reserveId}`].collateralFactor),
   );
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   payload.drawnUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ drawnUsd }: { drawnUsd: string }) => drawnUsd);
@@ -40,11 +40,13 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.leveragedAsset = leveragedAsset;
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
-    let assetPrice = assetsData[leveragedAsset].price;
+    const leveragedAssetData = Object.values(assetsData).find((asset) => asset.symbol === leveragedAsset);
+    let assetPrice = leveragedAssetData?.price || '0';
     if (leveragedType === 'lsd-leverage') {
       // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+      const ethPrice = Object.values(assetsData).find((asset) => asset.symbol === 'ETH')?.price || '0';
+      payload.leveragedLsdAssetRatio = new Dec(leveragedAssetData?.price || '0').div(ethPrice).toDP(18).toString();
+      assetPrice = new Dec(assetPrice).div(ethPrice).toString();
     }
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
