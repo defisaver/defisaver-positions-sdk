@@ -75,6 +75,10 @@ export interface AaveV4ReserveAssetData {
   supplyRate: string,
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
+  canBeBorrowed: boolean;
+  canBeSupplied: boolean;
+  canBeWithdrawn: boolean;
+  canBePayBacked: boolean;
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;

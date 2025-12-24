@@ -82,6 +82,10 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     supplyRate: '0', // To be implemented
     supplyIncentives,
     borrowIncentives,
+    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
+    canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
   });
 };
 
