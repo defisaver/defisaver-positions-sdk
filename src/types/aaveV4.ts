@@ -105,6 +105,7 @@ export interface AaveV4UsedReserveAsset {
   isSupplied: boolean,
   isBorrowed: boolean,
   collateral: boolean,
+  collateralFactor: number,
 }
 
 export interface AaveV4AggregatedPositionData {

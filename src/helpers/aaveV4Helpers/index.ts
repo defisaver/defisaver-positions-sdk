@@ -1,16 +1,22 @@
 import Dec from 'decimal.js';
 import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
-import { AaveV4AggregatedPositionData, AaveV4AssetsData, AaveV4UsedReserveAssets } from '../../types';
+import {
+  AaveV4AggregatedPositionData, AaveV4AssetsData, AaveV4ReserveAssetData, AaveV4UsedReserveAsset, AaveV4UsedReserveAssets,
+} from '../../types';
 import { NetworkNumber } from '../../types/common';
+
+export const aaveV4GetCollateralFactor = (assetData: AaveV4ReserveAssetData, usedAssetData: AaveV4UsedReserveAsset, useUserCollateralFactor: boolean = false): number => (useUserCollateralFactor ? usedAssetData.collateralFactor : assetData.collateralFactor);
 
 export const aaveV4GetAggregatedPositionData = ({
   usedAssets,
   assetsData,
   network,
+  useUserCollateralFactor = false,
 }: {
   usedAssets: AaveV4UsedReserveAssets,
   assetsData: AaveV4AssetsData,
   network: NetworkNumber,
+  useUserCollateralFactor?: boolean,
 }): AaveV4AggregatedPositionData => {
   const payload = {} as AaveV4AggregatedPositionData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
@@ -18,14 +24,9 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.borrowLimitUsd = getAssetsTotal(
     usedAssets,
     ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    ({ symbol, suppliedUsd, reserveId }: { symbol: string, suppliedUsd: string, reserveId: number }) => new Dec(suppliedUsd).mul(assetsData[`${symbol}-${reserveId}`].collateralFactor),
+    ({ symbol, suppliedUsd, reserveId }: { symbol: string, suppliedUsd: string, reserveId: number }) => new Dec(suppliedUsd).mul(aaveV4GetCollateralFactor(assetsData[`${symbol}-${reserveId}`], usedAssets[`${symbol}-${reserveId}`], useUserCollateralFactor)),
   );
-  payload.liquidationLimitUsd = getAssetsTotal(
-    usedAssets,
-    ({ isSupplied, collateral }: { isSupplied: boolean, collateral: string }) => isSupplied && collateral,
-    // TODO: Verify if liquidation factor is available in Aave V4, currently using collateralFactor as placeholder
-    ({ symbol, suppliedUsd, reserveId }: { symbol: string, suppliedUsd: string, reserveId: number }) => new Dec(suppliedUsd).mul(assetsData[`${symbol}-${reserveId}`].collateralFactor),
-  );
+  payload.liquidationLimitUsd = payload.borrowLimitUsd;
   payload.borrowedUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   payload.drawnUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ drawnUsd }: { drawnUsd: string }) => drawnUsd);
   payload.premiumUsd = getAssetsTotal(usedAssets, ({ isBorrowed }: { isBorrowed: boolean }) => isBorrowed, ({ premiumUsd }: { premiumUsd: string }) => premiumUsd);

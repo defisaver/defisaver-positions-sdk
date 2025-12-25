@@ -146,6 +146,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
       isSupplied: !new Dec(supplied).eq(0),
       isBorrowed: usedReserveAsset.isBorrowing,
       collateral: usedReserveAsset.isUsingAsCollateral,
+      collateralFactor: new Dec(usedReserveAsset.collateralFactor).div(10000).toNumber(),
     };
     return acc;
   }, {});
@@ -157,6 +158,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
       usedAssets,
       assetsData: spokeData.assetsData,
       network,
+      useUserCollateralFactor: true,
     }),
   };
 }
