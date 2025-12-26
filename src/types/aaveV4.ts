@@ -79,6 +79,7 @@ export interface AaveV4ReserveAssetData {
   canBeSupplied: boolean;
   canBeWithdrawn: boolean;
   canBePayBacked: boolean;
+  utilization: string;
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;

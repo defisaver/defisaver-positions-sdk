@@ -86,6 +86,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused && !reserveAsset.frozen,
     canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
     canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
+    utilization: new Dec(reserveAsset.totalDrawn.toString()).times(100).div(new Dec(reserveAsset.totalSupplied.toString())).toString(),
   });
 };
 
