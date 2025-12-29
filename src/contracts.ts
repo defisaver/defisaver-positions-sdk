@@ -67,6 +67,51 @@ export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: T
   });
 };
 
+export const getMorphoVaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('MorphoVault') as typeof configRaw['MorphoVault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
+export const getYearnVaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('YearnVault') as typeof configRaw['YearnVault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
+export const getSparkSavingsVaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('SparkSavingsVault') as typeof configRaw['SparkSavingsVault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
+export const getErc20ContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('Erc20') as typeof configRaw['Erc20']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
+export const getYearnV3VaultContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('YearnV3Vault') as typeof configRaw['YearnV3Vault']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
@@ -106,3 +151,22 @@ export const LiquityV2ViewContractViem = createViemContractFromConfigFunc('Liqui
 export const LiquityV2LegacyViewContractViem = createViemContractFromConfigFunc('LiquityV2LegacyView');
 
 export const FluidViewContractViem = createViemContractFromConfigFunc('FluidView');
+
+export const AaveIncentivesControllerViem = createViemContractFromConfigFunc('AaveIncentivesController');
+export const AaveUmbrellaViewViem = createViemContractFromConfigFunc('AaveUmbrellaView');
+
+export const LiquityLQTYStakingViem = createViemContractFromConfigFunc('LiquityLQTYStaking');
+export const LiquityStabilityPoolViem = createViemContractFromConfigFunc('LiquityStabilityPool');
+
+export const UUPSViem = createViemContractFromConfigFunc('UUPS');
+export const SparkRewardsControllerViem = createViemContractFromConfigFunc('SparkRewardsController');
+
+export const AaveRewardsControllerViem = createViemContractFromConfigFunc('AaveRewardsController');
+export const LiquityV2sBoldVaultViem = createViemContractFromConfigFunc('LiquityV2sBoldVault');
+export const StkAAVEViem = createViemContractFromConfigFunc('StkAAVE');
+
+export const YearnViewContractViem = createViemContractFromConfigFunc('YearnView');
+
+export const MakerDsrContractViem = createViemContractFromConfigFunc('MakerDsr');
+
+export const SkySavingsContractView = createViemContractFromConfigFunc('SkySavings');

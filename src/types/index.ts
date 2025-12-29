@@ -10,3 +10,6 @@ export * from './llamaLend';
 export * from './euler';
 export * from './fluid';
 export * from './portfolio';
+export * from './merit';
+export * from './merkl';
+export * from './savings';

@@ -1,4 +1,5 @@
 import {
+  IncentiveData,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -9,6 +10,13 @@ export enum AaveVersions {
   AaveV3Lido = 'v3lido',
   AaveV3Etherfi = 'v3etherfi',
 }
+
+export enum AaveVersionType {
+  V1 = 'v1',
+  V2 = 'v2',
+  V3 = 'v3',
+}
+
 export type AaveMarketInfo = {
   chainIds: NetworkNumber[],
   label: string,
@@ -70,12 +78,6 @@ export interface AaveV2AssetData extends AaveAssetData {
   isFrozen: boolean,
 }
 
-export interface IncentiveData {
-  token: string,
-  apy: string,
-  incentiveKind?: 'staking' | 'reward';
-}
-
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
@@ -89,8 +91,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFlashLoanEnabled: boolean,
   assetId: string | number | null,
   liquidationBonus: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;

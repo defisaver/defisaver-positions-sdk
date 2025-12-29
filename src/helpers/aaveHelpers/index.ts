@@ -4,7 +4,7 @@ import { Client } from 'viem';
 import {
   AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
-import { ethToWeth, wethToEth } from '../../services/utils';
+import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
   aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
 } from '../../moneymarket';
@@ -57,7 +57,7 @@ export const aaveAnyGetEmodeMutableProps = (
     eModeCategoriesData,
     assetsData,
   }: AaveHelperCommon, _asset: string) => {
-  const asset = wethToEth(_asset);
+  const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
   const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
@@ -103,14 +103,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
-    usedAssets,
-    assetsData,
-    isAave: true,
-  });
-  payload.netApy = netApy;
-  payload.incentiveUsd = incentiveUsd;
-  payload.totalInterestUsd = totalInterestUsd;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
@@ -130,6 +122,15 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
   payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
+    usedAssets,
+    assetsData,
+    optionalData: { healthRatio: payload.healthRatio },
+  });
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
   return payload;
 };
 
@@ -137,7 +138,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const params = actions.map(({ action, asset, amount }) => {
     const isDebtAsset = borrowOperations.includes(action);
     const amountInWei = assetAmountInWei(amount, asset);
-    const assetInfo = getAssetInfo(ethToWeth(asset), network);
+    const assetInfo = getAssetInfo(getWrappedNativeAssetFromUnwrapped(asset), network);
     let liquidityAdded;
     let liquidityTaken;
     if (isDebtAsset) {
@@ -158,7 +159,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const data = await viewContract.read.getApyAfterValuesEstimation([selectedMarket.providerAddress, params]);
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
   data.forEach((d: { reserveAddress: EthAddress, supplyRate: BigInt, variableBorrowRate: BigInt }) => {
-    const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
+    const asset = getNativeAssetFromWrapped(getAssetInfoByAddress(d.reserveAddress, network).symbol);
     rates[asset] = {
       supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
       borrowRate: aprToApy(new Dec(d.variableBorrowRate.toString()).div(1e25).toString()),
@@ -168,3 +169,20 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getApyAfterValuesEstimationInner(selectedMarket, actions, getViemProvider(provider, network), network);
+
+/**
+ * won't cover all cases
+ */
+export const getAaveUnderlyingSymbol = (_symbol = '') => {
+  let symbol = _symbol
+    .replace(/^aEthLido/, '')
+    .replace(/^aEthEtherFi/, '')
+    .replace(/^aEth/, '')
+    .replace(/^aArb/, '')
+    .replace(/^aOpt/, '')
+    .replace(/^aLin/, '')
+    .replace(/^aPla/, '')
+    .replace(/^aBas/, '');
+  if (symbol.startsWith('a')) symbol = symbol.slice(1);
+  return getNativeAssetFromWrapped(symbol);
+};
