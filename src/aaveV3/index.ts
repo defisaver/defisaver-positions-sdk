@@ -84,7 +84,6 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
-
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
@@ -96,20 +95,29 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
+  // same break logic as view contract
+  let missCounter = 0;
   const eModeCategoriesData: EModeCategoriesData = {};
   for (let i = 0; i < eModesInfo.length; i++) {
-    if (!eModesInfo[i].label) break;
-    eModeCategoriesData[i + 1] = {
-      label: eModesInfo[i].label,
-      id: i + 1,
-      liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
-      liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
-      collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
-      borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
-      collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
-      borrowAssets: [],
-      collateralAssets: [],
-    };
+    if (eModesInfo[i].liquidationThreshold !== 0) {
+      eModeCategoriesData[i + 1] = {
+        label: eModesInfo[i].label,
+        id: i + 1,
+        liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
+        liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
+        collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
+        borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
+        collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
+        ltvzeroBitmap: eModesInfo[i].ltvzeroBitmap.toString(),
+        borrowAssets: [],
+        collateralAssets: [],
+        ltvZeroAssets: [],
+      };
+      missCounter = 0;
+    } else {
+      ++missCounter;
+      if (missCounter > 2) break;
+    }
   }
 
   if (networksWithIncentives.includes(network) && rewardInfo) {
@@ -128,6 +136,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       for (const eModeIndex in eModeCategoriesData) {
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].collateralBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
+        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].ltvzeroBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].ltvZeroAssets.push(symbol);
       }
 
       const borrowCap = tokenMarket.borrowCap.toString();
@@ -326,6 +335,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     collateralFactor: '0',
     collateralAssets: assetsData.map((a) => a.symbol),
     borrowAssets: assetsData.map((a) => a.symbol),
+    ltvZeroAssets: [],
   };
 
   return { assetsData: payload, eModeCategoriesData };
