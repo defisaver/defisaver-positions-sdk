@@ -30,7 +30,7 @@ import {
   EModeCategoriesData,
   EModeCategoryData,
   EModeCategoryDataMapping,
-} from '../types/aave';
+} from '../types';
 import {
   Blockish,
   EthAddress,

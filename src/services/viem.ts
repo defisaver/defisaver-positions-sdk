@@ -1,4 +1,9 @@
-import { createPublicClient, custom } from 'viem';
+import {
+  createPublicClient,
+  custom,
+  encodeFunctionData,
+  type Abi,
+} from 'viem';
 import {
   arbitrum, base, mainnet, optimism, linea, plasma,
 } from 'viem/chains';
@@ -33,3 +38,20 @@ export const setViemBlockNumber = (block: Blockish) => {
   if (block === 'latest') return {};
   return { blockNumber: BigInt(block) };
 };
+
+/**
+ * Utility function to return callData
+ * Useful for Tenderly simulation
+ *
+ * @param contract
+ * @param functionName
+ * @param args
+ */
+export function encodeCalldata(
+  contract: { abi: Abi },
+  functionName: string,
+  args?: readonly unknown[],
+): `0x${string}` {
+  const callDescriptor = { abi: contract.abi, functionName } as const;
+  return encodeFunctionData((args ? { ...callDescriptor, args } : callDescriptor) as any);
+}
