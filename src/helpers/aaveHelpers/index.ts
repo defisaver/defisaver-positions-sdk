@@ -60,7 +60,9 @@ export const aaveAnyGetEmodeMutableProps = (
   const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
-  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string, ltvZeroAssets: string[] } = eModeCategoriesData?.[eModeCategory] || {
+    collateralAssets: [], ltvZeroAssets: [], collateralFactor: '0', liquidationRatio: '0',
+  };
 
   if (
     eModeCategory === 0
@@ -70,6 +72,8 @@ export const aaveAnyGetEmodeMutableProps = (
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
   }
+  if (eModeCategoryData.ltvZeroAssets.includes(asset)) return ({ liquidationRatio: '0', collateralFactor: '0' });
+
   const { liquidationRatio, collateralFactor } = eModeCategoryData;
   return ({ liquidationRatio, collateralFactor });
 };
