@@ -45,6 +45,8 @@ export interface EModeCategoryData {
   collateralBitmap?: string,
   collateralAssets: string[],
   borrowAssets: string[],
+  ltvzeroBitmap?: string,
+  ltvZeroAssets: string[],
 }
 export interface EModeCategoryDataMapping {
   enteringTerms: boolean[],

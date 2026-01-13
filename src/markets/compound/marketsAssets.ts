@@ -86,7 +86,7 @@ export const v3USDSCollAssets = {
   [NetworkNumber.Plasma]: [],
 };
 
-export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
+export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH', 'ETH', 'USDC', 'USDT', 'tETH', 'weETH'];
 
 export const v3wstETHCollAssets = {
   [NetworkNumber.Eth]: v3wstETHCollAssetsEth,

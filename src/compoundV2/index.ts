@@ -64,7 +64,7 @@ export const _getCompoundV2MarketsData = async (provider: Client, network: Netwo
         utilization: new Dec(market.totalBorrow.toString()).div(totalSupply).times(100).toString(),
         totalSupply: assetAmountInEth(totalSupply, handleWbtcLegacy(symbol)),
         totalBorrow: assetAmountInEth(totalBorrow, handleWbtcLegacy(symbol)),
-        exchangeRate: new Dec(market.exchangeRate.toString()).div(1e28).toString(),
+        exchangeRate: new Dec(market.exchangeRate.toString()).div(1e28).mul(10 ** pricePrecisionDiff).toString(),
         borrowCap: assetAmountInEth(borrowCap, handleWbtcLegacy(symbol)),
         canBeBorrowed: market.canBorrow,
         canBeSupplied: market.canMint,

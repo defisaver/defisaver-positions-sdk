@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "2.1.43-aave-v4-dev-7",
+  "version": "2.1.49-aave-v4-dev-1",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -12,7 +12,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
-    "test": "mocha tests/aaveV4.ts",
+    "test": "mocha tests/*",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
@@ -21,7 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.7.17",
+    "@defisaver/tokens": "^1.7.19",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.6.0",

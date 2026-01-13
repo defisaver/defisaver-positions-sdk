@@ -10,7 +10,7 @@ export const aaveV2AssetsDefaultMarket = ['USDT', 'WBTC', 'ETH', 'YFI', 'ZRX', '
 
 export const aaveV3AssetsDefaultMarketEth = [
   'ETH', 'wstETH', 'WBTC', 'USDC', 'DAI', 'LINK', 'AAVE', 'cbETH', 'USDT', 'rETH', 'LUSD', 'CRV', 'MKR', 'SNX', 'BAL', 'UNI', 'LDO', 'ENS', '1INCH', 'FRAX', 'GHO', 'RPL', 'sDAI', 'STG', 'KNC', 'FXS', 'crvUSD', 'PYUSD', 'weETH', 'osETH', 'USDe', 'ETHx', 'sUSDe', 'tBTC', 'cbBTC', 'USDS', 'rsETH', 'LBTC', 'eBTC', 'RLUSD', 'PT eUSDe May', 'PT sUSDe July', 'USDtb',
-  'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'EURC', 'FBTC', 'PT sUSDe Sep', 'PT USDe Sep', 'tETH', 'ezETH', 'XAUt', 'PT sUSDe Nov', 'PT USDe Nov', 'PT sUSDe Feb', 'PT USDe Feb', 'mUSD', 'syrupUSDT',
+  'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'EURC', 'FBTC', 'PT sUSDe Sep', 'PT USDe Sep', 'tETH', 'ezETH', 'XAUt', 'PT sUSDe Nov', 'PT USDe Nov', 'PT sUSDe Feb', 'PT USDe Feb', 'mUSD', 'syrupUSDT', 'USDG',
 ];
 export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
@@ -20,7 +20,7 @@ export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH',
 
 export const aaveV3AssetsDefaultMarketLinea = ['ETH', 'USDC', 'weETH', 'ezETH', 'USDT', 'wstETH', 'wrsETH', 'WBTC', 'mUSD'];
 
-export const aaveV3AssetsDefaultMarketPlasma = ['ETH', 'USDT', 'sUSDe', 'USDe', 'weETH', 'XAUt', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'XPL'];
+export const aaveV3AssetsDefaultMarketPlasma = ['ETH', 'USDT', 'sUSDe', 'USDe', 'weETH', 'XAUt', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'XPL', 'PT USDe Apr', 'PT sUSDe Apr'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
 export const aaveV3AssetsDefaultMarket = {

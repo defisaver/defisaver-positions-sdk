@@ -24,7 +24,7 @@ export const STABLE_ASSETS = [
   'DAI', 'USDC', 'USDT', 'TUSD', 'USDP', 'GUSD', 'BUSD', 'SUSD', 'FRAX', 'LUSD', 'USDC.e', 'GHO', 'sDAI', 'USDA',
   'USDe', 'sUSDe', 'USDS', 'sUSDS', 'USR', 'EURC', 'BOLD', 'BOLD Legacy', 'RLUSD', 'PT sUSDe July', 'PT eUSDe May',
   'USDtb', 'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov', 'PT sUSDe Jan', 'PT USDe Jan',
-  'PT sUSDe Feb', 'PT USDe Feb',
+  'PT sUSDe Feb', 'PT USDe Feb', 'PT USDe Apr', 'PT sUSDe Apr',
 ];
 
 export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
