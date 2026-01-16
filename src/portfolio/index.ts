@@ -53,7 +53,7 @@ import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
 
-export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<{
+export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], isSim = false): Promise<{
   positions: PortfolioPositionsData;
   stakingPositions: any;
   rewardsData: any;
@@ -76,20 +76,9 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
-  const client = getViemProvider(provider, network, {
-    batch: {
-      multicall: {
-        batchSize: 2500000,
-      },
-    },
-  });
-  const defaultClient = getViemProvider(defaultProvider, network, {
-    batch: {
-      multicall: {
-        batchSize: 2500000,
-      },
-    },
-  });
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 500_000 : 2_500_000 } } }];
+  const client = getViemProvider(provider, ...args);
+  const defaultClient = getViemProvider(defaultProvider, ...args);
 
   const morphoMarketsData: Record<string, MorphoBlueMarketInfo> = {};
   const compoundV3MarketsData: Record<string, CompoundV3MarketsData> = {};
@@ -121,7 +110,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const positions: PortfolioPositionsData = {};
   const stakingPositions: any = {};
   const rewardsData: any = {};
-  const allAddresses = [...addresses, ...summerFiAddresses];
+  const allAddresses = [...addresses];
 
   for (const address of allAddresses) {
     positions[address.toLowerCase() as EthAddress] = {
@@ -440,7 +429,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       }
     })(),
   ]);
-
 
   await Promise.all([
     ...aaveV3Markets.map((market) => allAddresses.map(async (address) => {

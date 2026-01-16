@@ -44,6 +44,8 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
 
+  MorphoBlueMORPHOUSDC_625 = 'morphobluemorphousdc_625',
+
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
   MorphoBlueCbEthUSDC_860_Base_1c21c59d = 'morphobluecbethusdc_860_base_1c21c59d',
