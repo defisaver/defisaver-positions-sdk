@@ -93,7 +93,7 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.leveragedAsset = leveragedAsset;
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
-    const leveragedAssetData = Object.values(assetsData).find((asset) => asset.symbol === leveragedAsset);
+    const leveragedAssetData = assetsData[leveragedAsset];
     let assetPrice = leveragedAssetData?.price || '0';
     if (leveragedType === 'lsd-leverage') {
       // Treat ETH like a stablecoin in a long stETH position
