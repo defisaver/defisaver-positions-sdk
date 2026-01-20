@@ -17,6 +17,13 @@ export interface AaveV4SpokeInfo {
   hubs: EthAddress[],
 }
 
+export interface AaveV4HubInfo {
+  chainIds: NetworkNumber[],
+  label: string,
+  value: AaveV4HubsType,
+  address: EthAddress,
+}
+
 export interface AaveV4HubAssetOnChainData {
   assetId: number,
   drawnRate: bigint,
@@ -54,6 +61,7 @@ export interface AaveV4ReserveAssetData {
   symbol: string,
   underlying: EthAddress,
   hub: EthAddress,
+  hubName: string,
   assetId: number,
   reserveId: number,
   paused: boolean,
@@ -93,6 +101,7 @@ export interface AaveV4SpokeData {
 
 export interface AaveV4UsedReserveAsset {
   symbol: string,
+  hubName: string,
   assetId: number,
   reserveId: number,
   supplied: string,
