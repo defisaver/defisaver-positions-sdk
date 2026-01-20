@@ -38,7 +38,7 @@ describe('Aave v3', () => {
   };
 
   const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0x5487D6E1F90e449f0a1Cd15B73ECfC7B91a52b48', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0xe4D0f8c53C7fE7717d5a68321eDA15D667E7d44C', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
     console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...

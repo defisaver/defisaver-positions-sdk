@@ -168,7 +168,7 @@ export interface EulerV2AggregatedPositionData {
   liqPercent: string,
   leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minRatio: string,
   minDebt: string,

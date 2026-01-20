@@ -116,7 +116,7 @@ export interface CompoundAggregatedPositionData {
   liqPercent: string,
   leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minRatio: string,
   debtTooLow: boolean,

@@ -117,11 +117,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
     let assetPrice = data.assetsData[leveragedAsset].price;
-    if (leveragedType === LeverageType.LsdLeverage) {
-      // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
-    }
     if (leveragedType === LeverageType.VolatilePair) {
       const borrowedAsset = (Object.values(usedAssets) as AaveV3UsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
       const borrowedAssetPrice = data.assetsData[borrowedAsset!.symbol].price;

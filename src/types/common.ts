@@ -13,7 +13,6 @@ export enum IncentiveEligibilityId {
 export enum LeverageType {
   Long = 'long',
   Short = 'short',
-  LsdLeverage = 'lsd-leverage',
   VolatilePair = 'volatile-pair',
   VolatilePairReverse = 'volatile-pair-reverse',
   None = '',

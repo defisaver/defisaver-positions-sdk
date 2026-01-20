@@ -13,7 +13,7 @@ export const calcShortLiqPrice = (assetPrice: string, borrowedUsd: string, borro
 
 export const calcLeverageLiqPrice = (leverageType: LeverageType, assetPrice: string, borrowedUsd: string, borrowLimitUsd: string) => {
   if (leverageType === LeverageType.Short || leverageType === LeverageType.VolatilePairReverse) return calcShortLiqPrice(assetPrice, borrowedUsd, borrowLimitUsd);
-  if (leverageType === LeverageType.Long || leverageType === LeverageType.LsdLeverage || leverageType === LeverageType.VolatilePair) return calcLongLiqPrice(assetPrice, borrowedUsd, borrowLimitUsd);
+  if (leverageType === LeverageType.Long || leverageType === LeverageType.VolatilePair) return calcLongLiqPrice(assetPrice, borrowedUsd, borrowLimitUsd);
   console.error('invalid leverageType', leverageType);
   return '0';
 };
@@ -52,8 +52,6 @@ export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
   });
   const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
   const isShort = supplyStable > 0 && supplyUnstable === 0 && borrowUnstable === 1 && borrowStable === 0;
-  // lsd -> liquid staking derivative
-  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH', 'ezETH', 'weETH'].includes(longAsset);
   const isVolatilePair = supplyUnstable === 1 && borrowUnstable === 1 && supplyStable === 0 && borrowStable === 0;
   if (isLong) {
     return {
@@ -65,12 +63,6 @@ export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
     return {
       leveragedType: LeverageType.Short,
       leveragedAsset: shortAsset,
-    };
-  }
-  if (isLsdLeveraged) {
-    return {
-      leveragedType: LeverageType.LsdLeverage,
-      leveragedAsset: longAsset,
     };
   }
   if (isVolatilePair) {

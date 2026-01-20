@@ -10,6 +10,7 @@ import { calculateNetApy } from '../../staking';
 import {
   EulerV2AggregatedPositionData,
   EulerV2AssetsData,
+  EulerV2UsedAsset,
   EulerV2UsedAssets,
 } from '../../types';
 import { EulerV2ViewContractViem } from '../../contracts';
@@ -44,8 +45,7 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
   });
   const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
   const isShort = supplyStable > 0 && supplyUnstable === 0 && borrowUnstable === 1 && borrowStable === 0;
-  // lsd -> liquid staking derivative
-  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH'].includes(longAsset);
+  const isVolatilePair = supplyUnstable === 1 && borrowUnstable === 1 && supplyStable === 0 && borrowStable === 0;
   if (isLong) {
     return {
       leveragedType: LeverageType.Long,
@@ -60,9 +60,9 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
       leveragedVault: leverageAssetVault,
     };
   }
-  if (isLsdLeveraged) {
+  if (isVolatilePair) {
     return {
-      leveragedType: LeverageType.LsdLeverage,
+      leveragedType: LeverageType.VolatilePair,
       leveragedAsset: longAsset,
       leveragedVault: leverageAssetVault,
     };
@@ -99,14 +99,21 @@ export const getEulerV2AggregatedData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedVault.toLowerCase()].price;
-    if (leveragedType === LeverageType.LsdLeverage) {
-      const ethAsset = Object.values(assetsData).find((asset) => ['WETH', 'ETH'].includes(asset.symbol));
-      if (ethAsset) {
-        payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedVault.toLowerCase()].price).div(ethAsset.price).toString();
-        assetPrice = new Dec(assetPrice).div(ethAsset.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as EulerV2UsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = assetsData[borrowedAsset!.vaultAddress.toLowerCase()].price;
+      const leveragedAssetPrice = assetsData[leveragedVault.toLowerCase()].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
       }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();

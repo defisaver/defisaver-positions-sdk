@@ -347,7 +347,7 @@ export interface FluidAggregatedVaultData {
   leveragedType?: LeverageType,
   leveragedAsset?: string,
   liquidationPrice?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
 }

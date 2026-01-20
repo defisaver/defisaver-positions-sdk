@@ -106,7 +106,7 @@ export interface SparkAggregatedPositionData {
   liqPercent: string,
   leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minCollRatio: string,
   collLiquidationRatio: string,
