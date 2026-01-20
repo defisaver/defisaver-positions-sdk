@@ -16,6 +16,7 @@ import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
+import { getAaveV4HubByAddress } from '../markets/aaveV4';
 
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
@@ -33,6 +34,10 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
 const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, reserveId: number, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
   const assetInfo = getAssetInfoByAddress(reserveAsset.underlying, network);
   const symbol = wethToEth(assetInfo.symbol);
+  const hubInfo = getAaveV4HubByAddress(network, reserveAsset.hub);
+  if (!hubInfo) {
+    throw new Error(`Hub not found with address: ${reserveAsset.hub}`);
+  }
 
   const isStakingAsset = STAKING_ASSETS.includes(symbol);
   const supplyIncentives: IncentiveData[] = [];
@@ -60,7 +65,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   return ({
     symbol,
     underlying: reserveAsset.underlying,
-    hub: reserveAsset.hub,
+    hub: hubInfo.address,
+    hubName: hubInfo?.label,
     assetId: reserveAsset.assetId,
     reserveId,
     paused: reserveAsset.paused,
@@ -134,6 +140,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
     const borrowed = assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
     acc[identifier] = {
       symbol: reserveData.symbol,
+      hubName: reserveData.hubName,
       assetId: reserveData.assetId,
       reserveId: +usedReserveAsset.reserveId.toString(),
       supplied,
