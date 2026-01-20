@@ -61,16 +61,6 @@ describe('Aave v3', () => {
     ]);
   };
 
-  it('can fetch market and account data for Ethereum', async function () {
-    this.timeout(10000);
-    const network = NetworkNumber.Eth;
-
-    const marketData = await fetchMarketData(network, provider);
-    await fetchAccountData(network, provider, marketData);
-  });
-
-  return;
-
   // Ethereum
 
   it('can fetch apy after values data for Ethereum', async function () {
