@@ -10,7 +10,9 @@ import {
 import { calculateNetApy } from '../../staking';
 import { ethToWeth, getNativeAssetFromWrapped, wethToEth } from '../../services/utils';
 import { SparkViewContractViem } from '../../contracts';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import {
+  EthAddress, EthereumProvider, LeverageType, NetworkNumber,
+} from '../../types/common';
 import { borrowOperations } from '../../constants';
 import { getViemProvider } from '../../services/viem';
 
@@ -105,7 +107,7 @@ export const sparkGetAggregatedPositionData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = data.assetsData[leveragedAsset].price; // TODO sparkPrice or price??
-    if (leveragedType === 'lsd-leverage') {
+    if (leveragedType === LeverageType.LsdLeverage) {
       // Treat ETH like a stablecoin in a long stETH position
       payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
       assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();

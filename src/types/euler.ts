@@ -1,6 +1,7 @@
 import {
   EthAddress,
   IncentiveData,
+  LeverageType,
   MMPositionData, NetworkNumber,
 } from './common';
 
@@ -165,7 +166,7 @@ export interface EulerV2AggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,

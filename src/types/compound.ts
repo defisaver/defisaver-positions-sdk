@@ -1,5 +1,6 @@
 import {
   EthAddress,
+  LeverageType,
   MMAssetData,
   MMPositionData,
   MMUsedAsset,
@@ -113,7 +114,7 @@ export interface CompoundAggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,

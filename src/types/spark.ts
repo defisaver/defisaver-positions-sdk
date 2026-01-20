@@ -2,6 +2,7 @@ import { EModeCategoriesData } from './aave';
 import {
   EthAddress,
   IncentiveData,
+  LeverageType,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -103,7 +104,7 @@ export interface SparkAggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,

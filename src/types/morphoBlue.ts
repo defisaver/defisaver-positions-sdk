@@ -1,5 +1,5 @@
 import {
-  EthAddress, IncentiveData, MMUsedAssets, NetworkNumber,
+  EthAddress, IncentiveData, LeverageType, MMUsedAssets, NetworkNumber,
 } from './common';
 
 export enum MorphoBlueVersions {
@@ -140,7 +140,7 @@ export interface MorphoBlueAggregatedPositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
@@ -162,7 +162,7 @@ export interface MorphoBluePositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,

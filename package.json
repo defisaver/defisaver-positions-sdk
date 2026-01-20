@@ -1,6 +1,6 @@
 {
   "name": "@defisaver/positions-sdk",
-  "version": "2.1.52",
+  "version": "2.1.52-dev-2",
   "description": "",
   "main": "./cjs/index.js",
   "module": "./esm/index.js",
@@ -12,7 +12,7 @@
     "dev": "tsc -p tsconfig.json --watch",
     "lint": "eslint src/ --fix",
     "lint-check": "eslint src/",
-    "test": "mocha tests/*",
+    "test": "mocha tests/aaveV3.ts",
     "test-single": "mocha ./tests/$npm_config_name.ts",
     "test:debugger": "mocha --inspect-brk tests/*",
     "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""

@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei } from '@defisaver/tokens';
 import {
-  EthAddress, EthereumProvider, MMAssetsData, NetworkNumber,
+  EthAddress, EthereumProvider, LeverageType, MMAssetsData, NetworkNumber,
 } from '../../types/common';
 import {
   calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS,
@@ -48,27 +48,27 @@ export const isLeveragedPos = (usedAssets: EulerV2UsedAssets, dustLimit = 5) => 
   const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH'].includes(longAsset);
   if (isLong) {
     return {
-      leveragedType: 'long',
+      leveragedType: LeverageType.Long,
       leveragedAsset: longAsset,
       leveragedVault: leverageAssetVault,
     };
   }
   if (isShort) {
     return {
-      leveragedType: 'short',
+      leveragedType: LeverageType.Short,
       leveragedAsset: shortAsset,
       leveragedVault: leverageAssetVault,
     };
   }
   if (isLsdLeveraged) {
     return {
-      leveragedType: 'lsd-leverage',
+      leveragedType: LeverageType.LsdLeverage,
       leveragedAsset: longAsset,
       leveragedVault: leverageAssetVault,
     };
   }
   return {
-    leveragedType: '',
+    leveragedType: LeverageType.None,
     leveragedAsset: '',
     leveragedVault: '',
   };
@@ -99,7 +99,7 @@ export const getEulerV2AggregatedData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedVault.toLowerCase()].price;
-    if (leveragedType === 'lsd-leverage') {
+    if (leveragedType === LeverageType.LsdLeverage) {
       const ethAsset = Object.values(assetsData).find((asset) => ['WETH', 'ETH'].includes(asset.symbol));
       if (ethAsset) {
         payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedVault.toLowerCase()].price).div(ethAsset.price).toString();

@@ -5,7 +5,7 @@ import {
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import {
-  EthereumProvider, MMAssetsData, MMUsedAssets, NetworkNumber,
+  EthereumProvider, LeverageType, MMAssetsData, MMUsedAssets, NetworkNumber,
 } from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
@@ -58,7 +58,7 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
+    if (leveragedType === LeverageType.LsdLeverage) {
       // Treat ETH like a stablecoin in a long stETH position
       payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
       assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();

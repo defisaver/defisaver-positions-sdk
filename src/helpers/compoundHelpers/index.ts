@@ -12,7 +12,7 @@ import {
 } from '../../moneymarket';
 import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../../staking';
 import {
-  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, NetworkNumber,
+  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, LeverageType, NetworkNumber,
 } from '../../types/common';
 import { CompoundLoanInfoContractViem, CompV3ViewContractViem } from '../../contracts';
 import { getViemProvider } from '../../services/viem';
@@ -189,7 +189,7 @@ export const getCompoundV3AggregatedData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
+    if (leveragedType === LeverageType.LsdLeverage) {
       payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toString();
       assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
     }

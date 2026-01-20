@@ -38,8 +38,8 @@ describe('Aave v3', () => {
   };
 
   const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
-    // console.log(accountData);
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0x5487D6E1F90e449f0a1Cd15B73ECfC7B91a52b48', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
+    console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
@@ -60,6 +60,16 @@ describe('Aave v3', () => {
       'collateral', 'debt',
     ]);
   };
+
+  it('can fetch market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const marketData = await fetchMarketData(network, provider);
+    await fetchAccountData(network, provider, marketData);
+  });
+
+  return;
 
   // Ethereum
 

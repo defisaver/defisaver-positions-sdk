@@ -1,4 +1,6 @@
-import { EthAddress, IncentiveData, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, NetworkNumber,
+} from './common';
 import { BandData, UserBandData } from './curveUsd';
 
 export enum LLVersionsEth {
@@ -110,7 +112,7 @@ export interface LlamaLendAggregatedPositionData {
   borrowLimitUsd: string,
   minAllowedRatio: number,
   collFactor: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
   liquidationPrice?: string,
   netApy: string,
