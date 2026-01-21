@@ -13,3 +13,4 @@ export * from './portfolio';
 export * from './merit';
 export * from './merkl';
 export * from './savings';
+export * from './common';
