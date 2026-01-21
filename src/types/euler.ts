@@ -1,5 +1,6 @@
 import {
   EthAddress,
+  IncentiveData,
   MMPositionData, NetworkNumber,
 } from './common';
 
@@ -50,8 +51,8 @@ export interface EulerV2AssetData {
   borrowCap: string
   canBeBorrowed: boolean
   canBeSupplied: boolean
-  incentiveSupplyApy?: string
-  incentiveSupplyToken?: string
+  supplyIncentives: IncentiveData[]
+  borrowIncentives: IncentiveData[]
   totalBorrow: string
   collateralFactor: string
   borrowRate: string
