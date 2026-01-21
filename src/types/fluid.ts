@@ -1,4 +1,6 @@
-import { EthAddress, IncentiveData, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, NetworkNumber,
+} from './common';
 
 export interface FluidMarketInfo {
   chainIds: number[]
@@ -342,10 +344,10 @@ export interface FluidAggregatedVaultData {
   collRatio: string,
   minRatio: string
   totalInterestUsd: string,
-  leveragedType?: string,
+  leveragedType?: LeverageType,
   leveragedAsset?: string,
   liquidationPrice?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
 }

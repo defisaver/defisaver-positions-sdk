@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
+  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAsset, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
 import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
@@ -10,7 +10,9 @@ import {
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { borrowOperations } from '../../constants';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import {
+  EthAddress, EthereumProvider, LeverageType, NetworkNumber,
+} from '../../types/common';
 import { AaveLoanInfoV2ContractViem, AaveV3ViewContractViem } from '../../contracts';
 import { getViemProvider } from '../../services/viem';
 
@@ -115,12 +117,21 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
     let assetPrice = data.assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
-      // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as AaveV3UsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = data.assetsData[borrowedAsset!.symbol].price;
+      const leveragedAssetPrice = data.assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();

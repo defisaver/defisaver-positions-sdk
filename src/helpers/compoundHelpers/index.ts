@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundVersions,
+  BaseAdditionalAssetData, CompoundAggregatedPositionData, CompoundMarketData, CompoundV2AssetsData, CompoundV2UsedAssets, CompoundV3AssetData, CompoundV3AssetsData, CompoundV3UsedAsset, CompoundV3UsedAssets, CompoundVersions,
 } from '../../types';
 import {
   addToArrayIf, getEthAmountForDecimals, handleWbtcLegacy, wethToEth,
@@ -12,7 +12,7 @@ import {
 } from '../../moneymarket';
 import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../../staking';
 import {
-  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, NetworkNumber,
+  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, LeverageType, NetworkNumber,
 } from '../../types/common';
 import { CompoundLoanInfoContractViem, CompV3ViewContractViem } from '../../contracts';
 import { getViemProvider } from '../../services/viem';
@@ -189,31 +189,24 @@ export const getCompoundV3AggregatedData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as CompoundV3UsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = assetsData[borrowedAsset!.symbol].price;
+      const leveragedAssetPrice = assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
-
-  // TO DO: handle strategies
-  /* const subscribedStrategies = rest.compoundStrategies
-    ? compoundV3GetSubscribedStrategies({ selectedMarket, compoundStrategies: rest.compoundStrategies })
-    : []; */
-
-  // TODO possibly move to global helper, since every protocol has the same graphData?
-  // payload.ratioTooLow = false;
-  // payload.ratioTooHigh = false;
-
-  // TO DO: handle strategies
-  /* if (subscribedStrategies.length) {
-    subscribedStrategies.forEach(({ graphData }) => {
-      payload.ratioTooLow = parseFloat(payload.ratio) < parseFloat(graphData.minRatio);
-      payload.ratioTooHigh = graphData.boostEnabled && parseFloat(payload.ratio) > parseFloat(graphData.maxRatio);
-    });
-  } */
 
   return payload;
 };
