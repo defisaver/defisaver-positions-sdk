@@ -5,12 +5,14 @@ import {
 } from '../../moneymarket';
 import {
   SparkAggregatedPositionData,
-  SparkAssetsData, SparkHelperCommon, SparkMarketData, SparkUsedAssets,
+  SparkAssetsData, SparkHelperCommon, SparkMarketData, SparkUsedAsset, SparkUsedAssets,
 } from '../../types';
 import { calculateNetApy } from '../../staking';
 import { ethToWeth, getNativeAssetFromWrapped, wethToEth } from '../../services/utils';
 import { SparkViewContractViem } from '../../contracts';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import {
+  EthAddress, EthereumProvider, LeverageType, NetworkNumber,
+} from '../../types/common';
 import { borrowOperations } from '../../constants';
 import { getViemProvider } from '../../services/viem';
 
@@ -105,12 +107,21 @@ export const sparkGetAggregatedPositionData = ({
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = data.assetsData[leveragedAsset].price; // TODO sparkPrice or price??
-    if (leveragedType === 'lsd-leverage') {
-      // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as SparkUsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = data.assetsData[borrowedAsset!.symbol].price;
+      const leveragedAssetPrice = data.assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();

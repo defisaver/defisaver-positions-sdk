@@ -1,4 +1,6 @@
-import { EthAddress, IncentiveData, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, NetworkNumber,
+} from './common';
 
 export enum LiquityV2Versions {
   LiquityV2Eth = 'liquityv2eth',
@@ -96,7 +98,7 @@ export interface LiquityV2AggregatedTroveData {
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset: string,
   liquidationPrice: string,
   ratio: string,
@@ -119,7 +121,7 @@ export interface LiquityV2TroveData {
   totalInterestUsd: string,
   interestBatchManager: EthAddress,
   troveStatus: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset: string,
   liquidationPrice: string,
   debtInFront: string,

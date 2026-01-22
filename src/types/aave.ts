@@ -1,5 +1,6 @@
 import {
   IncentiveData,
+  LeverageType,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -177,14 +178,14 @@ export interface AaveV3AggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
   healthRatio?: string,
   minHealthRatio?: string,
+  currentVolatilePairRatio?: string,
 }
 
 export interface AaveHelperCommon {

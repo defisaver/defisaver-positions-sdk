@@ -10,6 +10,14 @@ export enum IncentiveEligibilityId {
   AaveV3EthenaLiquidLeveragePlasma = '0x67264783f1e9a2af8627a235853057a6fc975bd2BORROW_BL',
 }
 
+export enum LeverageType {
+  Long = 'long',
+  Short = 'short',
+  VolatilePair = 'volatile-pair',
+  VolatilePairReverse = 'volatile-pair-reverse',
+  None = '',
+}
+
 export interface IncentiveData {
   token: string,
   apy: string,
