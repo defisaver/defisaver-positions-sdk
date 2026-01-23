@@ -1,4 +1,6 @@
-import { EthAddress, IncentiveData, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, NetworkNumber,
+} from './common';
 
 export enum AaveV4SpokesType {
   AaveV4CoreSpoke = 'aave_v4_core_spoke',
@@ -131,16 +133,16 @@ export interface AaveV4AggregatedPositionData {
   collRatio: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset: string,
   liquidationPrice: string,
-  leveragedLsdAssetRatio?: string,
   minCollRatio: string,
   collLiquidationRatio: string,
   minHealthRatio: string,
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
+  currentVolatilePairRatio?: string,
 }
 
 export type AaveV4UsedReserveAssets = Record<string, AaveV4UsedReserveAsset>;

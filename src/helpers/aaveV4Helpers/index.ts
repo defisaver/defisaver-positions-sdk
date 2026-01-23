@@ -3,7 +3,7 @@ import { calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS } from '../../money
 import {
   AaveV4AggregatedPositionData, AaveV4AssetsData, AaveV4ReserveAssetData, AaveV4UsedReserveAsset, AaveV4UsedReserveAssets,
 } from '../../types';
-import { NetworkNumber } from '../../types/common';
+import { LeverageType, NetworkNumber } from '../../types/common';
 
 export const aaveV4GetCollateralFactor = (assetData: AaveV4ReserveAssetData, usedAssetData: AaveV4UsedReserveAsset, useUserCollateralFactor: boolean = false): number => (useUserCollateralFactor ? usedAssetData.collateralFactor : assetData.collateralFactor);
 
@@ -33,28 +33,27 @@ export const isLeveragedPosAaveV4 = (usedAssets: AaveV4UsedReserveAssets, dustLi
   });
   const isLong = borrowStable > 0 && borrowUnstable === 0 && supplyUnstable === 1 && supplyStable === 0;
   const isShort = supplyStable > 0 && supplyUnstable === 0 && borrowUnstable === 1 && borrowStable === 0;
-  // lsd -> liquid staking derivative
-  const isLsdLeveraged = supplyUnstable === 1 && borrowUnstable === 1 && shortAsset === 'ETH' && ['stETH', 'wstETH', 'cbETH', 'rETH', 'ezETH', 'weETH'].includes(longAsset);
+  const isVolatilePair = supplyUnstable === 1 && borrowUnstable === 1 && supplyStable === 0 && borrowStable === 0;
   if (isLong) {
     return {
-      leveragedType: 'long',
+      leveragedType: LeverageType.Long,
       leveragedAsset: longAsset,
     };
   }
   if (isShort) {
     return {
-      leveragedType: 'short',
+      leveragedType: LeverageType.Short,
       leveragedAsset: shortAsset,
     };
   }
-  if (isLsdLeveraged) {
+  if (isVolatilePair) {
     return {
-      leveragedType: 'lsd-leverage',
+      leveragedType: LeverageType.VolatilePair,
       leveragedAsset: longAsset,
     };
   }
   return {
-    leveragedType: '',
+    leveragedType: LeverageType.None,
     leveragedAsset: '',
   };
 };
@@ -95,13 +94,21 @@ export const aaveV4GetAggregatedPositionData = ({
   if (leveragedType !== '') {
     const leveragedAssetData = assetsData[leveragedAsset];
     let assetPrice = leveragedAssetData?.price || '0';
-    if (leveragedType === 'lsd-leverage') {
-      // Treat ETH like a stablecoin in a long stETH position
-      const ethPrice = Object.values(assetsData).find((asset) => asset.symbol === 'ETH')?.price || '0';
-      payload.leveragedLsdAssetRatio = new Dec(leveragedAssetData?.price || '0').div(ethPrice).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(ethPrice).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as AaveV4UsedReserveAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = assetsData[`${borrowedAsset!.symbol}-${borrowedAsset!.reserveId}`].price;
+      const leveragedAssetPrice = assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
