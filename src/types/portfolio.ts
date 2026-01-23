@@ -1,4 +1,5 @@
 import { AaveV2PositionData, AaveV3PositionData, AaveVersions } from './aave';
+import { AaveV4AccountData, AaveV4SpokesType } from './aaveV4';
 import { EthAddress } from './common';
 import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
@@ -53,6 +54,9 @@ export interface PortfolioPositionsDataForAddress {
     data: {
       [key: string]: FluidVaultData;
     };
+  };
+  aaveV4: {
+    [key in AaveV4SpokesType]?: PortfolioProtocolData<AaveV4AccountData>;
   };
 }
 

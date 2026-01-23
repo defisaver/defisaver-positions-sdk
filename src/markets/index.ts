@@ -23,3 +23,4 @@ export { EulerV2Markets } from './euler';
 export {
   FluidMarkets, getFluidVersionsDataForNetwork, getFluidMarketInfoById, getFTokenAddress, getFluidMarketInfoByAddress,
 } from './fluid';
+export { AaveV4Spokes } from './aaveV4';
