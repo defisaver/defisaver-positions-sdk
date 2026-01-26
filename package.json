@@ -21,14 +21,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@defisaver/tokens": "^1.7.19",
+    "@defisaver/tokens": "^1.7.21",
     "@types/lodash": "^4.17.15",
     "@types/memoizee": "^0.4.12",
     "decimal.js": "^10.6.0",
+    "graphql-request": "^1.8.2",
     "lodash": "^4.17.21",
     "memoizee": "^0.4.17",
-    "viem": "^2.37.9",
-    "graphql-request": "^1.8.2"
+    "viem": "^2.37.9"
   },
   "devDependencies": {
     "@defisaver/eslint-config": "^1.0.1",

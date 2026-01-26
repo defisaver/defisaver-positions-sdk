@@ -16,7 +16,7 @@ export const aaveV3AssetsDefaultMarketOpt = [
   'DAI', 'USDC.e', 'USDT', 'SUSD', 'AAVE', 'LINK', 'WBTC', 'ETH', 'OP', 'wstETH', 'LUSD', 'MAI', 'rETH', 'USDC',
 ];
 export const aaveV3AssetsDefaultMarketArb = ['DAI', 'LINK', 'USDC.e', 'WBTC', 'ETH', 'USDT', 'AAVE', 'EURS', 'wstETH', 'MAI', 'rETH', 'LUSD', 'USDC', 'FRAX', 'ARB', 'weETH', 'GHO', 'ezETH', 'rsETH', 'tBTC'];
-export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'GHO', 'wrsETH', 'LBTC', 'EURC', 'AAVE', 'tBTC'];
+export const aaveV3AssetsDefaultMarketBase = ['ETH', 'cbETH', 'USDbC', 'wstETH', 'USDC', 'weETH', 'cbBTC', 'ezETH', 'GHO', 'wrsETH', 'LBTC', 'EURC', 'AAVE', 'tBTC', 'syrupUSDC'];
 
 export const aaveV3AssetsDefaultMarketLinea = ['ETH', 'USDC', 'weETH', 'ezETH', 'USDT', 'wstETH', 'wrsETH', 'WBTC', 'mUSD'];
 
