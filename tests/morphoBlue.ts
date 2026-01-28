@@ -305,6 +305,24 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
+  it('can fetch sUSDe/USDtb market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915];
+
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
+  });
+
+  it('can fetch USDe/USDtb market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueUSDeUSDtb_915];
+
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
+  });
+
   // ezETH/ETH
 
   it('can fetch ezETH/ETH 86% market and account data for Ethereum', async function () {

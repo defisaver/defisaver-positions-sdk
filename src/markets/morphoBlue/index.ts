@@ -260,6 +260,36 @@ export const MORPHO_BLUE_SUSDE_USDC_915 = (networkId: NetworkNumber = NetworkNum
   marketId: '0x85c7f4374f3a403b36d54cc284983b2b02bbd8581ee0f3c36494447b87d9fcab',
   protocolName: 'morpho-blue',
 });
+export const MORPHO_BLUE_SUSDE_USDTB_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho',
+  shortLabel: 'sUSDe/USDTb',
+  value: MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915,
+  url: 'susdeusdtb-88a18b2f',
+  loanToken: '0xC139190F447e929f090Edeb554D95AbB8b18aC1C',
+  collateralToken: '0x9D39A5DE30e57443BfF2A8307A4256c8797A3497',
+  oracle: '0x67BcC03438D7d71c39343d7AD21cb73Dc19aDB89',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.915,
+  marketId: '0x88a18b2f4d94e7ad27a381b15531c06abf05a7c99dd5d3c3679875fed6f7e742',
+  protocolName: 'morpho-blue',
+});
+export const MORPHO_BLUE_USDE_USDTB_915 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
+  chainIds: [1],
+  label: 'Morpho',
+  shortLabel: 'USDe/USDTb',
+  value: MorphoBlueVersions.MorphoBlueUSDeUSDtb_915,
+  url: 'usdeusdtb-ba5bb3cc',
+  loanToken: '0xC139190F447e929f090Edeb554D95AbB8b18aC1C',
+  collateralToken: '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3',
+  oracle: '0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35',
+  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
+  lltv: 0.915,
+  marketId: '0xba5bb3ccec8df00a56ac1f4d97ae0fd1461f262b6d4f29631bdec717fa6017fd',
+  protocolName: 'morpho-blue',
+});
 // ezETH/ETH
 export const MORPHO_BLUE_EZETH_ETH_860 = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [1],
@@ -930,6 +960,8 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueLBTCCbBTC_945]: MORPHO_BLUE_LBTC_CBBTC_945(networkId),
   [MorphoBlueVersions.MorphoBluesUSDSUSDT_965]: MORPHO_BLUE_SUSDS_USDT_965(networkId),
   [MorphoBlueVersions.MorphoBlueMORPHOUSDC_625]: MORPHO_BLUE_MORPHO_USDC_625(networkId),
+  [MorphoBlueVersions.MorphoBlueSUSDeUSDtb_915]: MORPHO_BLUE_SUSDE_USDTB_915(networkId),
+  [MorphoBlueVersions.MorphoBlueUSDeUSDtb_915]: MORPHO_BLUE_USDE_USDTB_915(networkId),
 
   // wstETH/WETH
   [MorphoBlueVersions.MorphoBlueWstEthEth_945]: MORPHO_BLUE_WSTETH_ETH_945(networkId),

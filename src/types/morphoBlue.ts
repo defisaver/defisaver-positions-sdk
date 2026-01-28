@@ -27,6 +27,8 @@ export enum MorphoBlueVersions {
   MorphoBlueUSRUSDC_915 = 'morphoblueusrusdc_915', // USR/USDC
   MorphoBlueSyrupUSDCUSDC_915 = 'morphobluesyrupusdcusdc_915', // syrupUSDC/USDC
   MorphoBluesUSDSUSDT_965 = 'morphobluesusdsusdt_965', // sUSDS/USDT
+  MorphoBlueSUSDeUSDtb_915 = 'morphobluesusdeusdtb_915', // sUSDe/USDTb
+  MorphoBlueUSDeUSDtb_915 = 'morphoblueusdeusdtb_915', // USDe/USDTb
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
