@@ -61,4 +61,5 @@ export interface CdpData {
   globalDebtCurrent: string,
   liquidationFee: string,
   lastUpdated: number,
+  exposure: string,
 }

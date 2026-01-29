@@ -13,6 +13,7 @@ import { CdpData, CdpInfo, CdpType } from '../types';
 import { wethToEth } from '../services/utils';
 import { parseCollateralInfo } from '../helpers/makerHelpers';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { getExposure } from '../moneymarket';
 
 export const _getMakerAccountBalances = async (provider: PublicClient, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
@@ -214,6 +215,7 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     globalDebtCurrent: collInfo.globalDebtCurrent,
     liquidationFee: collInfo.liquidationFee,
     lastUpdated: Date.now(),
+    exposure: getExposure(assetAmountInEth(debt, 'DAI'), collateralUsd),
   };
 };
 

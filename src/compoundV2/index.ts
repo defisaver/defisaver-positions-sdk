@@ -100,6 +100,7 @@ export const EMPTY_COMPOUND_DATA = {
   incentiveUsd: '0',
   totalInterestUsd: '0',
   borrowStableSupplyUnstable: false,
+  exposure: 'N/A',
 };
 
 const getCollateralAssetsAddresses = async (provider: Client, network: NetworkNumber, account: EthAddress) => {

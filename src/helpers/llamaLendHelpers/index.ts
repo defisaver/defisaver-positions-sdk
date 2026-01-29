@@ -3,7 +3,9 @@ import {
   LlamaLendAggregatedPositionData, LlamaLendAssetsData, LlamaLendMarketData, LlamaLendUsedAssets,
 } from '../../types';
 import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+} from '../../moneymarket';
 import { mapRange } from '../../services/utils';
 import { calculateNetApy } from '../../staking';
 
@@ -49,5 +51,6 @@ export const getLlamaLendAggregatedData = ({
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, usedAssets[collAsset].price, payload.borrowedUsd, payload.borrowLimitUsd);
   }
 
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
   return payload;
 };

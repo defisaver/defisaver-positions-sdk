@@ -99,6 +99,7 @@ export interface MMPositionData {
   usedAssets: any,
   netApy: string,
   lastUpdated: number,
+  exposure: string,
   // ...
 }
 

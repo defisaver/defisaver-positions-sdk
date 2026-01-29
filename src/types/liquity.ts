@@ -28,4 +28,5 @@ export interface LiquityTroveInfo {
   minCollateralRatio: number,
   priceForRecovery: string,
   debtInFront: string,
+  exposure: string,
 }

@@ -211,6 +211,7 @@ export const EMPTY_EULER_V2_DATA = {
   lastUpdated: Date.now(),
   hasBorrowInDifferentVault: false,
   addressSpaceTakenByAnotherAccount: false,
+  exposure: 'N/A',
 };
 
 export const _getEulerV2AccountData = async (
