@@ -4,7 +4,7 @@ import {
   EthAddress, EthereumProvider, LeverageType, MMAssetsData, NetworkNumber,
 } from '../../types/common';
 import {
-  calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS,
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, STABLE_ASSETS,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import {
@@ -117,6 +117,7 @@ export const getEulerV2AggregatedData = ({
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
   return payload;
 };
 

@@ -179,6 +179,7 @@ export interface AaveV3AggregatedPositionData {
   liqRatio: string,
   liqPercent: string,
   leveragedType: LeverageType,
+  exposure: string,
   leveragedAsset?: string,
   liquidationPrice?: string,
   minCollRatio?: string,

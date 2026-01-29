@@ -24,7 +24,7 @@ describe('Portfolio', () => {
   });
 
   const fetchPortfolioData = async (network: NetworkNumber, _provider: EthereumProvider) => {
-    const portfolioData = await sdk.portfolio.getPortfolioData(_provider, network, provider, ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0x21dc459fba0b1ea037cd221d35b928be1c26141a'], ['0xda46F11AC5e394111d92F8879302a9347Fe42259']);
+    const portfolioData = await sdk.portfolio.getPortfolioData(_provider, network, provider, ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0x21dc459fba0b1ea037cd221d35b928be1c26141a'], false);
     return portfolioData;
   };
 

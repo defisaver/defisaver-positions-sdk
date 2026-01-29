@@ -17,6 +17,7 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getEthAmountForDecimals } from '../services/utils';
+import { getExposure } from '../moneymarket';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
@@ -104,6 +105,7 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
     minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
+    exposure: getExposure(assetAmountInEth(troveInfo[2].toString()), new Dec(assetAmountInEth(troveInfo[1].toString())).mul(assetPrice).toString()),
   };
 
   return payload;

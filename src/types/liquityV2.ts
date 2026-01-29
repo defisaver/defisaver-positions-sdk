@@ -103,6 +103,7 @@ export interface LiquityV2AggregatedTroveData {
   liquidationPrice: string,
   ratio: string,
   collRatio: string,
+  exposure: string,
 }
 
 export interface LiquityV2TroveData {
@@ -126,4 +127,5 @@ export interface LiquityV2TroveData {
   liquidationPrice: string,
   debtInFront: string,
   lastInterestRateAdjTime: string,
+  exposure: string,
 }

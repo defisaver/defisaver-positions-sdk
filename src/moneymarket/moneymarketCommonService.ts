@@ -82,3 +82,9 @@ export const aprToApy = (interest:string | number, frequency = BLOCKS_IN_A_YEAR)
   .minus(1)
   .times(100)
   .toString();
+
+export const getExposure = (borrowedUsd: string, suppliedUsd: string) => {
+  if (borrowedUsd === '0' || suppliedUsd === '0') return 'N/A';
+  const balanceUsd = new Dec(suppliedUsd).sub(borrowedUsd).toString();
+  return new Dec(suppliedUsd).div(balanceUsd).toDecimalPlaces(2).toString();
+};

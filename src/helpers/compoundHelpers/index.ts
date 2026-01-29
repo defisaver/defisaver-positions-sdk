@@ -8,7 +8,7 @@ import {
 } from '../../services/utils';
 import { BLOCKS_IN_A_YEAR, borrowOperations, SECONDS_PER_YEAR } from '../../constants';
 import {
-  aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, calculateBorrowingAssetLimit, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../../staking';
 import {
@@ -158,6 +158,7 @@ export const getCompoundV2AggregatedData = ({
     const assetPrice = assetsData[handleWbtcLegacy(leveragedAsset)].price;
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };
@@ -207,6 +208,7 @@ export const getCompoundV3AggregatedData = ({
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };

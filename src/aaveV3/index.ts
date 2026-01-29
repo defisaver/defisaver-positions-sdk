@@ -365,6 +365,7 @@ export const EMPTY_AAVE_DATA = {
   eModeCategories: [],
   collRatio: '0',
   suppliedCollateralUsd: '0',
+  exposure: 'N/A',
 };
 
 export const _getAaveV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
