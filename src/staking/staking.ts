@@ -64,7 +64,7 @@ export const STAKING_ASSETS = [
   'cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH',
   'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep',
   'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'syrupUSDC', 'wstUSR',
-  'PT sUSDe Feb', 'PT USDe Feb', 'PT USDe Apr', 'PT sUSDe Apr',
+  'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May',
 ];
 
 export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
@@ -101,6 +101,8 @@ export const getStakingApy = memoize(async (asset: string, network: number = Net
     if (asset === 'PT USDe Feb') return await getApyFromDfsApi('PT USDe Feb', network);
     if (asset === 'PT sUSDe Apr') return await getApyFromDfsApi('PT sUSDe Apr', network);
     if (asset === 'PT USDe Apr') return await getApyFromDfsApi('PT USDe Apr', network);
+    if (asset === 'PT sUSDe May') return await getApyFromDfsApi('PT sUSDe May', network);
+    if (asset === 'PT USDe May') return await getApyFromDfsApi('PT USDe May', network);
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
