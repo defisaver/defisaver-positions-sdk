@@ -4,10 +4,12 @@ import {
 
 export enum AaveV4SpokesType {
   AaveV4CoreSpoke = 'aave_v4_core_spoke',
+  AaveV4YieldSeekingSpoke = 'aave_v4_yield_seeking_spoke',
 }
 
 export enum AaveV4HubsType {
   AaveV4CoreHub = 'aave_v4_core_hub',
+  AaveV4YieldSeekingHub = 'aave_v4_yield_seeking_hub',
 }
 
 export interface AaveV4SpokeInfo {
