@@ -264,6 +264,7 @@ export const EMPTY_SPARK_DATA = {
   suppliedCollateralUsd: '0',
   totalSupplied: '0',
   eModeCategories: [],
+  exposure: 'N/A',
 };
 
 export const _getSparkAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {

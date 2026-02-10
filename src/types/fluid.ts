@@ -342,7 +342,7 @@ export interface FluidAggregatedVaultData {
   incentiveUsd: string,
   ratio: string,
   collRatio: string,
-  minRatio: string
+  minRatio: string,
   totalInterestUsd: string,
   leveragedType?: LeverageType,
   leveragedAsset?: string,
@@ -350,6 +350,7 @@ export interface FluidAggregatedVaultData {
   currentVolatilePairRatio?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
+  exposure: string,
 }
 
 export interface BaseFluidVaultData {

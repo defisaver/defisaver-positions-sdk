@@ -118,6 +118,7 @@ export interface LlamaLendAggregatedPositionData {
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
+  exposure: string,
 }
 
 export interface LlamaLendUsedAsset {
@@ -158,4 +159,5 @@ export interface LlamaLendUserData {
   userBands: UserBandData[],
   loanExists: boolean,
   borrowRate?: string,
+  exposure: string,
 }

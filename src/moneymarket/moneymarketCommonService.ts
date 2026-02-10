@@ -24,7 +24,7 @@ export const STABLE_ASSETS = [
   'DAI', 'USDC', 'USDT', 'TUSD', 'USDP', 'GUSD', 'BUSD', 'SUSD', 'FRAX', 'LUSD', 'USDC.e', 'GHO', 'sDAI', 'USDA',
   'USDe', 'sUSDe', 'USDS', 'sUSDS', 'USR', 'EURC', 'BOLD', 'BOLD Legacy', 'RLUSD', 'PT sUSDe July', 'PT eUSDe May',
   'USDtb', 'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov', 'PT sUSDe Jan', 'PT USDe Jan',
-  'PT sUSDe Feb', 'PT USDe Feb', 'PT USDe Apr', 'PT sUSDe Apr',
+  'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May', 'PT srUSDe Apr',
 ];
 
 export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
@@ -82,3 +82,9 @@ export const aprToApy = (interest:string | number, frequency = BLOCKS_IN_A_YEAR)
   .minus(1)
   .times(100)
   .toString();
+
+export const getExposure = (borrowedUsd: string, suppliedUsd: string) => {
+  if (borrowedUsd === '0' || suppliedUsd === '0') return 'N/A';
+  const balanceUsd = new Dec(suppliedUsd).sub(borrowedUsd).toString();
+  return new Dec(suppliedUsd).div(balanceUsd).toDecimalPlaces(2).toString();
+};

@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import {
   SparkAggregatedPositionData,
@@ -127,6 +127,7 @@ export const sparkGetAggregatedPositionData = ({
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
   payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
   return payload;
 };
 

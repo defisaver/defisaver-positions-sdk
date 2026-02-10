@@ -79,6 +79,7 @@ export interface CrvUSDAggregatedPositionData {
   minAllowedRatio: number,
   collFactor: string,
   leveragedType: LeverageType,
+  exposure: string,
   leveragedAsset?: string,
   liquidationPrice?: string,
 }
@@ -121,4 +122,5 @@ export interface CrvUSDUserData {
   borrowRate?: string,
   collateralPrice: string,
   collRatio: string,
+  exposure: string,
 }

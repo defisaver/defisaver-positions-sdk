@@ -1,7 +1,9 @@
 import Dec from 'decimal.js';
 import { CrvUSDAggregatedPositionData, CrvUSDMarketData, CrvUSDUsedAssets } from '../../types';
 import { MMUsedAssets, NetworkNumber } from '../../types/common';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+} from '../../moneymarket';
 import { mapRange } from '../../services/utils';
 
 export const getCrvUsdAggregatedData = ({
@@ -36,6 +38,8 @@ export const getCrvUsdAggregatedData = ({
     payload.leveragedAsset = leveragedAsset;
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, usedAssets[selectedMarket.collAsset].price, payload.borrowedUsd, payload.borrowLimitUsd);
   }
+
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };

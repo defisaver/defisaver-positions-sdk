@@ -6,7 +6,7 @@ import {
 } from '../../types';
 import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { borrowOperations } from '../../constants';
@@ -146,6 +146,7 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
   return payload;
 };
 

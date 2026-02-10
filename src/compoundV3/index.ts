@@ -104,6 +104,7 @@ export const EMPTY_COMPOUND_V3_DATA = {
   automationResubscribeRequired: false,
   isAllowed: false,
   lastUpdated: Date.now(),
+  exposure: 'N/A',
 };
 
 export const EMPTY_USED_ASSET = {

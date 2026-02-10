@@ -365,6 +365,7 @@ export const EMPTY_AAVE_DATA = {
   eModeCategories: [],
   collRatio: '0',
   suppliedCollateralUsd: '0',
+  exposure: 'N/A',
 };
 
 export const _getAaveV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
@@ -422,7 +423,7 @@ export const getAaveV3AccountBalances = async (provider: EthereumProvider, netwo
 
 export const _getAaveV3AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: any, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3PositionData> => {
   const {
-    selectedMarket: market, assetsData,
+    selectedMarket: market, assetsData, eModeCategoriesData,
   } = extractedState;
   let payload: AaveV3PositionData = {
     ...EMPTY_AAVE_DATA,
@@ -457,7 +458,9 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
     const supplied = assetAmountInEth(tokenInfo.balance.toString(), asset);
     const borrowedStable = assetAmountInEth(tokenInfo.borrowsStable.toString(), asset);
     const borrowedVariable = assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset);
-    const enabledAsCollateral = assetsData[asset].usageAsCollateralEnabled ? tokenInfo.enabledAsCollateral : false;
+    const eModeCategoryData = eModeCategoriesData[+(eModeCategory as BigInt).toString()];
+    const usageAsCollateralIsEnabledInEmode = eModeCategoryData?.collateralAssets.includes(asset);
+    const enabledAsCollateral = (assetsData[asset].usageAsCollateralEnabled || usageAsCollateralIsEnabledInEmode) ? tokenInfo.enabledAsCollateral : false;
 
     let interestMode;
     if (borrowedVariable === '0' && borrowedStable !== '0') {
