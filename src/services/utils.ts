@@ -54,6 +54,7 @@ export const isMaxuint = (amount: string) => compareAddresses(MAXUINT, amount);
 export const isMainnetNetwork = (network: NetworkNumber) => network === NetworkNumber.Eth;
 
 export const DEFAULT_TIMEOUT = 2000; // 2 seconds
+export const LONGER_TIMEOUT = 5000; // 5 seconds
 
 /**
  * Converts web3 hybrid response (that can be used as objects and arrays, so has duplicated values) to objects.
