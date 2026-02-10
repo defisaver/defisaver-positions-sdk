@@ -1,7 +1,7 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import {
@@ -76,6 +76,7 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };

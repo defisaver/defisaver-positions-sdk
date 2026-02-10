@@ -7,7 +7,9 @@ import {
   FluidVaultType,
   InnerFluidMarketData,
 } from '../../types';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+} from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { LeverageType, MMAssetsData } from '../../types/common';
 import { getEthAmountForDecimals } from '../../services/utils';
@@ -103,6 +105,7 @@ borrowShares?: string,
 
   payload.minCollRatio = new Dec(payload.suppliedUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };

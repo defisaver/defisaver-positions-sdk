@@ -154,6 +154,7 @@ export interface MorphoBlueAggregatedPositionData {
   liquidationPrice?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
+  exposure: string,
 }
 
 export interface MorphoBluePositionData {
@@ -176,6 +177,7 @@ export interface MorphoBluePositionData {
   liquidationPrice?: string,
   supplyShares: string,
   borrowShares: string,
+  exposure: string,
 }
 
 export interface MorphoBlueVault {
