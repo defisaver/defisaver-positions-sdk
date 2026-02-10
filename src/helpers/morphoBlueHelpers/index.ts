@@ -14,7 +14,7 @@ import {
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
 import { MorphoBlueViewContractViem } from '../../contracts';
-import { compareAddresses, DEFAULT_TIMEOUT, wethToEth } from '../../services/utils';
+import { compareAddresses, LONGER_TIMEOUT, wethToEth } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
@@ -232,7 +232,7 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
         query: MARKET_QUERY,
         variables: { uniqueKey: marketId, chainId: network },
       }),
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
     const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
@@ -297,7 +297,7 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
         query: MARKET_QUERY,
         variables: { uniqueKey: marketId, chainId: network },
       }),
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
     const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
