@@ -612,7 +612,15 @@ describe('Morpho Blue', () => {
     const marketData = await fetchMarketData(network, providerBase, selectedMarket);
     await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
-  it('can fetch weETH/ETH market and account data for Base', async function () {
+  it('can fetch weETH/ETH 91.5% market and account data for Base', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Base;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWeEthEth_915_Base];
+
+    const marketData = await fetchMarketData(network, providerBase, selectedMarket);
+    await fetchAccountData(network, providerBase, marketData, selectedMarket);
+  });
+  it('can fetch weETH/ETH 94.5% market and account data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
     const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWeEthEth_945_Base];

@@ -71,7 +71,8 @@ export enum MorphoBlueVersions {
   MorphoBlueCbBTCEURC_860_Base = 'morphobluecbbtceurc_860_base', // cbBTC/EURC
   MorphoBlueWETHEURC_860_Base = 'morphobluewetheurc_860_base', // WETH/EURC
   MorphoBlueCbEthEURC_860_Base = 'morphobluecbetheurc_860_base', // cbETH/EURC
-  MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH
+  MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH 0.945
+  MorphoBlueWeEthEth_915_Base = 'morphoblueweetheth_915_base', // weETH/ETH 0.915
   MorphoBlueAEROUSDC_625_Base = 'morphoblueaerousdc_625_base', // AERO/USDC
 
   // ARBITRUM
