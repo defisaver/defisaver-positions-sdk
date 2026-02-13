@@ -616,7 +616,7 @@ export const AaveLoanInfoV2 =  {
             "address": "0xEDf1087544a01596b70Da746F861B878F245B08f"
           },
         }
-      },
+      }, 
     }
   } as const;
 export const LendingPoolAddressesProvider =  {
