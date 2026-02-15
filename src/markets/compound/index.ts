@@ -1,6 +1,11 @@
 import { ZERO_ADDRESS } from '../../constants';
 import { getConfigContractAddress } from '../../contracts';
-import { CompoundBulkerOptions, CompoundMarketData, CompoundVersions } from '../../types';
+import {
+  CompoundBulkerOptions,
+  CompoundMarketData,
+  CompoundVersions,
+  CompoundVersionType,
+} from '../../types';
 import { NetworkNumber } from '../../types/common';
 import {
   compoundV2CollateralAssets,
@@ -88,12 +93,23 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
   },
+  [NetworkNumber.Plasma]: {
+    // Non-existing markets, keeping it because of typescript
+    [CompoundVersions.CompoundV3USDC]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3ETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+  },
 };
 
 export const COMPOUND_V2: CompoundMarketData = {
   chainIds: [NetworkNumber.Eth],
   label: 'Compound V2',
-  shortLabel: 'v2',
+  shortLabel: CompoundVersionType.V2,
   value: CompoundVersions.CompoundV2,
   baseAsset: '',
   collAssets: compoundV2CollateralAssets.map(a => a.underlyingAsset),
@@ -109,7 +125,7 @@ export const COMPOUND_V2: CompoundMarketData = {
 export const COMPOUND_V3_USDC = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Opt],
   label: 'Compound V3 - USDC',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3USDC,
   baseAsset: 'USDC',
   collAssets: networkId ? v3USDCCollAssets[networkId] : [],
@@ -125,7 +141,7 @@ export const COMPOUND_V3_USDC = (networkId: NetworkNumber): CompoundMarketData =
 export const COMPOUND_V3_USDCe = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Arb],
   label: 'Compound V3 - USDC.e',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3USDCe,
   baseAsset: 'USDC.e',
   collAssets: networkId ? v3USDCeCollAssets[networkId] : [],
@@ -141,7 +157,7 @@ export const COMPOUND_V3_USDCe = (networkId: NetworkNumber): CompoundMarketData 
 export const COMPOUND_V3_ETH = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Base, NetworkNumber.Arb, NetworkNumber.Opt],
   label: 'Compound V3 - ETH',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3ETH,
   baseAsset: 'ETH',
   collAssets: networkId ? v3ETHCollAssets[networkId] : [],
@@ -157,7 +173,7 @@ export const COMPOUND_V3_ETH = (networkId: NetworkNumber): CompoundMarketData =>
 export const COMPOUND_V3_USDBC = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Base],
   label: 'Compound V3 - USDbC',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3USDbC,
   baseAsset: 'USDbC',
   collAssets: networkId ? v3USDbCCollAssets[networkId] : [],
@@ -173,7 +189,7 @@ export const COMPOUND_V3_USDBC = (networkId: NetworkNumber): CompoundMarketData 
 export const COMPOUND_V3_USDT = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt],
   label: 'Compound V3 - USDT',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3USDT,
   baseAsset: 'USDT',
   collAssets: networkId ? v3USDTCollAssets[networkId] : [],
@@ -189,7 +205,7 @@ export const COMPOUND_V3_USDT = (networkId: NetworkNumber): CompoundMarketData =
 export const COMPOUND_V3_WSTETH = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Compound V3 - wstETH',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3wstETH,
   baseAsset: 'wstETH',
   collAssets: networkId ? v3wstETHCollAssets[networkId] : [],
@@ -204,7 +220,7 @@ export const COMPOUND_V3_WSTETH = (networkId: NetworkNumber): CompoundMarketData
 export const COMPOUND_V3_USDS = (networkId: NetworkNumber): CompoundMarketData => ({
   chainIds: [NetworkNumber.Eth, NetworkNumber.Base],
   label: 'Compound V3 - USDS',
-  shortLabel: 'v3',
+  shortLabel: CompoundVersionType.V3,
   value: CompoundVersions.CompoundV3USDS,
   baseAsset: 'USDS',
   collAssets: networkId ? v3USDSCollAssets[networkId] : [],

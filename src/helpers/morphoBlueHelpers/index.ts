@@ -1,11 +1,11 @@
 import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import {
-  EthereumProvider, MMAssetsData, MMUsedAssets, NetworkNumber,
+  EthereumProvider, LeverageType, MMAssetsData, MMUsedAsset, MMUsedAssets, NetworkNumber,
 } from '../../types/common';
 import {
   MorphoBlueAggregatedPositionData, MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo,
@@ -14,7 +14,7 @@ import {
 } from '../../types';
 import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
 import { MorphoBlueViewContractViem } from '../../contracts';
-import { compareAddresses, DEFAULT_TIMEOUT } from '../../services/utils';
+import { compareAddresses, LONGER_TIMEOUT, wethToEth } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 
 export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, marketInfo }: { usedAssets: MMUsedAssets, assetsData: MorphoBlueAssetsData, marketInfo: MorphoBlueMarketInfo }): MorphoBlueAggregatedPositionData => {
@@ -58,15 +58,25 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
-      // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as MMUsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = assetsData[borrowedAsset!.symbol].price;
+      const leveragedAssetPrice = assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };
@@ -222,7 +232,7 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
         query: MARKET_QUERY,
         variables: { uniqueKey: marketId, chainId: network },
       }),
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
     const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
@@ -287,7 +297,7 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
         query: MARKET_QUERY,
         variables: { uniqueKey: marketId, chainId: network },
       }),
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
     const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
@@ -388,4 +398,9 @@ export const getRewardsForMarket = async (marketId: string, network: NetworkNumb
   const supplyAprPercent = new Dec(supplyApr).mul(100).toString();
   const borrowAprPercent = new Dec(borrowApr).mul(100).toString();
   return { supplyApy: aprToApy(supplyAprPercent), borrowApy: aprToApy(borrowAprPercent) };
+};
+
+export const getMorphoUnderlyingSymbol = (_symbol: string) => {
+  if (_symbol === 'MORPHO Legacy') return 'MORPHO';
+  return wethToEth(_symbol);
 };

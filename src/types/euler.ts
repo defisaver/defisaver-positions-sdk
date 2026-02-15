@@ -1,5 +1,7 @@
 import {
   EthAddress,
+  IncentiveData,
+  LeverageType,
   MMPositionData, NetworkNumber,
 } from './common';
 
@@ -50,8 +52,8 @@ export interface EulerV2AssetData {
   borrowCap: string
   canBeBorrowed: boolean
   canBeSupplied: boolean
-  incentiveSupplyApy?: string
-  incentiveSupplyToken?: string
+  supplyIncentives: IncentiveData[]
+  borrowIncentives: IncentiveData[]
   totalBorrow: string
   collateralFactor: string
   borrowRate: string
@@ -164,12 +166,13 @@ export interface EulerV2AggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minRatio: string,
   minDebt: string,
   minCollRatio: string,
   collLiquidationRatio: string,
+  exposure: string,
 }

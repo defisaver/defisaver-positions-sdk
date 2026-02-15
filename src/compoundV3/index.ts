@@ -8,7 +8,7 @@ import {
   CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
 } from '../types';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   getStakingApy, STAKING_ASSETS,
@@ -58,15 +58,19 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
 
   for (const coll of colls) {
     if (STAKING_ASSETS.includes(coll.symbol)) {
-      coll.incentiveSupplyApy = await getStakingApy(coll.symbol);
-      coll.incentiveSupplyToken = coll.symbol;
+      coll.supplyIncentives.push({
+        apy: await getStakingApy(coll.symbol),
+        token: coll.symbol,
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${coll.symbol} yield.`,
+      });
     }
   }
   const base = formatBaseData(baseTokenInfo, network, baseAssetPrice);
 
   const payload: CompoundV3AssetsData = {};
 
-  const baseObj = { ...base, ...getIncentiveApys(base, compPrice) };
+  const baseObj = { ...base, ...(await getIncentiveApys(base, compPrice)) };
   const allAssets = [baseObj, ...colls];
 
   allAssets
@@ -100,6 +104,7 @@ export const EMPTY_COMPOUND_V3_DATA = {
   automationResubscribeRequired: false,
   isAllowed: false,
   lastUpdated: Date.now(),
+  exposure: 'N/A',
 };
 
 export const EMPTY_USED_ASSET = {

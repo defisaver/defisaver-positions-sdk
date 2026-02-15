@@ -3,14 +3,20 @@ import { Client } from 'viem';
 import Dec from 'decimal.js';
 import {
   AaveIncentiveDataProviderV3ContractViem,
+  AaveIncentivesControllerViem,
   AaveV3ViewContractViem,
   createViemContractFromConfigFunc,
+  StkAAVEViem,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
 import { AAVE_V3 } from '../markets/aave';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
-  ethToWeth, isEnabledOnBitmap, isLayer2Network, wethToEth, wethToEthByAddress,
+  getWrappedNativeAssetFromUnwrapped,
+  isEnabledOnBitmap,
+  isLayer2Network,
+  wethToEth,
+  wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
@@ -24,11 +30,21 @@ import {
   EModeCategoriesData,
   EModeCategoryData,
   EModeCategoryDataMapping,
-} from '../types/aave';
+} from '../types';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish,
+  EthAddress,
+  EthereumProvider,
+  IncentiveEligibilityId,
+  IncentiveKind,
+  NetworkNumber,
+  PositionBalances,
+  HexString,
 } from '../types/common';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { getMeritCampaigns } from './merit';
+import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkl';
+import { SECONDS_PER_YEAR } from '../constants';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
   const { eModeCategoriesData }: { assetsData: AaveV3AssetsData, eModeCategoriesData: EModeCategoriesData } = extractedState;
@@ -61,37 +77,47 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 };
 
 export async function _getAaveV3MarketData(provider: Client, network: NetworkNumber, market: AaveMarketInfo, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3MarketData> {
-  const _addresses = market.assets.map(a => getAssetInfo(ethToWeth(a), network).address);
+  const _addresses = market.assets.map(a => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
   const isL2 = isLayer2Network(network);
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
-  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea];
-
+  const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
   // eslint-disable-next-line prefer-const
-  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo] = await Promise.all([
+  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.isBorrowAllowed([marketAddress], setViemBlockNumber(blockNumber)), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null,
+    getMerkleCampaigns(network),
+    getMeritCampaigns(network, market.value),
   ]);
   isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
 
+  // same break logic as view contract
+  let missCounter = 0;
   const eModeCategoriesData: EModeCategoriesData = {};
   for (let i = 0; i < eModesInfo.length; i++) {
-    if (!eModesInfo[i].label) break;
-    eModeCategoriesData[i + 1] = {
-      label: eModesInfo[i].label,
-      id: i + 1,
-      liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
-      liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
-      collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
-      borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
-      collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
-      borrowAssets: [],
-      collateralAssets: [],
-    };
+    if (eModesInfo[i].liquidationThreshold !== 0) {
+      eModeCategoriesData[i + 1] = {
+        label: eModesInfo[i].label,
+        id: i + 1,
+        liquidationBonus: new Dec(eModesInfo[i].liquidationBonus).div(10000).toString(),
+        liquidationRatio: new Dec(eModesInfo[i].liquidationThreshold).div(10000).toString(),
+        collateralFactor: new Dec(eModesInfo[i].ltv).div(10000).toString(),
+        borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
+        collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
+        ltvzeroBitmap: eModesInfo[i].ltvzeroBitmap.toString(),
+        borrowAssets: [],
+        collateralAssets: [],
+        ltvZeroAssets: [],
+      };
+      missCounter = 0;
+    } else {
+      ++missCounter;
+      if (missCounter > 2) break;
+    }
   }
 
   if (networksWithIncentives.includes(network) && rewardInfo) {
@@ -110,6 +136,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
       for (const eModeIndex in eModeCategoriesData) {
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].collateralBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
         if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
+        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].ltvzeroBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].ltvZeroAssets.push(symbol);
       }
 
       const borrowCap = tokenMarket.borrowCap.toString();
@@ -160,51 +187,84 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         isolationModeBorrowingEnabled: tokenMarket.isolationModeBorrowingEnabled,
         isFlashLoanEnabled: tokenMarket.isFlashLoanEnabled,
         aTokenAddress: tokenMarket.aTokenAddress,
+        vTokenAddress: tokenMarket.debtTokenAddress,
+        supplyIncentives: [],
+        borrowIncentives: [],
       });
-    }));
-
+    }),
+  );
 
   // Get incentives data
-  await Promise.all(assetsData.map(async (_market: AaveV3AssetData) => {
+  await Promise.all(assetsData.map(async (_market: AaveV3AssetData, index) => {
     /* eslint-disable no-param-reassign */
     // @ts-ignore
     const rewardForMarket = rewardInfo?.[_market.underlyingTokenAddress];
     const isStakingAsset = STAKING_ASSETS.includes(_market.symbol);
+
     if (isStakingAsset) {
-      _market.incentiveSupplyApy = await getStakingApy(_market.symbol);
-      _market.incentiveSupplyToken = _market.symbol;
-      if (!_market.supplyIncentives) {
-        _market.supplyIncentives = [];
-      }
+      const yieldApy = await getStakingApy(_market.symbol, network as NetworkNumber);
       _market.supplyIncentives.push({
-        apy: _market.incentiveSupplyApy || '0',
+        apy: yieldApy,
         token: _market.symbol,
-        incentiveKind: 'staking',
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${_market.symbol} yield.`,
+      });
+      if (_market.canBeBorrowed) {
+        // when borrowing assets whose value increases over time
+        _market.borrowIncentives.push({
+          apy: new Dec(yieldApy).mul(-1).toString(),
+          token: _market.symbol,
+          incentiveKind: IncentiveKind.Reward,
+          description: `Due to the native yield of ${_market.symbol}, the value of the debt would increase over time.`,
+        });
+      }
+    }
+
+    const aTokenAddress = (_market as any).aTokenAddress.toLowerCase(); // DEV: Should aTokenAddress be in AaveV3AssetData type?
+    if (merkleRewardsMap[aTokenAddress]?.supply) {
+      const {
+        apy, rewardTokenSymbol, description, identifier,
+      } = merkleRewardsMap[aTokenAddress].supply;
+      _market.supplyIncentives.push({
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
+        eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
 
-    if (_market.canBeBorrowed && _market.incentiveSupplyApy) {
-      _market.incentiveBorrowApy = _market.incentiveSupplyApy;
-      _market.incentiveBorrowToken = _market.incentiveSupplyToken;
-      if (!_market.borrowIncentives) {
-        _market.borrowIncentives = [];
-      }
+    const vTokenAddress = (_market as any).vTokenAddress.toLowerCase(); // DEV: Should vTokenAddress be in AaveV3AssetData type?
+    if (merkleRewardsMap[vTokenAddress]?.borrow) {
+      const {
+        apy, rewardTokenSymbol, description, identifier,
+      } = merkleRewardsMap[vTokenAddress].borrow;
       _market.borrowIncentives.push({
-        apy: _market.incentiveBorrowApy,
-        token: _market.incentiveBorrowToken!!,
-        incentiveKind: 'reward',
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
+        eligibilityId: identifier as IncentiveEligibilityId,
       });
     }
 
-    if (_market.symbol === 'USDe') {
-      const merklApy = await getStakingApy(_market.symbol);
-      if (!_market.supplyIncentives) {
-        _market.supplyIncentives = [];
-      }
+    if (meritRewardsMap.supply[_market.symbol]) {
+      const { apy, rewardTokenSymbol, description } = meritRewardsMap.supply[_market.symbol];
       _market.supplyIncentives.push({
-        apy: merklApy || '0',
-        token: _market.symbol,
-        incentiveKind: 'reward',
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
+      });
+    }
+
+    if (meritRewardsMap.borrow[_market.symbol]) {
+      const { apy, rewardTokenSymbol, description } = meritRewardsMap.borrow[_market.symbol];
+      _market.borrowIncentives.push({
+        apy,
+        token: rewardTokenSymbol,
+        incentiveKind: IncentiveKind.Reward,
+        description,
       });
     }
 
@@ -213,9 +273,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     rewardForMarket.aIncentiveData.rewardsTokenInformation.forEach(supplyRewardData => {
       if (supplyRewardData) {
         if (+(supplyRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
-        _market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
         // reward token is aave asset
-        if (supplyRewardData.rewardTokenSymbol.startsWith('a') && supplyRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveSupplyToken = _market.symbol;
         const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** +supplyRewardData.priceFeedDecimals)
           .toString();
@@ -225,16 +283,11 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
           .div(_market.price)
           .div(_market.totalSupply)
           .toString();
-        _market.incentiveSupplyApy = new Dec(_market.incentiveSupplyApy || '0').add(rewardApy)
-          .toString();
-
-        if (!_market.supplyIncentives) {
-          _market.supplyIncentives = [];
-        }
         _market.supplyIncentives.push({
-          token: supplyRewardData.rewardTokenSymbol,
+          token: getAaveUnderlyingSymbol(supplyRewardData.rewardTokenSymbol),
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });
@@ -242,8 +295,6 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     rewardForMarket.vIncentiveData.rewardsTokenInformation.forEach(borrowRewardData => {
       if (borrowRewardData) {
         if (+(borrowRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
-        _market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
-        if (borrowRewardData.rewardTokenSymbol.startsWith('a') && borrowRewardData.rewardTokenSymbol.includes(_market.symbol)) _market.incentiveBorrowToken = _market.symbol;
         const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** +borrowRewardData.priceFeedDecimals)
           .toString();
@@ -253,16 +304,11 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
           .div(_market.price)
           .div(_market.totalBorrowVar)
           .toString();
-        _market.incentiveBorrowApy = new Dec(_market.incentiveBorrowApy || '0').add(rewardApy)
-          .toString();
-
-        if (!_market.borrowIncentives) {
-          _market.borrowIncentives = [];
-        }
         _market.borrowIncentives.push({
-          token: borrowRewardData.rewardTokenSymbol,
+          token: getAaveUnderlyingSymbol(borrowRewardData.rewardTokenSymbol),
           apy: rewardApy,
-          incentiveKind: 'reward',
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });
@@ -289,6 +335,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     collateralFactor: '0',
     collateralAssets: assetsData.map((a) => a.symbol),
     borrowAssets: assetsData.map((a) => a.symbol),
+    ltvZeroAssets: [],
   };
 
   return { assetsData: payload, eModeCategoriesData };
@@ -318,6 +365,7 @@ export const EMPTY_AAVE_DATA = {
   eModeCategories: [],
   collRatio: '0',
   suppliedCollateralUsd: '0',
+  exposure: 'N/A',
 };
 
 export const _getAaveV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
@@ -337,7 +385,8 @@ export const _getAaveV3AccountBalances = async (provider: Client, network: Netwo
   // @ts-ignore
   const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
+  // @ts-ignore
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
@@ -374,7 +423,7 @@ export const getAaveV3AccountBalances = async (provider: EthereumProvider, netwo
 
 export const _getAaveV3AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: any, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3PositionData> => {
   const {
-    selectedMarket: market, assetsData,
+    selectedMarket: market, assetsData, eModeCategoriesData,
   } = extractedState;
   let payload: AaveV3PositionData = {
     ...EMPTY_AAVE_DATA,
@@ -387,7 +436,7 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const lendingPoolContract = createViemContractFromConfigFunc(market.lendingPool, market.lendingPoolAddress)(provider, network);
   const marketAddress = market.providerAddress;
-  const _addresses = market.assets.map((a: string[]) => getAssetInfo(ethToWeth(a), network).address);
+  const _addresses = market.assets.map((a: string) => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
   const middleAddressIndex = Math.floor(_addresses.length / 2); // split addresses in half to avoid gas limit by multicall
 
@@ -409,7 +458,9 @@ export const _getAaveV3AccountData = async (provider: Client, network: NetworkNu
     const supplied = assetAmountInEth(tokenInfo.balance.toString(), asset);
     const borrowedStable = assetAmountInEth(tokenInfo.borrowsStable.toString(), asset);
     const borrowedVariable = assetAmountInEth(tokenInfo.borrowsVariable.toString(), asset);
-    const enabledAsCollateral = assetsData[asset].usageAsCollateralEnabled ? tokenInfo.enabledAsCollateral : false;
+    const eModeCategoryData = eModeCategoriesData[+(eModeCategory as BigInt).toString()];
+    const usageAsCollateralIsEnabledInEmode = eModeCategoryData?.collateralAssets.includes(asset);
+    const enabledAsCollateral = (assetsData[asset].usageAsCollateralEnabled || usageAsCollateralIsEnabledInEmode) ? tokenInfo.enabledAsCollateral : false;
 
     let interestMode;
     if (borrowedVariable === '0' && borrowedStable !== '0') {
@@ -485,4 +536,103 @@ export const getAaveV3FullPositionData = async (provider: EthereumProvider, netw
   const marketData = await getAaveV3MarketData(provider, network, market);
   const positionData = await getAaveV3AccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
+};
+
+// aTokens eligible for AAVE rewards
+export const REWARDABLE_ASSETS = [
+  '0x028171bCA77440897B824Ca71D1c56caC55b68A3', // DAI
+  '0x6C3c78838c761c6Ac7bE9F59fe808ea2A6E4379d',
+  '0xD37EE7e4f452C6638c96536e68090De8cBcdb583', // GUSD
+  '0x279AF5b99540c1A3A7E3CDd326e19659401eF99e',
+  '0xBcca60bB61934080951369a648Fb03DF4F96263C', // USDC
+  '0x619beb58998eD2278e08620f97007e1116D5D25b',
+  '0x3Ed3B47Dd13EC9a98b44e6204A523E766B225811', // USDT
+  '0x531842cEbbdD378f8ee36D171d6cC9C4fcf475Ec',
+  '0x9ff58f4fFB29fA2266Ab25e75e2A8b3503311656', // WBTC
+  '0x9c39809Dec7F95F5e0713634a4D0701329B3b4d2',
+  '0x030bA81f1c18d280636F32af80b9AAd02Cf0854e', // WETH
+  '0xF63B34710400CAd3e044cFfDcAb00a0f32E33eCf',
+  '0xa06bC25B5805d5F8d82847D191Cb4Af5A3e873E0', // LINK
+  '0x0b8f12b1788BFdE65Aa1ca52E3e9F3Ba401be16D',
+  '0x6C5024Cd4F8A59110119C56f8933403A539555EB', // SUSD
+  '0xdC6a3Ab17299D9C2A412B0e0a4C1f55446AE0817',
+  '0x5165d24277cD063F5ac44Efd447B27025e888f37', // YFI
+  '0x7EbD09022Be45AD993BAA1CEc61166Fcc8644d97',
+  '0xF256CC7847E919FAc9B808cC216cAc87CCF2f47a', // xSUSHI
+  '0xfAFEDF95E21184E3d880bd56D4806c4b8d31c69A',
+  '0xB9D7CB55f463405CDfBe4E90a6D2Df01C2B92BF1', // UNI
+  '0x5BdB050A92CADcCfCDcCCBFC17204a1C9cC0Ab73',
+  '0xc713e5E149D5D0715DcD1c156a020976e7E56B88', // MKR
+  '0xba728eAd5e496BE00DCF66F650b6d7758eCB50f8',
+  '0x101cc05f4A51C0319f570d5E146a8C625198e636', // TUSD
+  '0x01C0eb1f8c6F1C1bF74ae028697ce7AA2a8b0E92',
+  '0xc9BC48c72154ef3e5425641a3c747242112a46AF', // RAI
+  '0xB5385132EE8321977FfF44b60cDE9fE9AB0B4e6b',
+  '0x272F97b7a56a387aE942350bBC7Df5700f8a4576', // BAL
+  '0x13210D4Fe0d5402bd7Ecbc4B5bC5cFcA3b71adB0',
+  '0x2e8f4bdbe3d47d7d7de490437aea9915d930f1a3', // USDP
+  '0xfdb93b3b10936cf81fa59a02a7523b6e2149b2b7',
+  '0xA361718326c15715591c299427c62086F69923D9', // BUSD
+  '0xbA429f7011c9fa04cDd46a2Da24dc0FF0aC6099c',
+  '0xd4937682df3C8aEF4FE912A96A74121C0829E664', // FRAX
+  '0xfE8F19B17fFeF0fDbfe2671F248903055AFAA8Ca',
+  '0x683923dB55Fead99A79Fa01A27EeC3cB19679cC3', // FEI
+  '0xC2e10006AccAb7B45D9184FcF5b7EC7763f5BaAe',
+  '0x8dAE6Cb04688C62d939ed9B68d32Bc62e49970b1', // CRV
+  '0x00ad8eBF64F141f1C81e9f8f792d3d1631c6c684',
+  '0x6F634c6135D2EBD550000ac92F494F9CB8183dAe', // DPI
+  '0x4dDff5885a67E4EffeC55875a3977D7E60F82ae0',
+] as const;
+
+export const fetchYearlyMeritApyForStakingGho = async () => {
+  try {
+    const response = await fetch('https://apps.aavechan.com/api/merit/aprs', { signal: AbortSignal.timeout(5000) });
+    const data = await response.json();
+    const apr = data?.currentAPR?.actionsAPR?.['ethereum-stkgho'] || '0' as string;
+    const apy = aprToApy(apr);
+    const apyWithDFSBonus = new Dec(apy).mul(1.05).toString(); // 5% bonus for DFS users
+    return apyWithDFSBonus;
+  } catch (e) {
+    const message = 'External API Failure: Failed to fetch yearly merit APY for staking GHO';
+    console.error(message, e);
+    return '0';
+  }
+};
+
+export const getStakeAaveData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+  const stkGhoAddress = getAssetInfo('stkGHO').address as HexString;
+  const stkAaveAddress = getAssetInfo('stkAAVE').address as HexString;
+
+  const AaveIncentivesController = AaveIncentivesControllerViem(provider, network);
+  const stkAAVE = StkAAVEViem(provider, network);
+  const stkGHO = createViemContractFromConfigFunc('Erc20', stkGhoAddress as HexString)(provider, network);
+
+
+  const [aaveRewardsBalance, emissionsPerSecond, stkAAVEBalance, stkAAVETotalSupply, stkGHOBalance, ghoMeritApy] = await Promise.all([
+    AaveIncentivesController.read.getRewardsBalance([REWARDABLE_ASSETS, address]),
+    stkAAVE.read.assets([stkAaveAddress]),
+    stkAAVE.read.balanceOf([address]),
+    stkAAVE.read.totalSupply(),
+    stkGHO.read.balanceOf([address]),
+    fetchYearlyMeritApyForStakingGho(),
+  ]);
+
+
+  const stkAaveApy = new Dec(assetAmountInEth(emissionsPerSecond[0].toString(), 'GHO') || 0).mul(SECONDS_PER_YEAR).mul(100).div(assetAmountInEth(stkAAVETotalSupply.toString(), 'stkAAVE'))
+    .toString();
+  return {
+    activatedCooldown: '0',
+    activatedCooldownAmount: '0',
+    stkAaveRewardsBalance: '0',
+    aaveRewardsBalance: assetAmountInEth(aaveRewardsBalance.toString(), 'AAVE'),
+    stkAaveBalance: assetAmountInEth(stkAAVEBalance.toString(), 'stkAAVE'),
+    stkGhoBalance: assetAmountInEth(stkGHOBalance.toString(), 'GHO'),
+    ghoMeritApy,
+    stkAaveApy,
+  };
+};
+
+export {
+  getMeritCampaigns,
+  getMerkleCampaigns,
 };

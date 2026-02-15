@@ -7,7 +7,7 @@ export const compoundV2CollateralAssets: AssetData[] = [
 ].map((symbol) => getAssetInfo(symbol));
 
 export const v3USDCCollAssetsEth = ['COMP', 'WBTC', 'ETH', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'weETH', 'deUSD', 'sdeUSD', 'rsETH'];
-export const v3USDCCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC', 'wstETH', 'ezETH', 'wUSDM'];
+export const v3USDCCollAssetsArb = ['ARB', 'GMX', 'ETH', 'WBTC', 'wstETH', 'ezETH', 'wUSDM', 'tBTC'];
 export const v3USDCCollAssetsBase = ['cbETH', 'ETH', 'wstETH', 'cbBTC', 'tBTC'];
 export const v3USDCCollAssetsOpt = ['ETH', 'OP', 'WBTC', 'wstETH'];
 
@@ -18,6 +18,7 @@ export const v3USDCCollAssets = {
   [NetworkNumber.Arb]: v3USDCCollAssetsArb,
   [NetworkNumber.Base]: v3USDCCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const v3USDCeCollAssetsArb = ['ARB', 'ETH', 'GMX', 'WBTC'];
@@ -29,9 +30,10 @@ export const v3USDCeCollAssets = {
   [NetworkNumber.Arb]: v3USDCeCollAssetsArb,
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
-export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC', 'ETHx', 'tETH', 'pufETH', 'wOETH'];
+export const v3ETHCollAssetsEth = ['cbETH', 'wstETH', 'rETH', 'rsETH', 'weETH', 'osETH', 'WBTC', 'ezETH', 'cbBTC', 'rswETH', 'tBTC', 'ETHx', 'tETH', 'pufETH', 'wOETH', 'USDC', 'USDT'];
 export const v3ETHCollAssetsBase = ['cbETH', 'ezETH', 'wstETH', 'USDC', 'weETH', 'wrsETH', 'cbBTC', 'wsuperOETHb'];
 export const v3ETHCollAssetsArb = ['weETH', 'rETH', 'wstETH', 'WBTC', 'rsETH', 'ezETH', 'USDC', 'USDT'];
 export const v3ETHCollAssetsOpt = ['rETH', 'wstETH', 'WBTC', 'ezETH', 'USDC', 'USDT', 'weETH', 'wrsETH'];
@@ -43,6 +45,7 @@ export const v3ETHCollAssets = {
   [NetworkNumber.Arb]: v3ETHCollAssetsArb,
   [NetworkNumber.Base]: v3ETHCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 } as const;
 
 export const v3USDbCCollAssetsBase = ['ETH', 'cbETH'];
@@ -54,10 +57,11 @@ export const v3USDbCCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDbCCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
-export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD'];
-export const v3USDTCollAssetsArb = ['ETH', 'WBTC', 'wstETH', 'ARB', 'GMX'];
+export const v3USDTCollAssetsEth = ['COMP', 'ETH', 'WBTC', 'UNI', 'LINK', 'wstETH', 'cbBTC', 'tBTC', 'wUSDM', 'sFRAX', 'mETH', 'weETH', 'sdeUSD', 'deUSD', 'XAUt'];
+export const v3USDTCollAssetsArb = ['ARB', 'ETH', 'wstETH', 'WBTC', 'GMX', 'tBTC'];
 export const v3USDTCollAssetsOpt = ['ETH', 'WBTC', 'OP', 'wstETH'];
 
 // @dev Keep assets in array, do not assign directly, so we can parse it and edit it programmatically with `scripts/updateMarkets`
@@ -67,6 +71,7 @@ export const v3USDTCollAssets = {
   [NetworkNumber.Arb]: v3USDTCollAssetsArb,
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
 export const v3USDSCollAssetsEth = ['wstETH', 'ETH', 'sUSDS', 'cbETH', 'tBTC', 'USDe'];
@@ -78,9 +83,10 @@ export const v3USDSCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: v3USDSCollAssetsBase,
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };
 
-export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH'];
+export const v3wstETHCollAssetsEth = ['rsETH', 'ezETH', 'ETH', 'USDC', 'USDT', 'tETH', 'weETH'];
 
 export const v3wstETHCollAssets = {
   [NetworkNumber.Eth]: v3wstETHCollAssetsEth,
@@ -88,4 +94,5 @@ export const v3wstETHCollAssets = {
   [NetworkNumber.Arb]: [],
   [NetworkNumber.Base]: [],
   [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
 };

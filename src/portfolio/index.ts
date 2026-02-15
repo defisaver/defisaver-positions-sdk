@@ -2,9 +2,15 @@ import Dec from 'decimal.js';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
 import {
   AaveMarkets,
-  CompoundMarkets, CrvUsdMarkets, EulerV2Markets, LlamaLendMarkets, MorphoBlueMarkets, SparkMarkets,
+  CompoundMarkets,
+  CrvUsdMarkets,
+  EulerV2Markets,
+  LiquityV2Markets,
+  LlamaLendMarkets,
+  MorphoBlueMarkets,
+  SparkMarkets,
 } from '../markets';
-import { _getMorphoBlueAccountData, _getMorphoBlueMarketData } from '../morphoBlue';
+import { _getMorphoBlueAccountData, _getMorphoBlueMarketData, getMorphoEarn } from '../morphoBlue';
 import {
   AaveV2MarketData,
   AaveV3MarketData,
@@ -15,6 +21,7 @@ import {
   CompoundVersions,
   CrvUSDGlobalMarketData,
   EulerV2FullMarketData,
+  LiquityV2MarketData,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   PortfolioPositionsData,
@@ -25,20 +32,33 @@ import { _getSparkAccountData, _getSparkMarketsData } from '../spark';
 import { _getEulerV2AccountData, _getEulerV2MarketsData } from '../eulerV2';
 import { _getCurveUsdGlobalData, _getCurveUsdUserData } from '../curveUsd';
 import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
-import { _getAaveV3AccountData, _getAaveV3MarketData } from '../aaveV3';
+import { _getAaveV3AccountData, _getAaveV3MarketData, getStakeAaveData } from '../aaveV3';
 import { ZERO_ADDRESS } from '../constants';
 import { _getMakerCdpData, _getUserCdps } from '../maker';
 import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
-import { _getLiquityTroveInfo } from '../liquity';
-import { _getLiquityV2MarketData, _getLiquityV2TroveData, _getLiquityV2UserTroveIds } from '../liquityV2';
-import { _getUserPositionsPortfolio } from '../fluid';
+import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
+import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
+import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
+import { getUmbrellaData } from '../umbrella';
+import { getMeritUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
+import { getCompoundV3Rewards } from '../claiming/compV3';
+import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
+import { fetchMorphoBlueRewards } from '../claiming/morphoBlue';
+import { getKingRewards } from '../claiming/king';
+import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 
-export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], summerFiAddresses: EthAddress[]): Promise<PortfolioPositionsData> {
+export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], isSim = false): Promise<{
+  positions: PortfolioPositionsData;
+  stakingPositions: any;
+  rewardsData: any;
+  markets: any;
+}> {
   const isMainnet = network === NetworkNumber.Eth;
-  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base].includes(network);
+  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
+  const isMorphoRewardsSupported = [NetworkNumber.Eth, NetworkNumber.Base].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -49,21 +69,12 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
   const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
+  const liquityV2Markets = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)) : [];
+  const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
 
-  const client = getViemProvider(provider, network, {
-    batch: {
-      multicall: {
-        batchSize: 2500000,
-      },
-    },
-  });
-  const defaultClient = getViemProvider(defaultProvider, network, {
-    batch: {
-      multicall: {
-        batchSize: 2500000,
-      },
-    },
-  });
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 500_000 : 2_500_000 } } }];
+  const client = getViemProvider(provider, ...args);
+  const defaultClient = getViemProvider(defaultProvider, ...args);
 
   const morphoMarketsData: Record<string, MorphoBlueMarketInfo> = {};
   const compoundV3MarketsData: Record<string, CompoundV3MarketsData> = {};
@@ -75,9 +86,26 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const compoundV2MarketsData: Record<string, CompoundV2MarketsData> = {};
   const crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData> = {};
   const llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData> = {};
+  const liquityV2MarketsData: Record<string, LiquityV2MarketData> = {};
+
+  const markets = {
+    morphoMarketsData,
+    compoundV3MarketsData,
+    sparkMarketsData,
+    eulerV2MarketsData,
+    aaveV3MarketsData,
+    aaveV2MarketsData,
+    compoundV2MarketsData,
+    crvUsdMarketsData,
+    llamaLendMarketsData,
+    liquityV2MarketsData,
+  };
 
   const positions: PortfolioPositionsData = {};
-  const allAddresses = [...addresses, ...summerFiAddresses];
+  const stakingPositions: any = {};
+  const rewardsData: any = {};
+  const allAddresses = [...addresses];
+
   for (const address of allAddresses) {
     positions[address.toLowerCase() as EthAddress] = {
       aaveV3: {},
@@ -98,7 +126,37 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     };
   }
 
+  // TODO: check default values, probably needed when fetching portfolio on unsupported networks
+  for (const address of addresses) {
+    stakingPositions[address.toLowerCase() as EthAddress] = {
+      aaveV3: {},
+      morphoBlue: {},
+      compoundV3: {},
+      spark: {},
+      aaveV2: {},
+      compoundV2: {},
+      liquity: {},
+      liquityV2: {},
+      fluid: {
+        error: '',
+        data: {},
+      },
+    };
+
+    rewardsData[address.toLowerCase() as EthAddress] = {
+      aaveV3merit: {},
+      aaveV3: {},
+      compV3: {},
+      spark: {},
+      spk: {},
+      king: {},
+      morpho: {},
+      ethena: {},
+    };
+  }
+
   await Promise.allSettled([
+    // === MARKET DATA (needs to be fetched first) ===
     ...morphoMarkets.map(async (market) => {
       const marketData = await _getMorphoBlueMarketData(client, network, market);
       morphoMarketsData[market.value] = marketData;
@@ -119,11 +177,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const marketData = await _getAaveV3MarketData(client, network, market);
       aaveV3MarketsData[market.value] = marketData;
     }),
-    ...addresses.map(async (address) => {
-      if (!isMainnet) return; // Maker CDPs are only available on mainnet
-      const makerCdp = await _getUserCdps(client, network, address);
-      makerCdps[address.toLowerCase() as EthAddress] = makerCdp;
-    }),
     ...aaveV2Markets.map(async (market) => {
       const marketData = await _getAaveV2MarketsData(client, network, market);
       aaveV2MarketsData[market.value] = marketData;
@@ -140,12 +193,23 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       const marketData = await _getLlamaLendGlobalData(client, network, market);
       llamaLendMarketsData[market.value] = marketData;
     }),
+    ...liquityV2Markets.map(async (market) => {
+      const marketData = await _getLiquityV2MarketData(client, network, market);
+      liquityV2MarketsData[market.value] = marketData;
+    }),
+
+    // === INDEPENDENT USER DATA (doesn't depend on market data) ===
+    ...addresses.map(async (address) => {
+      if (!isMainnet) return; // Maker CDPs are only available on mainnet
+      const makerCdp = await _getUserCdps(client, network, address);
+      makerCdps[address.toLowerCase() as EthAddress] = makerCdp;
+    }),
     ...addresses.map(async (address) => {
       try {
         if (!isFluidSupported) return; // Fluid is not available on Optimism
-        const userPositions = await _getUserPositionsPortfolio(client, network, address);
+        const userPositions = (await _getUserPositionsPortfolio(client, network, address));
         for (const position of userPositions) {
-          if (new Dec(position.userData.suppliedUsd).gt(0)) {
+          if (position.userData && new Dec(position.userData.suppliedUsd).gt(0)) {
             positions[address.toLowerCase() as EthAddress].fluid.data[position.userData.nftId] = position.userData;
           }
         }
@@ -157,8 +221,203 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         };
       }
     }),
-  ]);
 
+    // === STAKING DATA (independent of market data) ===
+    ...addresses.map(async (address) => {
+      try {
+        if (!isFluidSupported) return;
+        stakingPositions[address.toLowerCase()].fluid = await _getAllUserEarnPositionsWithFTokens(client, network, address);
+      } catch (error) {
+        console.error(`Error fetching Fluid lend data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase()].fluid = { error: `Error fetching Fluid lend data for address ${address}`, data: null };
+      }
+    }),
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) return;
+        stakingPositions[address.toLowerCase()].liquity = await getLiquityStakingData(client, network, address);
+      } catch (error) {
+        console.error(`Error fetching Liquity staking data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase()].liquity = { error: `Error fetching Liquity staking data for address ${address}`, data: null };
+      }
+    }),
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) return;
+        stakingPositions[address.toLowerCase()].aaveV3 = await getStakeAaveData(client, network, address);
+      } catch (error) {
+        console.error(`Error fetching Aave V3 staking data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase()].aaveV3 = { error: `Error fetching Aave V3 staking data for address ${address}`, data: null };
+      }
+    }),
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) return;
+        stakingPositions[address.toLowerCase()].umbrella = await getUmbrellaData(client, network, address);
+      } catch (error) {
+        console.error(`Error fetching Umbrella staking data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase()].umbrella = { error: `Error fetching Umbrella staking data for address ${address}`, data: null };
+      }
+    }),
+    // Liquity V2 staking
+    ...liquityV2MarketsStaking.map(market => addresses.map(async (address) => {
+      try {
+        if (!isMainnet) {
+          stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: '', data: null };
+          return;
+        }
+        const liquityV2StakingData = await getLiquityV2Staking(client, network, market.value, address);
+        stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: '', data: liquityV2StakingData };
+      } catch (error) {
+        console.error(`Error fetching Liquity V2 staking data for address ${address}, market ${market.value}:`, error);
+        stakingPositions[address.toLowerCase()].liquityV2[market.value] = { error: `Error fetching Liquity V2 staking data for address ${address}`, data: null };
+      }
+    })).flat(),
+
+    // === REWARDS DATA (independent of market data) ===
+    // Batch King rewards
+    (async () => {
+      try {
+        if (!isMainnet) {
+          for (const address of addresses) {
+            rewardsData[address.toLowerCase()].king = { error: '', data: [] };
+          }
+          return;
+        }
+        const kingRewards = await getKingRewards(client, network, addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].king = {
+            error: '',
+            data: kingRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching King rewards data in batch:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].king = {
+            error: 'Error fetching King rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    ...sparkMarkets.map((market) => addresses.map(async address => {
+      try {
+        if (!isMainnet) {
+          rewardsData[address.toLowerCase()].spark[market.value] = { error: '', data: [] };
+          return;
+        }
+        const sparkData = await fetchSparkRewards(client, network, address, market.providerAddress);
+        rewardsData[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: sparkData };
+      } catch (error) {
+        console.error(`Error fetching Spark rewards data for address ${address}, market ${market.value}:`, error);
+        rewardsData[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark rewards data for address ${address}`, data: null };
+      }
+    })).flat(),
+    // CompV3 rewards
+    ...compoundV3Markets.map(market => addresses.map(async (address) => {
+      try {
+        const compV3Rewards = await getCompoundV3Rewards(client, network, address, market.baseMarketAddress);
+        rewardsData[address.toLowerCase() as EthAddress].compV3[market.value] = { error: '', data: compV3Rewards };
+      } catch (error) {
+        console.error(`Error fetching Compound V3 rewards data for address ${address}:`, error);
+        rewardsData[address.toLowerCase() as EthAddress].compV3[market.value] = { error: `Error fetching Compound V3 rewards data for address ${address}`, data: null };
+      }
+    })).flat(),
+    ...addresses.map(async (address) => {
+      try {
+        const aaveMeritData = await getMeritUnclaimedRewards(address, network);
+        rewardsData[address.toLowerCase() as EthAddress].aaveV3merit = { error: '', data: aaveMeritData };
+      } catch (error) {
+        console.error(`Error fetching Aave V3 Merit rewards data for address ${address}:`, error);
+        rewardsData[address.toLowerCase() as EthAddress].aaveV3merit = { error: `Error fetching Aave V3 Merit rewards data for address ${address}`, data: null };
+      }
+    }),
+    ...aaveV3Markets.map(market => addresses.map(async (address) => {
+      try {
+        const aaveData = await getUnclaimedRewardsForAllMarkets(client, network, address, market.providerAddress);
+        rewardsData[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: aaveData };
+      } catch (error) {
+        console.error(`Error fetching Aave V3 Merit rewards data for address ${address}:`, error);
+        rewardsData[address.toLowerCase() as EthAddress].aaveV3 = { error: `Error fetching Aave V3 rewards data for address ${address}`, data: null };
+      }
+    })).flat(),
+    // Batch Morpho Blue rewards
+    (async () => {
+      if (!isMorphoRewardsSupported) return;
+      try {
+        const morphoRewards = await fetchMorphoBlueRewards(client, network, addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].morpho = {
+            error: '',
+            data: morphoRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Morpho Blue rewards data in batch:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].morpho = {
+            error: 'Error fetching Morpho Blue rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    // Batch Spark Airdrop rewards
+    (async () => {
+      try {
+        if (!isMainnet) {
+          for (const address of addresses) {
+            rewardsData[address.toLowerCase()].spk = { error: '', data: [] };
+          }
+          return;
+        }
+
+        const sparkAirdropRewards = await fetchSparkAirdropRewards(client, network, addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].spk = {
+            error: '',
+            data: sparkAirdropRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Spark Airdrop rewards data in batch:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].spk = {
+            error: 'Error fetching Spark Airdrop rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    (async () => {
+      try {
+        if (!isMainnet) {
+          return;
+        }
+
+        const ethenaAirdropRewards = await fetchEthenaAirdropRewards(addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].ethena = {
+            error: '',
+            data: ethenaAirdropRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Ethena Airdrop rewards data:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].ethena = {
+            error: 'Error fetching Ethena Airdrop rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+  ]);
 
   await Promise.all([
     ...aaveV3Markets.map((market) => allAddresses.map(async (address) => {
@@ -172,8 +431,31 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...morphoMarkets.map((market) => addresses.map(async (address) => {
       try {
-        const accData = await _getMorphoBlueAccountData(client, network, address, market, morphoMarketsData[market.value]);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: '', data: accData };
+        const [accDataPromise, earnDataPromise] = await Promise.allSettled([
+          _getMorphoBlueAccountData(client, network, address, market, morphoMarketsData[market.value]),
+          getMorphoEarn(client, network, address, market, morphoMarketsData[market.value]),
+        ]);
+        if (accDataPromise.status === 'rejected') {
+          console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, accDataPromise.reason);
+          positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
+        }
+        if (earnDataPromise.status === 'rejected') {
+          console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, earnDataPromise.reason);
+          positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
+        }
+        if (accDataPromise.status !== 'rejected') {
+          const accData = accDataPromise.value;
+          if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: '', data: accData };
+        }
+        if (earnDataPromise.status !== 'rejected') {
+          const earnData = earnDataPromise.value;
+          if (earnData && new Dec(earnData.amount).gt(0)) {
+            stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = {
+              error: '',
+              data: earnData,
+            };
+          }
+        }
       } catch (error) {
         console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
@@ -190,7 +472,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...sparkMarkets.map((market) => allAddresses.map(async (address) => {
       try {
-        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData });
+        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: sparkMarketsData[market.value].assetsData, eModeCategoriesData: sparkMarketsData[market.value].eModeCategoriesData });
         if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);
@@ -279,7 +561,26 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: `Error fetching LlamaLend account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
+    // liquity sBold/yBold and staking options
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) {
+          stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: '', data: null };
+          return;
+        }
+        const data = await getLiquitySAndYBold(client, network, stakingPositions[address.toLowerCase()].liquityV2, address);
+        stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: '', data };
+      } catch (error) {
+        console.error(`Error fetching SBold/YBold data for address ${address}:`, error);
+        stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: `Error fetching sBold/yBold data for address ${address}`, data: null };
+      }
+    }),
   ]);
 
-  return positions;
+  return {
+    positions,
+    stakingPositions,
+    rewardsData,
+    markets,
+  };
 }

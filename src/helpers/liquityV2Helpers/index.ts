@@ -1,5 +1,7 @@
 import Dec from 'decimal.js';
-import { calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos } from '../../moneymarket';
+import {
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+} from '../../moneymarket';
 import {
   LiquityV2AggregatedTroveData, LiquityV2AssetsData, LiquityV2UsedAsset, LiquityV2UsedAssets,
 } from '../../types';
@@ -13,8 +15,10 @@ export const calculateNetApyLiquityV2 = (usedAssets: LiquityV2UsedAssets, assets
     if (usedAsset.suppliedUsd) {
       const amount = usedAsset.suppliedUsd;
       acc.suppliedUsd = new Dec(acc.suppliedUsd).add(amount).toString();
-      if (assetData.incentiveSupplyApy) {
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
+
+      for (const supplyIncentive of assetData.supplyIncentives) {
+        const { apy } = supplyIncentive;
+        const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }
@@ -75,6 +79,7 @@ export const getLiquityV2AggregatedPositionData = ({
     const assetPrice = assetsData[leveragedAsset].price;
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.borrowLimitUsd);
   }
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 
   return payload;
 };

@@ -1,4 +1,6 @@
-import { EthAddress, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, NetworkNumber,
+} from './common';
 
 export interface FluidMarketInfo {
   chainIds: number[]
@@ -148,7 +150,31 @@ export enum FluidBaseVersions {
   FLUID_LBTC_SUSDS_22_BASE = 'FLUID_LBTC_SUSDS_22_BASE',
 }
 
-export type FluidVersions = FluidArbitrumVersion | FluidBaseVersions | FluidMainnetVersion;
+export enum FluidPlasmaVersions {
+  FLUID_ETH_USDT_1_PLASMA = 'FLUID_ETH_USDT_1_PLASMA',
+  FLUID_ETH_USDE_2_PLASMA = 'FLUID_ETH_USDE_2_PLASMA',
+  FLUID_WEETH_ETH_3_PLASMA = 'FLUID_WEETH_ETH_3_PLASMA',
+  FLUID_SUSDE_USDT_4_PLASMA = 'FLUID_SUSDE_USDT_4_PLASMA',
+  FLUID_WEETH_USDT_5_PLASMA = 'FLUID_WEETH_USDT_5_PLASMA',
+  FLUID_WEETH_USDE_6_PLASMA = 'FLUID_WEETH_USDE_6_PLASMA',
+  FLUID_XAUT_USDT_7_PLASMA = 'FLUID_XAUT_USDT_7_PLASMA',
+  FLUID_XAUT_USDE_8_PLASMA = 'FLUID_XAUT_USDE_8_PLASMA',
+  FLUID_USDE_USDT_9_PLASMA = 'FLUID_USDE_USDT_9_PLASMA',
+  FLUID_USDAI_USDT_10_PLASMA = 'FLUID_USDAI_USDT_10_PLASMA',
+  FLUID_ETH_WEETH_ETH_11_PLASMA = 'FLUID_ETH_WEETH_ETH_11_PLASMA',
+  FLUID_SUSDE_USDT_USDT_12_PLASMA = 'FLUID_SUSDE_USDT_USDT_12_PLASMA',
+  FLUID_USDE_USDT_USDT_13_PLASMA = 'FLUID_USDE_USDT_USDT_13_PLASMA',
+  FLUID_USDAI_USDT_USDT_14_PLASMA = 'FLUID_USDAI_USDT_USDT_14_PLASMA',
+  FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA = 'FLUID_USDT_SYRUPUSDT_USDT_15_PLASMA',
+  FLUID_XPL_USDT_16_PLASMA = 'FLUID_XPL_USDT_16_PLASMA',
+  FLUID_XPL_USDE_17_PLASMA = 'FLUID_XPL_USDE_17_PLASMA',
+  FLUID_WSTUSR_USDT_18_PLASMA = 'FLUID_WSTUSR_USDT_18_PLASMA',
+  FLUID_WSTUSR_USDT_USDT_19_PLASMA = 'FLUID_WSTUSR_USDT_USDT_19_PLASMA',
+  FLUID_SYRUPUSDT_USDT_20_PLASMA = 'FLUID_SYRUPUSDT_USDT_20_PLASMA',
+  FLUID_ETH_WRSETH_ETH_21_PLASMA = 'FLUID_ETH_WRSETH_ETH_21_PLASMA',
+}
+
+export type FluidVersions = FluidArbitrumVersion | FluidBaseVersions | FluidMainnetVersion | FluidPlasmaVersions;
 
 export enum FluidMainnetDepositToken {
   ETH = 'ETH',
@@ -157,6 +183,7 @@ export enum FluidMainnetDepositToken {
   USDT = 'USDT',
   GHO = 'GHO',
   sUSDS = 'sUSDS',
+  USDtb = 'USDtb',
 }
 
 export enum FluidArbitrumDepositToken {
@@ -165,6 +192,8 @@ export enum FluidArbitrumDepositToken {
   USDC = 'USDC',
   USDT = 'USDT',
   ARB = 'ARB',
+  GHO = 'GHO',
+  sUSDS = 'sUSDS',
 }
 
 export enum FluidBaseDepositToken {
@@ -173,12 +202,20 @@ export enum FluidBaseDepositToken {
   wstETH = 'wstETH',
   EURC = 'EURC',
   sUSDS = 'sUSDS',
+  GHO = 'GHO',
+}
+
+export enum FluidPlasmaDepositToken {
+  USDe = 'USDe',
+  USDT = 'USDT',
+  ETH = 'ETH',
 }
 
 export type FluidDepositTokenByNetwork = {
   [NetworkNumber.Eth]: FluidMainnetDepositToken;
   [NetworkNumber.Arb]: FluidArbitrumDepositToken;
   [NetworkNumber.Base]: FluidBaseDepositToken;
+  [NetworkNumber.Plasma]: FluidPlasmaDepositToken;
 };
 
 export enum FluidVaultType {
@@ -193,10 +230,8 @@ export interface FluidAssetData {
   symbol: string,
   address: string,
   price: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
   totalSupply: string,
   totalBorrow: string,
   canBeSupplied: boolean,
@@ -307,14 +342,15 @@ export interface FluidAggregatedVaultData {
   incentiveUsd: string,
   ratio: string,
   collRatio: string,
-  minRatio: string
+  minRatio: string,
   totalInterestUsd: string,
-  leveragedType?: string,
+  leveragedType?: LeverageType,
   leveragedAsset?: string,
   liquidationPrice?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
+  exposure: string,
 }
 
 export interface BaseFluidVaultData {

@@ -2,10 +2,11 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
+  LlamaLendAssetsData,
   LlamaLendGlobalMarketData, LlamaLendMarketData, LlamaLendStatus, LlamaLendUsedAssets, LlamaLendUserData,
 } from '../types';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { LlamaLendViewContractViem } from '../contracts';
 import { getLlamaLendAggregatedData } from '../helpers/llamaLendHelpers';
@@ -88,7 +89,7 @@ export const _getLlamaLendGlobalData = async (provider: Client, network: Network
   const debtInAYearBN = new Dec(totalDebt).mul(new Dec(2.718281828459).pow(exponentRate).toNumber());
   const lendRate = debtInAYearBN.minus(totalDebt).div(cap).mul(100).toString();
 
-  const assetsData:any = {};
+  const assetsData: LlamaLendAssetsData = {};
   assetsData[debtAsset] = {
     symbol: debtAsset,
     address: data.debtToken,
@@ -97,6 +98,8 @@ export const _getLlamaLendGlobalData = async (provider: Client, network: Network
     borrowRate,
     canBeSupplied: true,
     canBeBorrowed: true,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
 
   assetsData[collAsset] = {
@@ -107,11 +110,17 @@ export const _getLlamaLendGlobalData = async (provider: Client, network: Network
     borrowRate: '0',
     canBeSupplied: true,
     canBeBorrowed: false,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
 
   if (STAKING_ASSETS.includes(collAsset)) {
-    assetsData[collAsset].incentiveSupplyApy = await getStakingApy(collAsset);
-    assetsData[collAsset].incentiveSupplyToken = collAsset;
+    assetsData[collAsset].supplyIncentives.push({
+      apy: await getStakingApy(collAsset),
+      token: collAsset,
+      incentiveKind: IncentiveKind.Staking,
+      description: `Native ${collAsset} yield.`,
+    });
   }
 
   return {

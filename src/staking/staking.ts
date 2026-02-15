@@ -1,8 +1,14 @@
 import Dec from 'decimal.js';
 import memoize from 'memoizee';
-import { MMAssetsData, MMUsedAssets } from '../types/common';
+import {
+  MMAssetsData,
+  MMUsedAssets,
+  NetworkNumber,
+} from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
+import { EligibilityMapping } from './eligibility';
+import { EulerV2UsedAsset } from '../types';
 
 const getSsrApy = async () => {
   try {
@@ -41,22 +47,27 @@ const getSuperOETHApy = async () => {
   }
 };
 
-const getApyFromDfsApi = async (asset: string) => {
+const getApyFromDfsApi = async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
-    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}`,
+    const res = await fetch(`https://fe.defisaver.com/api/staking/apy?asset=${asset}&network=${network}`,
       { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
     if (!res.ok) throw new Error(`Failed to fetch APY for ${asset}`);
     const data = await res.json();
-    return String(data.apy);
+    return String(data.apy ?? '0');
   } catch (e) {
     console.error(`External API Failure: Failed to fetch APY for ${asset} from DFS API`, e);
     return '0';
   }
 };
 
-export const STAKING_ASSETS = ['cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH', 'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov'];
+export const STAKING_ASSETS = [
+  'cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH',
+  'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep',
+  'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'syrupUSDC', 'wstUSR',
+  'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May', 'PT srUSDe Apr',
+];
 
-export const getStakingApy = memoize(async (asset: string) => {
+export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
   try {
     if (asset === 'stETH' || asset === 'wstETH') return await getApyFromDfsApi('wstETH');
     if (asset === 'cbETH') return await getApyFromDfsApi('cbETH');
@@ -71,16 +82,28 @@ export const getStakingApy = memoize(async (asset: string) => {
     if (asset === 'pufETH') return await getApyFromDfsApi('pufETH');
     if (asset === 'wsuperOETHb') return await getSuperOETHApy();
     if (asset === 'sUSDS') return await getSsrApy();
-    if (asset === 'PT eUSDe May') return await getApyFromDfsApi('PT eUSDe May');
-    if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July');
-    if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July');
-    if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug');
-    if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep');
-    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep');
+    if (asset === 'PT eUSDe May') return await getApyFromDfsApi('PT eUSDe May', network);
+    if (asset === 'PT sUSDe July') return await getApyFromDfsApi('PT sUSDe July', network);
+    if (asset === 'PT USDe July') return await getApyFromDfsApi('PT USDe July', network);
+    if (asset === 'PT eUSDe Aug') return await getApyFromDfsApi('PT eUSDe Aug', network);
+    if (asset === 'PT sUSDe Sep') return await getApyFromDfsApi('PT sUSDe Sep', network);
+    if (asset === 'PT USDe Sep') return await getApyFromDfsApi('PT USDe Sep', network);
     if (asset === 'tETH') return await getApyFromDfsApi('tETH');
     if (asset === 'USDe') return await getApyFromDfsApi('USDe');
-    if (asset === 'PT sUSDe Nov') return await getApyFromDfsApi('PT sUSDe Nov');
-    if (asset === 'PT USDe Nov') return await getApyFromDfsApi('PT USDe Nov');
+    if (asset === 'PT sUSDe Nov') return await getApyFromDfsApi('PT sUSDe Nov', network);
+    if (asset === 'PT USDe Nov') return await getApyFromDfsApi('PT USDe Nov', network);
+    if (asset === 'PT USDe Jan') return await getApyFromDfsApi('PT USDe Jan', network);
+    if (asset === 'PT sUSDe Jan') return await getApyFromDfsApi('PT sUSDe Jan', network);
+    if (asset === 'syrupUSDT') return await getApyFromDfsApi('syrupUSDT');
+    if (asset === 'syrupUSDC') return await getApyFromDfsApi('syrupUSDC');
+    if (asset === 'wstUSR') return await getApyFromDfsApi('wstUSR');
+    if (asset === 'PT sUSDe Feb') return await getApyFromDfsApi('PT sUSDe Feb', network);
+    if (asset === 'PT USDe Feb') return await getApyFromDfsApi('PT USDe Feb', network);
+    if (asset === 'PT sUSDe Apr') return await getApyFromDfsApi('PT sUSDe Apr', network);
+    if (asset === 'PT USDe Apr') return await getApyFromDfsApi('PT USDe Apr', network);
+    if (asset === 'PT sUSDe May') return await getApyFromDfsApi('PT sUSDe May', network);
+    if (asset === 'PT USDe May') return await getApyFromDfsApi('PT USDe May', network);
+    if (asset === 'PT srUSDe Apr') return await getApyFromDfsApi('PT srUSDe Apr', network);
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
   }
@@ -103,78 +126,56 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
-export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets) => {
-  const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
-  const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
-  const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
-  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
-  const totalAmountSupplied = new Dec(USDeUSDAmountSupplied).add(sUSDeUSDAmountSupplied).toString();
-  const percentageInUSDe = new Dec(USDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInUSDe < 0.45 || percentageInUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in USDe
-  const percentageInSUSDe = new Dec(sUSDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInSUSDe < 0.45 || percentageInSUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in sUSDe
-
-  const allowedBorrowAssets = ['USDC', 'USDT', 'USDS'];
-  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
-  if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
-
-  const totalAmountBorrowed = Object.values(usedAssets).reduce((acc, asset) => {
-    if (asset.isBorrowed) {
-      return acc.add(asset.borrowedUsd);
-    }
-    return acc;
-  }, new Dec(0)).toString();
-
-  const borrowPercentage = new Dec(totalAmountBorrowed).div(totalAmountSupplied).toNumber();
-  if (borrowPercentage < 0.5) return { isEligible: false, eligibleUSDAmount: '0' }; // must be looped at least once
-
-  const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
-  const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
-
-  return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
-};
-
 export const calculateNetApy = ({
-  usedAssets, assetsData, isMorpho = false, isAave = false,
-}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, isMorpho?: boolean, isAave?: boolean }) => {
-  const { isEligible, eligibleUSDAmount } = isAave ? isEligibleForEthenaUSDeRewards(usedAssets) : { isEligible: true, eligibleUSDAmount: '0' };
+  usedAssets, assetsData, optionalData,
+}: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, optionalData?: any }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
-    const assetData = assetsData[usedAsset.symbol];
+    const assetData = assetsData[usedAsset.symbol] || assetsData[(usedAsset as EulerV2UsedAsset).vaultAddress?.toLowerCase() || ''];
 
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;
       acc.suppliedUsd = new Dec(acc.suppliedUsd).add(amount).toString();
-      const rate = isMorpho
-        ? usedAsset.supplyRate === '0' ? assetData.supplyRateP2P : usedAsset.supplyRate
-        : assetData.supplyRate;
+      const rate = assetData.supplyRate;
       const supplyInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
-      if (assetData.incentiveSupplyApy) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveSupplyApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-      }
 
-      if (usedAsset.symbol === 'USDe' && isEligible) {
-        // @ts-ignore
-        const incentiveInterest = calculateInterestEarned(eligibleUSDAmount, assetData.supplyIncentives?.[0]?.apy || '0', 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+      if (assetData.supplyIncentives) {
+        for (const supplyIncentive of assetData.supplyIncentives) {
+          const { apy, eligibilityId } = supplyIncentive;
+          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+          if (eligibilityCheck) {
+            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
+            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+          } else {
+            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+          }
+        }
       }
     }
 
     if (usedAsset.isBorrowed) {
       const amount = usedAsset.borrowedUsd;
       acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
-      const rate = isMorpho
-        ? usedAsset.borrowRate === '0' ? assetData.borrowRateP2P : usedAsset.borrowRate
-        : (usedAsset?.interestMode === '1' ? usedAsset.stableBorrowRate : assetData.borrowRate);
+      const rate = assetData.borrowRate;
       const borrowInterest = calculateInterestEarned(amount, rate as string, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
-      if (assetData.incentiveBorrowApy) {
-        // take COMP/AAVE yield into account
-        const incentiveInterest = calculateInterestEarned(amount, assetData.incentiveBorrowApy, 'year', true);
-        acc.incentiveUsd = new Dec(acc.incentiveUsd).sub(incentiveInterest).toString();
+
+      if (assetData.borrowIncentives) {
+        for (const borrowIncentive of assetData.borrowIncentives) {
+          const { apy, eligibilityId } = borrowIncentive;
+          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+          if (eligibilityCheck) {
+            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
+            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+          } else {
+            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
+            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+          }
+        }
       }
     }
 

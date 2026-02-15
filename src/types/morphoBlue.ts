@@ -1,4 +1,6 @@
-import { EthAddress, MMUsedAssets, NetworkNumber } from './common';
+import {
+  EthAddress, IncentiveData, LeverageType, MMUsedAssets, NetworkNumber,
+} from './common';
 
 export enum MorphoBlueVersions {
   // MAINNET
@@ -10,39 +12,44 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt', // wstETH/USDT
   MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
   MorphoBlueWstEthPYUSD = 'morphobluwstethpyusd', // wstETH/PYUSD
-  MorphoBlueREthEth_945 = 'morphoblueretheth_945', // rETH/ETH
   MorphoBlueWBTCPYUSD = 'morphobluewbtcpyusd', // WBTC/PYUSD
   MorphoBlueWBTCEth = 'morphobluewbtceth', // WBTC/ETH
   MorphoBlueUSDeUSDT = 'morphoblueusdeusdt', // USDe/USDT
   MorphoBlueSUSDeUSDT = 'morphobluesusdeusdt', // sUSDe/USDT
-  MorphoBlueSDAIEth = 'morphobluesdaieth', // sDAI/ETH
   MorphoBlueMKRUSDC = 'morphobluemkrusdc', // MKR/USDC
   MorphoBlueTBTCUSDC = 'morphobluetbtcusdc', // tBTC/USDC
   MorphoBlueCbBTCEth_915 = 'morphobluecbbtceth', // cbBTC/Eth
   MorphoBlueCbBTCUSDC_860 = 'morphobluecbbtcusdc', // cbBTC/USDC
   MorphoBlueSUSDeUSDC_915 = 'morphobluesusdeusdc_915', // sUSDe/USDC
   MorphoBlueLBTCWBTC_945 = 'morphobluelbtcwbtc_945', // LBTC/WBTC
+  MorphoBlueLBTCUSDC_860 = 'morphobluelbtcusdc_860', // LBTC/USDC
+  MorphoBlueLBTCCbBTC_945 = 'morphobluelbtccbbtc_945', // LBTC/cbBTC
   MorphoBlueUSRUSDC_915 = 'morphoblueusrusdc_915', // USR/USDC
+  MorphoBlueSyrupUSDCUSDC_915 = 'morphobluesyrupusdcusdc_915', // syrupUSDC/USDC
+  MorphoBluesUSDSUSDT_965 = 'morphobluesusdsusdt_965', // sUSDS/USDT
+  MorphoBlueSUSDeUSDtb_915 = 'morphobluesusdeusdtb_915', // sUSDe/USDTb
+  MorphoBlueUSDeUSDtb_915 = 'morphoblueusdeusdtb_915', // USDe/USDTb
+  MorphoBlueEthUSDT_915 = 'morphoblueethusdt_915', // ETH/USDT
+  MorphoBlueRsEthEth_945 = 'morphobluersetheth_945', // rsETH/ETH
+  MorphoBlueRswEthEth_945 = 'morphobluerswetheth_945', // rswETH/ETH
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
   // weETH/ETH
-  MorphoBlueWeEthEth_860 = 'morphoblueweetheth_860',
   MorphoBlueWeEthEth_945 = 'morphoblueweetheth_945',
   // wstETH/WETH
   MorphoBlueWstEthEth_945 = 'morphobluewstetheth_945',
   MorphoBlueWstEthEth_945_Exchange_Rate = 'morphobluewstetheth_945_exchange_rate',
   MorphoBlueWstEthEth_965_Exchange_Rate = 'morphobluewstetheth_965_exchange_rate',
   // sUSDe/DAI
-  MorphoBlueSUSDeDAI_770 = 'morphobluesusdedai_770',
   MorphoBlueSUSDeDAI_860 = 'morphobluesusdedai_860',
   MorphoBlueSUSDeDAI_915 = 'morphobluesusdedai_915',
   MorphoBlueSUSDeDAI_945 = 'morphobluesusdedai_945',
   // USDe/DAI
-  MorphoBlueUSDeDAI_770 = 'morphoblueusdedai_770',
   MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
-  MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
+
+  MorphoBlueMORPHOUSDC_625 = 'morphobluemorphousdc_625',
 
   // BASE
   MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
@@ -62,6 +69,18 @@ export enum MorphoBlueVersions {
   MorphoBlueLBTCCbBTC_945_Base = 'morphobluelbtccbbtc_945_base', // LBTC/cbBTC
   MorphoBlueWstEthEURC_860_Base = 'morphobluewstetheurc_860_base', // wstETH/EURC
   MorphoBlueCbBTCEURC_860_Base = 'morphobluecbbtceurc_860_base', // cbBTC/EURC
+  MorphoBlueWETHEURC_860_Base = 'morphobluewetheurc_860_base', // WETH/EURC
+  MorphoBlueCbEthEURC_860_Base = 'morphobluecbetheurc_860_base', // cbETH/EURC
+  MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH 0.945
+  MorphoBlueWeEthEth_915_Base = 'morphoblueweetheth_915_base', // weETH/ETH 0.915
+  MorphoBlueAEROUSDC_625_Base = 'morphoblueaerousdc_625_base', // AERO/USDC
+
+  // ARBITRUM
+  MorphoBlueSyrupUSDCUSDC_915_Arb = 'morphobluesyrupusdcusdc_915_arb', // syrupUSDC/USDC
+  MorphoBlueWBTCUSDC_860_Arb = 'morphobluewbtcusdc_860_arb', // WBTC/USDC
+  MorphoBlueWstEthUSDC_860_Arb = 'morphobluewstethusdc_860_arb', // wstETH/USDC
+  MorphoBlueEthUSDC_860_Arb = 'morphoblueethusdc_860_arb', // ETH/USDC
+  MorphoBluesUSDSUSDC_945_Arb = 'morphobluesusdsusdc_945_arb', // sUSDS/USDC
 }
 
 export enum MorphoBlueOracleType {
@@ -94,10 +113,8 @@ export interface MorphoBlueAssetData {
   price: string,
   supplyRate: string,
   borrowRate: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
+  supplyIncentives: IncentiveData[],
+  borrowIncentives: IncentiveData[],
   totalSupply?: string,
   totalBorrow?: string,
   canBeSupplied?: boolean,
@@ -132,12 +149,13 @@ export interface MorphoBlueAggregatedPositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
+  exposure: string,
 }
 
 export interface MorphoBluePositionData {
@@ -154,12 +172,13 @@ export interface MorphoBluePositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   supplyShares: string,
   borrowShares: string,
+  exposure: string,
 }
 
 export interface MorphoBlueVault {

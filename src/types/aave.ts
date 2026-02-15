@@ -1,4 +1,6 @@
 import {
+  IncentiveData,
+  LeverageType,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
 } from './common';
 
@@ -9,6 +11,13 @@ export enum AaveVersions {
   AaveV3Lido = 'v3lido',
   AaveV3Etherfi = 'v3etherfi',
 }
+
+export enum AaveVersionType {
+  V1 = 'v1',
+  V2 = 'v2',
+  V3 = 'v3',
+}
+
 export type AaveMarketInfo = {
   chainIds: NetworkNumber[],
   label: string,
@@ -37,6 +46,8 @@ export interface EModeCategoryData {
   collateralBitmap?: string,
   collateralAssets: string[],
   borrowAssets: string[],
+  ltvzeroBitmap?: string,
+  ltvZeroAssets: string[],
 }
 export interface EModeCategoryDataMapping {
   enteringTerms: boolean[],
@@ -70,12 +81,6 @@ export interface AaveV2AssetData extends AaveAssetData {
   isFrozen: boolean,
 }
 
-export interface IncentiveData {
-  token: string,
-  apy: string,
-  incentiveKind?: 'staking' | 'reward';
-}
-
 export interface AaveV3AssetData extends AaveAssetData {
   isIsolated: boolean,
   isSiloed: boolean,
@@ -89,8 +94,8 @@ export interface AaveV3AssetData extends AaveAssetData {
   isFlashLoanEnabled: boolean,
   assetId: string | number | null,
   liquidationBonus: string,
-  supplyIncentives?: IncentiveData[];
-  borrowIncentives?: IncentiveData[];
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
@@ -173,14 +178,15 @@ export interface AaveV3AggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
+  exposure: string,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
   liquidationPrice?: string,
   minCollRatio?: string,
   collLiquidationRatio?: string,
   healthRatio?: string,
   minHealthRatio?: string,
+  currentVolatilePairRatio?: string,
 }
 
 export interface AaveHelperCommon {

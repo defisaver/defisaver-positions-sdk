@@ -1,7 +1,9 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
+import {
+  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
+} from '../types/common';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
   compareAddresses, getEthAmountForDecimals, isMaxuint, wethToEth, wethToEthByAddress,
@@ -87,12 +89,18 @@ export const _getEulerV2MarketsData = async (provider: Client, network: NetworkN
       supplyRate,
       utilization: new Dec(utilizationRate).mul(100).toString(),
       governorAdmin: collateral.governorAdmin,
+      supplyIncentives: [],
+      borrowIncentives: [],
     });
   });
   for (const coll of colls) {
     if (STAKING_ASSETS.includes(coll.symbol)) {
-      coll.incentiveSupplyApy = await getStakingApy(coll.symbol);
-      coll.incentiveSupplyToken = coll.symbol;
+      coll.supplyIncentives.push({
+        apy: await getStakingApy(coll.symbol),
+        token: coll.symbol,
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${coll.symbol} yield.`,
+      });
     }
   }
   const isEscrow = data.collaterals.length === 0;
@@ -134,6 +142,8 @@ export const _getEulerV2MarketsData = async (provider: Client, network: NetworkN
     governorAdmin: data.governorAdmin,
     vaultType,
     name: data.name,
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
 
   const assetsData: EulerV2AssetsData = {
@@ -201,6 +211,7 @@ export const EMPTY_EULER_V2_DATA = {
   lastUpdated: Date.now(),
   hasBorrowInDifferentVault: false,
   addressSpaceTakenByAnotherAccount: false,
+  exposure: 'N/A',
 };
 
 export const _getEulerV2AccountData = async (

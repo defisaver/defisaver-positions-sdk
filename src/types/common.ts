@@ -1,3 +1,31 @@
+export enum IncentiveKind {
+  Staking = 'staking',
+  Reward = 'reward',
+}
+
+export enum IncentiveEligibilityId {
+  AaveV3EthenaLiquidLeverage = '0x8014e0076e5393e62c49a7134070d8fccc922e46BORROW_BL',
+  AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
+  AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
+  AaveV3EthenaLiquidLeveragePlasma = '0x67264783f1e9a2af8627a235853057a6fc975bd2BORROW_BL',
+}
+
+export enum LeverageType {
+  Long = 'long',
+  Short = 'short',
+  VolatilePair = 'volatile-pair',
+  VolatilePairReverse = 'volatile-pair-reverse',
+  None = '',
+}
+
+export interface IncentiveData {
+  token: string,
+  apy: string,
+  incentiveKind?: IncentiveKind;
+  description?: string;
+  eligibilityId?: IncentiveEligibilityId;
+}
+
 // General
 export type EthAddress = HexString;
 export type Blockish = number | 'latest';
@@ -10,6 +38,7 @@ export enum NetworkNumber {
   Arb = 42161,
   Base = 8453,
   Linea = 59144,
+  Plasma = 9745,
 }
 export type Networkish = string | NetworkNumber;
 
@@ -28,12 +57,10 @@ export interface MMAssetData {
   canBeBorrowed: boolean,
   canBeSupplied: boolean,
   totalBorrow: string,
-  incentiveBorrowApy?: string,
-  incentiveBorrowToken?: string,
-  incentiveSupplyApy?: string,
-  incentiveSupplyToken?: string,
   borrowRateP2P?: string,
   supplyRateP2P?: string,
+  supplyIncentives: IncentiveData[];
+  borrowIncentives: IncentiveData[];
 }
 
 export interface MMAssetsData {
@@ -72,6 +99,7 @@ export interface MMPositionData {
   usedAssets: any,
   netApy: string,
   lastUpdated: number,
+  exposure: string,
   // ...
 }
 
