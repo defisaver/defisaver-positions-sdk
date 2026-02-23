@@ -12,7 +12,7 @@ export enum MorphoBlueVersions {
   MorphoBlueSDAIUSDC = 'morphobluesdaiusdc', // sDAI/USDC
   MorphoBlueWBTCUSDC = 'morphobluewbtcusdc', // WBTC/USDC
   MorphoBlueEthUSDC_915 = 'morphoblueethusdc_915', // ETH/USDC
-  MorphoBlueEthUSDC = 'morphoblueethusdc', // ETH/USDC
+  MorphoBlueEthUSDC_860 = 'morphoblueethusdc_860', // ETH/USDC
   MorphoBlueWBTCUSDT = 'morphobluewbtcusdt', // WBTC/USDT
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt', // wstETH/USDT
   MorphoBlueWstEthUSDA_Exchange_Rate = 'morphobluewstethusda_exchange_rate', // wstETH/USDA
