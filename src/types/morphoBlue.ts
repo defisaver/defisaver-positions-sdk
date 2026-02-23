@@ -4,9 +4,14 @@ import {
 
 export enum MorphoBlueVersions {
   // MAINNET
+  MorphoBlueMKRDAI = 'morphobluemkrdai', // MKR/DAI
+  MorphoBlueWoEthEth = 'morphobluewoetheth', // woETH/ETH
+  MorphoBlueOsEthEth = 'morphoblueosetheth', // osETH/ETH
+  MorphoBlueWeEthEth = 'morphoblueweetheth', // weETH/ETH
   MorphoBlueWstEthUSDC = 'morphobluewstethusdc', // wstETH/USDC
   MorphoBlueSDAIUSDC = 'morphobluesdaiusdc', // sDAI/USDC
   MorphoBlueWBTCUSDC = 'morphobluewbtcusdc', // WBTC/USDC
+  MorphoBlueEthUSDC_915 = 'morphoblueethusdc_915', // ETH/USDC
   MorphoBlueEthUSDC = 'morphoblueethusdc', // ETH/USDC
   MorphoBlueWBTCUSDT = 'morphobluewbtcusdt', // WBTC/USDT
   MorphoBlueWstEthUSDT = 'morphobluewstethusdt', // wstETH/USDT
@@ -31,7 +36,11 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeUSDtb_915 = 'morphoblueusdeusdtb_915', // USDe/USDTb
   MorphoBlueEthUSDT_915 = 'morphoblueethusdt_915', // ETH/USDT
   MorphoBlueRsEthEth_945 = 'morphobluersetheth_945', // rsETH/ETH
+  MorphoBlueRsEthEth_860 = 'morphobluersetheth_860', // rsETH/ETH
   MorphoBlueRswEthEth_945 = 'morphobluerswetheth_945', // rswETH/ETH
+  MorphoBluePTweETHUSDA = 'morphoblueptweethusda', // PTweETH/USDA
+  MorphoBlueSwBTCWBTC_945 = 'morphoblueswbtcwbtc_945', // swBTC/WBTC
+
   // ezETH/ETH
   MorphoBlueEzEthEth_860 = 'morphoblueezetheth_860',
   MorphoBlueEzEthEth_945 = 'morphoblueezetheth_945',
@@ -45,9 +54,12 @@ export enum MorphoBlueVersions {
   MorphoBlueSUSDeDAI_860 = 'morphobluesusdedai_860',
   MorphoBlueSUSDeDAI_915 = 'morphobluesusdedai_915',
   MorphoBlueSUSDeDAI_945 = 'morphobluesusdedai_945',
+  MorphoBlueSUSDeDAI_777 = 'morphobluesusdedai_777',
   // USDe/DAI
   MorphoBlueUSDeDAI_860 = 'morphoblueusdedai_860',
   MorphoBlueUSDeDAI_915 = 'morphoblueusdedai_915',
+  MorphoBlueUSDeDAI_945 = 'morphoblueusdedai_945',
+  MorphoBlueUSDeDAI_777 = 'morphoblueusdedai_777',
 
   MorphoBlueMORPHOUSDC_625 = 'morphobluemorphousdc_625',
 
@@ -74,6 +86,10 @@ export enum MorphoBlueVersions {
   MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH 0.945
   MorphoBlueWeEthEth_915_Base = 'morphoblueweetheth_915_base', // weETH/ETH 0.915
   MorphoBlueAEROUSDC_625_Base = 'morphoblueaerousdc_625_base', // AERO/USDC
+  MorphoBlueWeEthUSDC_Base = 'morphoblueweethusdc_base', // weETH/USDC
+  MorphoBlueEzEthUsdc_Base = 'morphoblueezethusdc_base', // ezETH/USDC
+  MorphoBlueEzEthEth_Base = 'morphoblueezetheth_base', // ezETH/ETH
+  MorphoBlueBsdEthEth_Base = 'morphobluebsdetheth_base', // bsdETH/ETH
 
   // ARBITRUM
   MorphoBlueSyrupUSDCUSDC_915_Arb = 'morphobluesyrupusdcusdc_915_arb', // syrupUSDC/USDC
