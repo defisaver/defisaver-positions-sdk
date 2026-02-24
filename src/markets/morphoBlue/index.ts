@@ -548,7 +548,7 @@ export const MORPHO_BLUE_SUSDE_DAI_777 = (networkId: NetworkNumber = NetworkNumb
   oracle: '0x5D916980D5Ae1737a8330Bf24dF812b2911Aae25',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
-  lltv: 0.777,
+  lltv: 0.77,
   marketId: '0x42dcfb38bb98767afb6e38ccf90d59d0d3f0aa216beb3a234f12850323d17536',
   protocolName: 'morpho-blue',
 });
@@ -609,7 +609,7 @@ export const MORPHO_BLUE_USDE_DAI_777 = (networkId: NetworkNumber = NetworkNumbe
   oracle: '0xaE4750d0813B5E37A51f7629beedd72AF1f9cA35',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
-  lltv: 0.777,
+  lltv: 0.77,
   marketId: '0xfd8493f09eb6203615221378d89f53fcd92ff4f7d62cca87eece9a2fff59e86f',
   protocolName: 'morpho-blue',
 });
@@ -1063,7 +1063,7 @@ export const MORPHO_BLUE_WEETH_USDC_777_BASE = (networkId: NetworkNumber = Netwo
   oracle: '0xaacbD2BbCA7927F772145f99EC942024Ddd0FAB0',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
-  lltv: 0.777,
+  lltv: 0.77,
   marketId: '0x6a331b22b56c9c0ee32a1a7d6f852d2c682ea8b27a1b0f99a9c484a37a951eb7',
   protocolName: 'morpho-blue',
 });
@@ -1095,7 +1095,7 @@ export const MORPHO_BLUE_EZETH_USDC_777_BASE = (networkId: NetworkNumber = Netwo
   oracle: '0x1BAaB21821c6468f8aee73ee60Fd8Fdc39c0C973',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
-  lltv: 0.777,
+  lltv: 0.77,
   marketId: '0xf24417ee06adc0b0836cf0dbec3ba56c1059f62f53a55990a38356d42fa75fa2',
   protocolName: 'morpho-blue',
 });
@@ -1111,7 +1111,7 @@ export const MORPHO_BLUE_EZETH_ETH_777_BASE = (networkId: NetworkNumber = Networ
   oracle: '0x09ECeE1Ab6f37a3D8D01f93A622b7A3021A5D91F',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
-  lltv: 0.777,
+  lltv: 0.77,
   marketId: '0xdf13c46bf7bd41597f27e32ae9c306eb63859c134073cb81c796ff20b520c7cf',
   protocolName: 'morpho-blue',
 });
