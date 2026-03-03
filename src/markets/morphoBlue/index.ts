@@ -1111,7 +1111,7 @@ export const MORPHO_BLUE_EZETH_ETH_777_BASE = (networkId: NetworkNumber = Networ
   oracle: '0x09ECeE1Ab6f37a3D8D01f93A622b7A3021A5D91F',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
   irm: '0x46415998764C29aB2a25CbeA6254146D50D22687',
-  lltv: 0.77,
+  lltv: 0.86,
   marketId: '0xdf13c46bf7bd41597f27e32ae9c306eb63859c134073cb81c796ff20b520c7cf',
   protocolName: 'morpho-blue',
 });
