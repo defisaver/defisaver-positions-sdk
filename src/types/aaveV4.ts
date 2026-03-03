@@ -2,23 +2,20 @@ import {
   EthAddress, IncentiveData, LeverageType, NetworkNumber,
 } from './common';
 
-export enum AaveV4SpokesType {
-  AaveV4CoreSpoke = 'aave_v4_core_spoke',
-  AaveV4YieldSeekingSpoke = 'aave_v4_yield_seeking_spoke',
-}
-
 export enum AaveV4HubsType {
   AaveV4CoreHub = 'aave_v4_core_hub',
-  AaveV4YieldSeekingHub = 'aave_v4_yield_seeking_hub',
+  AaveV4PlusHub = 'aave_v4_plus_hub',
+  AaveV4PrimeHub = 'aave_v4_prime_hub',
 }
 
-export interface AaveV4SpokeInfo {
-  chainIds: NetworkNumber[],
-  label: string,
-  value: AaveV4SpokesType,
-  url: string,
-  address: EthAddress,
-  hubs: EthAddress[],
+export enum AaveV4SpokesType {
+  AaveV4BluechipSpoke = 'aave_v4_bluechip_spoke',
+  AaveV4EthenaSpoke = 'aave_v4_ethena_spoke',
+  AaveV4EtherfiSpoke = 'aave_v4_etherfi_spoke',
+  AaveV4GoldSpoke = 'aave_v4_gold_spoke',
+  AaveV4KelpSpoke = 'aave_v4_kelp_spoke',
+  AaveV4LidoSpoke = 'aave_v4_lido_spoke',
+  AaveV4MainSpoke = 'aave_v4_main_spoke',
 }
 
 export interface AaveV4HubInfo {
@@ -35,6 +32,22 @@ export interface AaveV4HubAssetOnChainData {
 
 export interface AaveV4HubOnChainData {
   assets: Record<number, AaveV4HubAssetOnChainData>,
+}
+
+export interface AaveV4SpokeInfo {
+  chainIds: NetworkNumber[],
+  label: string,
+  value: AaveV4SpokesType,
+  url: string,
+  address: EthAddress,
+  hubs: EthAddress[],
+}
+
+export interface AaveV4SpokeData {
+  assetsData: AaveV4AssetsData,
+  oracle: EthAddress,
+  oracleDecimals: number,
+  address: EthAddress,
 }
 
 export interface AaveV4ReserveAssetOnChain {
@@ -58,7 +71,7 @@ export interface AaveV4ReserveAssetOnChain {
   borrowCap: bigint,
   deficitRay: bigint,
   spokeActive: boolean,
-  spokePaused: boolean
+  spokeHalted: boolean
 }
 
 export interface AaveV4ReserveAssetData {
@@ -82,7 +95,7 @@ export interface AaveV4ReserveAssetData {
   supplyCap: string,
   borrowCap: string,
   spokeActive: boolean,
-  spokePaused: boolean,
+  spokeHalted: boolean,
   drawnRate: string,
   supplyRate: string,
   supplyIncentives: IncentiveData[];
@@ -95,13 +108,6 @@ export interface AaveV4ReserveAssetData {
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;
-
-export interface AaveV4SpokeData {
-  assetsData: AaveV4AssetsData,
-  oracle: EthAddress,
-  oracleDecimals: number,
-  address: EthAddress,
-}
 
 export interface AaveV4UsedReserveAsset {
   symbol: string,

@@ -83,15 +83,15 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     supplyCap: assetAmountInEth(reserveAsset.supplyCap.toString(), symbol),
     borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
-    spokePaused: reserveAsset.spokePaused,
+    spokeHalted: reserveAsset.spokeHalted,
     drawnRate: new Dec(hubAsset.drawnRate).div(new Dec(10).pow(27)).toString(),
     supplyRate: '0', // To be implemented
     supplyIncentives,
     borrowIncentives,
-    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused && !reserveAsset.frozen,
-    canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused && !reserveAsset.frozen,
-    canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
-    canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokePaused && !reserveAsset.paused,
+    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
+    canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     utilization: new Dec(reserveAsset.totalDrawn.toString()).times(100).div(new Dec(reserveAsset.totalSupplied.toString())).toString(),
   });
 };
