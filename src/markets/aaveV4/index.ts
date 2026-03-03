@@ -48,7 +48,7 @@ export const AAVE_V4_BLUECHIP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInf
   label: 'Bluechip Spoke',
   value: AaveV4SpokesType.AaveV4BluechipSpoke,
   url: 'bluechip',
-  address: '0xe8344a3A199Cb995241BEcD6129a93Cc128f24ca',
+  address: '0x637F9E189332a2821e5B046E2d7EEFae2405d6c5',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -61,7 +61,7 @@ export const AAVE_V4_ETHENA_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo 
   label: 'Ethena Spoke',
   value: AaveV4SpokesType.AaveV4EthenaSpoke,
   url: 'ethena',
-  address: '0x57893f96d25f7125211d797bC39972b629572b2c',
+  address: '0x4054a9EbfcdB692599a8dF61eb0b3484F2d279D4',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -74,7 +74,7 @@ export const AAVE_V4_ETHERFI_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo
   label: 'Etherfi Spoke',
   value: AaveV4SpokesType.AaveV4EtherfiSpoke,
   url: 'etherfi',
-  address: '0xFC2685999D5a1d15AAEf0E73426673829A483cA6',
+  address: '0x4054a9EbfcdB692599a8dF61eb0b3484F2d279D4',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -87,7 +87,7 @@ export const AAVE_V4_GOLD_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Gold Spoke',
   value: AaveV4SpokesType.AaveV4GoldSpoke,
   url: 'gold',
-  address: '0x4b8A81E96dcbD21Aaf6bd32E03Bd0c64b8a2E6Fa',
+  address: '0x0DC7ccE912Afab8B49031A0A95DB74531741C2c4',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -100,7 +100,7 @@ export const AAVE_V4_KELP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Kelp Spoke',
   value: AaveV4SpokesType.AaveV4KelpSpoke,
   url: 'kelp',
-  address: '0x4a2A38377cC85BFd8548a4C9AC71DBb245dc9A9D',
+  address: '0x8aC76d950a3D03F9E1d857b5AAFFdA3f86C1e9AA',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -113,7 +113,7 @@ export const AAVE_V4_LIDO_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Lido Spoke',
   value: AaveV4SpokesType.AaveV4LidoSpoke,
   url: 'lido',
-  address: '0x4f7202367f72ADae87393c3e49b3Fbc353a9110D',
+  address: '0x4D4a7b3Ce709b4362D7095a4A0105bDFDb5dA2a7',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -126,7 +126,7 @@ export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Main Spoke',
   value: AaveV4SpokesType.AaveV4MainSpoke,
   url: 'main',
-  address: '0x5738d9cB82d6a1617973C257D05A387bF5568F47',
+  address: '0x46539e9123A18c427e6b4DFF114c28CF405Cb023',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
