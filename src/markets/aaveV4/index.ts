@@ -12,21 +12,21 @@ export const AAVE_V4_CORE_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Core Hub',
   value: AaveV4HubsType.AaveV4CoreHub,
-  address: '0x8b5aABDbf90744FA259fa7A708c00fF5Cf43FD75',
+  address: '0x3Ed2C9829FBCab6015E331a0352F8ae148217D70',
 });
 
 export const AAVE_V4_PLUS_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Plus Hub',
   value: AaveV4HubsType.AaveV4PlusHub,
-  address: '0xDf488F18631Ff7DcF39Ab305C9BE5AeC06F673d0',
+  address: '0xcb8C80026248f92c6DE735264c23c8e22922C562',
 });
 
 export const AAVE_V4_PRIME_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Prime Hub',
   value: AaveV4HubsType.AaveV4PrimeHub,
-  address: '0xaa605F00a695fE90f4818CcB11C0daF22e23Aa69',
+  address: '0xea40581231Ca775e6A3d7c129cF231D292B85f20',
 });
 
 export const AaveV4Hubs = (networkId: NetworkNumber) => ({
