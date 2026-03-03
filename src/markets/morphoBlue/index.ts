@@ -1106,7 +1106,7 @@ export const MORPHO_BLUE_EZETH_ETH_777_BASE = (networkId: NetworkNumber = Networ
   shortLabel: 'ezETH/ETH',
   value: MorphoBlueVersions.MorphoBlueEzEthEth_777_Base,
   url: 'ezetheth-df13c46b',
-  loanToken: '0x4200000000000000000000000000000000000012',
+  loanToken: '0x4200000000000000000000000000000000000006',
   collateralToken: '0x2416092f143378750bb29b79eD961ab195CcEea5',
   oracle: '0x09ECeE1Ab6f37a3D8D01f93A622b7A3021A5D91F',
   oracleType: MorphoBlueOracleType.MARKET_RATE,
