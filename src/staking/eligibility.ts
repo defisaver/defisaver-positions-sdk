@@ -1,28 +1,79 @@
 import Dec from 'decimal.js';
 import { IncentiveEligibilityId, MMUsedAssets } from '../types/common';
 
-export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets, { healthRatio }: { healthRatio: string }) => {
-  const USDeUSDAmountSupplied = usedAssets.USDe?.suppliedUsd || '0';
-  const sUSDeUSDAmountSupplied = usedAssets.sUSDe?.suppliedUsd || '0';
-  const anythingElseSupplied = Object.values(usedAssets).some((asset) => asset.symbol !== 'USDe' && asset.symbol !== 'sUSDe' && asset.isSupplied);
-  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
-  const totalAmountSupplied = new Dec(USDeUSDAmountSupplied).add(sUSDeUSDAmountSupplied).toString();
-  const percentageInUSDe = new Dec(USDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInUSDe < 0.45 || percentageInUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in USDe
-  const percentageInSUSDe = new Dec(sUSDeUSDAmountSupplied).div(totalAmountSupplied).toNumber();
-  if (percentageInSUSDe < 0.45 || percentageInSUSDe > 0.55) return { isEligible: false, eligibleUSDAmount: '0' }; // 45% - 55% of total amount supplied must be in sUSDe
+type EthenaPairEligibilityConfig = {
+  baseSymbol: string;
+  pairSymbol: string;
+  allowedBorrowAssets: string[];
+  maxHealthRatio: string; // exclusive upper bound
+  rewardSymbol: string;
+};
 
-  const allowedBorrowAssets = ['USDC', 'USDT', 'USDS'];
-  const anythingBorrowedNotAllowed = Object.values(usedAssets).some((asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol));
+const isEligibleForEthenaPairRewards = (
+  usedAssets: MMUsedAssets,
+  { healthRatio }: { healthRatio: string },
+  {
+    baseSymbol,
+    pairSymbol,
+    allowedBorrowAssets,
+    maxHealthRatio,
+    rewardSymbol,
+  }: EthenaPairEligibilityConfig,
+) => {
+  const baseSuppliedUsd = usedAssets[baseSymbol]?.suppliedUsd || '0';
+  const pairSuppliedUsd = usedAssets[pairSymbol]?.suppliedUsd || '0';
+
+  const anythingElseSupplied = Object.values(usedAssets).some(
+    (asset) => asset.isSupplied && asset.symbol !== baseSymbol && asset.symbol !== pairSymbol,
+  );
+  if (anythingElseSupplied) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const totalAmountSupplied = new Dec(baseSuppliedUsd).add(pairSuppliedUsd);
+  if (totalAmountSupplied.eq(0)) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const percentageInBase = new Dec(baseSuppliedUsd).div(totalAmountSupplied).toNumber();
+  if (percentageInBase < 0.45 || percentageInBase > 0.55) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const percentageInPair = new Dec(pairSuppliedUsd).div(totalAmountSupplied).toNumber();
+  if (percentageInPair < 0.45 || percentageInPair > 0.55) return { isEligible: false, eligibleUSDAmount: '0' };
+
+  const anythingBorrowedNotAllowed = Object.values(usedAssets).some(
+    (asset) => asset.isBorrowed && !allowedBorrowAssets.includes(asset.symbol),
+  );
   if (anythingBorrowedNotAllowed) return { isEligible: false, eligibleUSDAmount: '0' };
 
-  if (new Dec(healthRatio).gte(2.5)) return { isEligible: false, eligibleUSDAmount: '0' }; // health ratio must be below 2.5
+  if (new Dec(healthRatio).gte(maxHealthRatio)) return { isEligible: false, eligibleUSDAmount: '0' };
 
-  const halfAmountSupplied = new Dec(totalAmountSupplied).div(2).toString();
-  const USDeAmountEligibleForRewards = Dec.min(USDeUSDAmountSupplied, halfAmountSupplied).toString(); // rewards are given to amount of USDe supplied up to half of total amount supplied
+  const halfAmountSupplied = totalAmountSupplied.div(2);
+  const rewardSuppliedUsd = usedAssets[rewardSymbol]?.suppliedUsd || '0';
+  const eligibleUSDAmount = Dec.min(rewardSuppliedUsd, halfAmountSupplied).toString();
 
-  return { isEligible: true, eligibleUSDAmount: USDeAmountEligibleForRewards };
+  return { isEligible: true, eligibleUSDAmount };
 };
+
+export const isEligibleForEthenaUSDeRewards = (usedAssets: MMUsedAssets, { healthRatio }: { healthRatio: string }) => isEligibleForEthenaPairRewards(
+  usedAssets,
+  { healthRatio },
+  {
+    baseSymbol: 'USDe',
+    pairSymbol: 'sUSDe',
+    allowedBorrowAssets: ['USDC', 'USDT', 'USDS'],
+    maxHealthRatio: '2.5',
+    rewardSymbol: 'USDe',
+  },
+);
+
+export const isEligibleForEthenaGHORewards = (usedAssets: MMUsedAssets, { healthRatio }: { healthRatio: string }) => isEligibleForEthenaPairRewards(
+  usedAssets,
+  { healthRatio },
+  {
+    baseSymbol: 'syrupUSDT',
+    pairSymbol: 'GHO',
+    allowedBorrowAssets: ['USDT'],
+    maxHealthRatio: '2',
+    rewardSymbol: 'GHO',
+  },
+);
 
 export const isEligibleForAaveV3ArbitrumEthSupply = (usedAssets: MMUsedAssets) => {
   const ETHAmountSupplied = usedAssets.ETH?.suppliedUsd || '0';
@@ -51,4 +102,5 @@ export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets:
   [IncentiveEligibilityId.AaveV3ArbitrumEthSupply]: isEligibleForAaveV3ArbitrumEthSupply,
   [IncentiveEligibilityId.AaveV3ArbitrumETHLSBorrow]: isEligibleForAaveV3ArbitrumETHLSBorrow,
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasma]: isEligibleForEthenaUSDeRewards,
+  [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasmaGHO]: isEligibleForEthenaGHORewards,
 };
