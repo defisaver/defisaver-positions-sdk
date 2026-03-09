@@ -18,6 +18,8 @@ import { wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
 
+export * as lend from './lend';
+
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
   return {
@@ -62,6 +64,13 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     }
   }
 
+  const totalSuppliedRaw = reserveAsset.totalSupplied ?? 0;
+  const totalDrawnRaw = reserveAsset.totalDrawn ?? 0;
+  const totalPremiumRaw = reserveAsset.totalPremium ?? 0;
+  const totalDebtRaw = reserveAsset.totalDebt ?? 0;
+  const supplyCapRaw = reserveAsset.supplyCap ?? 0;
+  const borrowCapRaw = reserveAsset.borrowCap ?? 0;
+
   return ({
     symbol,
     underlying: reserveAsset.underlying,
@@ -76,12 +85,12 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     collateralFactor: new Dec(reserveAsset.collateralFactor).div(10000).toNumber(),
     liquidationFee: new Dec(reserveAsset.liquidationFee).div(10000).toNumber(),
     price: new Dec(reserveAsset.price).div(new Dec(10).pow(oracleDecimals)).toString(),
-    totalSupplied: assetAmountInEth(reserveAsset.totalSupplied.toString(), symbol),
-    totalDrawn: assetAmountInEth(reserveAsset.totalDrawn.toString(), symbol),
-    totalPremium: assetAmountInEth(reserveAsset.totalPremium.toString(), symbol),
-    totalDebt: assetAmountInEth(reserveAsset.totalDebt.toString(), symbol),
-    supplyCap: assetAmountInEth(reserveAsset.supplyCap.toString(), symbol),
-    borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), symbol),
+    totalSupplied: assetAmountInEth(totalSuppliedRaw.toString(), symbol),
+    totalDrawn: assetAmountInEth(totalDrawnRaw.toString(), symbol),
+    totalPremium: assetAmountInEth(totalPremiumRaw.toString(), symbol),
+    totalDebt: assetAmountInEth(totalDebtRaw.toString(), symbol),
+    supplyCap: assetAmountInEth(supplyCapRaw.toString(), symbol),
+    borrowCap: assetAmountInEth(borrowCapRaw.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
     spokeHalted: reserveAsset.spokeHalted,
     drawnRate: new Dec(hubAsset.drawnRate).div(new Dec(10).pow(27)).toString(),
