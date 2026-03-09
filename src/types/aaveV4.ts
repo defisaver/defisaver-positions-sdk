@@ -28,6 +28,12 @@ export interface AaveV4HubInfo {
 export interface AaveV4HubAssetOnChainData {
   assetId: number,
   drawnRate: bigint,
+  liquidity: bigint,
+  liquidityFee: number,
+  swept: bigint,
+  totalDrawn: bigint,
+  totalDrawnShares: bigint,
+  totalPremiumShares: bigint,
 }
 
 export interface AaveV4HubOnChainData {
@@ -98,6 +104,7 @@ export interface AaveV4ReserveAssetData {
   spokeHalted: boolean,
   drawnRate: string,
   supplyRate: string,
+  borrowRate: string,
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
   canBeBorrowed: boolean;

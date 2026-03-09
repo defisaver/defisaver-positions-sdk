@@ -6,17 +6,23 @@ import {
   AaveV4AccountData,
   AaveV4HubAssetOnChainData,
   AaveV4HubOnChainData,
-  AaveV4ReserveAssetData, AaveV4ReserveAssetOnChain, AaveV4SpokeData, AaveV4SpokeInfo,
+  AaveV4ReserveAssetData,
+  AaveV4ReserveAssetOnChain,
+  AaveV4SpokeData,
+  AaveV4SpokeInfo,
   AaveV4UsedReserveAssets,
+  EthAddress,
+  EthereumProvider,
+  IncentiveData,
+  IncentiveKind,
+  NetworkNumber,
 } from '../types';
-import {
-  EthAddress, EthereumProvider, IncentiveData, IncentiveKind, NetworkNumber,
-} from '../types/common';
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
+import { aprToApy } from '../moneymarket';
 
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
@@ -25,6 +31,12 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
       acc[assetOnChainData.assetId] = {
         assetId: assetOnChainData.assetId,
         drawnRate: assetOnChainData.drawnRate,
+        liquidity: assetOnChainData.liquidity,
+        liquidityFee: assetOnChainData.liquidityFee,
+        swept: assetOnChainData.swept,
+        totalDrawn: assetOnChainData.totalDrawn,
+        totalDrawnShares: assetOnChainData.totalDrawnShares,
+        totalPremiumShares: assetOnChainData.totalPremiumShares,
       };
       return acc;
     }, {}),
@@ -62,6 +74,21 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     }
   }
 
+  /** @DEV Hub related calculations */
+  const drawnRate = new Dec(hubAsset.drawnRate.toString()).div(new Dec(10).pow(27));
+  const borrowApr = drawnRate.mul(100);
+  const totalDrawn = new Dec(hubAsset.totalDrawn.toString());
+  const liquidity = new Dec(hubAsset.liquidity.toString());
+  const swept = new Dec(hubAsset.swept.toString());
+  const hubUtilization = totalDrawn.div(totalDrawn.add(swept).add(liquidity));
+  const liquidityFee = new Dec(hubAsset.liquidityFee.toString()).div(new Dec(10).pow(4));
+  const totalDrawnShares = new Dec(hubAsset.totalDrawnShares.toString());
+  const totalPremiumShares = new Dec(hubAsset.totalPremiumShares.toString());
+  // TODO JK@JK premiumMultiplier should be added to supplyApr calculation (.mul(premiumMultiplier)
+  // TODO JKJ@JK when we confirm that this is the right way to calculate it
+  const premiumMultiplier = totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
+  const supplyApr = borrowApr.mul(hubUtilization).mul(new Dec(1).minus(liquidityFee));
+
   return ({
     symbol,
     underlying: reserveAsset.underlying,
@@ -84,8 +111,9 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
     spokeHalted: reserveAsset.spokeHalted,
-    drawnRate: new Dec(hubAsset.drawnRate).div(new Dec(10).pow(27)).toString(),
-    supplyRate: '0', // To be implemented
+    drawnRate: drawnRate.toString(),
+    borrowRate: aprToApy(borrowApr.toString()),
+    supplyRate: aprToApy(supplyApr.toString()),
     supplyIncentives,
     borrowIncentives,
     canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
