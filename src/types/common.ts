@@ -8,6 +8,7 @@ export enum IncentiveEligibilityId {
   AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
   AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
   AaveV3EthenaLiquidLeveragePlasma = '0xeefac321069fbecc9d6b2aed2948f6d5503d8633BORROW_BL',
+  AaveV3EthenaLiquidLeveragePlasmaGHO = 'replace_when_known',
 }
 
 export enum LeverageType {

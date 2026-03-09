@@ -73,6 +73,7 @@ export const aaveV4GetTokenizedHubKey = (hubNameOrKey?: string | null): AaveV4To
   if (!hubNameOrKey) return null;
   const normalized = hubNameOrKey.trim().toUpperCase();
 
+  // TODO AaveV4 Maybe turn into constants
   if (normalized === 'CORE' || normalized === 'CORE HUB') return 'CORE';
   if (normalized === 'PLUS' || normalized === 'PLUS HUB') return 'PLUS';
   if (normalized === 'PRIME' || normalized === 'PRIME HUB') return 'PRIME';
@@ -92,9 +93,7 @@ export const aaveV4GetTokenizedVaultKey = (
   const hubKey = aaveV4GetTokenizedHubKey(hubNameOrKey);
   if (!hubKey) return null;
 
-  const normalizedSymbol = symbol
-    .trim()
-    .replace(/-/g, '_');
+  const normalizedSymbol = symbol.trim().replace(/-/g, '_');
 
   return `${normalizedSymbol}_${hubKey}`;
 };
@@ -147,8 +146,6 @@ export async function getAaveV4TokenizationSpokesData(
   const client = getViemProvider(provider, network);
   const viewContract = AaveV4ViewContractViem(client, network);
   const raw = await viewContract.read.getTokenizationSpokesData([spokes, userAddress]);
-
-  console.log(raw);
 
   return raw.map((r: any, i: number) => {
     const vaultAddress = spokes[i];
