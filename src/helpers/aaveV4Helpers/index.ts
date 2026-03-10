@@ -1,9 +1,14 @@
 import Dec from 'decimal.js';
 import { calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS } from '../../moneymarket';
 import {
-  AaveV4AggregatedPositionData, AaveV4AssetsData, AaveV4ReserveAssetData, AaveV4UsedReserveAsset, AaveV4UsedReserveAssets,
+  AaveV4AggregatedPositionData,
+  AaveV4AssetsData,
+  AaveV4ReserveAssetData,
+  AaveV4UsedReserveAsset,
+  AaveV4UsedReserveAssets,
+  LeverageType,
+  NetworkNumber,
 } from '../../types';
-import { LeverageType, NetworkNumber } from '../../types/common';
 
 export const aaveV4GetCollateralFactor = (assetData: AaveV4ReserveAssetData, usedAssetData: AaveV4UsedReserveAsset, useUserCollateralFactor: boolean = false): number => (useUserCollateralFactor ? usedAssetData.collateralFactor : assetData.collateralFactor);
 
