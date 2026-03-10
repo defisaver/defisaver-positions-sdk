@@ -59,7 +59,7 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
     const afterEnteringCategory = aaveAnyGetAggregatedPositionData({
       ...extractedState, usedAssets, eModeCategory: e.id,
     });
-    const willStayOverCollateralized = new Dec(afterEnteringCategory.ratio).eq(0) || new Dec(afterEnteringCategory.ratio).gt(afterEnteringCategory.liqPercent);
+    const willStayOverCollateralized = new Dec(afterEnteringCategory.ratio === 'NaN' ? '0' : afterEnteringCategory.ratio).eq(0) || new Dec(afterEnteringCategory.ratio).gt(afterEnteringCategory.liqPercent);
     const enteringTerms = [borrowingOnlyFromCategory, willStayOverCollateralized];
     categoriesMapping[e.id] = {
       enteringTerms,
