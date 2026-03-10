@@ -165,4 +165,5 @@ export type AaveV4UsedReserveAssets = Record<string, AaveV4UsedReserveAsset>;
 export interface AaveV4AccountData extends AaveV4AggregatedPositionData {
   usedAssets: AaveV4UsedReserveAssets,
   healthFactor: string,
+  riskPremiumBps: number,
 }

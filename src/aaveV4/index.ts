@@ -11,6 +11,7 @@ import {
   AaveV4SpokeData,
   AaveV4SpokeInfo,
   AaveV4UsedReserveAssets,
+  AaveV4AssetsData,
   EthAddress,
   EthereumProvider,
   IncentiveData,
@@ -23,6 +24,8 @@ import { wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
+
+export * as lend from './lend';
 
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
@@ -41,6 +44,73 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
       return acc;
     }, {}),
   };
+};
+
+const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, assetsData: AaveV4AssetsData): number => {
+  type CollateralInfo = { riskBps: number; valueUsd: Dec };
+  type DebtInfo = { valueUsd: Dec };
+
+  const collaterals: CollateralInfo[] = [];
+  const debts: DebtInfo[] = [];
+
+  Object.entries(usedAssets).forEach(([identifier, asset]) => {
+    const reserveData = assetsData[identifier];
+    if (!reserveData) return;
+
+    const borrowedUsdDec = new Dec(asset.borrowedUsd || '0');
+    if (asset.isBorrowed && borrowedUsdDec.gt(0)) {
+      debts.push({ valueUsd: borrowedUsdDec });
+    }
+
+    const suppliedUsdDec = new Dec(asset.suppliedUsd || '0');
+    const isActiveCollateral = asset.collateral
+      && asset.isSupplied
+      && asset.collateralFactor > 0
+      && suppliedUsdDec.gt(0);
+
+    if (isActiveCollateral) {
+      // collateralRisk is stored as a fraction (e.g. 0.25), convert back to bps
+      const riskBps = new Dec(reserveData.collateralRisk).mul(10000).toNumber();
+      collaterals.push({
+        riskBps,
+        valueUsd: suppliedUsdDec,
+      });
+    }
+  });
+
+  const totalDebtUsd = debts.reduce((sum, d) => sum.add(d.valueUsd), new Dec(0));
+
+  if (totalDebtUsd.lte(0)) {
+    return 0;
+  }
+
+  // sort by risk ASC, value DESC
+  collaterals.sort((a, b) => {
+    if (a.riskBps !== b.riskBps) return a.riskBps - b.riskBps;
+    return b.valueUsd.comparedTo(a.valueUsd);
+  });
+
+  let debtLeftToCover = totalDebtUsd;
+  let numerator = new Dec(0); // sum(coveredUsd * riskBps)
+  let coveredDebt = new Dec(0); // sum(coveredUsd)
+
+  collaterals.forEach(({ riskBps, valueUsd }) => {
+    if (debtLeftToCover.lte(0)) return;
+
+    const coveredUsd = Dec.min(valueUsd, debtLeftToCover);
+
+    numerator = numerator.add(coveredUsd.mul(riskBps));
+    coveredDebt = coveredDebt.add(coveredUsd);
+
+    debtLeftToCover = debtLeftToCover.sub(coveredUsd);
+  });
+
+  if (coveredDebt.lte(0)) {
+    return 0;
+  }
+
+  const riskPremiumBps = numerator.div(coveredDebt);
+  return riskPremiumBps.toNumber();
 };
 
 const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, reserveId: number, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
@@ -74,6 +144,13 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     }
   }
 
+  const totalSuppliedRaw = reserveAsset.totalSupplied ?? 0;
+  const totalDrawnRaw = reserveAsset.totalDrawn ?? 0;
+  const totalPremiumRaw = reserveAsset.totalPremium ?? 0;
+  const totalDebtRaw = reserveAsset.totalDebt ?? 0;
+  const supplyCapRaw = reserveAsset.supplyCap ?? 0;
+  const borrowCapRaw = reserveAsset.borrowCap ?? 0;
+
   /** @DEV Hub related calculations */
   const drawnRate = new Dec(hubAsset.drawnRate.toString()).div(new Dec(10).pow(27));
   const borrowApr = drawnRate.mul(100);
@@ -103,12 +180,12 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     collateralFactor: new Dec(reserveAsset.collateralFactor).div(10000).toNumber(),
     liquidationFee: new Dec(reserveAsset.liquidationFee).div(10000).toNumber(),
     price: new Dec(reserveAsset.price).div(new Dec(10).pow(oracleDecimals)).toString(),
-    totalSupplied: assetAmountInEth(reserveAsset.totalSupplied.toString(), symbol),
-    totalDrawn: assetAmountInEth(reserveAsset.totalDrawn.toString(), symbol),
-    totalPremium: assetAmountInEth(reserveAsset.totalPremium.toString(), symbol),
-    totalDebt: assetAmountInEth(reserveAsset.totalDebt.toString(), symbol),
-    supplyCap: assetAmountInEth(reserveAsset.supplyCap.toString(), symbol),
-    borrowCap: assetAmountInEth(reserveAsset.borrowCap.toString(), symbol),
+    totalSupplied: assetAmountInEth(totalSuppliedRaw.toString(), symbol),
+    totalDrawn: assetAmountInEth(totalDrawnRaw.toString(), symbol),
+    totalPremium: assetAmountInEth(totalPremiumRaw.toString(), symbol),
+    totalDebt: assetAmountInEth(totalDebtRaw.toString(), symbol),
+    supplyCap: assetAmountInEth(supplyCapRaw.toString(), symbol),
+    borrowCap: assetAmountInEth(borrowCapRaw.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
     spokeHalted: reserveAsset.spokeHalted,
     drawnRate: drawnRate.toString(),
@@ -187,15 +264,20 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
     return acc;
   }, {});
 
+  const aggregated = aaveV4GetAggregatedPositionData({
+    usedAssets,
+    assetsData: spokeData.assetsData,
+    network,
+    useUserCollateralFactor: true,
+  });
+
+  const riskPremiumBps = calcUserRiskPremiumBps(usedAssets, spokeData.assetsData);
+
   return {
+    ...aggregated,
     usedAssets,
     healthFactor,
-    ...aaveV4GetAggregatedPositionData({
-      usedAssets,
-      assetsData: spokeData.assetsData,
-      network,
-      useUserCollateralFactor: true,
-    }),
+    riskPremiumBps,
   };
 }
 
