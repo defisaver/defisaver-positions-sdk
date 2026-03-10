@@ -61,7 +61,7 @@ export const AAVE_V4_ETHENA_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo 
   label: 'Ethena Spoke',
   value: AaveV4SpokesType.AaveV4EthenaSpoke,
   url: 'ethena',
-  address: '0x4054a9EbfcdB692599a8dF61eb0b3484F2d279D4',
+  address: '0xf3b207c235f6154120F41eB63D5ACCBAfD4086D1',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
