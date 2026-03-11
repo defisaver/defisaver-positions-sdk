@@ -46,6 +46,7 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
   };
 };
 
+// TODO AaveV4: Will be used for after values, onchain data is available when fetching position data
 const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, assetsData: AaveV4AssetsData): number => {
   type CollateralInfo = { riskBps: number; valueUsd: Dec };
   type DebtInfo = { valueUsd: Dec };
@@ -134,7 +135,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
       description: `Native ${symbol} yield.`,
     });
     if (reserveAsset.borrowable) {
-      // when borrowing assets whose value increases over time
+      // When borrowing assets whose value increases over time
       borrowIncentives.push({
         apy: new Dec(yieldApy).mul(-1).toString(),
         token: symbol,
@@ -150,6 +151,9 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalDebtRaw = reserveAsset.totalDebt ?? 0;
   const supplyCapRaw = reserveAsset.supplyCap ?? 0;
   const borrowCapRaw = reserveAsset.borrowCap ?? 0;
+  const totalSuppliedDec = new Dec(totalSuppliedRaw.toString());
+  const totalDrawnDec = new Dec(totalDrawnRaw.toString());
+  const utilization = totalSuppliedDec.isZero() ? '0' : totalDrawnDec.times(100).div(totalSuppliedDec).toString();
 
   /** @DEV Hub related calculations */
   const drawnRate = new Dec(hubAsset.drawnRate.toString()).div(new Dec(10).pow(27));
@@ -157,13 +161,14 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalDrawn = new Dec(hubAsset.totalDrawn.toString());
   const liquidity = new Dec(hubAsset.liquidity.toString());
   const swept = new Dec(hubAsset.swept.toString());
-  const hubUtilization = totalDrawn.div(totalDrawn.add(swept).add(liquidity));
+  const hubUtilizationDenominator = totalDrawn.add(swept).add(liquidity);
+  const hubUtilization = hubUtilizationDenominator.isZero() ? new Dec(0) : totalDrawn.div(hubUtilizationDenominator);
   const liquidityFee = new Dec(hubAsset.liquidityFee.toString()).div(new Dec(10).pow(4));
   const totalDrawnShares = new Dec(hubAsset.totalDrawnShares.toString());
   const totalPremiumShares = new Dec(hubAsset.totalPremiumShares.toString());
   // TODO JK@JK premiumMultiplier should be added to supplyApr calculation (.mul(premiumMultiplier)
   // TODO JKJ@JK when we confirm that this is the right way to calculate it
-  const premiumMultiplier = totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
+  const premiumMultiplier = totalDrawnShares.isZero() ? new Dec(1) : totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
   const supplyApr = borrowApr.mul(hubUtilization).mul(new Dec(1).minus(liquidityFee));
 
   return ({
@@ -197,7 +202,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
     canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
-    utilization: new Dec(reserveAsset.totalDrawn.toString()).times(100).div(new Dec(reserveAsset.totalSupplied.toString())).toString(),
+    utilization,
   });
 };
 
