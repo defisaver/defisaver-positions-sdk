@@ -3,7 +3,7 @@ import { SummerVault, SummerVaultType } from '../../types';
 
 export const SUMMER_VAULT_USDC_MAINNET_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDCMainnetLR,
-  name: 'Lower Risk USDC',
+  name: 'USDC',
   address: '0x98C49e13bf99D7CAd8069faa2A370933EC9EcF17',
   asset: 'USDC',
   network: NetworkNumber.Eth,
@@ -23,7 +23,7 @@ export const SUMMER_VAULT_USDC_MAINNET_HR: SummerVault = {
 
 export const SUMMER_VAULT_USDT_MAINNET_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDTMainnetLR,
-  name: 'Lower Risk USDT',
+  name: 'USDT',
   address: '0x17ee2d03e88b55e762c66c76ec99c3a28a54ad8d',
   asset: 'USDT',
   network: NetworkNumber.Eth,
@@ -33,7 +33,7 @@ export const SUMMER_VAULT_USDT_MAINNET_LR: SummerVault = {
 
 export const SUMMER_VAULT_ETH_MAINNET_LR: SummerVault = {
   type: SummerVaultType.SummerVaultETHMainnetLR,
-  name: 'Lower Risk ETH',
+  name: 'ETH',
   address: '0x67e536797570b3d8919df052484273815a0ab506',
   asset: 'WETH',
   network: NetworkNumber.Eth,
@@ -53,7 +53,7 @@ export const SUMMER_VAULT_ETH_MAINNET_HR: SummerVault = {
 
 export const SUMMER_VAULT_USDC_ARBITRUM_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDCArbitrumLR,
-  name: 'Lower Risk USDC',
+  name: 'USDC',
   address: '0x71d77c39db0eb5d086611a2e950198e3077cf58a',
   asset: 'USDC',
   network: NetworkNumber.Arb,
@@ -63,7 +63,7 @@ export const SUMMER_VAULT_USDC_ARBITRUM_LR: SummerVault = {
 
 export const SUMMER_VAULT_USDT_ARBITRUM_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDTArbitrumLR,
-  name: 'Lower Risk USDT',
+  name: 'USDT',
   address: '0x98c49e13bf99d7cad8069faa2a370933ec9ecf17',
   asset: 'USDT',
   network: NetworkNumber.Arb,
@@ -73,7 +73,7 @@ export const SUMMER_VAULT_USDT_ARBITRUM_LR: SummerVault = {
 
 export const SUMMER_VAULT_USDC_BASE_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDCBaseLR,
-  name: 'Lower Risk USDC',
+  name: 'USDC',
   address: '0x98C49e13bf99D7CAd8069faa2A370933EC9EcF17',
   asset: 'USDC',
   network: NetworkNumber.Base,
@@ -83,7 +83,7 @@ export const SUMMER_VAULT_USDC_BASE_LR: SummerVault = {
 
 export const SUMMER_VAULT_EURC_BASE_LR: SummerVault = {
   type: SummerVaultType.SummerVaultEURCBaseLR,
-  name: 'Lower Risk EURC',
+  name: 'EURC',
   address: '0x64db8f51f1bf7064bb5a361a7265f602d348e0f0',
   asset: 'EURC',
   network: NetworkNumber.Base,
@@ -93,7 +93,7 @@ export const SUMMER_VAULT_EURC_BASE_LR: SummerVault = {
 
 export const SUMMER_VAULT_ETH_BASE_LR: SummerVault = {
   type: SummerVaultType.SummerVaultETHBaseLR,
-  name: 'Lower Risk ETH',
+  name: 'ETH',
   address: '0x2bb9ad69feba5547b7cd57aafe8457d40bf834af',
   asset: 'WETH',
   network: NetworkNumber.Base,
