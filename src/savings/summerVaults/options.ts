@@ -54,10 +54,10 @@ export const SUMMER_VAULT_ETH_MAINNET_HR: SummerVault = {
 export const SUMMER_VAULT_USDC_ARBITRUM_LR: SummerVault = {
   type: SummerVaultType.SummerVaultUSDCArbitrumLR,
   name: 'Lower Risk USDC',
-  address: '0x4f63cfea7458221cb3a0eee2f31f7424ad34bb58',
+  address: '0x71d77c39db0eb5d086611a2e950198e3077cf58a',
   asset: 'USDC',
   network: NetworkNumber.Arb,
-  deploymentBlock: 312942348,
+  deploymentBlock: 404339289,
   isLegacy: false,
 };
 
