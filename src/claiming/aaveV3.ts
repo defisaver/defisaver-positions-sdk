@@ -106,7 +106,7 @@ export async function getUnclaimedRewardsForAllMarkets(
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber, acceptMorpho: boolean = true): Promise<ClaimableToken[]> {
   let data;
   try {
-    const res = await fetch(`https://api.merkl.xyz/v4/users/${account}/rewards?chainId=${network}`,
+    const res = await fetch(`https://api-merkl.angle.money/v4/users/${account}/rewards?chainId=${network}`,
       { signal: AbortSignal.timeout(3000) });
     data = await res.json();
   } catch (error) {
