@@ -31,7 +31,7 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    const res = await fetch('https://api.merkl.xyz/v4/opportunities?mainProtocolId=aave', {
+    const res = await fetch('https://api-merkl.angle.money/v4/opportunities?mainProtocolId=aave', {
       signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');

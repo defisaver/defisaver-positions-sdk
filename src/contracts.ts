@@ -103,6 +103,15 @@ export const getErc20ContractViem = (client: Client, address: HexString) => {
   });
 };
 
+export const getErc4626ContractViem = (client: Client, address: HexString) => {
+  const abi = getConfigContractAbi('Erc4626') as typeof configRaw['Erc4626']['abi'];
+  return getContract({
+    address,
+    abi,
+    client,
+  });
+};
+
 export const getYearnV3VaultContractViem = (client: Client, address: HexString) => {
   const abi = getConfigContractAbi('YearnV3Vault') as typeof configRaw['YearnV3Vault']['abi'];
   return getContract({
