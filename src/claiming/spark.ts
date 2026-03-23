@@ -73,7 +73,7 @@ export const fetchSparkAirdropRewards = async (
     }
 
     // Filter out IGNITION_REWARDS since they are no longer active
-    const filteredData = data.filter((rewardInfo: { type: SparkAirdropType; }) => rewardInfo.type !== SparkAirdropType.SPARK_IGNITION);
+    const filteredData = data.filter((rewardInfo: { type: SparkAirdropType; }) => rewardInfo.type !== SparkAirdropType.SPARK_IGNITION && rewardInfo.type !== SparkAirdropType.PRE_FARMING_AND_SOCIAL);
 
     allClaimData.push({ walletAddress, data: filteredData });
 
