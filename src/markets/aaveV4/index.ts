@@ -12,21 +12,21 @@ export const AAVE_V4_CORE_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Core Hub',
   value: AaveV4HubsType.AaveV4CoreHub,
-  address: '0x3Ed2C9829FBCab6015E331a0352F8ae148217D70',
+  address: '0x630c2cFF89cb11E62dE047EaeD8C4B396906bD7D',
 });
 
 export const AAVE_V4_PLUS_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Plus Hub',
   value: AaveV4HubsType.AaveV4PlusHub,
-  address: '0xcb8C80026248f92c6DE735264c23c8e22922C562',
+  address: '0x903395aEF788bD0A3a4c7a08651a9115add7c36b',
 });
 
 export const AAVE_V4_PRIME_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'Prime Hub',
   value: AaveV4HubsType.AaveV4PrimeHub,
-  address: '0xea40581231Ca775e6A3d7c129cF231D292B85f20',
+  address: '0xf64d97bd0454DF721d0edB468265f204D3A3421D',
 });
 
 export const AaveV4Hubs = (networkId: NetworkNumber) => ({
@@ -48,7 +48,7 @@ export const AAVE_V4_BLUECHIP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInf
   label: 'Bluechip Spoke',
   value: AaveV4SpokesType.AaveV4BluechipSpoke,
   url: 'bluechip',
-  address: '0x637F9E189332a2821e5B046E2d7EEFae2405d6c5',
+  address: '0xF1Fa1042474dC8bd4Ef830Fe70aE22C85A326729',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -56,12 +56,25 @@ export const AAVE_V4_BLUECHIP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInf
   ],
 });
 
-export const AAVE_V4_ETHENA_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+export const AAVE_V4_ETHENA_CORRELATED_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Ethena Spoke',
-  value: AaveV4SpokesType.AaveV4EthenaSpoke,
-  url: 'ethena',
-  address: '0xf3b207c235f6154120F41eB63D5ACCBAfD4086D1',
+  label: 'Ethena Correlated Spoke',
+  value: AaveV4SpokesType.AaveV4EthenaCorrelatedSpoke,
+  url: 'ethena-correlated',
+  address: '0xa1A984B65b661599a61680f56a6c864ECED96CA6',
+  hubs: [
+    AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PRIME_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
+export const AAVE_V4_ETHENA_ECOSYSTEM_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Ethena Ecosystem Spoke',
+  value: AaveV4SpokesType.AaveV4EthenaEcosystemSpoke,
+  url: 'ethena-ecosystem',
+  address: '0x417Fae379865b8E298332e2F6fdcc2526D55a090',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -74,7 +87,20 @@ export const AAVE_V4_ETHERFI_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo
   label: 'Etherfi Spoke',
   value: AaveV4SpokesType.AaveV4EtherfiSpoke,
   url: 'etherfi',
-  address: '0x4054a9EbfcdB692599a8dF61eb0b3484F2d279D4',
+  address: '0x7ED7431793eCbe5d42D64CA9b2593d026beB051B',
+  hubs: [
+    AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PRIME_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
+export const AAVE_V4_FOREX_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Forex Spoke',
+  value: AaveV4SpokesType.AaveV4ForexSpoke,
+  url: 'forex',
+  address: '0x37b36B7dfaBB69B12519B7Faaf019a6C0B261264',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -87,7 +113,7 @@ export const AAVE_V4_GOLD_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Gold Spoke',
   value: AaveV4SpokesType.AaveV4GoldSpoke,
   url: 'gold',
-  address: '0x0DC7ccE912Afab8B49031A0A95DB74531741C2c4',
+  address: '0x332EFa0E2121091Ae94f44F8c2C383B061ae2Ea7',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -100,7 +126,7 @@ export const AAVE_V4_KELP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Kelp Spoke',
   value: AaveV4SpokesType.AaveV4KelpSpoke,
   url: 'kelp',
-  address: '0x8aC76d950a3D03F9E1d857b5AAFFdA3f86C1e9AA',
+  address: '0xC8FA3983843E7a978244e34c0e2562159A3D0783',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -113,7 +139,20 @@ export const AAVE_V4_LIDO_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Lido Spoke',
   value: AaveV4SpokesType.AaveV4LidoSpoke,
   url: 'lido',
-  address: '0x4D4a7b3Ce709b4362D7095a4A0105bDFDb5dA2a7',
+  address: '0xa9Dd188591A6F0C92bD1dC3A461a64c188694FB3',
+  hubs: [
+    AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_PRIME_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
+export const AAVE_V4_LOMBARD_BTC_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Lombard BTC Spoke',
+  value: AaveV4SpokesType.AaveV4LombardBtcSpoke,
+  url: 'lombard-btc',
+  address: '0xc78F5e5566C9Bde0C531fC8c7F5dC5954daFcA9e',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -126,7 +165,7 @@ export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   label: 'Main Spoke',
   value: AaveV4SpokesType.AaveV4MainSpoke,
   url: 'main',
-  address: '0x46539e9123A18c427e6b4DFF114c28CF405Cb023',
+  address: '0x6488A415e9eA693EC7Ef32579507e1907c0AC798',
   hubs: [
     AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
     AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address,
@@ -136,11 +175,14 @@ export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
 
 export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4BluechipSpoke]: AAVE_V4_BLUECHIP_SPOKE(networkId),
-  [AaveV4SpokesType.AaveV4EthenaSpoke]: AAVE_V4_ETHENA_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4EthenaCorrelatedSpoke]: AAVE_V4_ETHENA_CORRELATED_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4EthenaEcosystemSpoke]: AAVE_V4_ETHENA_ECOSYSTEM_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4EtherfiSpoke]: AAVE_V4_ETHERFI_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4ForexSpoke]: AAVE_V4_FOREX_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4GoldSpoke]: AAVE_V4_GOLD_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4KelpSpoke]: AAVE_V4_KELP_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4LidoSpoke]: AAVE_V4_LIDO_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4LombardBtcSpoke]: AAVE_V4_LOMBARD_BTC_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4MainSpoke]: AAVE_V4_MAIN_SPOKE(networkId),
 }) as const;
 

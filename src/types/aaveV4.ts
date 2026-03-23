@@ -10,11 +10,14 @@ export enum AaveV4HubsType {
 
 export enum AaveV4SpokesType {
   AaveV4BluechipSpoke = 'aave_v4_bluechip_spoke',
-  AaveV4EthenaSpoke = 'aave_v4_ethena_spoke',
+  AaveV4EthenaCorrelatedSpoke = 'aave_v4_ethena_correlated_spoke',
+  AaveV4EthenaEcosystemSpoke = 'aave_v4_ethena_ecosystem_spoke',
   AaveV4EtherfiSpoke = 'aave_v4_etherfi_spoke',
+  AaveV4ForexSpoke = 'aave_v4_forex_spoke',
   AaveV4GoldSpoke = 'aave_v4_gold_spoke',
   AaveV4KelpSpoke = 'aave_v4_kelp_spoke',
   AaveV4LidoSpoke = 'aave_v4_lido_spoke',
+  AaveV4LombardBtcSpoke = 'aave_v4_lombard_btc_spoke',
   AaveV4MainSpoke = 'aave_v4_main_spoke',
 }
 
