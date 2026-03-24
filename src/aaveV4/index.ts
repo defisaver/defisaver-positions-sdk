@@ -198,7 +198,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     supplyRate: aprToApy(supplyApr.toString()),
     supplyIncentives,
     borrowIncentives,
-    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen && reserveAsset.borrowable,
     canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
     canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
