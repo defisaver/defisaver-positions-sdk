@@ -158,6 +158,7 @@ export interface AaveV4AggregatedPositionData {
   minCollRatio: string,
   collLiquidationRatio: string,
   minHealthRatio: string,
+  healthRatio: string,
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
