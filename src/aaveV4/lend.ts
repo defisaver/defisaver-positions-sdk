@@ -73,7 +73,6 @@ export const aaveV4GetTokenizedHubKey = (hubNameOrKey?: string | null): AaveV4To
   if (!hubNameOrKey) return null;
   const normalized = hubNameOrKey.trim().toUpperCase();
 
-  // TODO AaveV4 Maybe turn into constants
   if (normalized === 'CORE' || normalized === 'CORE HUB') return 'CORE';
   if (normalized === 'PLUS' || normalized === 'PLUS HUB') return 'PLUS';
   if (normalized === 'PRIME' || normalized === 'PRIME HUB') return 'PRIME';

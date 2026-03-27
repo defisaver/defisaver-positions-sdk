@@ -11,7 +11,6 @@ import {
   AaveV4SpokeData,
   AaveV4SpokeInfo,
   AaveV4UsedReserveAssets,
-  AaveV4AssetsData,
   EthAddress,
   EthereumProvider,
   IncentiveData,
@@ -21,7 +20,7 @@ import {
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { isMaxUint, wethToEth } from '../services/utils';
-import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
+import { aaveV4GetAggregatedPositionData, calcUserRiskPremiumBps } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
 
@@ -46,73 +45,6 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
   };
 };
 
-// TODO AaveV4: Will be used for after values, onchain data is available when fetching position data
-const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, assetsData: AaveV4AssetsData): number => {
-  type CollateralInfo = { riskBps: number; valueUsd: Dec };
-  type DebtInfo = { valueUsd: Dec };
-
-  const collaterals: CollateralInfo[] = [];
-  const debts: DebtInfo[] = [];
-
-  Object.entries(usedAssets).forEach(([identifier, asset]) => {
-    const reserveData = assetsData[identifier];
-    if (!reserveData) return;
-
-    const borrowedUsdDec = new Dec(asset.borrowedUsd || '0');
-    if (asset.isBorrowed && borrowedUsdDec.gt(0)) {
-      debts.push({ valueUsd: borrowedUsdDec });
-    }
-
-    const suppliedUsdDec = new Dec(asset.suppliedUsd || '0');
-    const isActiveCollateral = asset.collateral
-      && asset.isSupplied
-      && asset.collateralFactor > 0
-      && suppliedUsdDec.gt(0);
-
-    if (isActiveCollateral) {
-      // collateralRisk is stored as a fraction (e.g. 0.25), convert back to bps
-      const riskBps = new Dec(reserveData.collateralRisk).mul(10000).toNumber();
-      collaterals.push({
-        riskBps,
-        valueUsd: suppliedUsdDec,
-      });
-    }
-  });
-
-  const totalDebtUsd = debts.reduce((sum, d) => sum.add(d.valueUsd), new Dec(0));
-
-  if (totalDebtUsd.lte(0)) {
-    return 0;
-  }
-
-  // sort by risk ASC, value DESC
-  collaterals.sort((a, b) => {
-    if (a.riskBps !== b.riskBps) return a.riskBps - b.riskBps;
-    return b.valueUsd.comparedTo(a.valueUsd);
-  });
-
-  let debtLeftToCover = totalDebtUsd;
-  let numerator = new Dec(0); // sum(coveredUsd * riskBps)
-  let coveredDebt = new Dec(0); // sum(coveredUsd)
-
-  collaterals.forEach(({ riskBps, valueUsd }) => {
-    if (debtLeftToCover.lte(0)) return;
-
-    const coveredUsd = Dec.min(valueUsd, debtLeftToCover);
-
-    numerator = numerator.add(coveredUsd.mul(riskBps));
-    coveredDebt = coveredDebt.add(coveredUsd);
-
-    debtLeftToCover = debtLeftToCover.sub(coveredUsd);
-  });
-
-  if (coveredDebt.lte(0)) {
-    return 0;
-  }
-
-  const riskPremiumBps = numerator.div(coveredDebt);
-  return riskPremiumBps.toNumber();
-};
 
 const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, reserveId: number, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
   const assetInfo = getAssetInfoByAddress(reserveAsset.underlying, network);
@@ -166,10 +98,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const liquidityFee = new Dec(hubAsset.liquidityFee.toString()).div(new Dec(10).pow(4));
   const totalDrawnShares = new Dec(hubAsset.totalDrawnShares.toString());
   const totalPremiumShares = new Dec(hubAsset.totalPremiumShares.toString());
-  // TODO JK@JK premiumMultiplier should be added to supplyApr calculation (.mul(premiumMultiplier)
-  // TODO JKJ@JK when we confirm that this is the right way to calculate it
   const premiumMultiplier = totalDrawnShares.isZero() ? new Dec(1) : totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
-  const supplyApr = borrowApr.mul(hubUtilization).mul(new Dec(1).minus(liquidityFee));
+  const supplyApr = borrowApr.mul(hubUtilization).mul(premiumMultiplier).mul(new Dec(1).minus(liquidityFee));
 
   return ({
     symbol,

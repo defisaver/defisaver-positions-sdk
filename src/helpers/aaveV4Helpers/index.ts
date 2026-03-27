@@ -1,5 +1,10 @@
 import Dec from 'decimal.js';
-import { calcLeverageLiqPrice, getAssetsTotal, STABLE_ASSETS } from '../../moneymarket';
+import {
+  aprToApy,
+  calcLeverageLiqPrice,
+  getAssetsTotal,
+  STABLE_ASSETS,
+} from '../../moneymarket';
 import {
   AaveV4AggregatedPositionData,
   AaveV4AssetsData,
@@ -9,6 +14,98 @@ import {
   LeverageType,
   NetworkNumber,
 } from '../../types';
+
+export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, assetsData: AaveV4AssetsData): number => {
+  type CollateralInfo = { riskBps: number; valueUsd: Dec };
+  type DebtInfo = { valueUsd: Dec };
+
+  const collaterals: CollateralInfo[] = [];
+  const debts: DebtInfo[] = [];
+
+  Object.entries(usedAssets).forEach(([identifier, asset]) => {
+    const reserveData = assetsData[identifier];
+    if (!reserveData) return;
+
+    const borrowedUsdDec = new Dec(asset.borrowedUsd || '0');
+    if (asset.isBorrowed && borrowedUsdDec.gt(0)) {
+      debts.push({ valueUsd: borrowedUsdDec });
+    }
+
+    const suppliedUsdDec = new Dec(asset.suppliedUsd || '0');
+    const isActiveCollateral = asset.collateral
+      && asset.isSupplied
+      && asset.collateralFactor > 0
+      && suppliedUsdDec.gt(0);
+
+    if (isActiveCollateral) {
+      // collateralRisk is stored as a fraction (e.g. 0.25), convert back to bps
+      const riskBps = new Dec(reserveData.collateralRisk).mul(10000).toNumber();
+      collaterals.push({
+        riskBps,
+        valueUsd: suppliedUsdDec,
+      });
+    }
+  });
+
+  const totalDebtUsd = debts.reduce((sum, d) => sum.add(d.valueUsd), new Dec(0));
+
+  if (totalDebtUsd.lte(0)) {
+    return 0;
+  }
+
+  // sort by risk ASC, value DESC
+  collaterals.sort((a, b) => {
+    if (a.riskBps !== b.riskBps) return a.riskBps - b.riskBps;
+    return b.valueUsd.comparedTo(a.valueUsd);
+  });
+
+  let debtLeftToCover = totalDebtUsd;
+  let numerator = new Dec(0); // sum(coveredUsd * riskBps)
+  let coveredDebt = new Dec(0); // sum(coveredUsd)
+
+  collaterals.forEach(({ riskBps, valueUsd }) => {
+    if (debtLeftToCover.lte(0)) return;
+
+    const coveredUsd = Dec.min(valueUsd, debtLeftToCover);
+
+    numerator = numerator.add(coveredUsd.mul(riskBps));
+    coveredDebt = coveredDebt.add(coveredUsd);
+
+    debtLeftToCover = debtLeftToCover.sub(coveredUsd);
+  });
+
+  if (coveredDebt.lte(0)) {
+    return 0;
+  }
+
+  const riskPremiumBps = numerator.div(coveredDebt);
+  return riskPremiumBps.toNumber();
+};
+
+export const getApyAfterValuesEstimation = (
+  usedAssets: AaveV4UsedReserveAssets,
+  assetsData: AaveV4AssetsData,
+): Record<string, { borrowRate: string; supplyRate: string }> => {
+  const riskPremiumBps = calcUserRiskPremiumBps(usedAssets, assetsData);
+  const riskPremiumFraction = new Dec(riskPremiumBps).div(10000); // bps to fraction
+
+  const result: Record<string, { borrowRate: string; supplyRate: string }> = {};
+
+  Object.entries(assetsData).forEach(([identifier, assetData]) => {
+    const drawnRate = new Dec(assetData.drawnRate);
+    const baseBorrowApr = drawnRate.mul(100);
+    // finalBorrowRate = baseBorrowRate * (1 + riskPremiumFraction)
+    const userBorrowApr = baseBorrowApr.mul(new Dec(1).add(riskPremiumFraction));
+
+    result[identifier] = {
+      borrowRate: aprToApy(userBorrowApr.toString()),
+      // Supply rate is market-level (not user-specific), use existing value
+      supplyRate: assetData.supplyRate,
+    };
+  });
+
+  return result;
+};
 
 export const aaveV4GetCollateralFactor = (assetData: AaveV4ReserveAssetData, usedAssetData: AaveV4UsedReserveAsset, useUserCollateralFactor: boolean = false): number => (useUserCollateralFactor ? usedAssetData.collateralFactor : assetData.collateralFactor);
 
