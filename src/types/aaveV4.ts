@@ -96,6 +96,7 @@ export interface AaveV4ReserveAssetData {
   collateralRisk: number,
   collateralFactor: number,
   liquidationFee: number,
+  maxLiquidationBonus: number,
   price: string,
   totalSupplied: string,
   totalDrawn: string,

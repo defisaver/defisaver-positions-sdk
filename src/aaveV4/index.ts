@@ -83,8 +83,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalDebtRaw = reserveAsset.totalDebt ?? 0;
   const supplyCapRaw = reserveAsset.supplyCap ?? 0;
   const borrowCapRaw = reserveAsset.borrowCap ?? 0;
-  const totalSuppliedDec = new Dec(totalSuppliedRaw.toString());
-  const totalDrawnDec = new Dec(totalDrawnRaw.toString());
+  const totalSuppliedDec = isMaxUint(totalSuppliedRaw.toString()) ? new Dec(0) : new Dec(totalSuppliedRaw.toString());
+  const totalDrawnDec = isMaxUint(totalDrawnRaw.toString()) ? new Dec(0) : new Dec(totalDrawnRaw.toString());
   const utilization = totalSuppliedDec.isZero() ? '0' : totalDrawnDec.times(100).div(totalSuppliedDec).toString();
 
   /** @DEV Hub related calculations */
@@ -114,11 +114,12 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     collateralRisk: new Dec(reserveAsset.collateralRisk).div(10000).toNumber(),
     collateralFactor: new Dec(reserveAsset.collateralFactor).div(10000).toNumber(),
     liquidationFee: new Dec(reserveAsset.liquidationFee).div(10000).toNumber(),
+    maxLiquidationBonus: new Dec(reserveAsset.maxLiquidationBonus).div(10000).toNumber(),
     price: new Dec(reserveAsset.price).div(new Dec(10).pow(oracleDecimals)).toString(),
-    totalSupplied: assetAmountInEth(totalSuppliedRaw.toString(), symbol),
-    totalDrawn: assetAmountInEth(totalDrawnRaw.toString(), symbol),
-    totalPremium: assetAmountInEth(totalPremiumRaw.toString(), symbol),
-    totalDebt: assetAmountInEth(totalDebtRaw.toString(), symbol),
+    totalSupplied: isMaxUint(totalSuppliedRaw.toString()) ? totalSuppliedRaw.toString() : assetAmountInEth(totalSuppliedRaw.toString(), symbol),
+    totalDrawn: isMaxUint(totalDrawnRaw.toString()) ? totalDrawnRaw.toString() : assetAmountInEth(totalDrawnRaw.toString(), symbol),
+    totalPremium: isMaxUint(totalPremiumRaw.toString()) ? totalPremiumRaw.toString() : assetAmountInEth(totalPremiumRaw.toString(), symbol),
+    totalDebt: isMaxUint(totalDebtRaw.toString()) ? totalDebtRaw.toString() : assetAmountInEth(totalDebtRaw.toString(), symbol),
     supplyCap: isMaxUint(supplyCapRaw.toString()) ? supplyCapRaw.toString() : assetAmountInEth(supplyCapRaw.toString(), symbol),
     borrowCap: isMaxUint(borrowCapRaw.toString()) ? borrowCapRaw.toString() : assetAmountInEth(borrowCapRaw.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
@@ -175,10 +176,10 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
     const identifier = `${wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)}-${+usedReserveAsset.reserveId.toString()}`;
     const reserveData = spokeData.assetsData[identifier];
     const price = reserveData.price;
-    const supplied = assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
-    const drawn = assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
-    const premium = assetAmountInEth(usedReserveAsset.premium.toString(), reserveData.symbol);
-    const borrowed = assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
+    const supplied = isMaxUint(usedReserveAsset.supplied.toString()) ? usedReserveAsset.supplied.toString() : assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
+    const drawn = isMaxUint(usedReserveAsset.drawn.toString()) ? usedReserveAsset.drawn.toString() : assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
+    const premium = isMaxUint(usedReserveAsset.premium.toString()) ? usedReserveAsset.premium.toString() : assetAmountInEth(usedReserveAsset.premium.toString(), reserveData.symbol);
+    const borrowed = isMaxUint(usedReserveAsset.totalDebt.toString()) ? usedReserveAsset.totalDebt.toString() : assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
     acc[identifier] = {
       symbol: reserveData.symbol,
       hubName: reserveData.hubName,
