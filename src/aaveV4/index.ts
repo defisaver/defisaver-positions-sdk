@@ -240,7 +240,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
   const loanData = await viewContract.read.getLoanData([spokeData.address, address]);
 
   const healthFactorFromContract = new Dec(loanData.healthFactor.toString());
-  const healthFactor = isMaxUint(healthFactorFromContract.toString()) ? '0' : healthFactorFromContract.div(1e18).toString();
+  const healthFactor = isMaxUint(healthFactorFromContract.toString()) ? 'Infinity' : healthFactorFromContract.div(1e18).toString();
   const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
     const identifier = `${wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)}-${+usedReserveAsset.reserveId.toString()}`;
     const reserveData = spokeData.assetsData[identifier];
