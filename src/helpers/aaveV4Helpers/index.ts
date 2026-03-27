@@ -5,6 +5,7 @@ import {
   getAssetsTotal,
   STABLE_ASSETS,
 } from '../../moneymarket';
+import { calculateInterestEarned } from '../../staking';
 import {
   AaveV4AggregatedPositionData,
   AaveV4AssetsData,
@@ -105,6 +106,70 @@ export const getApyAfterValuesEstimation = (
   });
 
   return result;
+};
+
+export const calculateNetApyAaveV4 = ({
+  usedAssets,
+  assetsData,
+}: {
+  usedAssets: AaveV4UsedReserveAssets,
+  assetsData: AaveV4AssetsData,
+}) => {
+  const riskPremiumBps = calcUserRiskPremiumBps(usedAssets, assetsData);
+  const riskPremiumFraction = new Dec(riskPremiumBps).div(10000);
+
+  const sumValues = Object.entries(usedAssets).reduce((_acc, [identifier, usedAsset]) => {
+    const acc = { ..._acc };
+    const assetData = assetsData[identifier];
+    if (!assetData) return acc;
+
+    if (usedAsset.isSupplied) {
+      const amount = usedAsset.suppliedUsd;
+      acc.suppliedUsd = new Dec(acc.suppliedUsd).add(amount).toString();
+      const supplyInterest = calculateInterestEarned(amount, assetData.supplyRate, 'year', true);
+      acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
+
+      if (assetData.supplyIncentives) {
+        for (const supplyIncentive of assetData.supplyIncentives) {
+          const incentiveInterest = calculateInterestEarned(amount, supplyIncentive.apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        }
+      }
+    }
+
+    if (usedAsset.isBorrowed) {
+      const amount = usedAsset.borrowedUsd;
+      acc.borrowedUsd = new Dec(acc.borrowedUsd).add(amount).toString();
+      // User borrow rate = baseRate * (1 + riskPremiumFraction)
+      const drawnRate = new Dec(assetData.drawnRate);
+      const baseBorrowApr = drawnRate.mul(100);
+      const userBorrowApr = baseBorrowApr.mul(new Dec(1).add(riskPremiumFraction));
+      const userBorrowRate = aprToApy(userBorrowApr.toString());
+      const borrowInterest = calculateInterestEarned(amount, userBorrowRate, 'year', true);
+      acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
+
+      if (assetData.borrowIncentives) {
+        for (const borrowIncentive of assetData.borrowIncentives) {
+          const incentiveInterest = calculateInterestEarned(amount, borrowIncentive.apy, 'year', true);
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
+        }
+      }
+    }
+
+    return acc;
+  }, {
+    borrowInterest: '0', supplyInterest: '0', incentiveUsd: '0', borrowedUsd: '0', suppliedUsd: '0',
+  });
+
+  const {
+    borrowedUsd, suppliedUsd, borrowInterest, supplyInterest, incentiveUsd,
+  } = sumValues;
+
+  const totalInterestUsd = new Dec(borrowInterest).add(supplyInterest).add(incentiveUsd).toString();
+  const balance = new Dec(suppliedUsd).sub(borrowedUsd);
+  const netApy = balance.isZero() ? '0' : new Dec(totalInterestUsd).div(balance).times(100).toString();
+
+  return { netApy, totalInterestUsd, incentiveUsd };
 };
 
 export const aaveV4GetCollateralFactor = (assetData: AaveV4ReserveAssetData, usedAssetData: AaveV4UsedReserveAsset, useUserCollateralFactor: boolean = false): number => (useUserCollateralFactor ? usedAssetData.collateralFactor : assetData.collateralFactor);
@@ -217,14 +282,9 @@ export const aaveV4GetAggregatedPositionData = ({
   //   payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
   payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
 
-  // TODO: Re-implement netApy calculation
-  //   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
-  //     usedAssets,
-  //     assetsData,
-  //     optionalData: { healthRatio: payload.healthRatio },
-  //   });
-  payload.netApy = '0';
-  payload.incentiveUsd = '0';
-  payload.totalInterestUsd = '0';
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApyAaveV4({ usedAssets, assetsData });
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
   return payload;
 };
