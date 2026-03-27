@@ -115,6 +115,19 @@ export interface AaveV4TokenizationSpokeDataParsed {
   key: string | null;
   symbol: string;
   hubKey: string;
+  // ---- Spoke ----
+  spokeActive: boolean;
+  spokeHalted: boolean;
+  /** Deposit cap in asset units (wei string) */
+  spokeDepositCap: string;
+  /** Total assets currently in spoke in asset units (wei string) */
+  spokeTotalAssets: string;
+  // ---- Hub ----
+  /** Available hub liquidity in asset units (wei string) */
+  hubLiquidity: string;
+  /** The conversion rate from assets to shares expressed in asset units. */
+  convertToShares: string;
+  // ---- User ----
   userSuppliedAssetsEth: string;
   userSuppliedSharesEth: string;
   userSuppliedAssets: string;
@@ -166,6 +179,12 @@ export async function getAaveV4TokenizationSpokesData(
       key,
       symbol,
       hubKey,
+      spokeActive: r.spokeActive ?? true,
+      spokeHalted: r.spokeHalted ?? false,
+      spokeDepositCap: (r.spokeDepositCap ?? 0).toString(),
+      spokeTotalAssets: (r.spokeTotalAssets ?? 0).toString(),
+      hubLiquidity: (r.hubLiquidity ?? 0).toString(),
+      convertToShares: (r.convertToShares ?? 0).toString(),
       userSuppliedAssetsEth,
       userSuppliedSharesEth,
       userSuppliedAssets: userSuppliedAssetsRaw.toString(),
