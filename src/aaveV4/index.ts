@@ -20,7 +20,7 @@ import {
 } from '../types';
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { wethToEth } from '../services/utils';
+import { isMaxUint, wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
@@ -189,8 +189,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     totalDrawn: assetAmountInEth(totalDrawnRaw.toString(), symbol),
     totalPremium: assetAmountInEth(totalPremiumRaw.toString(), symbol),
     totalDebt: assetAmountInEth(totalDebtRaw.toString(), symbol),
-    supplyCap: assetAmountInEth(supplyCapRaw.toString(), symbol),
-    borrowCap: assetAmountInEth(borrowCapRaw.toString(), symbol),
+    supplyCap: isMaxUint(supplyCapRaw.toString()) ? supplyCapRaw.toString() : assetAmountInEth(supplyCapRaw.toString(), symbol),
+    borrowCap: isMaxUint(borrowCapRaw.toString()) ? borrowCapRaw.toString() : assetAmountInEth(borrowCapRaw.toString(), symbol),
     spokeActive: reserveAsset.spokeActive,
     spokeHalted: reserveAsset.spokeHalted,
     drawnRate: drawnRate.toString(),
@@ -239,7 +239,8 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
 
   const loanData = await viewContract.read.getLoanData([spokeData.address, address]);
 
-  const healthFactor = new Dec(loanData.healthFactor).div(1e18).toString();
+  const healthFactorFromContract = new Dec(loanData.healthFactor.toString());
+  const healthFactor = isMaxUint(healthFactorFromContract.toString()) ? '0' : healthFactorFromContract.div(1e18).toString();
   const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
     const identifier = `${wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)}-${+usedReserveAsset.reserveId.toString()}`;
     const reserveData = spokeData.assetsData[identifier];
