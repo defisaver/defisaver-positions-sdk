@@ -143,6 +143,7 @@ export interface AaveV4AggregatedPositionData {
   incentiveUsd: string,
   totalInterestUsd: string,
   currentVolatilePairRatio?: string,
+  minRatio: string,
 }
 
 export type AaveV4UsedReserveAssets = Record<string, AaveV4UsedReserveAsset>;
