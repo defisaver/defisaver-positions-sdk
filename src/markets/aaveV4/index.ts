@@ -45,7 +45,7 @@ export const getAaveV4HubByAddress = (networkId: NetworkNumber, address: string)
 
 export const AAVE_V4_BLUECHIP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Bluechip Spoke',
+  label: 'Bluechip',
   value: AaveV4SpokesType.AaveV4BluechipSpoke,
   url: 'bluechip',
   address: '0x973a023A77420ba610f06b3858aD991Df6d85A08',
@@ -58,7 +58,7 @@ export const AAVE_V4_BLUECHIP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInf
 
 export const AAVE_V4_ETHENA_CORRELATED_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Ethena Correlated Spoke',
+  label: 'Ethena Correlated',
   value: AaveV4SpokesType.AaveV4EthenaCorrelatedSpoke,
   url: 'ethena-correlated',
   address: '0x58131E79531caB1d52301228d1f7b842F26B9649',
@@ -71,7 +71,7 @@ export const AAVE_V4_ETHENA_CORRELATED_SPOKE = (networkId: NetworkNumber): AaveV
 
 export const AAVE_V4_ETHENA_ECOSYSTEM_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Ethena Ecosystem Spoke',
+  label: 'Ethena Ecosystem',
   value: AaveV4SpokesType.AaveV4EthenaEcosystemSpoke,
   url: 'ethena-ecosystem',
   address: '0xba1B3D55D249692b669A164024A838309B7508AF',
@@ -84,7 +84,7 @@ export const AAVE_V4_ETHENA_ECOSYSTEM_SPOKE = (networkId: NetworkNumber): AaveV4
 
 export const AAVE_V4_ETHERFI_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Etherfi Spoke',
+  label: 'Etherfi',
   value: AaveV4SpokesType.AaveV4EtherfiSpoke,
   url: 'etherfi',
   address: '0xbF10BDfE177dE0336aFD7fcCF80A904E15386219',
@@ -97,7 +97,7 @@ export const AAVE_V4_ETHERFI_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo
 
 export const AAVE_V4_FOREX_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Forex Spoke',
+  label: 'Forex',
   value: AaveV4SpokesType.AaveV4ForexSpoke,
   url: 'forex',
   address: '0xD8B93635b8C6d0fF98CbE90b5988E3F2d1Cd9da1',
@@ -110,7 +110,7 @@ export const AAVE_V4_FOREX_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =
 
 export const AAVE_V4_GOLD_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Gold Spoke',
+  label: 'Gold',
   value: AaveV4SpokesType.AaveV4GoldSpoke,
   url: 'gold',
   address: '0x65407b940966954b23dfA3caA5C0702bB42984DC',
@@ -123,7 +123,7 @@ export const AAVE_V4_GOLD_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
 
 export const AAVE_V4_KELP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Kelp Spoke',
+  label: 'Kelp',
   value: AaveV4SpokesType.AaveV4KelpSpoke,
   url: 'kelp',
   address: '0x3131FE68C4722e726fe6B2819ED68e514395B9a4',
@@ -136,7 +136,7 @@ export const AAVE_V4_KELP_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
 
 export const AAVE_V4_LIDO_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Lido Spoke',
+  label: 'Lido',
   value: AaveV4SpokesType.AaveV4LidoSpoke,
   url: 'lido',
   address: '0xe1900480ac69f0B296841Cd01cC37546d92F35Cd',
@@ -149,7 +149,7 @@ export const AAVE_V4_LIDO_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
 
 export const AAVE_V4_LOMBARD_BTC_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Lombard BTC Spoke',
+  label: 'Lombard BTC',
   value: AaveV4SpokesType.AaveV4LombardBtcSpoke,
   url: 'lombard-btc',
   address: '0x7EC68b5695e803e98a21a9A05d744F28b0a7753D',
@@ -162,7 +162,7 @@ export const AAVE_V4_LOMBARD_BTC_SPOKE = (networkId: NetworkNumber): AaveV4Spoke
 
 export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Main Spoke',
+  label: 'Main',
   value: AaveV4SpokesType.AaveV4MainSpoke,
   url: 'main',
   address: '0x94e7A5dCbE816e498b89aB752661904E2F56c485',
