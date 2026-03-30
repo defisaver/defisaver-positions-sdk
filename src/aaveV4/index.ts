@@ -97,7 +97,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalPremiumShares = new Dec(hubAsset.totalPremiumShares.toString());
   const premiumMultiplier = totalDrawnShares.isZero() ? new Dec(1) : totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
   const supplyApr = borrowApr.mul(hubUtilization).mul(premiumMultiplier).mul(new Dec(1).minus(liquidityFee));
-  const utilization = hubUtilization.toString();
+  const utilization = hubUtilization.times(100).toString();
 
   return ({
     symbol,
