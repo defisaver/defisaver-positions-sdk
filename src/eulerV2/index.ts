@@ -1,12 +1,13 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
-import {
-  EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
-} from '../types/common';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
-  compareAddresses, getEthAmountForDecimals, isMaxuint, wethToEth, wethToEthByAddress,
+  compareAddresses,
+  getEthAmountForDecimals,
+  isMaxUint,
+  wethToEth,
+  wethToEthByAddress,
 } from '../services/utils';
 import {
   EulerV2AssetData,
@@ -17,6 +18,10 @@ import {
   EulerV2PositionData,
   EulerV2UsedAssets,
   EulerV2VaultType,
+  EthAddress,
+  EthereumProvider,
+  IncentiveKind,
+  NetworkNumber,
 } from '../types';
 import {
   getEulerV2AggregatedData,
@@ -80,7 +85,7 @@ export const _getEulerV2MarketsData = async (provider: Client, network: NetworkN
       collateralFactor: new Dec(collateral.borrowLTV).div(10_000).toString(),
       totalBorrow: getEthAmountForDecimals(collateral.totalBorrows.toString(), decimals), // parse
       cash: getEthAmountForDecimals(collateral.cash.toString(), decimals),
-      supplyCap: isMaxuint(collateral.supplyCap.toString()) ? collateral.supplyCap.toString() : getEthAmountForDecimals(collateral.supplyCap.toString(), decimals),
+      supplyCap: isMaxUint(collateral.supplyCap.toString()) ? collateral.supplyCap.toString() : getEthAmountForDecimals(collateral.supplyCap.toString(), decimals),
       borrowCap: '0',
       price: isInUSD ? assetAmountInEth(collateral.assetPriceInUnit.toString()) : new Dec(assetAmountInEth(collateral.assetPriceInUnit.toString())).mul(usdPrice).toString(), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
       canBeBorrowed: false,
@@ -128,8 +133,8 @@ export const _getEulerV2MarketsData = async (provider: Client, network: NetworkN
     decimals,
     totalBorrow: getEthAmountForDecimals(data.totalBorrows.toString(), decimals), // parse
     cash: getEthAmountForDecimals(data.cash.toString(), decimals),
-    supplyCap: isMaxuint(data.supplyCap.toString()) ? data.supplyCap.toString() : getEthAmountForDecimals(data.supplyCap.toString(), decimals),
-    borrowCap: isMaxuint(data.supplyCap.toString()) ? data.borrowCap.toString() : getEthAmountForDecimals(data.borrowCap.toString(), decimals),
+    supplyCap: isMaxUint(data.supplyCap.toString()) ? data.supplyCap.toString() : getEthAmountForDecimals(data.supplyCap.toString(), decimals),
+    borrowCap: isMaxUint(data.supplyCap.toString()) ? data.borrowCap.toString() : getEthAmountForDecimals(data.borrowCap.toString(), decimals),
     price: isInUSD ? assetAmountInEth(data.assetPriceInUnit.toString()) : new Dec(assetAmountInEth(data.assetPriceInUnit.toString())).mul(usdPrice).toString(), // 1e18 -> price in unitOfAccount (so it could be USD or any other token)
     sortIndex: 0,
     canBeBorrowed: true,

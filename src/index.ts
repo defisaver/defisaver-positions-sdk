@@ -1,6 +1,7 @@
 import './setup';
 
 import * as fluid from './fluid';
+import * as aaveV4 from './aaveV4';
 import * as aaveV3 from './aaveV3';
 import * as aaveV2 from './aaveV2';
 import * as compoundV3 from './compoundV3';
@@ -27,6 +28,7 @@ export * from './types';
 export {
   aaveV2,
   aaveV3,
+  aaveV4,
   compoundV2,
   compoundV3,
   spark,
