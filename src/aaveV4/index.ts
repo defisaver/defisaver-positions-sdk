@@ -83,9 +83,6 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalDebtRaw = reserveAsset.totalDebt ?? 0;
   const supplyCapRaw = reserveAsset.supplyCap ?? 0;
   const borrowCapRaw = reserveAsset.borrowCap ?? 0;
-  const totalSuppliedDec = isMaxUint(totalSuppliedRaw.toString()) ? new Dec(0) : new Dec(totalSuppliedRaw.toString());
-  const totalDrawnDec = isMaxUint(totalDrawnRaw.toString()) ? new Dec(0) : new Dec(totalDrawnRaw.toString());
-  const utilization = totalSuppliedDec.isZero() ? '0' : totalDrawnDec.times(100).div(totalSuppliedDec).toString();
 
   /** @DEV Hub related calculations */
   const drawnRate = new Dec(hubAsset.drawnRate.toString()).div(new Dec(10).pow(27));
@@ -100,6 +97,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const totalPremiumShares = new Dec(hubAsset.totalPremiumShares.toString());
   const premiumMultiplier = totalDrawnShares.isZero() ? new Dec(1) : totalDrawnShares.add(totalPremiumShares).div(totalDrawnShares);
   const supplyApr = borrowApr.mul(hubUtilization).mul(premiumMultiplier).mul(new Dec(1).minus(liquidityFee));
+  const utilization = hubUtilization.times(100).toString();
 
   return ({
     symbol,
