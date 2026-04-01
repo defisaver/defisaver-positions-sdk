@@ -13,7 +13,7 @@ describe('Aave v4', () => {
     provider = getProvider('RPC');
   });
 
-  const fetchSpokeData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveV4SpokesType.AaveV4CoreSpoke) => {
+  const fetchSpokeData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveV4SpokesType.AaveV4MainSpoke) => {
     const marketData = await sdk.aaveV4.getAaveV4SpokeData(_provider, network, sdk.markets.AaveV4Spokes(network)[version] as sdk.AaveV4SpokeInfo);
     // console.log(marketData);
     return marketData;
@@ -27,11 +27,11 @@ describe('Aave v4', () => {
 
   // Ethereum
 
-  it('can fetch market and account data for Core Spoke Ethereum', async function () {
+  it('can fetch market and account data for Main Spoke Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
 
-    const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4CoreSpoke);
+    const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4MainSpoke);
     await fetchAccountData(network, provider, marketData);
   });
 });

@@ -100,7 +100,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const utilization = hubUtilization.times(100).toString();
 
   const hubLiquidityRaw = hubAsset.liquidity;
-  const hubLiquidity = assetAmountInEth(hubLiquidityRaw.toString(), symbol);
+  const hubLiquidity = isMaxUint(hubLiquidityRaw.toString()) ? hubLiquidityRaw.toString() : assetAmountInEth(hubLiquidityRaw.toString(), symbol);
 
   return ({
     symbol,
@@ -149,6 +149,8 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
       hubsData[hubAddress] = await fetchHubData(viewContract, hubAddress);
     }),
   ]);
+
+  console.log(spokeData);
 
   const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
 
