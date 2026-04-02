@@ -150,8 +150,6 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
     }),
   ]);
 
-  console.log(spokeData);
-
   const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
 
   return {
