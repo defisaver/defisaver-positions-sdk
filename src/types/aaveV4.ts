@@ -116,6 +116,8 @@ export interface AaveV4ReserveAssetData {
   canBeWithdrawn: boolean;
   canBePayBacked: boolean;
   utilization: string;
+  /** Hub `liquidity` for this assetId (underlying amount), used for pool-level borrow/withdraw limits */
+  hubLiquidity: string,
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;

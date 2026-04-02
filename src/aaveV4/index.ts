@@ -99,6 +99,9 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const supplyApr = borrowApr.mul(hubUtilization).mul(premiumMultiplier).mul(new Dec(1).minus(liquidityFee));
   const utilization = hubUtilization.times(100).toString();
 
+  const hubLiquidityRaw = hubAsset.liquidity;
+  const hubLiquidity = isMaxUint(hubLiquidityRaw.toString()) ? hubLiquidityRaw.toString() : assetAmountInEth(hubLiquidityRaw.toString(), symbol);
+
   return ({
     symbol,
     underlying: reserveAsset.underlying,
@@ -132,6 +135,7 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     utilization,
+    hubLiquidity,
   });
 };
 
