@@ -223,3 +223,15 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
 export async function getAaveV4AccountData(provider: EthereumProvider, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<any> {
   return _getAaveV4AccountData(getViemProvider(provider, network), network, marketData, address, blockNumber);
 }
+
+const _getAaveV4UnderlyingFromReserveId = async (provider: Client, network: NetworkNumber, spoke: EthAddress, reserveId: number): Promise<any> => {
+  const viewContract = AaveV4ViewContractViem(provider, network);
+
+  const reserveData = await viewContract.read.getReserveData([spoke, BigInt(reserveId)]);
+
+  return reserveData.underlying;
+};
+
+export async function getAaveV4UnderlyingFromReserveId(provider: EthereumProvider, network: NetworkNumber, spoke: EthAddress, reserveId: number): Promise<any> {
+  return _getAaveV4UnderlyingFromReserveId(getViemProvider(provider, network), network, spoke, reserveId);
+}

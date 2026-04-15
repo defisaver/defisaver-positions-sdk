@@ -1,9 +1,12 @@
 import 'dotenv/config';
 
+import { getAssetInfo } from '@defisaver/tokens';
 import * as sdk from '../src';
 
-import { Blockish, EthereumProvider, NetworkNumber } from '../src/types/common';
+import { Blockish, EthereumProvider, NetworkNumber } from '../src';
 import { getProvider } from './utils/getProvider';
+import { getAaveV4UnderlyingFromReserveId } from '../src/aaveV4';
+import { compareAddresses } from '../src/services/utils';
 
 const { assert } = require('chai');
 
@@ -33,5 +36,15 @@ describe('Aave v4', () => {
 
     const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4MainSpoke);
     await fetchAccountData(network, provider, marketData);
+  });
+
+  it('can fetch asset from reserveId', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    // gold spoke
+    const goldSpoke = sdk.markets.AaveV4Spokes(network)[sdk.AaveV4SpokesType.AaveV4GoldSpoke];
+    const XAUtReserveId = 0;
+    const assetAddress = await getAaveV4UnderlyingFromReserveId(provider, network, goldSpoke.address, XAUtReserveId);
+    // console.log(compareAddresses(assetAddress, getAssetInfo('XAUt', network).address));
   });
 });
