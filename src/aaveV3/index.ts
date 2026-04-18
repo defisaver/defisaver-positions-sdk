@@ -85,16 +85,13 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const marketAddress = market.providerAddress;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
   // eslint-disable-next-line prefer-const
-  let [loanInfo, eModesInfo, isBorrowAllowed, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
+  let [loanInfo, eModesInfo, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
     loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber)),
-    loanInfoContract.read.isBorrowAllowed([marketAddress], setViemBlockNumber(blockNumber)), // Used on L2s check for PriceOracleSentinel (mainnet will always return true)
     networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null,
     getMerkleCampaigns(network),
     getMeritCampaigns(network, market.value),
   ]);
-  isBorrowAllowed = isLayer2Network(network) ? isBorrowAllowed : true;
-
   // same break logic as view contract
   let missCounter = 0;
   const eModeCategoriesData: EModeCategoriesData = {};
@@ -176,7 +173,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         isInactive: !tokenMarket.isActive,
         isFrozen: tokenMarket.isFrozen,
         isPaused: tokenMarket.isPaused,
-        canBeBorrowed: tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen && tokenMarket.borrowingEnabled && isBorrowAllowed,
+        canBeBorrowed: tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen && tokenMarket.borrowingEnabled,
         canBeSupplied: tokenMarket.isActive && !tokenMarket.isPaused && !tokenMarket.isFrozen,
         canBeWithdrawn: tokenMarket.isActive && !tokenMarket.isPaused,
         canBePayBacked: tokenMarket.isActive && !tokenMarket.isPaused,
