@@ -79,7 +79,6 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
 export async function _getAaveV3MarketData(provider: Client, network: NetworkNumber, market: AaveMarketInfo, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3MarketData> {
   const _addresses = market.assets.map(a => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address);
 
-  const isL2 = isLayer2Network(network);
   const loanInfoContract = AaveV3ViewContractViem(provider, network);
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
