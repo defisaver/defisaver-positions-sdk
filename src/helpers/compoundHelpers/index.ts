@@ -71,7 +71,7 @@ export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice
     price: baseAssetPrice,
     collateralFactor: '0',
     liquidationRatio: '0',
-    canBeBorrowed: true,
+    canBeBorrowed: !isWithdrawPaused,
     canBeSupplied: !isSupplyPaused,
     canBeWithdrawn: !isWithdrawPaused,
     supplyCap: '0',

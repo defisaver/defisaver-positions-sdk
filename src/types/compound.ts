@@ -89,7 +89,7 @@ export type CompoundV3AssetsData = CompoundAssetsData<CompoundV3AssetData>;
 
 export type CompoundMarketsData<T> = { assetsData: T };
 export type CompoundV2MarketsData = CompoundMarketsData<CompoundV2AssetsData>;
-export type CompoundV3MarketsData = CompoundMarketsData<CompoundV3AssetsData>;
+export type CompoundV3MarketsData = CompoundMarketsData<CompoundV3AssetsData> & { isMarketSupplyPaused: boolean, isMarketWithdrawPaused: boolean, isMarketBorrowPaused: boolean };
 
 export interface BaseAdditionalAssetData {
   totalBorrow: string,

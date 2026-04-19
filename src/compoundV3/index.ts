@@ -87,7 +87,9 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
       payload[market.symbol] = { ...market, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  return {
+    assetsData: payload, isMarketBorrowPaused: isWithdrawPaused, isMarketSupplyPaused: isSupplyPaused, isMarketWithdrawPaused: isWithdrawPaused,
+  };
 };
 
 export const getCompoundV3MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3MarketsData> => _getCompoundV3MarketsData(getViemProvider(provider, network), network, selectedMarket, getViemProvider(defaultProvider, network));
