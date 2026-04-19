@@ -17,7 +17,7 @@ import {
 import { CompoundLoanInfoContractViem, CompV3ViewContractViem } from '../../contracts';
 import { getViemProvider } from '../../services/viem';
 
-export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData => {
+export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPrice: string, isSupplyPaused: boolean, isWithdrawPaused: boolean): CompoundV3AssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
   const isWETH = assetInfo.symbol === 'WETH';
   const price = getEthAmountForDecimals(data.price, 8);
@@ -37,14 +37,15 @@ export const formatMarketData = (data: any, network: NetworkNumber, baseAssetPri
     supplyRate: '0',
     borrowRate: '0',
     canBeBorrowed: false,
-    canBeSupplied: true,
+    canBeSupplied: !isSupplyPaused,
+    canBeWithdrawn: !isWithdrawPaused,
     supplyIncentives: [],
     borrowIncentives: [],
   });
 };
 
 // TODO: maybe not hardcode decimals
-export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice: string): CompoundV3AssetData & BaseAdditionalAssetData => {
+export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice: string, isSupplyPaused: boolean, isWithdrawPaused: boolean): CompoundV3AssetData & BaseAdditionalAssetData => {
   const assetInfo = getAssetInfoByAddress(data.tokenAddr, network);
   const totalSupply = getEthAmountForDecimals(new Dec(data.totalSupply).mul(data.supplyIndex).toString(), 15 + assetInfo.decimals);
   const totalBorrow = getEthAmountForDecimals(new Dec(data.totalBorrow).mul(data.borrowIndex).toString(), 15 + assetInfo.decimals);
@@ -71,7 +72,8 @@ export const formatBaseData = (data: any, network: NetworkNumber, baseAssetPrice
     collateralFactor: '0',
     liquidationRatio: '0',
     canBeBorrowed: true,
-    canBeSupplied: true,
+    canBeSupplied: !isSupplyPaused,
+    canBeWithdrawn: !isWithdrawPaused,
     supplyCap: '0',
     rewardSupplySpeed: getEthAmountForDecimals(data.baseTrackingSupplyRewardsSpeed, 15),
     rewardBorrowSpeed: getEthAmountForDecimals(data.baseTrackingBorrowRewardsSpeed, 15),

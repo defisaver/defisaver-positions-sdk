@@ -78,6 +78,7 @@ export interface CompoundV3AssetData extends CompoundAssetData {
   liquidationRatio: string,
   supplyCap: string,
   priceInBaseAsset: string,
+  canBeWithdrawn: boolean,
 }
 
 export interface CompoundAssetsData<T> {

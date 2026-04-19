@@ -43,18 +43,21 @@ const getBaseAssetPriceFunction = (asset: string) => {
 export const _getCompoundV3MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: Client): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContractViem(provider, network);
 
-  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos] = await Promise.all([
+  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos, govInfo] = await Promise.all([
     getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultProvider),
     getCompPrice(defaultProvider),
     contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress]),
     contract.read.getFullCollInfos([selectedMarket.baseMarketAddress]),
+    contract.read.getGovernanceInfoFull([selectedMarket.baseMarketAddress]),
   ]);
+
+  const { isSupplyPaused, isWithdrawPaused } = govInfo;
 
   const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
 
   const colls = collInfos
     .filter((coll: any) => supportedAssetsAddresses.includes(coll.tokenAddr.toLowerCase()))
-    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice, isSupplyPaused, isWithdrawPaused)) as CompoundV3AssetData[];
 
   for (const coll of colls) {
     if (STAKING_ASSETS.includes(coll.symbol)) {
@@ -66,7 +69,7 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
       });
     }
   }
-  const base = formatBaseData(baseTokenInfo, network, baseAssetPrice);
+  const base = formatBaseData(baseTokenInfo, network, baseAssetPrice, isSupplyPaused, isWithdrawPaused);
 
   const payload: CompoundV3AssetsData = {};
 
