@@ -36,7 +36,6 @@ export enum MorphoBlueVersions {
   MorphoBlueUSDeUSDtb_915 = 'morphoblueusdeusdtb_915', // USDe/USDTb
   MorphoBlueEthUSDT_915 = 'morphoblueethusdt_915', // ETH/USDT
   MorphoBlueRsEthEth_945 = 'morphobluersetheth_945', // rsETH/ETH
-  MorphoBlueRsEthEth_860 = 'morphobluersetheth_860', // rsETH/ETH
   MorphoBlueRswEthEth_945 = 'morphobluerswetheth_945', // rswETH/ETH
   MorphoBluePTweETHUSDA_860 = 'morphoblueptweethusda_860', // PTweETH/USDA
   MorphoBlueSwBTCWBTC_945 = 'morphoblueswbtcwbtc_945', // swBTC/WBTC
