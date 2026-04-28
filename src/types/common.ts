@@ -4,10 +4,10 @@ export enum IncentiveKind {
 }
 
 export enum IncentiveEligibilityId {
-  AaveV3EthenaLiquidLeverage = '0x8014e0076e5393e62c49a7134070d8fccc922e46BORROW_BL',
+  AaveV3EthenaLiquidLeverage = '0xa3a69b037797708422b49b4B1A200d5f79C518DBBORROW_BL',
   AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
   AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
-  AaveV3EthenaLiquidLeveragePlasma = '0xeefac321069fbecc9d6b2aed2948f6d5503d8633BORROW_BL',
+  AaveV3EthenaLiquidLeveragePlasma = '0xb8A354b1CdC7537d0d92cc2f5C2596670558F7EFBORROW_BL',
   AaveV3EthenaLiquidLeveragePlasmaGHO = '2b2f6fefcd3df634',
 }
 
