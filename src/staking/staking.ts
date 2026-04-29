@@ -108,6 +108,7 @@ export const getStakingApy = memoize(async (asset: string, network: number = Net
     if (asset === 'PT srUSDe Jun') return await getApyFromDfsApi('PT srUSDe Jun', network);
     if (asset === 'PT sUSDe June') return await getApyFromDfsApi('PT sUSDe June', network);
     if (asset === 'PT USDe June') return await getApyFromDfsApi('PT USDe June', network);
+    if (asset === 'PT USDG May') return await getApyFromDfsApi('PT USDG May', network);
     if (asset === 'GHO') return await getApyFromDfsApi('GHO', network);
   } catch (e) {
     console.error(`Failed to fetch APY for ${asset}`);
