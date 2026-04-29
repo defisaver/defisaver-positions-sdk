@@ -65,7 +65,7 @@ export const STAKING_ASSETS = [
   'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep',
   'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'syrupUSDC', 'wstUSR',
   'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May', 'PT srUSDe Apr', 'GHO',
-  'PT sUSDe June', 'PT USDe June', 'PT srUSDe Jun',
+  'PT sUSDe June', 'PT USDe June', 'PT srUSDe Jun', 'PT USDG May',
 ];
 
 export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
