@@ -2,15 +2,17 @@ import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAssets, AaveVersions,
+  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAsset, AaveV3UsedAssets, AaveVersions,
 } from '../../types';
-import { ethToWeth, wethToEth } from '../../services/utils';
+import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
-  aprToApy, calcLeverageLiqPrice, getAssetsTotal, isLeveragedPos,
+  aprToApy, calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import { borrowOperations } from '../../constants';
-import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import {
+  EthAddress, EthereumProvider, LeverageType, NetworkNumber,
+} from '../../types/common';
 import { AaveLoanInfoV2ContractViem, AaveV3ViewContractViem } from '../../contracts';
 import { getViemProvider } from '../../services/viem';
 
@@ -57,10 +59,12 @@ export const aaveAnyGetEmodeMutableProps = (
     eModeCategoriesData,
     assetsData,
   }: AaveHelperCommon, _asset: string) => {
-  const asset = wethToEth(_asset);
+  const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
-  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string } = eModeCategoriesData?.[eModeCategory] || { collateralAssets: [], collateralFactor: '0', liquidationRatio: '0' };
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string, ltvZeroAssets: string[] } = eModeCategoriesData?.[eModeCategory] || {
+    collateralAssets: [], ltvZeroAssets: [], collateralFactor: '0', liquidationRatio: '0',
+  };
 
   if (
     eModeCategory === 0
@@ -70,6 +74,8 @@ export const aaveAnyGetEmodeMutableProps = (
     const { liquidationRatio, collateralFactor } = assetData;
     return ({ liquidationRatio, collateralFactor });
   }
+  if (eModeCategoryData.ltvZeroAssets.includes(asset)) return ({ liquidationRatio: '0', collateralFactor: '0' });
+
   const { liquidationRatio, collateralFactor } = eModeCategoryData;
   return ({ liquidationRatio, collateralFactor });
 };
@@ -103,14 +109,6 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
-  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
-    usedAssets,
-    assetsData,
-    isAave: true,
-  });
-  payload.netApy = netApy;
-  payload.incentiveUsd = incentiveUsd;
-  payload.totalInterestUsd = totalInterestUsd;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
@@ -119,17 +117,36 @@ export const aaveAnyGetAggregatedPositionData = ({
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
     let assetPrice = data.assetsData[leveragedAsset].price;
-    if (leveragedType === 'lsd-leverage') {
-      // Treat ETH like a stablecoin in a long stETH position
-      payload.leveragedLsdAssetRatio = new Dec(assetsData[leveragedAsset].price).div(assetsData.ETH.price).toDP(18).toString();
-      assetPrice = new Dec(assetPrice).div(assetsData.ETH.price).toString();
+    if (leveragedType === LeverageType.VolatilePair) {
+      const borrowedAsset = (Object.values(usedAssets) as AaveV3UsedAsset[]).find(({ borrowedUsd }: { borrowedUsd: string }) => +borrowedUsd > 0);
+      const borrowedAssetPrice = data.assetsData[borrowedAsset!.symbol].price;
+      const leveragedAssetPrice = data.assetsData[leveragedAsset].price;
+      const isReverse = new Dec(leveragedAssetPrice).lt(borrowedAssetPrice);
+      if (isReverse) {
+        payload.leveragedType = LeverageType.VolatilePairReverse;
+        payload.currentVolatilePairRatio = new Dec(borrowedAssetPrice).div(leveragedAssetPrice).toDP(18).toString();
+        assetPrice = new Dec(borrowedAssetPrice).div(assetPrice).toString();
+      } else {
+        assetPrice = new Dec(assetPrice).div(borrowedAssetPrice).toString();
+        payload.currentVolatilePairRatio = new Dec(leveragedAssetPrice).div(borrowedAssetPrice).toDP(18).toString();
+      }
     }
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(payload.leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.minCollRatio = new Dec(payload.suppliedCollateralUsd).div(payload.borrowLimitUsd).mul(100).toString();
   payload.collLiquidationRatio = new Dec(payload.suppliedCollateralUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.healthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowedUsd).toDP(4).toString();
   payload.minHealthRatio = new Dec(payload.liquidationLimitUsd).div(payload.borrowLimitUsd).toDP(4).toString();
+
+  const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({
+    usedAssets,
+    assetsData,
+    optionalData: { healthRatio: payload.healthRatio },
+  });
+  payload.netApy = netApy;
+  payload.incentiveUsd = incentiveUsd;
+  payload.totalInterestUsd = totalInterestUsd;
+  payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
   return payload;
 };
 
@@ -137,7 +154,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const params = actions.map(({ action, asset, amount }) => {
     const isDebtAsset = borrowOperations.includes(action);
     const amountInWei = assetAmountInWei(amount, asset);
-    const assetInfo = getAssetInfo(ethToWeth(asset), network);
+    const assetInfo = getAssetInfo(getWrappedNativeAssetFromUnwrapped(asset), network);
     let liquidityAdded;
     let liquidityTaken;
     if (isDebtAsset) {
@@ -158,7 +175,7 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
   const data = await viewContract.read.getApyAfterValuesEstimation([selectedMarket.providerAddress, params]);
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
   data.forEach((d: { reserveAddress: EthAddress, supplyRate: BigInt, variableBorrowRate: BigInt }) => {
-    const asset = wethToEth(getAssetInfoByAddress(d.reserveAddress, network).symbol);
+    const asset = getNativeAssetFromWrapped(getAssetInfoByAddress(d.reserveAddress, network).symbol);
     rates[asset] = {
       supplyRate: aprToApy(new Dec(d.supplyRate.toString()).div(1e25).toString()),
       borrowRate: aprToApy(new Dec(d.variableBorrowRate.toString()).div(1e25).toString()),
@@ -168,3 +185,20 @@ const getApyAfterValuesEstimationInner = async (selectedMarket: AaveMarketInfo, 
 };
 
 export const getApyAfterValuesEstimation = async (selectedMarket: AaveMarketInfo, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getApyAfterValuesEstimationInner(selectedMarket, actions, getViemProvider(provider, network), network);
+
+/**
+ * won't cover all cases
+ */
+export const getAaveUnderlyingSymbol = (_symbol = '') => {
+  let symbol = _symbol
+    .replace(/^aEthLido/, '')
+    .replace(/^aEthEtherFi/, '')
+    .replace(/^aEth/, '')
+    .replace(/^aArb/, '')
+    .replace(/^aOpt/, '')
+    .replace(/^aLin/, '')
+    .replace(/^aPla/, '')
+    .replace(/^aBas/, '');
+  if (symbol.startsWith('a')) symbol = symbol.slice(1);
+  return getNativeAssetFromWrapped(symbol);
+};

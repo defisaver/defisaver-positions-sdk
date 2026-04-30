@@ -13,12 +13,14 @@ describe('Aave v3', () => {
   let providerOpt: EthereumProvider;
   let providerArb: EthereumProvider;
   let providerLinea: EthereumProvider;
+  let providerPlasma: EthereumProvider;
   before(async () => {
     provider = getProvider('RPC');
     providerOpt = getProvider('RPCOPT');
     providerBase = getProvider('RPCBASE');
     providerArb = getProvider('RPCARB');
     providerLinea = getProvider('RPCLINEA');
+    providerPlasma = getProvider('RPCPLASMA');
   });
 
   const fetchMarketData = async (network: NetworkNumber, _provider: EthereumProvider, version = sdk.AaveVersions.AaveV3) => {
@@ -36,8 +38,8 @@ describe('Aave v3', () => {
   };
 
   const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.AaveV3MarketData, version = sdk.AaveVersions.AaveV3) => {
-    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0x50d518f09cD64eB959F0D02e286517e8BcdA1946', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
-    // console.log(accountData);
+    const accountData = await sdk.aaveV3.getAaveV3AccountData(_provider, network, '0xe4D0f8c53C7fE7717d5a68321eDA15D667E7d44C', { selectedMarket: sdk.markets.AaveMarkets(network)[version], assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
+    console.log(accountData);
     assert.containsAllKeys(accountData, [
       'usedAssets', 'suppliedUsd', 'borrowedUsd', 'ratio', 'eModeCategories', // ...
     ]);
@@ -247,5 +249,36 @@ describe('Aave v3', () => {
     const network = NetworkNumber.Linea;
 
     await fetchAccountBalances(network, providerLinea, 22819963);
+  });
+
+  // Plasma
+
+  it('can fetch market and account data for Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    const marketData = await fetchMarketData(network, providerPlasma);
+    await fetchAccountData(network, providerPlasma, marketData);
+  });
+
+  it('can fetch full position data for Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    await fetchFullPositionData(network, providerPlasma);
+  });
+
+  it('can fetch latest account balances for Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    await fetchAccountBalances(network, providerPlasma, 'latest');
+  });
+
+  it('can fetch past account balances for Plasma', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Plasma;
+
+    await fetchAccountBalances(network, providerPlasma, 1880800);
   });
 });

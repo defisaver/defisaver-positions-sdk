@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   ethToWeth, wethToEth, wethToEthByAddress,
@@ -24,6 +24,7 @@ import {
   SparkPositionData,
   SparkUsedAsset,
   SparkUsedAssets,
+  EModeCategoriesData,
 } from '../types';
 import { sparkGetAggregatedPositionData, sparkIsInIsolationMode } from '../helpers/sparkHelpers';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
@@ -49,8 +50,6 @@ export const sparkEmodeCategoriesMapping = (extractedState: { assetsData: SparkA
       enteringTerms,
       canEnterCategory: !enteringTerms.includes(false),
       id: a.eModeCategory,
-      data: a.eModeCategoryData,
-      assets: a.eModeCategory === 0 ? [] : [...(categoriesMapping[a.eModeCategory]?.assets || []), a.symbol],
       enabledData: {
         ratio: afterEnteringCategory.ratio,
         liqRatio: afterEnteringCategory.liqRatio,
@@ -68,19 +67,19 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
   const loanInfoContract = SparkViewContractViem(provider, network);
   const sparkIncentivesContract = SparkIncentiveDataProviderContractViem(provider, network);
 
-  const [loanInfo, _rewardInfo] = await Promise.all([
+  // eslint-disable-next-line prefer-const
+  let [loanInfo, rewardInfo] = await Promise.all([
     loanInfoContract.read.getFullTokensInfo([marketAddress, selectedMarket.assets.map(a => getAssetInfo(ethToWeth(a)).address) as EthAddress[]]),
-    network === NetworkNumber.Opt ? sparkIncentivesContract.read.getReservesIncentivesData([marketAddress]) : [],
+    sparkIncentivesContract.read.getReservesIncentivesData([marketAddress]),
   ]);
 
-  let rewardInfo: any[] = [];
-  if (network === NetworkNumber.Opt) {
-    rewardInfo = rewardInfo.reduce((all, market) => {
-      // eslint-disable-next-line no-param-reassign
-      all[market.underlyingAsset] = market;
-      return all;
-    }, {});
-  }
+  rewardInfo = rewardInfo.reduce((all: any, market: any) => {
+    // eslint-disable-next-line no-param-reassign
+    all[market.underlyingAsset] = market;
+    return all;
+  }, {});
+
+  const eModeCategoriesData: EModeCategoriesData = {};
 
   const assetsData: SparkAssetData[] = await Promise.all(loanInfo
     .map(async (market, i) => {
@@ -98,12 +97,25 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
       if (new Dec(marketLiquidity).lt(0)) {
         marketLiquidity = '0';
       }
+
+      const emodeCategoryId = +market.emodeCategory.toString();
+      eModeCategoriesData[emodeCategoryId] = {
+        id: emodeCategoryId,
+        label: market.label,
+        liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
+        liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
+        collateralFactor: new Dec(market.ltv).div(10000).toString(),
+        collateralAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].collateralAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+        borrowAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].borrowAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
+        ltvZeroAssets: [],
+      };
+
       return ({
         symbol: selectedMarket.assets[i],
         isIsolated: new Dec(market.debtCeilingForIsolationMode.toString()).gt(0),
         debtCeilingForIsolationMode: new Dec(market.debtCeilingForIsolationMode.toString()).div(100).toString(),
         isSiloed: market.isSiloedForBorrowing,
-        eModeCategory: +market.emodeCategory.toString(),
+        eModeCategory: emodeCategoryId,
         isolationModeTotalDebt: new Dec(market.isolationModeTotalDebt.toString()).div(100).toString(),
         assetId: Number(market.assetId),
         underlyingTokenAddress: market.underlyingTokenAddress,
@@ -111,6 +123,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         borrowRate: aprToApy(new Dec(market.borrowRateVariable.toString()).div(1e25).toString()),
         borrowRateStable: aprToApy(new Dec(market.borrowRateStable.toString()).div(1e25).toString()),
         collateralFactor: new Dec(market.collateralFactor.toString()).div(10000).toString(),
+        liquidationBonus: eModeCategoriesData[emodeCategoryId].liquidationBonus,
         liquidationRatio: new Dec(market.liquidationRatio.toString()).div(10000).toString(),
         marketLiquidity,
         utilization: new Dec(market.totalBorrow.toString()).times(100).div(new Dec(market.totalSupply.toString())).toString(),
@@ -132,13 +145,8 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         isolationModeBorrowingEnabled: market.isolationModeBorrowingEnabled,
         isFlashLoanEnabled: market.isFlashLoanEnabled,
         aTokenAddress: market.aTokenAddress,
-        eModeCategoryData: {
-          label: market.label,
-          liquidationBonus: new Dec(market.liquidationBonus).div(10000).toString(),
-          liquidationRatio: new Dec(market.liquidationThreshold).div(10000).toString(),
-          collateralFactor: new Dec(market.ltv).div(10000).toString(),
-          priceSource: market.priceSource,
-        },
+        supplyIncentives: [],
+        borrowIncentives: [],
       });
     }));
 
@@ -146,40 +154,32 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
     /* eslint-disable no-param-reassign */
     const rewardForMarket = (rewardInfo as any)[market.underlyingTokenAddress];
     if (STAKING_ASSETS.includes(market.symbol)) {
-      market.incentiveSupplyApy = await getStakingApy(market.symbol);
-      market.incentiveSupplyToken = market.symbol;
-      if (!market.supplyIncentives) {
-        market.supplyIncentives = [];
-      }
-
+      const yieldApy = await getStakingApy(market.symbol);
       market.supplyIncentives.push({
-        apy: market.incentiveSupplyApy || '0',
+        apy: yieldApy,
         token: market.symbol,
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${market.symbol} yield.`,
       });
-    }
 
-    if (market.symbol === 'sDAI') {
-      market.incentiveSupplyApy = await getStakingApy('sDAI');
-      market.incentiveSupplyToken = 'sDAI';
-    }
+      if (market.canBeBorrowed) {
+        if (!market.borrowIncentives) {
+          market.borrowIncentives = [];
+        }
 
-    if (market.canBeBorrowed && market.incentiveSupplyApy) {
-      market.incentiveBorrowApy = market.incentiveSupplyApy;
-      market.incentiveBorrowToken = market.incentiveSupplyToken;
-      if (!market.borrowIncentives) {
-        market.borrowIncentives = [];
+        market.borrowIncentives.push({
+          apy: new Dec(yieldApy).mul(-1).toString(),
+          token: market.symbol,
+          incentiveKind: IncentiveKind.Reward,
+          description: `Due to the native yield of ${market.symbol}, the value of the debt would increase over time.`,
+        });
       }
-      market.borrowIncentives.push({
-        apy: market.incentiveBorrowApy,
-        token: market.incentiveBorrowToken!!,
-      });
     }
 
     if (!rewardForMarket) return;
     (rewardForMarket.aIncentiveData.rewardsTokenInformation as any[]).forEach(supplyRewardData => {
       if (supplyRewardData) {
-        if (supplyRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-        market.incentiveSupplyToken = supplyRewardData.rewardTokenSymbol;
+        if (+(supplyRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         const supplyEmissionPerSecond = supplyRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(supplyRewardData.rewardPriceFeed).div(10 ** supplyRewardData.priceFeedDecimals)
           .toString();
@@ -189,21 +189,18 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
           .div(market.price)
           .div(market.totalSupply)
           .toString();
-        market.incentiveSupplyApy = new Dec(market.incentiveSupplyApy || '0').add(rewardApy).toString();
 
-        if (!market.supplyIncentives) {
-          market.supplyIncentives = [];
-        }
         market.supplyIncentives.push({
           token: supplyRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });
     (rewardForMarket.vIncentiveData.rewardsTokenInformation as any[]).forEach(borrowRewardData => {
       if (borrowRewardData) {
-        if (borrowRewardData.emissionEndTimestamp * 1000 < Date.now()) return;
-        market.incentiveBorrowToken = borrowRewardData.rewardTokenSymbol;
+        if (+(borrowRewardData.emissionEndTimestamp.toString()) * 1000 < Date.now()) return;
         const supplyEmissionPerSecond = borrowRewardData.emissionPerSecond;
         const supplyRewardPrice = new Dec(borrowRewardData.rewardPriceFeed).div(10 ** borrowRewardData.priceFeedDecimals)
           .toString();
@@ -213,21 +210,18 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
           .div(market.price)
           .div(market.totalBorrowVar)
           .toString();
-        market.incentiveBorrowApy = new Dec(market.incentiveBorrowApy || '0').add(rewardApy).toString();
-
-        if (!market.borrowIncentives) {
-          market.borrowIncentives = [];
-        }
         market.borrowIncentives.push({
           token: borrowRewardData.rewardTokenSymbol,
           apy: rewardApy,
+          incentiveKind: IncentiveKind.Reward,
+          description: 'Eligible for protocol-level incentives.',
         });
       }
     });
     /* eslint-enable no-param-reassign */
   }));
 
-  const payload: SparkAssetsData = {};
+  const filteredAssetsData: SparkAssetsData = {};
   // Sort by market size
   assetsData
     .sort((a, b) => {
@@ -237,10 +231,13 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
       return new Dec(bMarket).minus(aMarket).toNumber();
     })
     .forEach((assetData: SparkAssetData, i) => {
-      payload[assetData.symbol] = { ...assetData, sortIndex: i };
+      filteredAssetsData[assetData.symbol] = { ...assetData, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  eModeCategoriesData[0].collateralAssets = Object.values(filteredAssetsData).map(a => a.symbol);
+  eModeCategoriesData[0].borrowAssets = Object.values(filteredAssetsData).map(a => a.symbol);
+
+  return { assetsData: filteredAssetsData, eModeCategoriesData };
 };
 
 export const getSparkMarketsData = async (
@@ -267,6 +264,7 @@ export const EMPTY_SPARK_DATA = {
   suppliedCollateralUsd: '0',
   totalSupplied: '0',
   eModeCategories: [],
+  exposure: 'N/A',
 };
 
 export const _getSparkAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
@@ -286,7 +284,8 @@ export const _getSparkAccountBalances = async (provider: Client, network: Networ
   // @ts-ignore
   const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
 
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block));
+  // @ts-ignore
+  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
   const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
   const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
 
@@ -328,7 +327,12 @@ export const getSparkAccountBalances = async (
   address: EthAddress,
 ): Promise<PositionBalances> => _getSparkAccountBalances(getViemProvider(provider, network, { batch: { multicall: true } }), network, block, addressMapping, address);
 
-export const _getSparkAccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData }) => {
+export const _getSparkAccountData = async (
+  provider: Client,
+  network: NetworkNumber,
+  address: EthAddress,
+  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData, eModeCategoriesData: EModeCategoriesData },
+) => {
   const {
     selectedMarket: market, assetsData,
   } = extractedState;
@@ -446,11 +450,11 @@ export const getSparkAccountData = async (
   provider: EthereumProvider,
   network: NetworkNumber,
   address: EthAddress,
-  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData },
+  extractedState: { selectedMarket: SparkMarketData, assetsData: SparkAssetsData, eModeCategoriesData: EModeCategoriesData },
 ) => _getSparkAccountData(getViemProvider(provider, network), network, address, extractedState);
 
 export const getSparkFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, market: SparkMarketData): Promise<SparkPositionData> => {
   const marketData = await getSparkMarketsData(provider, network, market);
-  const positionData = await getSparkAccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market });
+  const positionData = await getSparkAccountData(provider, network, address, { assetsData: marketData.assetsData, selectedMarket: market, eModeCategoriesData: marketData.eModeCategoriesData });
   return positionData;
 };

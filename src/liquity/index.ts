@@ -5,11 +5,19 @@ import {
   Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
-  LiquityActivePoolContractViem, LiquityCollSurplusPoolContractViem, LiquityPriceFeedContractViem, LiquityTroveManagerContractViem, LiquityViewContractViem,
+  LiquityActivePoolContractViem,
+  LiquityCollSurplusPoolContractViem,
+  LiquityLQTYStakingViem,
+  LiquityPriceFeedContractViem,
+  LiquityStabilityPoolViem,
+  LiquityTroveManagerContractViem,
+  LiquityViewContractViem,
 } from '../contracts';
 import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { getEthAmountForDecimals } from '../services/utils';
+import { getExposure } from '../moneymarket';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
@@ -97,9 +105,58 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
     minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
+    exposure: getExposure(assetAmountInEth(troveInfo[2].toString()), new Dec(assetAmountInEth(troveInfo[1].toString())).mul(assetPrice).toString()),
   };
 
   return payload;
 };
 
 export const getLiquityTroveInfo = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress): Promise<LiquityTroveInfo> => _getLiquityTroveInfo(getViemProvider(provider, network, { batch: { multicall: true } }), network, address);
+
+export const getLiquityStakingData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+  const lqtyStakingView = LiquityLQTYStakingViem(provider, network);
+  const stabilityPoolView = LiquityStabilityPoolViem(provider, network);
+  const [
+    stakes,
+    pendingETHGain,
+    pendingLUSDGain,
+    totalLQTYStakes,
+    stabilityPoolETHGain,
+    stabilityPoolLQTYGain,
+    compoundedLUSDDeposit,
+    totalLUSDDeposits,
+  ] = await Promise.all([
+    lqtyStakingView.read.stakes([address]),
+    lqtyStakingView.read.getPendingETHGain([address]),
+    lqtyStakingView.read.getPendingLUSDGain([address]),
+    lqtyStakingView.read.totalLQTYStaked(),
+    stabilityPoolView.read.getDepositorETHGain([address]),
+    stabilityPoolView.read.getDepositorLQTYGain([address]),
+    stabilityPoolView.read.getCompoundedLUSDDeposit([address]),
+    stabilityPoolView.read.getTotalLUSDDeposits(),
+  ]);
+  const totalLUSDDeposited = getEthAmountForDecimals(totalLUSDDeposits as string, 18);
+  const totalLQTYStaked = getEthAmountForDecimals(totalLQTYStakes as string, 18);
+  const stakedLQTY = getEthAmountForDecimals(stakes as string, 18);
+  const stakedLUSDBalance = getEthAmountForDecimals(compoundedLUSDDeposit as string, 18);
+  const rewardETH = getEthAmountForDecimals(pendingETHGain as string, 18);
+  const rewardLUSD = getEthAmountForDecimals(pendingLUSDGain as string, 18);
+  const stabilityRewardETH = getEthAmountForDecimals(stabilityPoolETHGain as string, 18);
+  const stabilityRewardLQTY = getEthAmountForDecimals(stabilityPoolLQTYGain as string, 18);
+
+  const showStakingBalances = !!(+stakedLQTY || +stakedLUSDBalance
+      || +rewardETH || +rewardLUSD
+      || +stabilityRewardETH || +stabilityRewardLQTY);
+
+  return {
+    totalLUSDDeposited,
+    totalLQTYStaked,
+    stakedLQTY,
+    stakedLUSDBalance,
+    rewardETH,
+    rewardLUSD,
+    stabilityRewardETH,
+    stabilityRewardLQTY,
+    showStakingBalances,
+  };
+};

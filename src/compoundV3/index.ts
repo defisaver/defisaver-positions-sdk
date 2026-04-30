@@ -8,7 +8,7 @@ import {
   CompoundV3AssetData, CompoundMarketData, CompoundV3AssetsData, CompoundV3UsedAssets, CompoundV3MarketsData, CompoundV3PositionData,
 } from '../types';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   getStakingApy, STAKING_ASSETS,
@@ -43,30 +43,37 @@ const getBaseAssetPriceFunction = (asset: string) => {
 export const _getCompoundV3MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: Client): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContractViem(provider, network);
 
-  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos] = await Promise.all([
+  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos, govInfo] = await Promise.all([
     getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultProvider),
     getCompPrice(defaultProvider),
     contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress]),
     contract.read.getFullCollInfos([selectedMarket.baseMarketAddress]),
+    contract.read.getGovernanceInfoFull([selectedMarket.baseMarketAddress]),
   ]);
+
+  const { isSupplyPaused, isWithdrawPaused } = govInfo;
 
   const supportedAssetsAddresses = getSupportedAssetsAddressesForMarket(selectedMarket, network);
 
   const colls = collInfos
     .filter((coll: any) => supportedAssetsAddresses.includes(coll.tokenAddr.toLowerCase()))
-    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice)) as CompoundV3AssetData[];
+    .map((coll: any) => formatMarketData(coll, network, baseAssetPrice, isSupplyPaused, isWithdrawPaused)) as CompoundV3AssetData[];
 
   for (const coll of colls) {
     if (STAKING_ASSETS.includes(coll.symbol)) {
-      coll.incentiveSupplyApy = await getStakingApy(coll.symbol);
-      coll.incentiveSupplyToken = coll.symbol;
+      coll.supplyIncentives.push({
+        apy: await getStakingApy(coll.symbol),
+        token: coll.symbol,
+        incentiveKind: IncentiveKind.Staking,
+        description: `Native ${coll.symbol} yield.`,
+      });
     }
   }
-  const base = formatBaseData(baseTokenInfo, network, baseAssetPrice);
+  const base = formatBaseData(baseTokenInfo, network, baseAssetPrice, isSupplyPaused, isWithdrawPaused);
 
   const payload: CompoundV3AssetsData = {};
 
-  const baseObj = { ...base, ...getIncentiveApys(base, compPrice) };
+  const baseObj = { ...base, ...(await getIncentiveApys(base, compPrice)) };
   const allAssets = [baseObj, ...colls];
 
   allAssets
@@ -80,7 +87,9 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
       payload[market.symbol] = { ...market, sortIndex: i };
     });
 
-  return { assetsData: payload };
+  return {
+    assetsData: payload, isMarketBorrowPaused: isWithdrawPaused, isMarketSupplyPaused: isSupplyPaused, isMarketWithdrawPaused: isWithdrawPaused,
+  };
 };
 
 export const getCompoundV3MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: EthereumProvider): Promise<CompoundV3MarketsData> => _getCompoundV3MarketsData(getViemProvider(provider, network), network, selectedMarket, getViemProvider(defaultProvider, network));
@@ -100,6 +109,7 @@ export const EMPTY_COMPOUND_V3_DATA = {
   automationResubscribeRequired: false,
   isAllowed: false,
   lastUpdated: Date.now(),
+  exposure: 'N/A',
 };
 
 export const EMPTY_USED_ASSET = {

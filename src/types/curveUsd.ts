@@ -1,4 +1,4 @@
-import { EthAddress, NetworkNumber } from './common';
+import { EthAddress, LeverageType, NetworkNumber } from './common';
 
 export enum CrvUSDVersions {
   'crvUSDwstETH' = 'wstETH',
@@ -78,7 +78,8 @@ export interface CrvUSDAggregatedPositionData {
   borrowLimitUsd: string,
   minAllowedRatio: number,
   collFactor: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
+  exposure: string,
   leveragedAsset?: string,
   liquidationPrice?: string,
 }
@@ -119,4 +120,7 @@ export interface CrvUSDUserData {
   userBands: UserBandData[],
   loanExists: boolean,
   borrowRate?: string,
+  collateralPrice: string,
+  collRatio: string,
+  exposure: string,
 }

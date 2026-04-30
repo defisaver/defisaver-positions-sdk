@@ -1,6 +1,10 @@
 import {
   EthAddress,
-  MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
+  LeverageType,
+  MMAssetData,
+  MMPositionData,
+  MMUsedAsset,
+  NetworkNumber,
 } from './common';
 
 export enum CompoundVersions {
@@ -12,6 +16,11 @@ export enum CompoundVersions {
   'CompoundV3USDT' = 'v3-USDT',
   'CompoundV3USDS' = 'v3-USDS',
   'CompoundV3wstETH' = 'v3-wstETH',
+}
+
+export enum CompoundVersionType {
+  V2 = 'v2',
+  V3 = 'v3',
 }
 
 export interface CompoundBulkerOptions {
@@ -69,6 +78,7 @@ export interface CompoundV3AssetData extends CompoundAssetData {
   liquidationRatio: string,
   supplyCap: string,
   priceInBaseAsset: string,
+  canBeWithdrawn: boolean,
 }
 
 export interface CompoundAssetsData<T> {
@@ -79,7 +89,7 @@ export type CompoundV3AssetsData = CompoundAssetsData<CompoundV3AssetData>;
 
 export type CompoundMarketsData<T> = { assetsData: T };
 export type CompoundV2MarketsData = CompoundMarketsData<CompoundV2AssetsData>;
-export type CompoundV3MarketsData = CompoundMarketsData<CompoundV3AssetsData>;
+export type CompoundV3MarketsData = CompoundMarketsData<CompoundV3AssetsData> & { isMarketSupplyPaused: boolean, isMarketWithdrawPaused: boolean, isMarketBorrowPaused: boolean };
 
 export interface BaseAdditionalAssetData {
   totalBorrow: string,
@@ -105,15 +115,16 @@ export interface CompoundAggregatedPositionData {
   totalInterestUsd: string,
   liqRatio: string,
   liqPercent: string,
-  leveragedType: string,
+  leveragedType: LeverageType,
   leveragedAsset?: string,
-  leveragedLsdAssetRatio?: string,
+  currentVolatilePairRatio?: string,
   liquidationPrice?: string,
   minRatio: string,
   debtTooLow: boolean,
   minDebt: string,
   minCollRatio: string,
   collLiquidationRatio: string,
+  exposure: string,
 }
 
 export interface CompoundPositionData extends MMPositionData {
