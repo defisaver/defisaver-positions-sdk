@@ -130,9 +130,9 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
 
       // eslint-disable-next-line guard-for-in
       for (const eModeIndex in eModeCategoriesData) {
-        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].collateralBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
-        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].borrowableBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
-        if (isEnabledOnBitmap(Number(eModeCategoriesData[eModeIndex].ltvzeroBitmap), Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].ltvZeroAssets.push(symbol);
+        if (isEnabledOnBitmap(eModeCategoriesData[eModeIndex].collateralBitmap!, Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].collateralAssets.push(symbol);
+        if (isEnabledOnBitmap(eModeCategoriesData[eModeIndex].borrowableBitmap!, Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].borrowAssets.push(symbol);
+        if (isEnabledOnBitmap(eModeCategoriesData[eModeIndex].ltvzeroBitmap!, Number(tokenMarket.assetId))) eModeCategoriesData[eModeIndex].ltvZeroAssets.push(symbol);
       }
 
       const borrowCap = tokenMarket.borrowCap.toString();
