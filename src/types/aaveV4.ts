@@ -118,6 +118,8 @@ export interface AaveV4ReserveAssetData {
   utilization: string;
   /** Hub `liquidity` for this assetId (underlying amount), used for pool-level borrow/withdraw limits */
   hubLiquidity: string,
+  premiumMultiplier: string;
+  liquidityFee: string;
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;

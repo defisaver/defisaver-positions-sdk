@@ -47,4 +47,13 @@ describe('Aave v4', () => {
     const assetAddress = await getAaveV4UnderlyingFromReserveId(provider, network, goldSpoke.address, XAUtReserveId);
     // console.log(compareAddresses(assetAddress, getAssetInfo('XAUt', network).address));
   });
+
+  it('can fetch apy afters Main Spoke Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4MainSpoke);
+    const apyAfters = await sdk.helpers.aaveV4Helpers.getAaveV4ApyAfterValuesEstimation(sdk.markets.AaveV4Spokes(network)[sdk.AaveV4SpokesType.AaveV4MainSpoke] as sdk.AaveV4SpokeInfo, marketData.assetsData, [{ action: 'borrow', amount: '100000', asset: 'USDC-7' }], provider, network);
+    // console.log(apyAfters);
+  });
 });
