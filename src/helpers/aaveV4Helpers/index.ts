@@ -90,31 +90,6 @@ export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, asse
   return riskPremiumBps.toNumber();
 };
 
-export const getApyAfterValuesEstimation = (
-  usedAssets: AaveV4UsedReserveAssets,
-  assetsData: AaveV4AssetsData,
-): Record<string, { borrowRate: string; supplyRate: string }> => {
-  const riskPremiumBps = calcUserRiskPremiumBps(usedAssets, assetsData);
-  const riskPremiumFraction = new Dec(riskPremiumBps).div(10000); // bps to fraction
-
-  const result: Record<string, { borrowRate: string; supplyRate: string }> = {};
-
-  Object.entries(assetsData).forEach(([identifier, assetData]) => {
-    const drawnRate = new Dec(assetData.drawnRate);
-    const baseBorrowApr = drawnRate.mul(100);
-    // finalBorrowRate = baseBorrowRate * (1 + riskPremiumFraction)
-    const userBorrowApr = baseBorrowApr.mul(new Dec(1).add(riskPremiumFraction));
-
-    result[identifier] = {
-      borrowRate: aprToApy(userBorrowApr.toString()),
-      // Supply rate is market-level (not user-specific), use existing value
-      supplyRate: assetData.supplyRate,
-    };
-  });
-
-  return result;
-};
-
 export const calculateNetApyAaveV4 = ({
   usedAssets,
   assetsData,
