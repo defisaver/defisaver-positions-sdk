@@ -311,7 +311,6 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
       liquidityAdded = action === 'collateral' ? amountInWei : '0';
       liquidityTaken = action === 'withdraw' ? amountInWei : '0';
     }
-    console.log(assetData.reserveId, liquidityAdded, liquidityTaken, isDebtAsset);
     return {
       reserveId: BigInt(assetData.reserveId),
       liquidityAdded: BigInt(liquidityAdded),
@@ -334,7 +333,7 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
 
     const totalDrawn = new Dec(hubTotalDrawnEstimation.toString());
     const swept = new Dec(hubSwept.toString());
-    const hubUtilizationDenominator = totalDrawn.add(swept).add(liquidityFee);
+    const hubUtilizationDenominator = totalDrawn.add(swept).add(hubTotalLiquidityEstimation.toString());
     const hubUtilization = hubUtilizationDenominator.isZero() ? new Dec(0) : totalDrawn.div(hubUtilizationDenominator);
 
     const supplyApr = borrowApr.mul(hubUtilization).mul(assetData?.premiumMultiplier || '0').mul(new Dec(1).minus(assetData?.liquidityFee || '0'));
