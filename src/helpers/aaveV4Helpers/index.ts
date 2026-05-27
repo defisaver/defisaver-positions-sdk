@@ -272,7 +272,7 @@ export const aaveV4GetAggregatedPositionData = ({
   return payload;
 };
 
-const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: [{ action: string, amount: string, asset: string }], client: Client, network: NetworkNumber) => {
+const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: { action: string, amount: string, asset: string }[], client: Client, network: NetworkNumber) => {
   const params = actions.map(({ action, asset, amount }) => {
     const isDebtAsset = borrowOperations.includes(action);
     const assetData = assetsData[asset];
@@ -299,7 +299,7 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
   const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
   data.forEach((item: any) => {
     const {
-      hubDrawnRateEstimation, hubTotalDrawnEstimation, hubTotalLiquidityEstimation, hubSwept, liquidityFee, reserveId,
+      hubDrawnRateEstimation, hubTotalDrawnEstimation, hubTotalLiquidityEstimation, hubSwept, reserveId,
     } = item;
     const drawnRate = new Dec(hubDrawnRateEstimation.toString()).div(new Dec(10).pow(27));
     const borrowApr = drawnRate.mul(100);
@@ -311,7 +311,7 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
     const hubUtilizationDenominator = totalDrawn.add(swept).add(hubTotalLiquidityEstimation.toString());
     const hubUtilization = hubUtilizationDenominator.isZero() ? new Dec(0) : totalDrawn.div(hubUtilizationDenominator);
 
-    const supplyApr = borrowApr.mul(hubUtilization).mul(assetData?.premiumMultiplier || '0').mul(new Dec(1).minus(assetData?.liquidityFee || '0'));
+    const supplyApr = borrowApr.mul(hubUtilization).mul(assetData?.premiumMultiplier || '1').mul(new Dec(1).minus(assetData?.liquidityFee || '0'));
 
     rates[`${assetData?.symbol}-${assetData?.reserveId}`] = {
       borrowRate: aprToApy(borrowApr.toString()),
@@ -321,4 +321,4 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
   return rates;
 };
 
-export const getAaveV4ApyAfterValuesEstimation = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: [{ action: string, amount: string, asset: string }], provider: EthereumProvider, network: NetworkNumber) => getAaveV4ApyAfterValuesEstimationInner(selectedSpoke, assetsData, actions, getViemProvider(provider, network), network);
+export const getAaveV4ApyAfterValuesEstimation = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: { action: string, amount: string, asset: string }[], provider: EthereumProvider, network: NetworkNumber) => getAaveV4ApyAfterValuesEstimationInner(selectedSpoke, assetsData, actions, getViemProvider(provider, network), network);
