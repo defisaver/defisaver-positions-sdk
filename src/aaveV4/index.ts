@@ -136,6 +136,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     utilization,
     hubLiquidity,
+    premiumMultiplier: premiumMultiplier.toString(),
+    liquidityFee: liquidityFee.toString(),
   });
 };
 

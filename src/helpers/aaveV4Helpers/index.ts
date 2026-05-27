@@ -1,4 +1,6 @@
 import Dec from 'decimal.js';
+import { assetAmountInWei } from '@defisaver/tokens';
+import { Client } from 'viem';
 import {
   aprToApy,
   calcLeverageLiqPrice,
@@ -10,11 +12,16 @@ import {
   AaveV4AggregatedPositionData,
   AaveV4AssetsData,
   AaveV4ReserveAssetData,
+  AaveV4SpokeInfo,
   AaveV4UsedReserveAsset,
   AaveV4UsedReserveAssets,
+  EthereumProvider,
   LeverageType,
   NetworkNumber,
 } from '../../types';
+import { borrowOperations } from '../../constants';
+import { AaveV4ViewContractViem } from '../../contracts';
+import { getViemProvider } from '../../services/viem';
 
 export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, assetsData: AaveV4AssetsData): number => {
   type CollateralInfo = { riskBps: number; valueUsd: Dec };
@@ -81,31 +88,6 @@ export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, asse
 
   const riskPremiumBps = numerator.div(coveredDebt);
   return riskPremiumBps.toNumber();
-};
-
-export const getApyAfterValuesEstimation = (
-  usedAssets: AaveV4UsedReserveAssets,
-  assetsData: AaveV4AssetsData,
-): Record<string, { borrowRate: string; supplyRate: string }> => {
-  const riskPremiumBps = calcUserRiskPremiumBps(usedAssets, assetsData);
-  const riskPremiumFraction = new Dec(riskPremiumBps).div(10000); // bps to fraction
-
-  const result: Record<string, { borrowRate: string; supplyRate: string }> = {};
-
-  Object.entries(assetsData).forEach(([identifier, assetData]) => {
-    const drawnRate = new Dec(assetData.drawnRate);
-    const baseBorrowApr = drawnRate.mul(100);
-    // finalBorrowRate = baseBorrowRate * (1 + riskPremiumFraction)
-    const userBorrowApr = baseBorrowApr.mul(new Dec(1).add(riskPremiumFraction));
-
-    result[identifier] = {
-      borrowRate: aprToApy(userBorrowApr.toString()),
-      // Supply rate is market-level (not user-specific), use existing value
-      supplyRate: assetData.supplyRate,
-    };
-  });
-
-  return result;
 };
 
 export const calculateNetApyAaveV4 = ({
@@ -289,3 +271,54 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.totalInterestUsd = totalInterestUsd;
   return payload;
 };
+
+const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: { action: string, amount: string, asset: string }[], client: Client, network: NetworkNumber) => {
+  const params = actions.map(({ action, asset, amount }) => {
+    const isDebtAsset = borrowOperations.includes(action);
+    const assetData = assetsData[asset];
+    const amountInWei = assetAmountInWei(amount, assetData.symbol);
+    let liquidityAdded;
+    let liquidityTaken;
+    if (isDebtAsset) {
+      liquidityAdded = action === 'payback' ? amountInWei : '0';
+      liquidityTaken = action === 'borrow' ? amountInWei : '0';
+    } else {
+      liquidityAdded = action === 'collateral' ? amountInWei : '0';
+      liquidityTaken = action === 'withdraw' ? amountInWei : '0';
+    }
+    return {
+      reserveId: BigInt(assetData.reserveId),
+      liquidityAdded: BigInt(liquidityAdded),
+      liquidityTaken: BigInt(liquidityTaken),
+      isDebtAsset,
+    };
+  });
+  const viewContract = AaveV4ViewContractViem(client, network);
+  const data = await viewContract.read.getApyAfterValuesEstimation([selectedSpoke.address, params]);
+
+  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  data.forEach((item: any) => {
+    const {
+      hubDrawnRateEstimation, hubTotalDrawnEstimation, hubTotalLiquidityEstimation, hubSwept, reserveId,
+    } = item;
+    const drawnRate = new Dec(hubDrawnRateEstimation.toString()).div(new Dec(10).pow(27));
+    const borrowApr = drawnRate.mul(100);
+
+    const assetData = Object.values(assetsData).find(({ reserveId: rId }) => rId === Number(reserveId));
+
+    const totalDrawn = new Dec(hubTotalDrawnEstimation.toString());
+    const swept = new Dec(hubSwept.toString());
+    const hubUtilizationDenominator = totalDrawn.add(swept).add(hubTotalLiquidityEstimation.toString());
+    const hubUtilization = hubUtilizationDenominator.isZero() ? new Dec(0) : totalDrawn.div(hubUtilizationDenominator);
+
+    const supplyApr = borrowApr.mul(hubUtilization).mul(assetData?.premiumMultiplier || '1').mul(new Dec(1).minus(assetData?.liquidityFee || '0'));
+
+    rates[`${assetData?.symbol}-${assetData?.reserveId}`] = {
+      borrowRate: aprToApy(borrowApr.toString()),
+      supplyRate: aprToApy(supplyApr.toString()),
+    };
+  });
+  return rates;
+};
+
+export const getAaveV4ApyAfterValuesEstimation = async (selectedSpoke: AaveV4SpokeInfo, assetsData: AaveV4AssetsData, actions: { action: string, amount: string, asset: string }[], provider: EthereumProvider, network: NetworkNumber) => getAaveV4ApyAfterValuesEstimationInner(selectedSpoke, assetsData, actions, getViemProvider(provider, network), network);
