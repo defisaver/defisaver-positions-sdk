@@ -8,8 +8,7 @@ import { getEthAmountForDecimals } from '../services/utils';
 export const fetchEthenaAirdropReward = async (address: EthAddress) => {
   try {
     const checksumAddress = getAddress(address);
-    const response = await fetch(`https://airdrop-data-ethena-s4.s3.us-west-2.amazonaws.com/${checksumAddress}/0x3d99219fbd49ace3f48d6ca1340e505ec1bdf27d1f8d0e15ec9f286cc9215fcd-${checksumAddress}.json`);
-
+    const response = await fetch(`https://d1o76ps6187jke.cloudfront.net/${checksumAddress}/0xb92954d91aa2793b3718414d8df2413d5bd648955dec4a75471e86ded263d585-${checksumAddress}.json`);
     if (!response.ok) {
       if (response.status === 403) {
         // This is also okay, means that there are no rewards for the address
