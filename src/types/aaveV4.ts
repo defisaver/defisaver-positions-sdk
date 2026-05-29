@@ -111,6 +111,16 @@ export interface AaveV4ReserveAssetData {
   borrowRate: string,
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
+  /**
+   * Intrinsic incentives pre-combined with scope-specific Merkl rewards, ready to render per surface:
+   *   - spoke* → spoke supply/borrow (Create page + dashboard market table)
+   *   - hub*   → hub supply/borrow (Lend page)
+   * `supplyIncentives`/`borrowIncentives` above remain intrinsic-only so the net-APY calc is unaffected.
+   */
+  spokeSupplyIncentives?: IncentiveData[];
+  spokeBorrowIncentives?: IncentiveData[];
+  hubSupplyIncentives?: IncentiveData[];
+  hubBorrowIncentives?: IncentiveData[];
   canBeBorrowed: boolean;
   canBeSupplied: boolean;
   canBeWithdrawn: boolean;
