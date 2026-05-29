@@ -12,26 +12,23 @@ export {
   morphoVaultsOptions,
 };
 
-const vaultDataQuery = (vaultAddress: EthAddress) => `query vaultByAddress {
-vaultByAddress(chainId: 1, address: "${vaultAddress}") {
-    id,
-    dailyApy,
-    dailyApys {
-    apy, netApy
-    },
-    monthlyApys {
-    apy, netApy
-    },
-    liquidity {
-    underlying, usd,
-    },
-    asset {
-    priceUsd
+const vaultDataQuery = `
+  query VaultByAddress($address: String!, $chainId: Int!) {
+    vaultByAddress(address: $address, chainId: $chainId) {
+      address
+      state {
+        totalAssets
+        totalAssetsUsd
+        totalSupply
+      }
+      liquidity {
+        underlying
+        usd
+      }
     }
-}
 }`;
 
-const MORPHO_BLUE_API = 'https://blue-api.morpho.org/graphql';
+const MORPHO_BLUE_API = 'https://api.morpho.org/graphql';
 
 export const _getMorphoVaultData = async (provider: Client, network: NetworkNumber, morphoVault: MorphoVault, accounts: EthAddress[]): Promise<SavingsVaultData> => {
   const morphoVaultContract = getMorphoVaultContractViem(provider, morphoVault.address);
@@ -43,7 +40,7 @@ export const _getMorphoVaultData = async (provider: Client, network: NetworkNumb
     morphoVaultContract.read.totalSupply(),
     morphoVaultContract.read.decimals(),
     morphoVaultContract.read.DECIMALS_OFFSET(),
-    graphqlRequest(MORPHO_BLUE_API, vaultDataQuery(morphoVault.address)),
+    graphqlRequest(MORPHO_BLUE_API, vaultDataQuery, { address: morphoVault.address, chainId: network }),
     ...accounts.map(async (account) => {
       const share = await morphoVaultContract.read.balanceOf([account]);
       shares[account] = share;
