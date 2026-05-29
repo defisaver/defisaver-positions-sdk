@@ -27,7 +27,7 @@ const buildIncentive = (opportunity: MerklOpportunity): IncentiveData => {
     apy: aprToApy(opportunity.apr),
     token,
     incentiveKind: IncentiveKind.Reward,
-    description: `Eligible for ${token} rewards through Merkl.`,
+    description: `Eligible for ${token} rewards through Merkl.${opportunity.description ? `\n${opportunity.description}` : ''}`,
   };
 };
 
