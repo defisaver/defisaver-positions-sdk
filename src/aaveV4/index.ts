@@ -147,9 +147,9 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
   const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
 
   const hubsData: Record<EthAddress, AaveV4HubOnChainData> = {};
-  const merklCampaignsPromise = getAaveV4MerkleCampaigns(network);
-  const [spokeData] = await Promise.all([
+  const [spokeData, merklCampaigns] = await Promise.all([
     viewContract.read.getSpokeDataFull([market.address]),
+    getAaveV4MerkleCampaigns(network),
     ...market.hubs.map(async (hubAddress) => {
       hubsData[hubAddress] = await fetchHubData(viewContract, hubAddress);
     }),
@@ -157,7 +157,6 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
 
   const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
 
-  const merklCampaigns = await merklCampaignsPromise;
   const enrichedAssets = reserveAssetsArray.map((asset) => attachAaveV4MerklIncentives(asset, market.address, merklCampaigns));
 
   return {
