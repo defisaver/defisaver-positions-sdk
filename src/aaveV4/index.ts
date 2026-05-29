@@ -23,8 +23,10 @@ import { isMaxUint, wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData, calcUserRiskPremiumBps } from '../helpers/aaveV4Helpers';
 import { getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
+import { attachAaveV4MerklIncentives, getAaveV4MerkleCampaigns } from './merkl';
 
 export * as lend from './lend';
+export { getAaveV4MerkleCampaigns } from './merkl';
 
 const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractViem>, hubAddress: EthAddress): Promise<AaveV4HubOnChainData> => {
   const hubData = await viewContract.read.getHubAllAssetsData([hubAddress]);
@@ -145,6 +147,7 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
   const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
 
   const hubsData: Record<EthAddress, AaveV4HubOnChainData> = {};
+  const merklCampaignsPromise = getAaveV4MerkleCampaigns(network);
   const [spokeData] = await Promise.all([
     viewContract.read.getSpokeDataFull([market.address]),
     ...market.hubs.map(async (hubAddress) => {
@@ -154,8 +157,11 @@ export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumb
 
   const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
 
+  const merklCampaigns = await merklCampaignsPromise;
+  const enrichedAssets = reserveAssetsArray.map((asset) => attachAaveV4MerklIncentives(asset, market.address, merklCampaigns));
+
   return {
-    assetsData: reserveAssetsArray.reduce((acc: Record<string, AaveV4ReserveAssetData>, reserveAsset: AaveV4ReserveAssetData) => {
+    assetsData: enrichedAssets.reduce((acc: Record<string, AaveV4ReserveAssetData>, reserveAsset: AaveV4ReserveAssetData) => {
       acc[`${reserveAsset.symbol}-${reserveAsset.reserveId}`] = reserveAsset;
       return acc;
     }, {}),
