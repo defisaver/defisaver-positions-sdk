@@ -146,12 +146,14 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
   return { borrowRate, supplyRate };
 };
 
-const API_URL = 'https://blue-api.morpho.org/graphql';
+const API_URL = 'https://api.morpho.org/graphql';
+// Morpho Blue ACRM (Adaptive Curve IRM) always targets 90% utilization — protocol constant
+const ACRM_TARGET_UTILIZATION = '900000000000000000';
+
 const MARKET_QUERY = `
-  query MarketByUniqueKey($uniqueKey: String!, $chainId: Int!) {
-      marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
+  query MarketByUniqueKey($marketId: String!, $chainId: Int!) {
+      marketById(marketId: $marketId, chainId: $chainId) {
         reallocatableLiquidityAssets
-        targetBorrowUtilization
         loanAsset {
           address
           decimals
@@ -168,8 +170,8 @@ const MARKET_QUERY = `
             address
             name
           }
-          allocationMarket {
-            uniqueKey
+          withdrawMarket {
+            marketId
             loanAsset {
               address
             }
@@ -193,15 +195,15 @@ const MARKET_QUERY = `
           address
         }
         irmAddress
-        lltv  
+        lltv
       }
     }
 `;
 
 const REWARDS_QUERY = `
-  query MarketByUniqueKey($uniqueKey: String!, $chainId: Int!) {
-      marketByUniqueKey(uniqueKey: $uniqueKey, chainId: $chainId) {
-      uniqueKey
+  query MarketByUniqueKey($marketId: String!, $chainId: Int!) {
+      marketById(marketId: $marketId, chainId: $chainId) {
+      marketId
       state {
         rewards {
           amountPerSuppliedToken
@@ -230,19 +232,19 @@ export const getReallocatableLiquidity = async (marketId: string, network: Netwo
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: MARKET_QUERY,
-        variables: { uniqueKey: marketId, chainId: network },
+        variables: { marketId, chainId: network },
       }),
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
-    const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
-    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+    const data: { data: { marketById: MorphoBlueRealloactionMarketData } } = await response.json();
+    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketById;
 
     if (!marketData) throw new Error('Market data not found');
 
     return {
       reallocatableLiquidity: marketData.reallocatableLiquidityAssets,
-      targetBorrowUtilization: marketData.targetBorrowUtilization,
+      targetBorrowUtilization: ACRM_TARGET_UTILIZATION,
     };
   } catch (error) {
     console.error('External API Failure: Morpho blue reallocatable liquidity', error);
@@ -295,13 +297,13 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: MARKET_QUERY,
-        variables: { uniqueKey: marketId, chainId: network },
+        variables: { marketId, chainId: network },
       }),
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
 
-    const data: { data: { marketByUniqueKey: MorphoBlueRealloactionMarketData } } = await response.json();
-    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketByUniqueKey;
+    const data: { data: { marketById: MorphoBlueRealloactionMarketData } } = await response.json();
+    const marketData: MorphoBlueRealloactionMarketData = data?.data?.marketById;
 
     if (!marketData) throw new Error('Market data not found');
 
@@ -315,9 +317,9 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
     const newUtil = new Dec(newTotalBorrowAssets).div(totalSupplyWei).toString();
     const newUtilScaled = new Dec(newUtil).mul(1e18).toString();
 
-    if (new Dec(newUtilScaled).lt(marketData.targetBorrowUtilization)) return { vaults: [], withdrawals: [] };
+    if (new Dec(newUtilScaled).lt(ACRM_TARGET_UTILIZATION)) return { vaults: [], withdrawals: [] };
 
-    const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, totalBorrowWei, totalSupplyWei, marketData.targetBorrowUtilization, marketData.reallocatableLiquidityAssets);
+    const liquidityToAllocate = getLiquidityToAllocate(amountToBorrow, totalBorrowWei, totalSupplyWei, ACRM_TARGET_UTILIZATION, marketData.reallocatableLiquidityAssets);
 
     const vaultTotalAssets = marketData.publicAllocatorSharedLiquidity.reduce(
       (acc: Record<string, string>, item: MorphoBluePublicAllocatorItem) => {
@@ -348,14 +350,14 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
         totalReallocated = new Dec(totalReallocated).add(amountToTake).toString();
         const withdrawal: [string[], string, string] = [
           [
-            item.allocationMarket.loanAsset.address,
-            item.allocationMarket.collateralAsset?.address,
-            item.allocationMarket.oracle?.address,
-            item.allocationMarket.irmAddress,
-            item.allocationMarket.lltv,
+            item.withdrawMarket.loanAsset.address,
+            item.withdrawMarket.collateralAsset?.address,
+            item.withdrawMarket.oracle?.address,
+            item.withdrawMarket.irmAddress,
+            item.withdrawMarket.lltv,
           ],
           amountToTake.toString(),
-          item.allocationMarket.uniqueKey,
+          item.withdrawMarket.marketId,
         ];
         if (!withdrawalsPerVault[vaultAddress]) {
           withdrawalsPerVault[vaultAddress] = [];
@@ -386,12 +388,12 @@ export const getRewardsForMarket = async (marketId: string, network: NetworkNumb
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       query: REWARDS_QUERY,
-      variables: { uniqueKey: marketId, chainId: network },
+      variables: { marketId, chainId: network },
     }),
   });
 
   const data = await response.json();
-  const marketData = data?.data?.marketByUniqueKey;
+  const marketData = data?.data?.marketById;
   if (!marketData) throw new Error('Market data not found');
   const morphoAssetInfo = getAssetInfo('MORPHO');
   const { supplyApr, borrowApr } = marketData.state.rewards.find((reward: any) => compareAddresses(reward.asset.address, morphoAssetInfo.addresses[network])) || { supplyApr: '0', borrowApr: '0' };
