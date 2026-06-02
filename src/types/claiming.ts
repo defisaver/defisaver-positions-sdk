@@ -9,8 +9,6 @@ export enum ClaimType {
   COMPOUND_V3_COMP = 'COMPOUND_V3_COMP',
   /** Rewards from Spark (wstETH only for now) */
   SPARK_REWARDS = 'SPARK_REWARDS',
-  /** Rewards from Morpho */
-  MORPHO = 'MORPHO',
   /** Rewards from King (prev LTR^2 - received for weETH holding) */
   KING_REWARDS = 'KING_REWARDS',
   /** Spark Airdrop */
@@ -63,18 +61,6 @@ export type KingRewardsClaimableToken = _ClaimableTokenPartial & {
   };
 };
 
-export type MorphoClaimableToken = _ClaimableTokenPartial & {
-  claimType: ClaimType.MORPHO,
-  additionalClaimFields: {
-    originalAmount: string,
-    merkleProofs: string[];
-    distributor: EthAddress;
-    isLegacy: boolean;
-    txData: string;
-  }
-};
-
-
 export type CompoundV3CompClaimableToken = _ClaimableTokenPartial & {
   claimType: ClaimType.COMPOUND_V3_COMP,
   additionalClaimFields: {
@@ -106,7 +92,6 @@ export type ClaimableToken =
     AaveRewardsClaimableToken
     | AaveMeritRewardsClaimableToken
     | CompoundV3CompClaimableToken
-    | MorphoClaimableToken
     | SparkRewardsClaimableToken
     | KingRewardsClaimableToken
     | SparkAirdropClaimableToken

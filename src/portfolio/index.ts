@@ -48,7 +48,6 @@ import { getUmbrellaData } from '../umbrella';
 import { getMeritUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
 import { getCompoundV3Rewards } from '../claiming/compV3';
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
-import { fetchMorphoBlueRewards } from '../claiming/morphoBlue';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
@@ -61,7 +60,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
 }> {
   const isMainnet = network === NetworkNumber.Eth;
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
-  const isMorphoRewardsSupported = [NetworkNumber.Eth, NetworkNumber.Base].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
@@ -157,7 +155,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       spark: {},
       spk: {},
       king: {},
-      morpho: {},
       ethena: {},
     };
   }
@@ -354,28 +351,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         rewardsData[address.toLowerCase() as EthAddress].aaveV3 = { error: `Error fetching Aave V3 rewards data for address ${address}`, data: null };
       }
     })).flat(),
-    // Batch Morpho Blue rewards
-    (async () => {
-      if (!isMorphoRewardsSupported) return;
-      try {
-        const morphoRewards = await fetchMorphoBlueRewards(client, network, addresses);
-        for (const address of addresses) {
-          const lowerAddress = address.toLowerCase() as EthAddress;
-          rewardsData[lowerAddress].morpho = {
-            error: '',
-            data: morphoRewards[lowerAddress] || [],
-          };
-        }
-      } catch (error) {
-        console.error('Error fetching Morpho Blue rewards data in batch:', error);
-        for (const address of addresses) {
-          rewardsData[address.toLowerCase() as EthAddress].morpho = {
-            error: 'Error fetching Morpho Blue rewards data in batch',
-            data: null,
-          };
-        }
-      }
-    })(),
     // Batch Spark Airdrop rewards
     (async () => {
       try {
