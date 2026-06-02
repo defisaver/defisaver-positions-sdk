@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import path from 'path';
+import { createRequire } from 'module';
 import { loadFile, writeFile, detectCodeFormat } from 'magicast';
 import lodash from 'lodash';
 import { getAssetInfoByAddress } from '@defisaver/tokens';
@@ -20,6 +21,23 @@ import {
   cUSDTv3,
 // eslint-disable-next-line import/extensions
 } from '../../esm/config/contracts.js';
+
+const require = createRequire(import.meta.url);
+const { AaveV4View } = require('../../cjs/config/contracts.js');
+
+// Keep in sync with `src/markets/aaveV4/index.ts`
+const AAVE_V4_SPOKES_ETH = [
+  { label: 'Bluechip', address: '0x973a023A77420ba610f06b3858aD991Df6d85A08' },
+  { label: 'Ethena Correlated', address: '0x58131E79531caB1d52301228d1f7b842F26B9649' },
+  { label: 'Ethena Ecosystem', address: '0xba1B3D55D249692b669A164024A838309B7508AF' },
+  { label: 'Etherfi', address: '0xbF10BDfE177dE0336aFD7fcCF80A904E15386219' },
+  { label: 'Forex', address: '0xD8B93635b8C6d0fF98CbE90b5988E3F2d1Cd9da1' },
+  { label: 'Gold', address: '0x65407b940966954b23dfA3caA5C0702bB42984DC' },
+  { label: 'Kelp', address: '0x3131FE68C4722e726fe6B2819ED68e514395B9a4' },
+  { label: 'Lido', address: '0xe1900480ac69f0B296841Cd01cC37546d92F35Cd' },
+  { label: 'Lombard BTC', address: '0x7EC68b5695e803e98a21a9A05d744F28b0a7753D' },
+  { label: 'Main', address: '0x94e7A5dCbE816e498b89aB752661904E2F56c485' },
+];
 
 const getViemChain = (chainId) => {
   switch (chainId) {
@@ -161,6 +179,24 @@ const compound = {
   },
 };
 
+const aaveV4 = {
+  V1: {
+    networks: [1],
+    getter: async (chainId, { spokeAddress }) => {
+      const client = getViem(chainId);
+      const viewContract = getContract({
+        address: AaveV4View.networks[chainId].address,
+        abi: AaveV4View.abi,
+        client,
+      });
+      const spokeData = await viewContract.read.getSpokeDataFull([spokeAddress]);
+      const underlyings = spokeData[1].map((reserve) => reserve.underlying);
+
+      return separateAssetsByExistence(underlyings, chainId);
+    },
+  },
+};
+
 const spark = {
   V1: {
     fileName: 'spark/marketAssets.ts',
@@ -238,6 +274,28 @@ async function formatResponse(protocol) {
   return data;
 }
 
+/** Aave V4 has no marketAssets arrays to auto-update; only report missing tokens in the GH PR. */
+async function formatAaveV4Response(protocol) {
+  const chainId = protocol.networks[0];
+  const spokes = chainId === 1 ? AAVE_V4_SPOKES_ETH : [];
+  const data = [];
+
+  for (const spoke of spokes) {
+    const { nonexistent } = await protocol.getter(chainId, { spokeAddress: spoke.address });
+    if (nonexistent.length === 0) continue;
+
+    data.push({
+      newSymbols: [],
+      missingAddresses: nonexistent,
+      variableName: spoke.label,
+      fileName: `aaveV4 spoke (${spoke.address})`,
+      chainId,
+    });
+  }
+
+  return data;
+}
+
 function createContent(data) {
   let description = '';
   let hasNewSymbols = false;
@@ -273,6 +331,7 @@ function createContent(data) {
       aaveV2: await formatResponse(aave.V2),
       aaveV3: await formatResponse(aave.V3),
       compoundV3: await formatResponse(compound.V3),
+      aaveV4: await formatAaveV4Response(aaveV4.V1),
     };
 
     const { description, hasNewSymbols, hasMissingTokens } = createContent(data);
