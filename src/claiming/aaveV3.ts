@@ -103,7 +103,7 @@ export async function getUnclaimedRewardsForAllMarkets(
   return mapAaveRewardsToClaimableTokens(Object.values(totalUnclaimedPerRewardToken), marketAddress, walletAddress);
 }
 
-export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber, acceptMorpho: boolean = true): Promise<ClaimableToken[]> {
+export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
   let data;
   try {
     const res = await fetch(`https://api-merkl.angle.money/v4/users/${account}/rewards?chainId=${network}`,
@@ -125,8 +125,7 @@ export async function getMeritUnclaimedRewards(account: EthAddress, network: Net
         proofs,
       } = reward;
 
-      const isTokenMorpho = token.symbol === 'MORPHO';
-      if (!token || !token.symbol || amount === '0' || (isTokenMorpho && !acceptMorpho)) return;
+      if (!token || !token.symbol || amount === '0') return;
 
       const unclaimedAmount = new Dec(amount).minus(claimed || 0).toString();
       if (unclaimedAmount === '0') return;

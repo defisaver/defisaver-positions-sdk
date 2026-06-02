@@ -399,8 +399,3 @@ export const getRewardsForMarket = async (marketId: string, network: NetworkNumb
   const borrowAprPercent = new Dec(borrowApr).mul(100).toString();
   return { supplyApy: aprToApy(supplyAprPercent), borrowApy: aprToApy(borrowAprPercent) };
 };
-
-export const getMorphoUnderlyingSymbol = (_symbol: string) => {
-  if (_symbol === 'MORPHO Legacy') return 'MORPHO';
-  return wethToEth(_symbol);
-};
