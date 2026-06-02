@@ -206,13 +206,13 @@ export interface MorphoBlueAllocationMarket {
   oracle: { address: string },
   irmAddress: string,
   lltv: string,
-  uniqueKey: string,
+  marketId: string,
 }
 
 export interface MorphoBluePublicAllocatorItem {
   vault: MorphoBlueVault,
   assets: string,
-  allocationMarket: MorphoBlueAllocationMarket,
+  withdrawMarket: MorphoBlueAllocationMarket,
 }
 
 export interface MorphoBlueAllocatorMarketState {
@@ -222,7 +222,6 @@ export interface MorphoBlueAllocatorMarketState {
 
 export interface MorphoBlueRealloactionMarketData {
   reallocatableLiquidityAssets: string,
-  targetBorrowUtilization: string,
   publicAllocatorSharedLiquidity: MorphoBluePublicAllocatorItem[],
   state: MorphoBlueAllocatorMarketState,
 }
