@@ -85,6 +85,8 @@ export interface AaveV4ReserveAssetOnChain {
 
 export interface AaveV4ReserveAssetData {
   symbol: string,
+  /** Underlying token decimals as reported on-chain (independent of `@defisaver/tokens`). */
+  decimals: number,
   underlying: EthAddress,
   hub: EthAddress,
   hubName: string,
@@ -130,6 +132,11 @@ export interface AaveV4ReserveAssetData {
   hubLiquidity: string,
   premiumMultiplier: string;
   liquidityFee: string;
+  /**
+   * True when the underlying token is missing from `@defisaver/tokens` (placeholder `?` asset).
+   * The reserve is kept for read-only display, but amounts are zeroed and all actions are disabled.
+   */
+  isUnsupported?: boolean;
 }
 
 export type AaveV4AssetsData = Record<string, AaveV4ReserveAssetData>;
@@ -151,6 +158,8 @@ export interface AaveV4UsedReserveAsset {
   isBorrowed: boolean,
   collateral: boolean,
   collateralFactor: number,
+  /** True when the underlying token is missing from `@defisaver/tokens` (placeholder `?` asset). */
+  isUnsupported?: boolean,
 }
 
 export interface AaveV4AggregatedPositionData {

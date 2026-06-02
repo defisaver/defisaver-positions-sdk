@@ -50,6 +50,9 @@ const fetchHubData = async (viewContract: ReturnType<typeof AaveV4ViewContractVi
 
 const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAsset: AaveV4HubAssetOnChainData, reserveId: number, oracleDecimals: number, network: NetworkNumber): Promise<AaveV4ReserveAssetData> => {
   const assetInfo = getAssetInfoByAddress(reserveAsset.underlying, network);
+  // `@defisaver/tokens` returns a placeholder ('?', decimals NaN) when the underlying is not in the
+  // tokens package. Flag it so consumers can render it read-only instead of feeding NaN into amounts.
+  const isUnsupported = assetInfo.symbol === '?';
   const symbol = wethToEth(assetInfo.symbol);
   const hubInfo = getAaveV4HubByAddress(network, reserveAsset.hub);
   if (!hubInfo) {
@@ -101,11 +104,23 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   const supplyApr = borrowApr.mul(hubUtilization).mul(premiumMultiplier).mul(new Dec(1).minus(liquidityFee));
   const utilization = hubUtilization.times(100).toString();
 
+  // For unsupported assets `symbol` is '?' (decimals NaN in `@defisaver/tokens`), so the
+  // symbol-based conversion would produce NaN. Fall back to the on-chain `decimals` so the reserve
+  // still shows correct amounts (and feeds correct USD/ratio/liquidation math) in read-only mode.
+  const toEth = (raw: string | number | bigint) => {
+    const rawStr = raw.toString();
+    if (isMaxUint(rawStr)) return rawStr;
+    if (isUnsupported) return new Dec(rawStr || 0).div(new Dec(10).pow(reserveAsset.decimals)).toString();
+    return assetAmountInEth(rawStr, symbol);
+  };
+
   const hubLiquidityRaw = hubAsset.liquidity;
-  const hubLiquidity = isMaxUint(hubLiquidityRaw.toString()) ? hubLiquidityRaw.toString() : assetAmountInEth(hubLiquidityRaw.toString(), symbol);
+  const hubLiquidity = toEth(hubLiquidityRaw.toString());
 
   return ({
     symbol,
+    decimals: reserveAsset.decimals,
+    isUnsupported,
     underlying: reserveAsset.underlying,
     hub: hubInfo.address,
     hubName: hubInfo?.label,
@@ -119,12 +134,12 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     liquidationFee: new Dec(reserveAsset.liquidationFee).div(10000).toNumber(),
     maxLiquidationBonus: new Dec(reserveAsset.maxLiquidationBonus).div(10000).toNumber(),
     price: new Dec(reserveAsset.price).div(new Dec(10).pow(oracleDecimals)).toString(),
-    totalSupplied: isMaxUint(totalSuppliedRaw.toString()) ? totalSuppliedRaw.toString() : assetAmountInEth(totalSuppliedRaw.toString(), symbol),
-    totalDrawn: isMaxUint(totalDrawnRaw.toString()) ? totalDrawnRaw.toString() : assetAmountInEth(totalDrawnRaw.toString(), symbol),
-    totalPremium: isMaxUint(totalPremiumRaw.toString()) ? totalPremiumRaw.toString() : assetAmountInEth(totalPremiumRaw.toString(), symbol),
-    totalDebt: isMaxUint(totalDebtRaw.toString()) ? totalDebtRaw.toString() : assetAmountInEth(totalDebtRaw.toString(), symbol),
-    supplyCap: isMaxUint(supplyCapRaw.toString()) ? supplyCapRaw.toString() : assetAmountInEth(supplyCapRaw.toString(), symbol),
-    borrowCap: isMaxUint(borrowCapRaw.toString()) ? borrowCapRaw.toString() : assetAmountInEth(borrowCapRaw.toString(), symbol),
+    totalSupplied: toEth(totalSuppliedRaw.toString()),
+    totalDrawn: toEth(totalDrawnRaw.toString()),
+    totalPremium: toEth(totalPremiumRaw.toString()),
+    totalDebt: toEth(totalDebtRaw.toString()),
+    supplyCap: toEth(supplyCapRaw.toString()),
+    borrowCap: toEth(borrowCapRaw.toString()),
     spokeActive: reserveAsset.spokeActive,
     spokeHalted: reserveAsset.spokeHalted,
     drawnRate: drawnRate.toString(),
@@ -132,10 +147,10 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     supplyRate: aprToApy(supplyApr.toString()),
     supplyIncentives,
     borrowIncentives,
-    canBeBorrowed: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen && reserveAsset.borrowable,
-    canBeSupplied: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
-    canBeWithdrawn: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
-    canBePayBacked: reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
+    canBeBorrowed: !isUnsupported && reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen && reserveAsset.borrowable,
+    canBeSupplied: !isUnsupported && reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused && !reserveAsset.frozen,
+    canBeWithdrawn: !isUnsupported && reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
+    canBePayBacked: !isUnsupported && reserveAsset.spokeActive && !reserveAsset.spokeHalted && !reserveAsset.paused,
     utilization,
     hubLiquidity,
     premiumMultiplier: premiumMultiplier.toString(),
@@ -182,17 +197,29 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
   const healthFactorFromContract = new Dec(loanData.healthFactor.toString());
   const healthFactor = isMaxUint(healthFactorFromContract.toString()) ? 'Infinity' : healthFactorFromContract.div(1e18).toString();
   const usedAssets = loanData.reserves.reduce((acc: AaveV4UsedReserveAssets, usedReserveAsset) => {
-    const identifier = `${wethToEth(getAssetInfoByAddress(usedReserveAsset.underlying, network).symbol)}-${+usedReserveAsset.reserveId.toString()}`;
+    const assetInfo = getAssetInfoByAddress(usedReserveAsset.underlying, network);
+    const isUnsupported = assetInfo.symbol === '?';
+    const symbol = wethToEth(assetInfo.symbol);
+    const identifier = `${symbol}-${+usedReserveAsset.reserveId.toString()}`;
     const reserveData = spokeData.assetsData[identifier];
-    const price = reserveData.price;
-    const supplied = isMaxUint(usedReserveAsset.supplied.toString()) ? usedReserveAsset.supplied.toString() : assetAmountInEth(usedReserveAsset.supplied.toString(), reserveData.symbol);
-    const drawn = isMaxUint(usedReserveAsset.drawn.toString()) ? usedReserveAsset.drawn.toString() : assetAmountInEth(usedReserveAsset.drawn.toString(), reserveData.symbol);
-    const premium = isMaxUint(usedReserveAsset.premium.toString()) ? usedReserveAsset.premium.toString() : assetAmountInEth(usedReserveAsset.premium.toString(), reserveData.symbol);
-    const borrowed = isMaxUint(usedReserveAsset.totalDebt.toString()) ? usedReserveAsset.totalDebt.toString() : assetAmountInEth(usedReserveAsset.totalDebt.toString(), reserveData.symbol);
+    const price = reserveData?.price ?? '0';
+    // For unsupported assets the symbol-based conversion yields NaN, so use the on-chain decimals
+    // from the reserve data instead. If the reserve is missing entirely we can't convert, so fall
+    // back to '0' and keep the entry read-only.
+    const toEth = (raw: string) => {
+      if (isMaxUint(raw)) return raw;
+      if (!reserveData) return '0';
+      if (isUnsupported) return new Dec(raw || 0).div(new Dec(10).pow(reserveData.decimals)).toString();
+      return assetAmountInEth(raw, reserveData.symbol);
+    };
+    const supplied = toEth(usedReserveAsset.supplied.toString());
+    const drawn = toEth(usedReserveAsset.drawn.toString());
+    const premium = toEth(usedReserveAsset.premium.toString());
+    const borrowed = toEth(usedReserveAsset.totalDebt.toString());
     acc[identifier] = {
-      symbol: reserveData.symbol,
-      hubName: reserveData.hubName,
-      assetId: reserveData.assetId,
+      symbol: reserveData?.symbol ?? symbol,
+      hubName: reserveData?.hubName ?? '',
+      assetId: reserveData?.assetId ?? 0,
       reserveId: +usedReserveAsset.reserveId.toString(),
       supplied,
       suppliedUsd: new Dec(supplied).mul(price).toString(),
@@ -206,6 +233,7 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
       isBorrowed: usedReserveAsset.isBorrowing,
       collateral: usedReserveAsset.isUsingAsCollateral,
       collateralFactor: new Dec(usedReserveAsset.collateralFactor).div(10000).toNumber(),
+      isUnsupported: isUnsupported || !reserveData,
     };
     return acc;
   }, {});
