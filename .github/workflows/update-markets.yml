@@ -22,7 +22,7 @@ jobs:
       - name: Set node version
         uses: actions/setup-node@v4
         with:
-          node-version: 20.x
+          node-version: 22.x
 
       - name: Install root dependencies
         run: npm install
@@ -57,7 +57,7 @@ jobs:
       - name: Create pull request
         id: pull_request
         if: env.SCRIPT_HAS_NEW_SYMBOLS == 'true' || env.SCRIPT_HAS_MISSING_TOKENS == 'true'
-        uses: peter-evans/create-pull-request@v5
+        uses: peter-evans/create-pull-request@v7
         with:
           title: 'Update markets'
           branch: 'update-markets/patch'
@@ -65,7 +65,7 @@ jobs:
 
       - name: Write comment
         if: env.SCRIPT_HAS_NEW_SYMBOLS == 'true' || env.SCRIPT_HAS_MISSING_TOKENS == 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           script: |
             let data = `${{ env.SCRIPT_DESCRIPTION }}`;
