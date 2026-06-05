@@ -44,6 +44,7 @@ import {
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getMeritCampaigns } from './merit';
 import { getAaveUnderlyingSymbol, getMerkleCampaigns } from './merkl';
+import { getSghoData } from './sgho';
 import { SECONDS_PER_YEAR } from '../constants';
 
 export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: AaveV3UsedAssets) => {
@@ -604,13 +605,14 @@ export const getStakeAaveData = async (provider: Client, network: NetworkNumber,
   const stkGHO = createViemContractFromConfigFunc('Erc20', stkGhoAddress as HexString)(provider, network);
 
 
-  const [aaveRewardsBalance, emissionsPerSecond, stkAAVEBalance, stkAAVETotalSupply, stkGHOBalance, ghoMeritApy] = await Promise.all([
+  const [aaveRewardsBalance, emissionsPerSecond, stkAAVEBalance, stkAAVETotalSupply, stkGHOBalance, ghoMeritApy, sgho] = await Promise.all([
     AaveIncentivesController.read.getRewardsBalance([REWARDABLE_ASSETS, address]),
     stkAAVE.read.assets([stkAaveAddress]),
     stkAAVE.read.balanceOf([address]),
     stkAAVE.read.totalSupply(),
     stkGHO.read.balanceOf([address]),
     fetchYearlyMeritApyForStakingGho(),
+    getSghoData(network, address),
   ]);
 
 
@@ -625,6 +627,7 @@ export const getStakeAaveData = async (provider: Client, network: NetworkNumber,
     stkGhoBalance: assetAmountInEth(stkGHOBalance.toString(), 'GHO'),
     ghoMeritApy,
     stkAaveApy,
+    sgho,
   };
 };
 
@@ -632,3 +635,6 @@ export {
   getMeritCampaigns,
   getMerkleCampaigns,
 };
+
+export { getSghoData } from './sgho';
+export type { SghoData, SghoUserData } from './sgho';
