@@ -86,11 +86,11 @@ export const getSghoData = async (
       targetRate: percentValue(data.targetRate),
       paused: !!data.paused,
       user: {
-        shares: tokenAmountValue(data?.user?.shares),
-        balance: tokenAmountValue(data?.user?.balance),
-        maxDeposit: tokenAmountValue(data?.user?.maxDeposit),
-        maxWithdraw: tokenAmountValue(data?.user?.maxWithdraw),
-        underlyingBalance: tokenAmountValue(data?.user?.underlyingBalance),
+        shares: tokenAmountValue(data.user?.shares),
+        balance: tokenAmountValue(data.user?.balance),
+        maxDeposit: tokenAmountValue(data.user?.maxDeposit),
+        maxWithdraw: tokenAmountValue(data.user?.maxWithdraw),
+        underlyingBalance: tokenAmountValue(data.user?.underlyingBalance),
       },
     };
   } catch (e) {
