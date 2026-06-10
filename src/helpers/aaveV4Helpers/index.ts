@@ -296,7 +296,7 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
   const viewContract = AaveV4ViewContractViem(client, network);
   const data = await viewContract.read.getApyAfterValuesEstimation([selectedSpoke.address, params]);
 
-  const rates: { [key: string]: { supplyRate: string, borrowRate: string } } = {};
+  const rates: { [key: string]: { supplyRate: string, borrowRate: string, drawnRate: string } } = {};
   data.forEach((item: any) => {
     const {
       hubDrawnRateEstimation, hubTotalDrawnEstimation, hubTotalLiquidityEstimation, hubSwept, reserveId,
@@ -316,6 +316,7 @@ const getAaveV4ApyAfterValuesEstimationInner = async (selectedSpoke: AaveV4Spoke
     rates[`${assetData?.symbol}-${assetData?.reserveId}`] = {
       borrowRate: aprToApy(borrowApr.toString()),
       supplyRate: aprToApy(supplyApr.toString()),
+      drawnRate: drawnRate.toString(),
     };
   });
   return rates;
