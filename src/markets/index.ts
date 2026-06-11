@@ -27,4 +27,4 @@ export {
   getFTokenAddress,
   getFluidMarketInfoByAddress,
 } from './fluid';
-export { AaveV4Spokes } from './aaveV4';
+export { AaveV4Spokes, findAaveV4SpokeByAddress } from './aaveV4';

@@ -28,6 +28,20 @@ describe('Aave v4', () => {
     return accountData;
   };
 
+  const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, blockNumber: Blockish) => {
+    const mainSpoke = sdk.markets.AaveV4Spokes(network)[sdk.AaveV4SpokesType.AaveV4MainSpoke];
+    const balances = await sdk.aaveV4.getAaveV4AccountBalances(
+      _provider,
+      network,
+      blockNumber,
+      false,
+      '0x57cc7f1aFA33411D2411549c15a2D2BAcf316709',
+      mainSpoke.address,
+    );
+    assert.containsAllKeys(balances, ['collateral', 'debt']);
+    return balances;
+  };
+
   // Ethereum
 
   it('can fetch market and account data for Main Spoke Ethereum', async function () {
@@ -36,6 +50,13 @@ describe('Aave v4', () => {
 
     const marketData = await fetchSpokeData(network, provider, sdk.AaveV4SpokesType.AaveV4MainSpoke);
     await fetchAccountData(network, provider, marketData);
+  });
+
+  it('can fetch account balances for Main Spoke Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    await fetchAccountBalances(network, provider, 'latest');
   });
 
   it('can fetch asset from reserveId', async function () {
