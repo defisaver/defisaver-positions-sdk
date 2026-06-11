@@ -1,6 +1,6 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
-import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
+import { assetAmountInEth, assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
 import { getViemProvider } from '../services/viem';
 import {
   AaveV4AccountData,
@@ -16,12 +16,14 @@ import {
   IncentiveData,
   IncentiveKind,
   NetworkNumber,
+  Blockish,
+  PositionBalances,
 } from '../types';
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { isMaxUint, wethToEth } from '../services/utils';
 import { aaveV4GetAggregatedPositionData, calcUserRiskPremiumBps } from '../helpers/aaveV4Helpers';
-import { getAaveV4HubByAddress } from '../markets/aaveV4';
+import { findAaveV4SpokeByAddress, getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
 import { attachAaveV4MerklIncentives, getAaveV4MerkleCampaigns } from './merkl';
 
@@ -258,6 +260,73 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
 export async function getAaveV4AccountData(provider: EthereumProvider, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<any> {
   return _getAaveV4AccountData(getViemProvider(provider, network), network, marketData, address, blockNumber);
 }
+
+export const _getAaveV4AccountBalances = async (
+  provider: Client,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  spokeAddress: EthAddress,
+  spokeData?: AaveV4SpokeData,
+): Promise<PositionBalances> => {
+  const balances: PositionBalances = {
+    collateral: {},
+    debt: {},
+  };
+
+  if (!address || !spokeAddress) {
+    return balances;
+  }
+
+  const blockNumber = block === 'latest' ? 'latest' : Number(block);
+  let resolvedSpokeData = spokeData;
+  if (!resolvedSpokeData) {
+    const spokeInfo = findAaveV4SpokeByAddress(network, spokeAddress);
+    if (!spokeInfo) {
+      return balances;
+    }
+    resolvedSpokeData = await _getAaveV4SpokeData(provider, network, spokeInfo, blockNumber);
+  }
+
+  const accountData = await _getAaveV4AccountData(provider, network, resolvedSpokeData, address, blockNumber);
+
+  Object.entries(accountData.usedAssets).forEach(([key, asset]) => {
+    const reserveData = resolvedSpokeData.assetsData[key];
+    if (!reserveData) return;
+
+    const balanceKey = addressMapping
+      ? reserveData.underlying.toLowerCase()
+      : wethToEth(asset.symbol);
+
+    if (asset.isSupplied && new Dec(asset.supplied || 0).gt(0)) {
+      balances.collateral![balanceKey] = assetAmountInWei(asset.supplied, asset.symbol);
+    }
+    if (asset.isBorrowed && new Dec(asset.borrowed || 0).gt(0)) {
+      balances.debt![balanceKey] = assetAmountInWei(asset.borrowed, asset.symbol);
+    }
+  });
+
+  return balances;
+};
+
+export const getAaveV4AccountBalances = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  block: Blockish,
+  addressMapping: boolean,
+  address: EthAddress,
+  spokeAddress: EthAddress,
+  spokeData?: AaveV4SpokeData,
+): Promise<PositionBalances> => _getAaveV4AccountBalances(
+  getViemProvider(provider, network),
+  network,
+  block,
+  addressMapping,
+  address,
+  spokeAddress,
+  spokeData,
+);
 
 const _getAaveV4UnderlyingFromReserveId = async (provider: Client, network: NetworkNumber, spoke: EthAddress, reserveId: number): Promise<any> => {
   const viewContract = AaveV4ViewContractViem(provider, network);

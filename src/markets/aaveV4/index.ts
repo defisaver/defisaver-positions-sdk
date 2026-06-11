@@ -188,4 +188,8 @@ export const AaveV4Spokes = (networkId: NetworkNumber) => ({
 
 export const getAaveV4SpokeTypeInfo = (type: AaveV4SpokesType, network?: NetworkNumber) => ({ ...AaveV4Spokes(network ?? NetworkNumber.Eth) }[type]);
 
+export const findAaveV4SpokeByAddress = (networkId: NetworkNumber, address: string): AaveV4SpokeInfo | undefined => Object.values(AaveV4Spokes(networkId)).find(
+  spoke => spoke.address.toLowerCase() === address.toLowerCase(),
+);
+
 
