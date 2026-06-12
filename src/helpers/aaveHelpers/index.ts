@@ -93,6 +93,12 @@ const LTV_ZERO_FALLBACK_LLTV_OFFSET = '0.05';
  * ltv 0 but KEEPS the eMode liquidation threshold (liquidations only consider LLTV). The returned
  * `ltv` is identical to aaveAnyGetEmodeMutableProps().collateralFactor in every branch, so a ratio
  * built on this matches the regular safety ratio whenever no collateral is LTV-0.
+ *
+ * Intentionally NOT merged with aaveAnyGetEmodeMutableProps (which it otherwise duplicates): the two
+ * differ only for an eMode ltv-zero asset — that helper returns liquidationRatio '0', whereas this one
+ * keeps the eMode liquidation threshold (to match the contract). aaveAnyGetEmodeMutableProps also feeds
+ * liquidationLimitUsd, so unifying them would change healthRatio / liqRatio / liquidationPrice for
+ * eMode-ltv-zero positions — to be done as a separate, validated follow-up PR.
  */
 export const aaveAnyGetUserReserveLtvAndLltv = (
   {
