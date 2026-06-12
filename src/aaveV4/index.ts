@@ -21,7 +21,7 @@ import {
 } from '../types';
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { isMaxUint, wethToEth } from '../services/utils';
+import { isMaxUint, wethToEth, wethToEthByAddress } from '../services/utils';
 import { aaveV4GetAggregatedPositionData, calcUserRiskPremiumBps } from '../helpers/aaveV4Helpers';
 import { findAaveV4SpokeByAddress, getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
@@ -290,13 +290,14 @@ export const _getAaveV4AccountBalances = async (
   }
 
   const accountData = await _getAaveV4AccountData(provider, network, resolvedSpokeData, address, blockNumber);
+  const finalSpokeData = resolvedSpokeData;
 
   Object.entries(accountData.usedAssets).forEach(([key, asset]) => {
-    const reserveData = resolvedSpokeData.assetsData[key];
+    const reserveData = finalSpokeData.assetsData[key];
     if (!reserveData) return;
 
     const balanceKey = addressMapping
-      ? reserveData.underlying.toLowerCase()
+      ? wethToEthByAddress(reserveData.underlying, network).toLowerCase()
       : wethToEth(asset.symbol);
 
     if (asset.isSupplied && new Dec(asset.supplied || 0).gt(0)) {
