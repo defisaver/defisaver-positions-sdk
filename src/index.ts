@@ -25,6 +25,8 @@ import * as savings from './savings';
 
 export * from './types';
 
+export { getMerklApiUrl, setMerklApiUrl } from './services/merkl';
+
 export {
   aaveV2,
   aaveV3,

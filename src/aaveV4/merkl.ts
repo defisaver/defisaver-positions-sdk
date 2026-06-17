@@ -1,5 +1,6 @@
 import { aprToApy } from '../moneymarket';
-import { DEFAULT_TIMEOUT } from '../services/utils';
+import { LONGER_TIMEOUT } from '../services/utils';
+import { getMerklApiUrl } from '../services/merkl';
 import {
   AaveV4MerklRewardMap,
   AaveV4ReserveAssetData,
@@ -34,8 +35,8 @@ const buildIncentive = (opportunity: MerklOpportunity): IncentiveData => {
 export const getAaveV4MerkleCampaigns = async (chainId: NetworkNumber): Promise<AaveV4MerklRewardMap> => {
   const result: AaveV4MerklRewardMap = { hub: {}, spoke: {} };
   try {
-    const res = await fetch('https://api-merkl.angle.money/v4/opportunities?mainProtocolId=aave', {
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    const res = await fetch(`${getMerklApiUrl()}/v4/opportunities?mainProtocolId=aave`, {
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Aave V4 Merkle campaigns');
     const opportunities = await res.json() as MerklOpportunity[];

@@ -6,8 +6,9 @@ import {
   AaveIncentiveDataProviderV3ContractViem,
   AaveRewardsControllerViem,
 } from '../contracts';
-import { compareAddresses, getEthAmountForDecimals } from '../services/utils';
+import { compareAddresses, getEthAmountForDecimals, LONGER_TIMEOUT } from '../services/utils';
 import { getAaveUnderlyingSymbol } from '../helpers/aaveHelpers';
+import { getMerklApiUrl } from '../services/merkl';
 
 type AaveReward = {
   amount: string;
@@ -106,8 +107,8 @@ export async function getUnclaimedRewardsForAllMarkets(
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
   let data;
   try {
-    const res = await fetch(`https://api-merkl.angle.money/v4/users/${account}/rewards?chainId=${network}`,
-      { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`${getMerklApiUrl()}/v4/users/${account}/rewards?chainId=${network}`,
+      { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
     data = await res.json();
   } catch (error) {
     console.error('External API Failure: Aave Merit', error);
@@ -115,6 +116,10 @@ export async function getMeritUnclaimedRewards(account: EthAddress, network: Net
   }
 
   const claimableTokens: ClaimableToken[] = [];
+
+  // Merkl (or our proxy, on a non-2xx) can return a non-array error body; `fetch` doesn't throw on
+  // HTTP errors, so guard before iterating. Mirrors the app-side getMeritUnclaimedRewards.
+  if (!Array.isArray(data)) return claimableTokens;
 
   data.forEach((item: { rewards: any[]; }) => {
     item.rewards.forEach(reward => {
