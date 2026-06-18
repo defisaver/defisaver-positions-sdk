@@ -1,6 +1,5 @@
 import { aprToApy } from '../moneymarket';
 import { LONGER_TIMEOUT, wethToEth } from '../services/utils';
-import { getMerklApiUrl } from '../services/merkl';
 import {
   MerkleRewardMap, MerklOpportunity, OpportunityAction, OpportunityStatus,
 } from '../types';
@@ -32,7 +31,7 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    const res = await fetch(`${getMerklApiUrl()}/v4/opportunities?mainProtocolId=aave`, {
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');

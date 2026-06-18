@@ -8,7 +8,6 @@ import {
 } from '../contracts';
 import { compareAddresses, getEthAmountForDecimals, LONGER_TIMEOUT } from '../services/utils';
 import { getAaveUnderlyingSymbol } from '../helpers/aaveHelpers';
-import { getMerklApiUrl } from '../services/merkl';
 
 type AaveReward = {
   amount: string;
@@ -107,7 +106,7 @@ export async function getUnclaimedRewardsForAllMarkets(
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
   let data;
   try {
-    const res = await fetch(`${getMerklApiUrl()}/v4/users/${account}/rewards?chainId=${network}`,
+    const res = await fetch(`https://fe.defisaver.com/api/merkl/get-user-rewards/${account}?chainId=${network}`,
       { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
     data = await res.json();
   } catch (error) {
