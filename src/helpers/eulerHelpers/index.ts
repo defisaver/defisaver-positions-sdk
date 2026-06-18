@@ -173,7 +173,7 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
   });
 
   const res = await Promise.all([
-    ...actions.map(({ vaultAddress }) => eulerV2ViewContract.read.getVaultInfoFull([vaultAddress])),
+    ...actions.map(({ vaultAddress }) => eulerV2ViewContract.read.getVaultInfoFull([vaultAddress])) as any,
     // @ts-ignore
     eulerV2ViewContract.read.getApyAfterValuesEstimation([apyAfterValuesEstimationParams]),
   ]);
@@ -181,10 +181,10 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
   const data: any = {};
   for (let i = 0; i < numOfActions; i += 1) {
     // @ts-ignore
-    const _interestRate = res[numOfActions].estimatedBorrowRates[i];
+    const _interestRate = res[numOfActions][i].toString();
     // @ts-ignore
-    const vaultInfo = res[i][0];
-    const decimals = vaultInfo.decimals;
+    const vaultInfo = res[i];
+    const decimals = vaultInfo.decimals.toString();
     const borrowRate = getEulerV2BorrowRate(_interestRate);
 
     const amount = new Dec(actions[i].amount).mul(10 ** decimals).toString();
@@ -192,12 +192,12 @@ export const getApyAfterValuesEstimationEulerV2 = async (actions: { action: stri
     const isBorrowOperation = borrowOperations.includes(action);
     const { liquidityAdded, liquidityRemoved } = getLiquidityChanges(action, amount, isBorrowOperation);
 
-    const totalBorrows = new Dec(vaultInfo.totalBorrows).add(isBorrowOperation ? liquidityRemoved : '0').sub(isBorrowOperation ? liquidityAdded : '0').toString();
-    const totalAssets = new Dec(vaultInfo.totalAssets).add(isBorrowOperation ? '0' : liquidityAdded).sub(isBorrowOperation ? '0' : liquidityRemoved).toString();
+    const totalBorrows = new Dec(vaultInfo.totalBorrows.toString()).add(isBorrowOperation ? liquidityRemoved : '0').sub(isBorrowOperation ? liquidityAdded : '0').toString();
+    const totalAssets = new Dec(vaultInfo.totalAssets.toString()).add(isBorrowOperation ? '0' : liquidityAdded).sub(isBorrowOperation ? '0' : liquidityRemoved).toString();
     const utilizationRate = getUtilizationRate(totalBorrows, totalAssets);
     data[vaultInfo.vaultAddr.toLowerCase()] = {
       borrowRate,
-      supplyRate: getEulerV2SupplyRate(borrowRate, utilizationRate, vaultInfo.interestFee),
+      supplyRate: getEulerV2SupplyRate(borrowRate, utilizationRate, vaultInfo.interestFee.toString()),
     };
   }
   return data;
