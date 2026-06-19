@@ -1,6 +1,6 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
-import { EthAddress, NetworkNumber } from '../types/common';
+import { EthAddress, NetworkNumber } from '../types';
 import { ClaimableToken, ClaimType } from '../types/claiming';
 import {
   AaveIncentiveDataProviderV3ContractViem,
@@ -106,7 +106,8 @@ export async function getUnclaimedRewardsForAllMarkets(
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
   let data;
   try {
-    const res = await fetch(`https://fe.defisaver.com/api/merkl/get-user-rewards/${account}?chainId=${network}`,
+    // TEMP staging QA (DEV-12653): revert to https://fe.defisaver.com/api/merkl before merge
+    const res = await fetch(`https://stage.defisaver.com/dev-12653-merkl-auth-api/api/merkl/get-user-rewards/${account}?chainId=${network}`,
       { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
     data = await res.json();
   } catch (error) {
