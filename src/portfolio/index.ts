@@ -74,7 +74,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
-  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 500_000 : 2_500_000 } } }];
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: 500_000 } } }];
   const client = getViemProvider(provider, ...args);
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
