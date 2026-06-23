@@ -29,10 +29,18 @@ export const AAVE_V4_PRIME_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   address: '0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931',
 });
 
+export const AAVE_V4_PAXOS_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Paxos Hub',
+  value: AaveV4HubsType.AaveV4PaxosHub,
+  address: '0x62d63197660c080236193CA60b70E49A08E90368',
+});
+
 export const AaveV4Hubs = (networkId: NetworkNumber) => ({
   [AaveV4HubsType.AaveV4CoreHub]: AAVE_V4_CORE_HUB(networkId),
   [AaveV4HubsType.AaveV4PlusHub]: AAVE_V4_PLUS_HUB(networkId),
   [AaveV4HubsType.AaveV4PrimeHub]: AAVE_V4_PRIME_HUB(networkId),
+  [AaveV4HubsType.AaveV4PaxosHub]: AAVE_V4_PAXOS_HUB(networkId),
 }) as const;
 
 export const getAaveV4HubTypeInfo = (type: AaveV4HubsType, network?: NetworkNumber) => ({ ...AaveV4Hubs(network ?? NetworkNumber.Eth) }[type]);
@@ -173,6 +181,18 @@ export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   ],
 });
 
+export const AAVE_V4_USDG_PENDLE_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'USDG Pendle',
+  value: AaveV4SpokesType.AaveV4USDGPendleSpoke,
+  url: 'usdg-pendle',
+  address: '0x956d8e0A89cfa3744428C4641b5a53B56167a7f9',
+  hubs: [
+    AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
 export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4BluechipSpoke]: AAVE_V4_BLUECHIP_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4EthenaCorrelatedSpoke]: AAVE_V4_ETHENA_CORRELATED_SPOKE(networkId),
@@ -184,6 +204,7 @@ export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4LidoSpoke]: AAVE_V4_LIDO_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4LombardBtcSpoke]: AAVE_V4_LOMBARD_BTC_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4MainSpoke]: AAVE_V4_MAIN_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4USDGPendleSpoke]: AAVE_V4_USDG_PENDLE_SPOKE(networkId),
 }) as const;
 
 export const getAaveV4SpokeTypeInfo = (type: AaveV4SpokesType, network?: NetworkNumber) => ({ ...AaveV4Spokes(network ?? NetworkNumber.Eth) }[type]);
