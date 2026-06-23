@@ -22,10 +22,10 @@ export const calculateBorrowingAssetLimit = (assetBorrowedUsd: string, borrowLim
 
 export const STABLE_ASSETS = [
   'DAI', 'USDC', 'USDT', 'TUSD', 'USDP', 'GUSD', 'BUSD', 'SUSD', 'FRAX', 'LUSD', 'USDC.e', 'GHO', 'sDAI', 'USDA',
-  'USDe', 'sUSDe', 'USDS', 'sUSDS', 'USR', 'EURC', 'BOLD', 'BOLD Legacy', 'RLUSD', 'PT sUSDe July', 'PT eUSDe May',
+  'USDe', 'sUSDe', 'srUSDe', 'USDS', 'sUSDS', 'USR', 'EURC', 'BOLD', 'BOLD Legacy', 'RLUSD', 'PT sUSDe July', 'PT eUSDe May',
   'USDtb', 'eUSDe', 'PT USDe July', 'PT eUSDe Aug', 'PT sUSDe Sep', 'PT USDe Sep', 'PT sUSDe Nov', 'PT USDe Nov', 'PT sUSDe Jan', 'PT USDe Jan',
   'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May', 'PT srUSDe Apr', 'frxUSD', 'PT sUSDe June',
-  'PT USDe June', 'PT srUSDe Jun', 'PT USDG May', 'PT sUSDS Nov', 'PT sUSDe Oct',
+  'PT USDe June', 'PT srUSDe Jun', 'PT srUSDe Oct', 'PT USDG May', 'PT sUSDS Nov', 'PT sUSDe Oct',
 ];
 
 export const isLeveragedPos = (usedAssets: MMUsedAssets, dustLimit = 5) => {
