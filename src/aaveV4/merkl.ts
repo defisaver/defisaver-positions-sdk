@@ -8,8 +8,8 @@ import {
   MerklOpportunity,
   OpportunityAction,
   OpportunityStatus,
+  NetworkNumber,
 } from '../types';
-import { NetworkNumber } from '../types/common';
 
 /**
  * Merkl tags Aave V4 reward campaigns by scope via the `type` field:
@@ -34,8 +34,7 @@ const buildIncentive = (opportunity: MerklOpportunity): IncentiveData => {
 export const getAaveV4MerkleCampaigns = async (chainId: NetworkNumber): Promise<AaveV4MerklRewardMap> => {
   const result: AaveV4MerklRewardMap = { hub: {}, spoke: {} };
   try {
-    // TEMP staging QA (DEV-12653): revert to https://fe.defisaver.com/api/merkl before merge
-    const res = await fetch('https://stage.defisaver.com/dev-12653-merkl-auth-api/api/merkl/opportunities?mainProtocolId=aave', {
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Aave V4 Merkle campaigns');

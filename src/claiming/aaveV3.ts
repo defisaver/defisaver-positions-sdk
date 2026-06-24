@@ -106,8 +106,7 @@ export async function getUnclaimedRewardsForAllMarkets(
 export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
   let data;
   try {
-    // TEMP staging QA (DEV-12653): revert to https://fe.defisaver.com/api/merkl before merge
-    const res = await fetch(`https://stage.defisaver.com/dev-12653-merkl-auth-api/api/merkl/get-user-rewards/${account}?chainId=${network}`,
+    const res = await fetch(`https://fe.defisaver.com/api/merkl/get-user-rewards/${account}?chainId=${network}`,
       { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
     data = await res.json();
   } catch (error) {

@@ -2,8 +2,8 @@ import { aprToApy } from '../moneymarket';
 import { LONGER_TIMEOUT, wethToEth } from '../services/utils';
 import {
   MerkleRewardMap, MerklOpportunity, OpportunityAction, OpportunityStatus,
+  EthAddress, NetworkNumber,
 } from '../types';
-import { EthAddress, NetworkNumber } from '../types/common';
 
 export const getAaveUnderlyingSymbol = (_symbol = '') => {
   let symbol = _symbol
@@ -31,8 +31,7 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    // TEMP staging QA (DEV-12653): revert to https://fe.defisaver.com/api/merkl before merge
-    const res = await fetch('https://stage.defisaver.com/dev-12653-merkl-auth-api/api/merkl/opportunities?mainProtocolId=aave', {
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
