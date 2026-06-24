@@ -1,5 +1,5 @@
 import { aprToApy } from '../moneymarket';
-import { DEFAULT_TIMEOUT } from '../services/utils';
+import { LONGER_TIMEOUT } from '../services/utils';
 import {
   AaveV4MerklRewardMap,
   AaveV4ReserveAssetData,
@@ -8,8 +8,8 @@ import {
   MerklOpportunity,
   OpportunityAction,
   OpportunityStatus,
+  NetworkNumber,
 } from '../types';
-import { NetworkNumber } from '../types/common';
 
 /**
  * Merkl tags Aave V4 reward campaigns by scope via the `type` field:
@@ -34,8 +34,8 @@ const buildIncentive = (opportunity: MerklOpportunity): IncentiveData => {
 export const getAaveV4MerkleCampaigns = async (chainId: NetworkNumber): Promise<AaveV4MerklRewardMap> => {
   const result: AaveV4MerklRewardMap = { hub: {}, spoke: {} };
   try {
-    const res = await fetch('https://api-merkl.angle.money/v4/opportunities?mainProtocolId=aave', {
-      signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
+      signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Aave V4 Merkle campaigns');
     const opportunities = await res.json() as MerklOpportunity[];
