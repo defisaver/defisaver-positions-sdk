@@ -48,13 +48,16 @@ export const AAVE_V4_TOKENIZED_SPOKES: Record<string, EthAddress> = {
   GHO_PRIME: '0x900fD46d565d1ac8995928c0179052ec02a6D0E1',
   USDC_PRIME: '0x486415fb1F8b062c89ED548f871cf64304AACb31',
   USDT_PRIME: '0x46c588DD8453aC259c1f6a54b4C9A93C2aC3762D',
+
+  // USDC_PAXOS: '0x0',
+  // USDT_PAXOS: '0x0',
 };
 
 export const AAVE_V4_TOKENIZED_SPOKE_ADDRESSES: Partial<Record<NetworkNumber, EthAddress[]>> = {
   [NetworkNumber.Eth]: Object.values(AAVE_V4_TOKENIZED_SPOKES),
 };
 
-export type AaveV4TokenizedHubKey = 'CORE' | 'PLUS' | 'PRIME';
+export type AaveV4TokenizedHubKey = 'CORE' | 'PLUS' | 'PRIME' | 'PAXOS';
 
 export const aaveV4GetTokenizedHubKey = (hubNameOrKey?: string | null): AaveV4TokenizedHubKey | null => {
   if (!hubNameOrKey) return null;
@@ -63,10 +66,12 @@ export const aaveV4GetTokenizedHubKey = (hubNameOrKey?: string | null): AaveV4To
   if (normalized === 'CORE' || normalized === 'CORE HUB') return 'CORE';
   if (normalized === 'PLUS' || normalized === 'PLUS HUB') return 'PLUS';
   if (normalized === 'PRIME' || normalized === 'PRIME HUB') return 'PRIME';
+  if (normalized === 'PAXOS' || normalized === 'PAXOS HUB') return 'PAXOS';
 
   if (normalized.includes('CORE')) return 'CORE';
   if (normalized.includes('PLUS')) return 'PLUS';
   if (normalized.includes('PRIME')) return 'PRIME';
+  if (normalized.includes('PAXOS')) return 'PAXOS';
 
   return null;
 };
