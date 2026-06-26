@@ -206,9 +206,7 @@ const REWARDS_QUERY = `
       marketId
       state {
         rewards {
-          amountPerSuppliedToken
           supplyApr
-          amountPerBorrowedToken
           borrowApr
           asset {
             address
