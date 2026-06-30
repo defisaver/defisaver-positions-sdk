@@ -470,7 +470,6 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, provider, marketData, selectedMarket);
   });
 
-  // DEV-13004: new Morpho markets
   it('can fetch PRIME/PYUSD 86% market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
@@ -871,7 +870,6 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
 
-  // DEV-13004: new Morpho markets
   it('can fetch USDe/USDC 91.5% market and account data for Base', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Base;
@@ -939,7 +937,6 @@ describe('Morpho Blue', () => {
     await fetchAccountData(network, providerArb, marketData, selectedMarket);
   });
 
-  // DEV-13004: new Morpho markets
   it('can fetch weETH/USDC 86% market and account data for Arbitrum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Arb;

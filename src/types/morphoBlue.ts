@@ -62,42 +62,6 @@ export enum MorphoBlueVersions {
 
   MorphoBlueMORPHOUSDC_625 = 'morphobluemorphousdc_625',
 
-  // BASE
-  MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
-  MorphoBlueCbEthUSDC_860_Base_1c21c59d = 'morphobluecbethusdc_860_base_1c21c59d',
-  MorphoBlueWstEthUSDC_860_Base = 'morphobluewstethusdc_860_base',
-  MorphoBlueWstEthUSDC_860_Base_13c42741 = 'morphobluewstethusdc_860_base_13c42741',
-  MorphoBlueEthUSDC_860_Base = 'morphoblueethusdc_860_base',
-  MorphoBlueCbEthEth_945_Base = 'morphobluecbetheth_945_base',
-  MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
-  MorphoBlueWstEthEth_945_Base = 'morphobluewstetheth_945_base',
-  MorphoBlueWstEthEth_965_Base = 'morphobluewstetheth_965_base',
-  MorphoBlueREthUSDC_860_Base = 'morphobluerethusdc_860_base',
-  MorphoBlueREthEth_945_Base = 'morphoblueretheth_945_base',
-  MorphoBlueCbBTCEth_915_Base = 'morphobluecbbtceth_915_base',
-  MorphoBlueCbBTCUSDC_860_Base = 'morphobluecbbtcusdc_860_base',
-  MorphoBlueWsuperOETHbWETH_915_Base = 'morphobluewsuperoethbweth_915_base',
-  MorphoBlueLBTCCbBTC_945_Base = 'morphobluelbtccbbtc_945_base', // LBTC/cbBTC
-  MorphoBlueWstEthEURC_860_Base = 'morphobluewstetheurc_860_base', // wstETH/EURC
-  MorphoBlueCbBTCEURC_860_Base = 'morphobluecbbtceurc_860_base', // cbBTC/EURC
-  MorphoBlueWETHEURC_860_Base = 'morphobluewetheurc_860_base', // WETH/EURC
-  MorphoBlueCbEthEURC_860_Base = 'morphobluecbetheurc_860_base', // cbETH/EURC
-  MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH 0.945
-  MorphoBlueWeEthEth_915_Base = 'morphoblueweetheth_915_base', // weETH/ETH 0.915
-  MorphoBlueAEROUSDC_625_Base = 'morphoblueaerousdc_625_base', // AERO/USDC
-  MorphoBlueWeEthUSDC_777_Base = 'morphoblueweethusdc_777_base', // weETH/USDC
-  MorphoBlueEzEthUsdc_777_Base = 'morphoblueezethusdc_777_base', // ezETH/USDC
-  MorphoBlueEzEthEth_777_Base = 'morphoblueezetheth_777_base', // ezETH/ETH
-  MorphoBlueBsdEthEth_860_Base = 'morphobluebsdetheth_860_base', // bsdETH/ETH
-
-  // ARBITRUM
-  MorphoBlueSyrupUSDCUSDC_915_Arb = 'morphobluesyrupusdcusdc_915_arb', // syrupUSDC/USDC
-  MorphoBlueWBTCUSDC_860_Arb = 'morphobluewbtcusdc_860_arb', // WBTC/USDC
-  MorphoBlueWstEthUSDC_860_Arb = 'morphobluewstethusdc_860_arb', // wstETH/USDC
-  MorphoBlueEthUSDC_860_Arb = 'morphoblueethusdc_860_arb', // ETH/USDC
-  MorphoBluesUSDSUSDC_945_Arb = 'morphobluesusdsusdc_945_arb', // sUSDS/USDC
-
-  // DEV-13004 MAINNET
   MorphoBluePRIMEPYUSD_860 = 'morphoblueprimepyusd_860', // PRIME/PYUSD 0.86
   MorphoBlueKBTCRLUSD_860 = 'morphobluekbtcrlusd_860', // kBTC/RLUSD 0.86
   MorphoBlueKBTCPYUSD_860 = 'morphobluekbtcpyusd_860', // kBTC/PYUSD 0.86
@@ -127,11 +91,44 @@ export enum MorphoBlueVersions {
   MorphoBlueEthUSDT_860 = 'morphoblueethusdt_860', // ETH/USDT 0.86
   MorphoBlueWBTCRLUSD_860 = 'morphobluewbtcrlusd_860', // WBTC/RLUSD 0.86
   MorphoBlueWBTCPYUSD_860 = 'morphobluewbtcpyusd_860', // WBTC/PYUSD 0.86
-  // DEV-13004 BASE
+
+  // BASE
+  MorphoBlueCbEthUSDC_860_Base = 'morphobluecbethusdc_860_base',
+  MorphoBlueCbEthUSDC_860_Base_1c21c59d = 'morphobluecbethusdc_860_base_1c21c59d',
+  MorphoBlueWstEthUSDC_860_Base = 'morphobluewstethusdc_860_base',
+  MorphoBlueWstEthUSDC_860_Base_13c42741 = 'morphobluewstethusdc_860_base_13c42741',
+  MorphoBlueEthUSDC_860_Base = 'morphoblueethusdc_860_base',
+  MorphoBlueCbEthEth_945_Base = 'morphobluecbetheth_945_base',
+  MorphoBlueCbEthEth_965_Base = 'morphobluecbetheth_965_base',
+  MorphoBlueWstEthEth_945_Base = 'morphobluewstetheth_945_base',
+  MorphoBlueWstEthEth_965_Base = 'morphobluewstetheth_965_base',
+  MorphoBlueREthUSDC_860_Base = 'morphobluerethusdc_860_base',
+  MorphoBlueREthEth_945_Base = 'morphoblueretheth_945_base',
+  MorphoBlueCbBTCEth_915_Base = 'morphobluecbbtceth_915_base',
+  MorphoBlueCbBTCUSDC_860_Base = 'morphobluecbbtcusdc_860_base',
+  MorphoBlueWsuperOETHbWETH_915_Base = 'morphobluewsuperoethbweth_915_base',
+  MorphoBlueLBTCCbBTC_945_Base = 'morphobluelbtccbbtc_945_base', // LBTC/cbBTC
+  MorphoBlueWstEthEURC_860_Base = 'morphobluewstetheurc_860_base', // wstETH/EURC
+  MorphoBlueCbBTCEURC_860_Base = 'morphobluecbbtceurc_860_base', // cbBTC/EURC
+  MorphoBlueWETHEURC_860_Base = 'morphobluewetheurc_860_base', // WETH/EURC
+  MorphoBlueCbEthEURC_860_Base = 'morphobluecbetheurc_860_base', // cbETH/EURC
+  MorphoBlueWeEthEth_945_Base = 'morphoblueweetheth_945_base', // weETH/ETH 0.945
+  MorphoBlueWeEthEth_915_Base = 'morphoblueweetheth_915_base', // weETH/ETH 0.915
+  MorphoBlueAEROUSDC_625_Base = 'morphoblueaerousdc_625_base', // AERO/USDC
+  MorphoBlueWeEthUSDC_777_Base = 'morphoblueweethusdc_777_base', // weETH/USDC
+  MorphoBlueEzEthUsdc_777_Base = 'morphoblueezethusdc_777_base', // ezETH/USDC
+  MorphoBlueEzEthEth_777_Base = 'morphoblueezetheth_777_base', // ezETH/ETH
+  MorphoBlueBsdEthEth_860_Base = 'morphobluebsdetheth_860_base', // bsdETH/ETH
   MorphoBlueUSDeUSDC_915_Base = 'morphoblueusdeusdc_915_base', // USDe/USDC 0.915
   MorphoBlueCbEthUSDC_770_Base = 'morphobluecbethusdc_770_base', // cbETH/USDC 0.77
   MorphoBlueCbXRPUSDC_625_Base = 'morphobluecbxrpusdc_625_base', // cbXRP/USDC 0.625
-  // DEV-13004 ARBITRUM
+
+  // ARBITRUM
+  MorphoBlueSyrupUSDCUSDC_915_Arb = 'morphobluesyrupusdcusdc_915_arb', // syrupUSDC/USDC
+  MorphoBlueWBTCUSDC_860_Arb = 'morphobluewbtcusdc_860_arb', // WBTC/USDC
+  MorphoBlueWstEthUSDC_860_Arb = 'morphobluewstethusdc_860_arb', // wstETH/USDC
+  MorphoBlueEthUSDC_860_Arb = 'morphoblueethusdc_860_arb', // ETH/USDC
+  MorphoBluesUSDSUSDC_945_Arb = 'morphobluesusdsusdc_945_arb', // sUSDS/USDC
   MorphoBlueWeEthUSDC_860_Arb = 'morphoblueweethusdc_860_arb', // weETH/USDC 0.86
   MorphoBluesUSDSUSDT0_945_Arb = 'morphobluesusdsusdt0_945_arb', // sUSDS/USDT0 0.945
   MorphoBlueWeEthUSDT0_860_Arb = 'morphoblueweethusdt0_860_arb', // weETH/USDT0 0.86

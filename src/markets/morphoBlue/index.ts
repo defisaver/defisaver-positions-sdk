@@ -1,6 +1,10 @@
 import { compareAddresses } from '../../services/utils';
-import { MorphoBlueMarketData, MorphoBlueOracleType, MorphoBlueVersions } from '../../types';
-import { NetworkNumber } from '../../types/common';
+import {
+  MorphoBlueMarketData,
+  MorphoBlueOracleType,
+  MorphoBlueVersions,
+  NetworkNumber,
+} from '../../types';
 
 export const MORPHO_BLUE_WSTETH_USDC = (networkId: NetworkNumber = NetworkNumber.Eth): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Eth],
@@ -1262,7 +1266,6 @@ export const MORPHO_BLUE_PTWEETH_USDA_860 = (networkId: NetworkNumber = NetworkN
   protocolName: 'morpho-blue',
 });
 
-// DEV-13004: Add Morpho markets
 export const MORPHO_BLUE_USDE_USDC_915_BASE = (networkId: NetworkNumber = NetworkNumber.Base): MorphoBlueMarketData => ({
   chainIds: [NetworkNumber.Base],
   label: 'Morpho',
@@ -1927,50 +1930,6 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueUSDeDAI_945]: MORPHO_BLUE_USDE_DAI_945(networkId),
   [MorphoBlueVersions.MorphoBlueUSDeDAI_777]: MORPHO_BLUE_USDE_DAI_777(networkId),
 
-  // Base
-  [MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base]: MORPHO_BLUE_CBETH_USDC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base_1c21c59d]: MORPHO_BLUE_CBETH_USDC_860_BASE_1c21c59d(networkId),
-  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base]: MORPHO_BLUE_WSTETH_USDC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base_13c42741]: MORPHO_BLUE_WSTETH_USDC_860_BASE_13c42741(networkId),
-  [MorphoBlueVersions.MorphoBlueEthUSDC_860_Base]: MORPHO_BLUE_ETH_USDC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueREthUSDC_860_Base]: MORPHO_BLUE_RETH_USDC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueREthEth_945_Base]: MORPHO_BLUE_RETH_ETH_945_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbBTCEth_915_Base]: MORPHO_BLUE_CBBTC_ETH_915_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbBTCUSDC_860_Base]: MORPHO_BLUE_CBBTC_USDC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbBTCEURC_860_Base]: MORPHO_BLUE_CBBTC_EURC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWstEthEURC_860_Base]: MORPHO_BLUE_WSTETH_EURC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueLBTCCbBTC_945_Base]: MORPHO_BLUE_LBTC_CBBTC_945_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWETHEURC_860_Base]: MORPHO_BLUE_WETH_EURC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbEthEURC_860_Base]: MORPHO_BLUE_CBETH_EURC_860_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWeEthEth_945_Base]: MORPHO_BLUE_WEETH_ETH_945_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWeEthEth_915_Base]: MORPHO_BLUE_WEETH_ETH_915_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueAEROUSDC_625_Base]: MORPHO_BLUE_AERO_USDC_625_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWeEthUSDC_777_Base]: MORPHO_BLUE_WEETH_USDC_777_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueEzEthUsdc_777_Base]: MORPHO_BLUE_EZETH_USDC_777_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueEzEthEth_777_Base]: MORPHO_BLUE_EZETH_ETH_777_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueBsdEthEth_860_Base]: MORPHO_BLUE_BSDETH_ETH_860_BASE(networkId),
-
-  // wsuperOETHb/WETH Base
-  [MorphoBlueVersions.MorphoBlueWsuperOETHbWETH_915_Base]: MORPHO_BLUE_WSUPEROETHB_WETH_915_BASE(networkId),
-
-  // cbETH/WETH Base
-  [MorphoBlueVersions.MorphoBlueCbEthEth_945_Base]: MORPHO_BLUE_CBETH_ETH_945_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbEthEth_965_Base]: MORPHO_BLUE_CBETH_ETH_965_BASE(networkId),
-
-  // wstETH/WETH Base
-  [MorphoBlueVersions.MorphoBlueWstEthEth_945_Base]: MORPHO_BLUE_WSTETH_ETH_945_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueWstEthEth_965_Base]: MORPHO_BLUE_WSTETH_ETH_965_BASE(networkId),
-
-  // Arbitrum
-  [MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915_Arb]: MORPHO_BLUE_SYRUPUSDC_USDC_915_ARB(networkId),
-  [MorphoBlueVersions.MorphoBlueWBTCUSDC_860_Arb]: MorphoBlueWBTCUSDC_860_Arb(networkId),
-  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Arb]: MORPHO_BLUE_WSTETH_USDC_860_ARB(networkId),
-  [MorphoBlueVersions.MorphoBlueEthUSDC_860_Arb]: MORPHO_BLUE_ETH_USDC_860_ARB(networkId),
-  [MorphoBlueVersions.MorphoBluesUSDSUSDC_945_Arb]: MORPHO_BLUE_SUSDS_USDC_945_ARB(networkId),
-  // DEV-13004: Add Morpho markets
-  [MorphoBlueVersions.MorphoBlueUSDeUSDC_915_Base]: MORPHO_BLUE_USDE_USDC_915_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbEthUSDC_770_Base]: MORPHO_BLUE_CBETH_USDC_770_BASE(networkId),
-  [MorphoBlueVersions.MorphoBlueCbXRPUSDC_625_Base]: MORPHO_BLUE_CBXRP_USDC_625_BASE(networkId),
   [MorphoBlueVersions.MorphoBluePRIMEPYUSD_860]: MORPHO_BLUE_PRIME_PYUSD_860(networkId),
   [MorphoBlueVersions.MorphoBlueKBTCRLUSD_860]: MORPHO_BLUE_KBTC_RLUSD_860(networkId),
   [MorphoBlueVersions.MorphoBlueKBTCPYUSD_860]: MORPHO_BLUE_KBTC_PYUSD_860(networkId),
@@ -2000,6 +1959,50 @@ export const MorphoBlueMarkets = (networkId: NetworkNumber) => ({
   [MorphoBlueVersions.MorphoBlueEthUSDT_860]: MORPHO_BLUE_ETH_USDT_860(networkId),
   [MorphoBlueVersions.MorphoBlueWBTCRLUSD_860]: MORPHO_BLUE_WBTC_RLUSD_860(networkId),
   [MorphoBlueVersions.MorphoBlueWBTCPYUSD_860]: MORPHO_BLUE_WBTC_PYUSD_860(networkId),
+
+  // Base
+  [MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base]: MORPHO_BLUE_CBETH_USDC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbEthUSDC_860_Base_1c21c59d]: MORPHO_BLUE_CBETH_USDC_860_BASE_1c21c59d(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base]: MORPHO_BLUE_WSTETH_USDC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Base_13c42741]: MORPHO_BLUE_WSTETH_USDC_860_BASE_13c42741(networkId),
+  [MorphoBlueVersions.MorphoBlueEthUSDC_860_Base]: MORPHO_BLUE_ETH_USDC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueREthUSDC_860_Base]: MORPHO_BLUE_RETH_USDC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueREthEth_945_Base]: MORPHO_BLUE_RETH_ETH_945_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbBTCEth_915_Base]: MORPHO_BLUE_CBBTC_ETH_915_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbBTCUSDC_860_Base]: MORPHO_BLUE_CBBTC_USDC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbBTCEURC_860_Base]: MORPHO_BLUE_CBBTC_EURC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthEURC_860_Base]: MORPHO_BLUE_WSTETH_EURC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueLBTCCbBTC_945_Base]: MORPHO_BLUE_LBTC_CBBTC_945_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWETHEURC_860_Base]: MORPHO_BLUE_WETH_EURC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbEthEURC_860_Base]: MORPHO_BLUE_CBETH_EURC_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWeEthEth_945_Base]: MORPHO_BLUE_WEETH_ETH_945_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWeEthEth_915_Base]: MORPHO_BLUE_WEETH_ETH_915_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueAEROUSDC_625_Base]: MORPHO_BLUE_AERO_USDC_625_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWeEthUSDC_777_Base]: MORPHO_BLUE_WEETH_USDC_777_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueEzEthUsdc_777_Base]: MORPHO_BLUE_EZETH_USDC_777_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueEzEthEth_777_Base]: MORPHO_BLUE_EZETH_ETH_777_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueBsdEthEth_860_Base]: MORPHO_BLUE_BSDETH_ETH_860_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueUSDeUSDC_915_Base]: MORPHO_BLUE_USDE_USDC_915_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbEthUSDC_770_Base]: MORPHO_BLUE_CBETH_USDC_770_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbXRPUSDC_625_Base]: MORPHO_BLUE_CBXRP_USDC_625_BASE(networkId),
+
+  // wsuperOETHb/WETH Base
+  [MorphoBlueVersions.MorphoBlueWsuperOETHbWETH_915_Base]: MORPHO_BLUE_WSUPEROETHB_WETH_915_BASE(networkId),
+
+  // cbETH/WETH Base
+  [MorphoBlueVersions.MorphoBlueCbEthEth_945_Base]: MORPHO_BLUE_CBETH_ETH_945_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueCbEthEth_965_Base]: MORPHO_BLUE_CBETH_ETH_965_BASE(networkId),
+
+  // wstETH/WETH Base
+  [MorphoBlueVersions.MorphoBlueWstEthEth_945_Base]: MORPHO_BLUE_WSTETH_ETH_945_BASE(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthEth_965_Base]: MORPHO_BLUE_WSTETH_ETH_965_BASE(networkId),
+
+  // Arbitrum
+  [MorphoBlueVersions.MorphoBlueSyrupUSDCUSDC_915_Arb]: MORPHO_BLUE_SYRUPUSDC_USDC_915_ARB(networkId),
+  [MorphoBlueVersions.MorphoBlueWBTCUSDC_860_Arb]: MorphoBlueWBTCUSDC_860_Arb(networkId),
+  [MorphoBlueVersions.MorphoBlueWstEthUSDC_860_Arb]: MORPHO_BLUE_WSTETH_USDC_860_ARB(networkId),
+  [MorphoBlueVersions.MorphoBlueEthUSDC_860_Arb]: MORPHO_BLUE_ETH_USDC_860_ARB(networkId),
+  [MorphoBlueVersions.MorphoBluesUSDSUSDC_945_Arb]: MORPHO_BLUE_SUSDS_USDC_945_ARB(networkId),
   [MorphoBlueVersions.MorphoBlueWeEthUSDC_860_Arb]: MORPHO_BLUE_WEETH_USDC_860_ARB(networkId),
   [MorphoBlueVersions.MorphoBluesUSDSUSDT0_945_Arb]: MORPHO_BLUE_SUSDS_USDT0_945_ARB(networkId),
   [MorphoBlueVersions.MorphoBlueWeEthUSDT0_860_Arb]: MORPHO_BLUE_WEETH_USDT0_860_ARB(networkId),
