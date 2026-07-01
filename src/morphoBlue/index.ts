@@ -34,12 +34,12 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
 
   let marketInfo;
   let loanTokenPrice;
-  const isTokenUSDA = loanTokenInfo.symbol === 'USDA';
+  const isHardcodedUsdStable = ['USDA', 'RLUSD'].includes(loanTokenInfo.symbol);
   const isMainnet = isMainnetNetwork(network);
   if (isMainnet) {
     const feedRegistryContract = FeedRegistryContractViem(provider, NetworkNumber.Eth);
     const [_loanTokenPrice, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
+      isHardcodedUsdStable ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
       morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
@@ -49,7 +49,7 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
 
     const [loanTokenPriceRound, _marketInfo] = await Promise.all([
-      isTokenUSDA ? Promise.resolve([0, '100000000']) // Normalize to match the expected object structure
+      isHardcodedUsdStable ? Promise.resolve([0, '100000000']) // Normalize to match the expected object structure
         : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]),
       morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
