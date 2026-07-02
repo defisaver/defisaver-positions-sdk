@@ -1691,7 +1691,7 @@ export const MORPHO_BLUE_SYRUPUSDT_USDT_915 = (networkId: NetworkNumber = Networ
   loanToken: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
   collateralToken: '0x356B8d89c1e1239Cbbb9dE4815c39A1474d5BA7D',
   oracle: '0x34e50151c21c5f3499AcE66c7157aA547892e997',
-  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  oracleType: MorphoBlueOracleType.CONTRACT_RATE,
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.915,
   marketId: '0xa4774e3e693fff2ebd1dcbbd69b1b0a5b9bb0ccc753bfda5dd07bdac97c4818a',

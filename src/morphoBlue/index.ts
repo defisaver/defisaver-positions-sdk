@@ -19,6 +19,8 @@ import {
 import { getChainlinkAssetAddress } from '../services/priceService';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
+const HARDCODED_USD_STABLE_PRICE = '100000000'; // $1 with 8 decimals
+
 export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
   const {
     loanToken, collateralToken, oracle, irm, lltv, oracleType,
@@ -39,7 +41,7 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
   if (isMainnet) {
     const feedRegistryContract = FeedRegistryContractViem(provider, NetworkNumber.Eth);
     const [_loanTokenPrice, _marketInfo] = await Promise.all([
-      isHardcodedUsdStable ? Promise.resolve('100000000') : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
+      isHardcodedUsdStable ? Promise.resolve(HARDCODED_USD_STABLE_PRICE) : feedRegistryContract.read.latestAnswer([loanTokenFeedAddress, USD_QUOTE]),
       morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
     marketInfo = _marketInfo;
@@ -49,7 +51,7 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     const feedRegistryContract = DFSFeedRegistryContractViem(provider, network);
 
     const [loanTokenPriceRound, _marketInfo] = await Promise.all([
-      isHardcodedUsdStable ? Promise.resolve([0, '100000000']) // Normalize to match the expected object structure
+      isHardcodedUsdStable ? Promise.resolve([0, HARDCODED_USD_STABLE_PRICE]) // Normalize to match the expected object structure
         : feedRegistryContract.read.latestRoundData([loanTokenFeedAddress, USD_QUOTE]),
       morphoBlueViewContract.read.getMarketInfoNotTuple([loanToken, collateralToken, oracle, irm, BigInt(lltvInWei)]),
     ]);
