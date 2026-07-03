@@ -49,8 +49,9 @@ export const AAVE_V4_TOKENIZED_SPOKES: Record<string, EthAddress> = {
   USDC_PRIME: '0x486415fb1F8b062c89ED548f871cf64304AACb31',
   USDT_PRIME: '0x46c588DD8453aC259c1f6a54b4C9A93C2aC3762D',
 
-  // USDC_PAXOS: '0x0',
-  // USDT_PAXOS: '0x0',
+  USDC_PAXOS: '0x4131E0B2E7AFeCEAf3d3b4225aA61a3B2B7535b8',
+  USDT_PAXOS: '0x8Dabe53E8cB991c57f0307F6f419E6D469b0deAA',
+  PT_USDG_Sep_PAXOS: '0x27eF1140364948A0E30E248297FfDFE5a4091ec4',
 };
 
 export const AAVE_V4_TOKENIZED_SPOKE_ADDRESSES: Partial<Record<NetworkNumber, EthAddress[]>> = {
@@ -84,7 +85,7 @@ export const aaveV4GetTokenizedVaultKey = (
   const hubKey = aaveV4GetTokenizedHubKey(hubNameOrKey);
   if (!hubKey) return null;
 
-  const normalizedSymbol = symbol.trim().replace(/-/g, '_');
+  const normalizedSymbol = symbol.trim().replace(/[-\s]+/g, '_');
 
   return `${normalizedSymbol}_${hubKey}`;
 };
