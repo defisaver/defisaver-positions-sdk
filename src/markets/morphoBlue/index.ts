@@ -1021,7 +1021,7 @@ export const MORPHO_BLUE_USD3_USDC_915 = (networkId: NetworkNumber = NetworkNumb
   loanToken: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
   collateralToken: '0x056B269Eb1f75477a8666ae8C7fE01b64dD55eCc',
   oracle: '0x68b4c2B2b2e245AB54a3bD55DfD5A9d84f029C06',
-  oracleType: MorphoBlueOracleType.MARKET_RATE,
+  oracleType: MorphoBlueOracleType.CONTRACT_RATE,
   irm: '0x870aC11D48B15DB9a138Cf899d20F13F79Ba00BC',
   lltv: 0.915,
   marketId: '0xe3df58f9d3011b7481ff36b939fa5f8da642f34ea5792d25d3958dbf1efa26d7',
