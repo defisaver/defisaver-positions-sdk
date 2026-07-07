@@ -579,3 +579,5 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     markets,
   };
 }
+
+export * from './discovery';
