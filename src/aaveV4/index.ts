@@ -257,6 +257,33 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
   };
 }
 
+/**
+ * Lightweight existence check for Loan Shifter / UI discovery.
+ * Reads only `getLoanData(spoke, user)` and returns whether any reserve has
+ * non-zero supplied or debt, avoiding full spoke/market data fetches.
+ */
+export const _getAaveV4AccountHasAnyBalance = async (
+  provider: Client,
+  network: NetworkNumber,
+  block: Blockish,
+  address: EthAddress,
+  spokeAddress: EthAddress,
+): Promise<boolean> => {
+  if (!address || !spokeAddress) return false;
+
+  const blockNumber = block === 'latest' ? 'latest' : Number(block);
+  const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
+
+  const loanData = await viewContract.read.getLoanData([spokeAddress, address]);
+  const reserves = loanData?.reserves || [];
+
+  return reserves.some((reserveAsset) => {
+    const suppliedRaw = reserveAsset?.supplied?.toString?.() ?? reserveAsset?.supplied ?? '0';
+    const debtRaw = reserveAsset?.totalDebt?.toString?.() ?? reserveAsset?.totalDebt ?? '0';
+    return new Dec(suppliedRaw).gt(0) || new Dec(debtRaw).gt(0);
+  });
+};
+
 export async function getAaveV4AccountData(provider: EthereumProvider, network: NetworkNumber, marketData: AaveV4SpokeData, address: EthAddress, blockNumber: 'latest' | number = 'latest'): Promise<any> {
   return _getAaveV4AccountData(getViemProvider(provider, network), network, marketData, address, blockNumber);
 }
