@@ -13,29 +13,13 @@ import {
   SparkMarkets,
 } from '../markets';
 import { AaveVersions, CompoundVersions } from '../types';
-import { _getAaveV4AccountBalances } from '../aaveV4';
+import { _getAaveV4AccountHasAnyBalance } from '../aaveV4';
 import { _getCompoundV2AccountBalances } from '../compoundV2';
 import { _getCompoundV3AccountBalances } from '../compoundV3';
 import { _getCrvUsdAccountBalances } from '../curveUsd';
 import { _getLlamaLendAccountBalances } from '../llamaLend';
 import { _getMorphoBlueAccountBalances } from '../morphoBlue';
-
-// Aave-style `Pool.getUserAccountData(user)` — shared by Aave V2/V3(+Lido/Etherfi) and Spark.
-// A single aggregate read per market, far cheaper than enumerating reserve token balances.
-const AAVE_POOL_ABI = [{
-  type: 'function',
-  name: 'getUserAccountData',
-  stateMutability: 'view',
-  inputs: [{ name: 'user', type: 'address' }],
-  outputs: [
-    { name: 'totalCollateralBase', type: 'uint256' },
-    { name: 'totalDebtBase', type: 'uint256' },
-    { name: 'availableBorrowsBase', type: 'uint256' },
-    { name: 'currentLiquidationThreshold', type: 'uint256' },
-    { name: 'ltv', type: 'uint256' },
-    { name: 'healthFactor', type: 'uint256' },
-  ],
-}] as const;
+import { createViemContractFromConfigFunc } from '../contracts';
 
 const hasAnyBalance = (balances: PositionBalances): boolean => (
   [balances.collateral, balances.debt].some(
@@ -74,25 +58,30 @@ export async function getUserPositionsExistence(
   const sparkMarkets = Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network));
 
   [...aaveV3Markets, ...sparkMarkets].forEach((market) => {
+    if (!market.lendingPool) return;
+    const lendingPoolContract = createViemContractFromConfigFunc(
+      market.lendingPool,
+      market.lendingPoolAddress as EthAddress,
+    )(client, network, block);
     tasks.push(
-      client.readContract({
-        address: market.lendingPoolAddress as EthAddress,
-        abi: AAVE_POOL_ABI,
-        functionName: 'getUserAccountData',
-        args: [address],
-        ...setViemBlockNumber(block),
-      }).then(([totalCollateral, totalDebt]) => {
-        existence[market.value] = new Dec(totalCollateral.toString()).gt(0) || new Dec(totalDebt.toString()).gt(0);
-      }).catch(() => { existence[market.value] = true; }),
+      lendingPoolContract.read.getUserAccountData([address], setViemBlockNumber(block))
+        .then(([totalCollateral, totalDebt]) => {
+          existence[market.value] = new Dec(totalCollateral.toString()).gt(0) || new Dec(totalDebt.toString()).gt(0);
+        })
+        .catch(() => { existence[market.value] = false; }),
     );
   });
 
   const balanceTask = (key: string, getBalances: () => Promise<PositionBalances>) => getBalances()
     .then((balances) => { existence[key] = hasAnyBalance(balances); })
-    .catch(() => { existence[key] = true; });
+    .catch(() => { existence[key] = false; });
 
   Object.values(AaveV4Spokes(network)).filter((spoke) => spoke.chainIds.includes(network)).forEach((spoke) => {
-    tasks.push(balanceTask(spoke.value, () => _getAaveV4AccountBalances(client, network, block, false, address, spoke.address)));
+    tasks.push(
+      _getAaveV4AccountHasAnyBalance(client, network, block, address, spoke.address)
+        .then((hasAny) => { existence[spoke.value] = hasAny; })
+        .catch(() => { existence[spoke.value] = false; }),
+    );
   });
 
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
