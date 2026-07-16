@@ -16,6 +16,7 @@ import {
   AaveV4UsedReserveAsset,
   AaveV4UsedReserveAssets,
   EthereumProvider,
+  IncentiveData,
   LeverageType,
   NetworkNumber,
 } from '../../types';
@@ -90,6 +91,17 @@ export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, asse
   return riskPremiumBps.toNumber();
 };
 
+/**
+ * `spokeXIncentives`/`hubXIncentives` are each the intrinsic `base` list with at most one Merkl
+ * reward appended (see attachAaveV4MerklIncentives). Both scopes can apply to the same position at
+ * once (spoke-specific + hub-wide), so the full applicable set is base + whatever each scope appended.
+ */
+const mergeScopedIncentives = (base: IncentiveData[] = [], spokeScoped?: IncentiveData[], hubScoped?: IncentiveData[]): IncentiveData[] => [
+  ...base,
+  ...(spokeScoped ? spokeScoped.slice(base.length) : []),
+  ...(hubScoped ? hubScoped.slice(base.length) : []),
+];
+
 export const calculateNetApyAaveV4 = ({
   usedAssets,
   assetsData,
@@ -111,11 +123,10 @@ export const calculateNetApyAaveV4 = ({
       const supplyInterest = calculateInterestEarned(amount, assetData.supplyRate, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
 
-      if (assetData.supplyIncentives) {
-        for (const supplyIncentive of assetData.supplyIncentives) {
-          const incentiveInterest = calculateInterestEarned(amount, supplyIncentive.apy, 'year', true);
-          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-        }
+      const supplyIncentives = mergeScopedIncentives(assetData.supplyIncentives, assetData.spokeSupplyIncentives, assetData.hubSupplyIncentives);
+      for (const supplyIncentive of supplyIncentives) {
+        const incentiveInterest = calculateInterestEarned(amount, supplyIncentive.apy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }
 
@@ -130,11 +141,10 @@ export const calculateNetApyAaveV4 = ({
       const borrowInterest = calculateInterestEarned(amount, userBorrowRate, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
 
-      if (assetData.borrowIncentives) {
-        for (const borrowIncentive of assetData.borrowIncentives) {
-          const incentiveInterest = calculateInterestEarned(amount, borrowIncentive.apy, 'year', true);
-          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-        }
+      const borrowIncentives = mergeScopedIncentives(assetData.borrowIncentives, assetData.spokeBorrowIncentives, assetData.hubBorrowIncentives);
+      for (const borrowIncentive of borrowIncentives) {
+        const incentiveInterest = calculateInterestEarned(amount, borrowIncentive.apy, 'year', true);
+        acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
       }
     }
 
