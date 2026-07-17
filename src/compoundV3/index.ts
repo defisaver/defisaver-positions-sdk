@@ -19,9 +19,7 @@ import { calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   formatBaseData, formatMarketData, getCompoundV3AggregatedData, getIncentiveApys,
 } from '../helpers/compoundHelpers';
-import {
-  COMPOUND_V3_ETH, COMPOUND_V3_USDBC, COMPOUND_V3_USDC, COMPOUND_V3_USDCe, COMPOUND_V3_USDT,
-} from '../markets/compound';
+import { CompoundMarkets } from '../markets/compound';
 import {
   getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
 } from '../services/priceService';
@@ -134,13 +132,13 @@ export const _getCompoundV3AccountBalances = async (provider: Client, network: N
     return balances;
   }
 
-  const market = ({
-    [COMPOUND_V3_ETH(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_ETH(network),
-    [COMPOUND_V3_USDC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDC(network),
-    [COMPOUND_V3_USDBC(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDBC(network),
-    [COMPOUND_V3_USDT(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDT(network),
-    [COMPOUND_V3_USDCe(network).baseMarketAddress.toLowerCase()]: COMPOUND_V3_USDCe(network),
-  })[marketAddress.toLowerCase()];
+  const market = Object.values(CompoundMarkets(network)).find((m) => (
+    m.baseMarketAddress
+    && m.baseMarketAddress !== ZERO_ADDRESS
+    && m.baseMarketAddress.toLowerCase() === marketAddress.toLowerCase()
+  ));
+
+  if (!market) throw new Error(`Unsupported Compound V3 market address ${marketAddress} on network ${network}`);
 
   const loanInfoContract = CompV3ViewContractViem(provider, network, block);
   const loanInfo = await loanInfoContract.read.getLoanData([market.baseMarketAddress, address], setViemBlockNumber(block));
