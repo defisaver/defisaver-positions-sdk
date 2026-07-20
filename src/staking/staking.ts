@@ -60,6 +60,19 @@ const getApyFromDfsApi = async (asset: string, network: number = NetworkNumber.E
   }
 };
 
+const getWeEthApy = async () => {
+  try {
+    const res = await fetch('https://www.ether.fi/app/cash/api/stake/weeth',
+      { signal: AbortSignal.timeout(DEFAULT_TIMEOUT) });
+    if (!res.ok) throw new Error('Failed to fetch APY for weETH');
+    const data = await res.json();
+    return String(data.data?.apy?.avg30d ?? '0');
+  } catch (e) {
+    console.error('External API Failure: Failed to fetch APY for weETH from ether.fi API', e);
+    return '0';
+  }
+};
+
 export const STAKING_ASSETS = [
   'cbETH', 'wstETH', 'cbETH', 'rETH', 'sDAI', 'weETH', 'sUSDe', 'osETH',
   'ezETH', 'ETHx', 'rsETH', 'pufETH', 'wrsETH', 'wsuperOETHb', 'sUSDS', 'tETH', 'PT sUSDe Sep', 'PT USDe Sep',
@@ -75,7 +88,7 @@ export const getStakingApy = memoize(async (asset: string, network: number = Net
     if (asset === 'rETH') return await getApyFromDfsApi('rETH');
     if (asset === 'sDAI') return await getApyFromDfsApi('sDAI');
     if (asset === 'sUSDe') return await getApyFromDfsApi('sUSDe');
-    if (asset === 'weETH') return await getApyFromDfsApi('weETH');
+    if (asset === 'weETH') return await getWeEthApy();
     if (asset === 'ezETH') return await getApyFromDfsApi('ezETH');
     if (asset === 'osETH') return await getApyFromDfsApi('osETH');
     if (asset === 'ETHx') return await getApyFromDfsApi('ETHx');
