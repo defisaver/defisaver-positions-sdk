@@ -104,6 +104,7 @@ export const sparkGetAggregatedPositionData = ({
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = data.assetsData[leveragedAsset].price; // TODO sparkPrice or price??

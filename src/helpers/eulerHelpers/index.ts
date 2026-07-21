@@ -96,6 +96,7 @@ export const getEulerV2AggregatedData = ({
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset, leveragedVault } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedVault.toLowerCase()].price;

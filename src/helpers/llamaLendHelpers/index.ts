@@ -46,6 +46,7 @@ export const getLlamaLendAggregatedData = ({
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets as unknown as MMUsedAssets);
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, usedAssets[collAsset].price, payload.borrowedUsd, payload.borrowLimitUsd);

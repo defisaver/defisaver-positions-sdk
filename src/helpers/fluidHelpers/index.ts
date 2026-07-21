@@ -83,6 +83,7 @@ borrowShares?: string,
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
 
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;

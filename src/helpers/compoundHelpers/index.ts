@@ -155,6 +155,7 @@ export const getCompoundV2AggregatedData = ({
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     const assetPrice = assetsData[handleWbtcLegacy(leveragedAsset)].price;
@@ -189,6 +190,7 @@ export const getCompoundV3AggregatedData = ({
   payload.minDebt = assetsData[selectedMarket.baseAsset].minDebt;
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets, selectedMarket.value === CompoundVersions.CompoundV3ETH ? 0.001 : 5);
   payload.leveragedType = leveragedType;
+  payload.liquidationPrice = '';
   if (leveragedType !== '') {
     payload.leveragedAsset = leveragedAsset;
     let assetPrice = assetsData[leveragedAsset].price;
