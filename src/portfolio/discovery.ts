@@ -10,6 +10,7 @@ import {
   CrvUsdMarkets,
   LlamaLendMarkets,
   MorphoBlueMarkets,
+  MorphoMidnightMarkets,
   SparkMarkets,
 } from '../markets';
 import { AaveVersions, CompoundVersions } from '../types';
@@ -19,6 +20,7 @@ import { _getCompoundV3AccountBalances } from '../compoundV3';
 import { _getCrvUsdAccountBalances } from '../curveUsd';
 import { _getLlamaLendAccountBalances } from '../llamaLend';
 import { _getMorphoBlueAccountBalances } from '../morphoBlue';
+import { _getMorphoMidnightAccountBalances } from '../morphoMidnight';
 import { createViemContractFromConfigFunc } from '../contracts';
 
 const hasAnyBalance = (balances: PositionBalances): boolean => (
@@ -107,6 +109,10 @@ export async function getUserPositionsExistence(
 
   Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network)).forEach((market) => {
     tasks.push(balanceTask(market.value, () => _getMorphoBlueAccountBalances(client, network, block, false, address, market)));
+  });
+
+  Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network)).forEach((market) => {
+    tasks.push(balanceTask(market.value, () => _getMorphoMidnightAccountBalances(client, network, block, false, address, market)));
   });
 
   await Promise.all(tasks);
