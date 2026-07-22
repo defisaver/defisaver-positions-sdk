@@ -4,8 +4,11 @@ import {
 
 export enum MorphoMidnightVersions {
   // BASE
-  // Market ids are added here alongside their definitions in `src/markets/morphoMidnight`.
-  // e.g. MorphoMidnightCbBTCUSDC_Base = 'morphomidnightcbbtcusdc_base',
+  // Fixed-term markets are disambiguated by maturity (YYYYMMDD), so the same pair recurs across dates.
+  MorphoMidnightCbBTCUSDC_860_20260731_Base = 'morphomidnightcbbtcusdc_860_20260731_base',
+  MorphoMidnightWETHUSDC_860_20260731_Base = 'morphomidnightwethusdc_860_20260731_base',
+  MorphoMidnightWETHCbBTC_860_20270527_Base = 'morphomidnightwethcbbtc_860_20270527_base',
+  MorphoMidnightWETHCbBTC_860_20270617_Base = 'morphomidnightwethcbbtc_860_20270617_base',
 }
 
 export interface MorphoMidnightCollateralParams {
