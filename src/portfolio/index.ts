@@ -11,7 +11,7 @@ import {
   MorphoBlueMarkets,
   SparkMarkets,
 } from '../markets';
-import { _getMorphoBlueAccountData, _getMorphoBlueMarketData, getMorphoEarn } from '../morphoBlue';
+import { _getMorphoBlueAccountData, _getMorphoBluePortfolioMarketData, getMorphoEarn } from '../morphoBlue';
 import {
   AaveV2MarketData,
   AaveV3MarketData,
@@ -162,7 +162,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   await Promise.allSettled([
     // === MARKET DATA (needs to be fetched first) ===
     ...morphoMarkets.map(async (market) => {
-      const marketData = await _getMorphoBlueMarketData(client, network, market);
+      const marketData = await _getMorphoBluePortfolioMarketData(client, network, market);
       morphoMarketsData[market.value] = marketData;
     }),
     ...compoundV3Markets.map(async (market) => {

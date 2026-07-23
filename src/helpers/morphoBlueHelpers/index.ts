@@ -389,6 +389,7 @@ export const getRewardsForMarket = async (marketId: string, network: NetworkNumb
       query: REWARDS_QUERY,
       variables: { marketId, chainId: network },
     }),
+    signal: AbortSignal.timeout(LONGER_TIMEOUT),
   });
 
   const data = await response.json();
