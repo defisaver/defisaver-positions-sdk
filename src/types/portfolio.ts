@@ -10,6 +10,7 @@ import { LiquityV2TroveData, LiquityV2Versions } from './liquityV2';
 import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
 import { CdpData } from './maker';
 import { MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
+import { MorphoMidnightPositionData, MorphoMidnightVersions } from './morphoMidnight';
 import { SparkPositionData, SparkVersions } from './spark';
 
 export interface PortfolioProtocolData<T> {
@@ -23,6 +24,9 @@ export interface PortfolioPositionsDataForAddress {
   };
   morphoBlue: {
     [key in MorphoBlueVersions]?: PortfolioProtocolData<MorphoBluePositionData>;
+  };
+  morphoMidnight: {
+    [key in MorphoMidnightVersions]?: PortfolioProtocolData<MorphoMidnightPositionData>;
   };
   compoundV3: {
     [key in CompoundVersions]?: PortfolioProtocolData<CompoundV3PositionData>;

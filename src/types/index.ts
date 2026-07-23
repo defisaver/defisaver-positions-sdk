@@ -6,6 +6,7 @@ export * from './liquity';
 export * from './liquityV2';
 export * from './maker';
 export * from './morphoBlue';
+export * from './morphoMidnight';
 export * from './llamaLend';
 export * from './euler';
 export * from './fluid';

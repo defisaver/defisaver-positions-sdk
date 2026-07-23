@@ -9,9 +9,11 @@ import {
   LiquityV2Markets,
   LlamaLendMarkets,
   MorphoBlueMarkets,
+  MorphoMidnightMarkets,
   SparkMarkets,
 } from '../markets';
 import { _getMorphoBlueAccountData, _getMorphoBlueMarketData, getMorphoEarn } from '../morphoBlue';
+import { _getMorphoMidnightAccountData, _getMorphoMidnightMarketData, getMorphoMidnightEarn } from '../morphoMidnight';
 import {
   AaveV2MarketData,
   AaveV3MarketData,
@@ -26,6 +28,7 @@ import {
   LiquityV2MarketData,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
+  MorphoMidnightMarketInfo,
   PortfolioPositionsData,
   SparkMarketsData,
 } from '../types';
@@ -62,6 +65,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const morphoMidnightMarkets = Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
   const sparkMarkets = Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network));
   const eulerV2Markets = Object.values(EulerV2Markets(network)).filter((market) => market.chainIds.includes(network));
@@ -79,6 +83,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
   const morphoMarketsData: Record<string, MorphoBlueMarketInfo> = {};
+  const morphoMidnightMarketsData: Record<string, MorphoMidnightMarketInfo> = {};
   const compoundV3MarketsData: Record<string, CompoundV3MarketsData> = {};
   const sparkMarketsData: Record<string, SparkMarketsData> = {};
   const eulerV2MarketsData: Record<string, EulerV2FullMarketData> = {};
@@ -93,6 +98,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
 
   const markets = {
     morphoMarketsData,
+    morphoMidnightMarketsData,
     compoundV3MarketsData,
     sparkMarketsData,
     eulerV2MarketsData,
@@ -115,6 +121,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       aaveV3: {},
       aaveV4: {},
       morphoBlue: {},
+      morphoMidnight: {},
       compoundV3: {},
       spark: {},
       eulerV2: {},
@@ -136,6 +143,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     stakingPositions[address.toLowerCase() as EthAddress] = {
       aaveV3: {},
       morphoBlue: {},
+      morphoMidnight: {},
       compoundV3: {},
       spark: {},
       aaveV2: {},
@@ -164,6 +172,10 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...morphoMarkets.map(async (market) => {
       const marketData = await _getMorphoBlueMarketData(client, network, market);
       morphoMarketsData[market.value] = marketData;
+    }),
+    ...morphoMidnightMarkets.map(async (market) => {
+      const marketData = await _getMorphoMidnightMarketData(client, network, market);
+      morphoMidnightMarketsData[market.value] = marketData;
     }),
     ...compoundV3Markets.map(async (market) => {
       const marketData = await _getCompoundV3MarketsData(client, network, market, defaultClient);
@@ -454,6 +466,38 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       } catch (error) {
         console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const [accDataPromise, earnDataPromise] = await Promise.allSettled([
+          _getMorphoMidnightAccountData(client, network, address, market, morphoMidnightMarketsData[market.value]),
+          getMorphoMidnightEarn(client, network, address, market, morphoMidnightMarketsData[market.value]),
+        ]);
+        if (accDataPromise.status === 'rejected') {
+          console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, accDataPromise.reason);
+          positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
+        }
+        if (earnDataPromise.status === 'rejected') {
+          console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, earnDataPromise.reason);
+          positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
+        }
+        if (accDataPromise.status !== 'rejected') {
+          const accData = accDataPromise.value;
+          if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
+        }
+        if (earnDataPromise.status !== 'rejected') {
+          const earnData = earnDataPromise.value;
+          if (earnData && new Dec(earnData.amount).gt(0)) {
+            stakingPositions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = {
+              error: '',
+              data: earnData,
+            };
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
     ...compoundV3Markets.map((market) => addresses.map(async (address) => {
