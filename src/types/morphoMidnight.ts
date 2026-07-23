@@ -5,10 +5,13 @@ import {
 export enum MorphoMidnightVersions {
   // BASE
   // Fixed-term markets are disambiguated by maturity (YYYYMMDD), so the same pair recurs across dates.
+  // Sourced from the official listing at https://markets.morpho.org/fixed/base (see sitemap.xml).
   MorphoMidnightCbBTCUSDC_860_20260731_Base = 'morphomidnightcbbtcusdc_860_20260731_base',
-  MorphoMidnightWETHUSDC_860_20260731_Base = 'morphomidnightwethusdc_860_20260731_base',
-  MorphoMidnightWETHCbBTC_860_20270527_Base = 'morphomidnightwethcbbtc_860_20270527_base',
-  MorphoMidnightWETHCbBTC_860_20270617_Base = 'morphomidnightwethcbbtc_860_20270617_base',
+  MorphoMidnightCbBTCUSDC_860_20260828_Base = 'morphomidnightcbbtcusdc_860_20260828_base',
+  MorphoMidnightCbBTCUSDC_860_20260925_Base = 'morphomidnightcbbtcusdc_860_20260925_base',
+  MorphoMidnightCbBTCUSDC_860_20261030_Base = 'morphomidnightcbbtcusdc_860_20261030_base',
+  MorphoMidnightCbBTCUSDC_860_20261127_Base = 'morphomidnightcbbtcusdc_860_20261127_base',
+  MorphoMidnightCbBTCUSDC_860_20261225_Base = 'morphomidnightcbbtcusdc_860_20261225_base',
 }
 
 export interface MorphoMidnightCollateralParams {
