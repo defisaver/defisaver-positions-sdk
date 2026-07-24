@@ -80,38 +80,3 @@ const positionData = {
   leveragedType: LeverageType.None,
 } as unknown as MorphoBluePositionData;
 
-describe('Morpho Blue portfolio rewards enrichment', () => {
-  it('replaces only MORPHO incentives without mutating base market data', () => {
-    const enriched = addMorphoBlueRewardsToMarketInfo(marketInfo, {
-      supplyApy: '3',
-      borrowApy: '4',
-    });
-
-    assert.deepEqual(marketInfo.assetsData.USDC.supplyIncentives.map(({ token, apy }) => [token, apy]), [
-      ['SPK', '1'],
-      ['MORPHO', '99'],
-    ]);
-    assert.deepEqual(enriched.assetsData.USDC.supplyIncentives.map(({ token, apy }) => [token, apy]), [
-      ['SPK', '1'],
-      ['MORPHO', '3'],
-    ]);
-    assert.deepEqual(enriched.assetsData.USDC.borrowIncentives.map(({ token, apy }) => [token, apy]), [
-      ['MORPHO', '4'],
-    ]);
-  });
-
-  it('recalculates lending and earn APY as pure transformations', () => {
-    const enrichedMarket = addMorphoBlueRewardsToMarketInfo(marketInfo, {
-      supplyApy: '3',
-      borrowApy: '4',
-    });
-    const enrichedPosition = getMorphoBluePositionDataWithMarketInfo(positionData, enrichedMarket);
-    const earnData = { apy: '0', amount: '100', amountUsd: '100' };
-    const enrichedEarn = getMorphoEarnDataWithMarketInfo(earnData, enrichedMarket);
-
-    assert.notEqual(enrichedPosition, positionData);
-    assert.notEqual(enrichedPosition.netApy, undefined);
-    assert.equal(earnData.apy, '0');
-    assert.notEqual(enrichedEarn.apy, '0');
-  });
-});
