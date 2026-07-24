@@ -8,7 +8,7 @@ import {
   DFSFeedRegistryContractViem, FeedRegistryContractViem, MorphoBlueViewContractViem,
 } from '../contracts';
 import {
-  MorphoBlueAssetsData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBluePositionData,
+  MorphoBlueAssetsData, MorphoBlueEarnData, MorphoBlueMarketData, MorphoBlueMarketInfo, MorphoBlueMarketRewards, MorphoBluePositionData,
 } from '../types';
 import { USD_QUOTE, WAD } from '../constants';
 import { calculateNetApy, getStakingApy, STAKING_ASSETS } from '../staking';
@@ -21,7 +21,39 @@ import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
 const HARDCODED_USD_STABLE_PRICE = '100000000'; // $1 with 8 decimals
 
-export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
+const getMorphoRewardIncentives = (apy: string) => [{
+  token: 'MORPHO',
+  apy,
+  incentiveKind: IncentiveKind.Reward,
+  description: 'Eligible for protocol-level MORPHO incentives.',
+}];
+
+export const addMorphoBlueRewardsToMarketInfo = (
+  marketInfo: MorphoBlueMarketInfo,
+  rewards: MorphoBlueMarketRewards,
+): MorphoBlueMarketInfo => ({
+  ...marketInfo,
+  assetsData: {
+    ...marketInfo.assetsData,
+    [marketInfo.loanToken]: {
+      ...marketInfo.assetsData[marketInfo.loanToken],
+      supplyIncentives: [
+        ...marketInfo.assetsData[marketInfo.loanToken].supplyIncentives.filter(({ token }) => token !== 'MORPHO'),
+        ...getMorphoRewardIncentives(rewards.supplyApy),
+      ],
+      borrowIncentives: [
+        ...marketInfo.assetsData[marketInfo.loanToken].borrowIncentives.filter(({ token }) => token !== 'MORPHO'),
+        ...getMorphoRewardIncentives(rewards.borrowApy),
+      ],
+    },
+  },
+});
+
+async function getMorphoBlueMarketDataInternal(
+  provider: Client,
+  network: NetworkNumber,
+  selectedMarket: MorphoBlueMarketData,
+): Promise<MorphoBlueMarketInfo> {
   const {
     loanToken, collateralToken, oracle, irm, lltv, oracleType,
   } = selectedMarket;
@@ -59,16 +91,6 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     loanTokenPrice = loanTokenPriceRound[1].toString();
   }
 
-  let morphoSupplyApy = '0';
-  let morphoBorrowApy = '0';
-  try {
-    const { supplyApy: _morphoSupplyApy, borrowApy: _morphoBorrowApy } = await getRewardsForMarket(selectedMarket.marketId, network);
-    morphoSupplyApy = _morphoSupplyApy;
-    morphoBorrowApy = _morphoBorrowApy;
-  } catch (e) {
-    console.error(e);
-  }
-
   const supplyRate = getSupplyRate(marketInfo.totalSupplyAssets.toString(), marketInfo.totalBorrowAssets.toString(), marketInfo.borrowRate.toString(), marketInfo.fee.toString());
   const compoundedBorrowRate = getBorrowRate(marketInfo.borrowRate.toString(), marketInfo.totalBorrowShares.toString());
   const utillization = new Dec(marketInfo.totalBorrowAssets.toString()).div(marketInfo.totalSupplyAssets.toString()).mul(100).toString();
@@ -90,18 +112,8 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
     totalBorrow: new Dec(marketInfo.totalBorrowAssets.toString()).div(scale).toString(),
     canBeSupplied: true,
     canBeBorrowed: true,
-    supplyIncentives: [{
-      token: 'MORPHO',
-      apy: morphoSupplyApy,
-      incentiveKind: IncentiveKind.Reward,
-      description: 'Eligible for protocol-level MORPHO incentives.',
-    }],
-    borrowIncentives: [{
-      token: 'MORPHO',
-      apy: morphoBorrowApy,
-      incentiveKind: IncentiveKind.Reward,
-      description: 'Eligible for protocol-level MORPHO incentives.',
-    }],
+    supplyIncentives: [],
+    borrowIncentives: [],
   };
 
   assetsData[wethToEth(collateralTokenInfo.symbol)] = {
@@ -138,8 +150,68 @@ export async function _getMorphoBlueMarketData(provider: Client, network: Networ
   };
 }
 
+export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
+  const marketInfo = await getMorphoBlueMarketDataInternal(provider, network, selectedMarket);
+
+  try {
+    const rewards = await getRewardsForMarket(selectedMarket.marketId, network);
+    return addMorphoBlueRewardsToMarketInfo(marketInfo, rewards);
+  } catch (error) {
+    console.error(error);
+    return addMorphoBlueRewardsToMarketInfo(marketInfo, { supplyApy: '0', borrowApy: '0' });
+  }
+}
+
+export function _getMorphoBluePortfolioMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
+  return getMorphoBlueMarketDataInternal(provider, network, selectedMarket);
+}
+
 export async function getMorphoBlueMarketData(provider: EthereumProvider, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
   return _getMorphoBlueMarketData(getViemProvider(provider, network), network, selectedMarket);
+}
+
+export function getMorphoBluePortfolioMarketData(provider: EthereumProvider, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
+  return _getMorphoBluePortfolioMarketData(getViemProvider(provider, network), network, selectedMarket);
+}
+
+export const getMorphoBluePositionDataWithMarketInfo = (
+  data: MorphoBluePositionData,
+  marketInfo: MorphoBlueMarketInfo,
+): MorphoBluePositionData => ({
+  ...data,
+  ...getMorphoBlueAggregatedPositionData({
+    usedAssets: data.usedAssets,
+    assetsData: marketInfo.assetsData,
+    marketInfo,
+  }),
+});
+
+export const getMorphoEarnDataWithMarketInfo = (data: MorphoBlueEarnData, marketInfo: MorphoBlueMarketInfo): MorphoBlueEarnData => {
+  const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
+  const usedAssets: MMUsedAssets = {
+    [marketInfo.loanToken]: {
+      symbol: loanTokenInfo.symbol,
+      supplied: data.amount,
+      borrowed: '0',
+      isSupplied: new Dec(data.amount).gt(0),
+      isBorrowed: false,
+      collateral: false,
+      suppliedUsd: data.amountUsd,
+      borrowedUsd: '0',
+    },
+  };
+
+  return {
+    ...data,
+    apy: calculateNetApy({ usedAssets, assetsData: marketInfo.assetsData as unknown as MMAssetsData }).netApy,
+  };
+};
+
+export function getMorphoBlueMarketRewards(
+  network: NetworkNumber,
+  selectedMarket: MorphoBlueMarketData,
+): Promise<MorphoBlueMarketRewards> {
+  return getRewardsForMarket(selectedMarket.marketId, network);
 }
 
 export const _getMorphoBlueAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoBlueMarketData): Promise<PositionBalances> => {
@@ -238,7 +310,7 @@ export async function getMorphoBlueAccountData(provider: EthereumProvider, netwo
   return _getMorphoBlueAccountData(getViemProvider(provider, network), network, account, selectedMarket, marketInfo);
 }
 
-export async function getMorphoEarn(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<{ apy: string, amount: string, amountUsd: string }> {
+export async function getMorphoEarn(provider: Client, network: NetworkNumber, account: EthAddress, selectedMarket: MorphoBlueMarketData, marketInfo: MorphoBlueMarketInfo): Promise<MorphoBlueEarnData> {
   const {
     loanToken, collateralToken, oracle, irm, lltv,
   } = selectedMarket;
@@ -254,24 +326,9 @@ export async function getMorphoEarn(provider: Client, network: NetworkNumber, ac
   const loanTokenInfo = marketInfo.assetsData[marketInfo.loanToken];
   const loanTokenSupplied = assetAmountInEth(loanInfo.suppliedInAssets.toString(), marketInfo.loanToken);
   const loanTokenSuppliedUsd = new Dec(loanTokenSupplied).mul(loanTokenInfo.price).toString();
-  const usedAssets: MMUsedAssets = {
-    [marketInfo.loanToken]: {
-      symbol: loanTokenInfo.symbol,
-      supplied: loanTokenSupplied,
-      borrowed: '0',
-      isSupplied: new Dec(loanInfo.suppliedInAssets.toString()).gt(0),
-      isBorrowed: false,
-      collateral: false,
-      suppliedUsd: loanTokenSuppliedUsd,
-      borrowedUsd: '0',
-    },
-  };
-
-  const { netApy } = calculateNetApy({ usedAssets, assetsData: marketInfo.assetsData as unknown as MMAssetsData });
-
-  return {
-    apy: netApy,
+  return getMorphoEarnDataWithMarketInfo({
+    apy: '0',
     amount: loanTokenSupplied,
     amountUsd: loanTokenSuppliedUsd,
-  };
+  }, marketInfo);
 }
