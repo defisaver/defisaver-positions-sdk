@@ -15,6 +15,8 @@ export enum ClaimType {
   SPARK_AIRDROP = 'SPARK_AIRDROP',
   /** Spark Airdrop */
   SPARK_WST_ETH_REWARDS = 'SPARK_WST_ETH_REWARDS', // TODO: This will be removed once we fully refactor spark rewards
+  /** UNI Airdrop  */
+  UNI_REWARDS = 'UNI_REWARDS',
 
   ETHENA_AIRDROP = 'ETHENA_AIRDROP',
 }

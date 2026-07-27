@@ -51,6 +51,7 @@ import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
+import { getUniswapRewards } from '../claiming/uniswap';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], isSim = false): Promise<{
   positions: PortfolioPositionsData;
@@ -305,6 +306,33 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         for (const address of addresses) {
           rewardsData[address.toLowerCase() as EthAddress].king = {
             error: 'Error fetching King rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    // Batch UNI rewards
+    (async () => {
+      try {
+        if (!isMainnet) {
+          for (const address of addresses) {
+            rewardsData[address.toLowerCase()].uniswap = { error: '', data: [] };
+          }
+          return;
+        }
+        const uniswapRewards = await getUniswapRewards(client, network, addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].uniswap = {
+            error: '',
+            data: uniswapRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Uniswap rewards data in batch:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].uniswap = {
+            error: 'Error fetching Uniswap rewards data in batch',
             data: null,
           };
         }
