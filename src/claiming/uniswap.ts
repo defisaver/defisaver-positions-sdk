@@ -11,15 +11,15 @@ const EMPTY_DATA = (walletAddress: EthAddress) => ({
 
 export const fetchUniswapRewardsData = async (walletAddress: EthAddress) => {
   try {
-    const res = await fetch(`https://uniswap-merkl-drop.defisaver.com/claims/${walletAddress}`,
+    const res = await fetch(`http://localhost:8888/api/rewards/uniswap?user=${walletAddress}`,
       { signal: AbortSignal.timeout(5000) });
 
     if (!res.ok) throw new Error(await res.text());
 
     const data = await res.json();
-    if (data.error) return EMPTY_DATA(walletAddress);
+    if (data.data.error) return EMPTY_DATA(walletAddress);
 
-    return data;
+    return data.data;
   } catch (err) {
     console.error('External API Error: Error fetching Uniswap rewards:', err);
     return EMPTY_DATA(walletAddress);
