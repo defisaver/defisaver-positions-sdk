@@ -235,6 +235,17 @@ export interface MorphoBluePositionData {
   exposure: string,
 }
 
+export interface MorphoBlueEarnData {
+  apy: string,
+  amount: string,
+  amountUsd: string,
+}
+
+export interface MorphoBlueMarketRewards {
+  supplyApy: string,
+  borrowApy: string,
+}
+
 export interface MorphoBlueVault {
   address: string,
 }
