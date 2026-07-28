@@ -46,7 +46,7 @@ export const getUniswapRewards = async (provider: Client, network: NetworkNumber
 
     const amountToClaim = new Dec(data.amount);
 
-    if (amountToClaim.lessThanOrEqualTo('0')) {
+    if (amountToClaim.lessThanOrEqualTo('0') || cumulative) {
       results[walletAddress.toLowerCase() as EthAddress] = [];
     } else {
       results[walletAddress.toLowerCase() as EthAddress] = [{
