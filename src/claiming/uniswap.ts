@@ -21,7 +21,6 @@ export const fetchUniswapRewardsData = async (walletAddress: EthAddress) => {
 
     return data.data;
   } catch (err) {
-    console.error('External API Error: Error fetching Uniswap rewards:', err);
     return EMPTY_DATA(walletAddress);
   }
 };
