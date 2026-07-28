@@ -11,7 +11,7 @@ const EMPTY_DATA = (walletAddress: EthAddress) => ({
 
 export const fetchUniswapRewardsData = async (walletAddress: EthAddress) => {
   try {
-    const res = await fetch(`http://localhost:8888/api/rewards/uniswap?user=${walletAddress}`,
+    const res = await fetch(`https://fe.defisaver.com/api/rewards/uniswap?user=${walletAddress}`,
       { signal: AbortSignal.timeout(5000) });
 
     if (!res.ok) throw new Error(await res.text());
