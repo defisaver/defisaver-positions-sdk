@@ -13,7 +13,7 @@ import {
 import { USD_QUOTE } from '../constants';
 import { calculateNetApy } from '../staking';
 import { isMainnetNetwork, wethToEth } from '../services/utils';
-import { getMorphoMidnightAggregatedPositionData } from '../helpers/morphoMidnightHelpers';
+import { getMorphoMidnightAggregatedPositionData, getMorphoMidnightUserBorrowInfo } from '../helpers/morphoMidnightHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
@@ -157,13 +157,40 @@ export async function _getMorphoMidnightAccountData(provider: Client, network: N
     };
   });
 
+  // Enrich borrower positions with the orderbook-derived rate + principal/interest split (off-chain).
+  // MidnightView only stores `debt` (= face value at maturity), so we default to full-debt-as-principal and
+  // override from the transactions API when available. Never throw here — the position must still render.
+  let borrowRate = '0';
+  let debtBase = debt; // fallback: treat the full on-chain debt as principal until fill history is known
+  let debtInterest = '0';
+  let assetsDataForApy = marketInfo.assetsData;
+  if (new Dec(positionInfo.debt.toString()).gt(0)) {
+    try {
+      const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.maturity, marketInfo.loanToken);
+      borrowRate = borrowInfo.borrowRate;
+      debtBase = borrowInfo.debtBase;
+      debtInterest = borrowInfo.debtInterest;
+      usedAssets[marketInfo.loanToken].borrowRate = borrowRate;
+      // Reflect the real borrow cost in netApy without mutating the shared marketInfo.assetsData.
+      assetsDataForApy = {
+        ...marketInfo.assetsData,
+        [marketInfo.loanToken]: { ...loanTokenData, borrowRate },
+      };
+    } catch (err) {
+      // Orderbook API unavailable — keep the on-chain-only fallback above.
+    }
+  }
+
   return {
     usedAssets,
     credit,
     debt,
+    borrowRate,
+    debtBase,
+    debtInterest,
     maturity: marketInfo.maturity,
     isMatured: marketInfo.isMatured,
-    ...getMorphoMidnightAggregatedPositionData({ usedAssets, assetsData: marketInfo.assetsData, marketInfo }),
+    ...getMorphoMidnightAggregatedPositionData({ usedAssets, assetsData: assetsDataForApy, marketInfo }),
   };
 }
 

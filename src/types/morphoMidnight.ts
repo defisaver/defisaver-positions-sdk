@@ -99,6 +99,12 @@ export interface MorphoMidnightPositionData extends MorphoMidnightAggregatedPosi
   usedAssets: MMUsedAssets,
   credit: string, // lender credit units, face value at maturity (with interest); 0 for borrowers
   debt: string, // borrower debt, face value at maturity (with interest); 0 for lenders
+  // Borrow rate + base/interest split are orderbook-derived off-chain (from the Midnight transactions API):
+  // MidnightView only stores `debt` (= face value at maturity), so principal-vs-interest and the effective
+  // rate are computed from the fill history. Default to '0'/`debt`/'0' for lenders or when the API is unavailable.
+  borrowRate: string, // weighted-average borrow APY as a percent
+  debtBase: string, // base borrowed (principal), loan-token units
+  debtInterest: string, // debt − debtBase (fixed interest owed at maturity), loan-token units
   maturity: number,
   isMatured: boolean,
 }

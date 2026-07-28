@@ -8,6 +8,9 @@ import { MorphoMidnightMarketData, MorphoMidnightMarketInfo } from '../src/types
 import { getProvider } from './utils/getProvider';
 import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
+import {
+  getMorphoMidnightBorrowQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightTimeToMaturityDays,
+} from '../src/helpers/morphoMidnightHelpers';
 
 const { assert } = require('chai');
 
@@ -15,6 +18,9 @@ const { assert } = require('chai');
 // live on-chain state. Assertions are written to stay green even if these positions later change.
 const BORROWER = '0x37A87cA1ef98Ea3Fc6bDa550538d9aEd38D77E99';
 const LENDER = '0xD1373084D7c99d8C20C11371e2eA968a7B90e5d6';
+// Borrower documented by the Solidity team in the cbBTC/USDC 2026-08-28 market (0x059597...); used to
+// validate the off-chain borrow-rate/debt math. Position may change, so assertions stay tolerant.
+const DOC_BORROWER = '0x2e3Cc8Cd22812eaa229CbE85f3de7c9a39A8f4f7';
 
 const isPositive = (value: bigint): boolean => new Dec(value.toString()).gt(0);
 
@@ -125,5 +131,90 @@ describe('Morpho Midnight', function midnightSuite() {
       assert.isTrue(accData.usedAssets.USDC.isSupplied, 'lender should have supplied USDC (credit)');
       assert.isFalse(accData.usedAssets.USDC.isBorrowed);
     }
+  });
+
+  const market20260828 = () => sdk.markets.MorphoMidnightMarkets(network)[sdk.MorphoMidnightVersions.MorphoMidnightCbBTCUSDC_860_20260828_Base];
+
+  it('quotes a borrow from the orderbook and derives the estimated rate + slippage cap', async function quoteTest() {
+    const market = market20260828();
+    const assetsRaw = '2000000'; // 2 USDC (6 decimals)
+    const slippage = 0.5;
+
+    let quote;
+    try {
+      quote = await getMorphoMidnightBorrowQuote(market.marketId, assetsRaw, slippage, market.maturity);
+    } catch (err) {
+      // Orderbook may be unable to fill (empty book / matured) — skip rather than fail on live liquidity.
+      this.skip();
+      return;
+    }
+
+    assert.containsAllKeys(quote, ['bestPrice', 'worstPrice', 'estBorrowRate', 'maxRate', 'newUnits', 'maxUnits', 'takeableOffers']);
+    // Discount price: 0 < worst <= best < 1 for a fixed-term borrow.
+    assert.isTrue(new Dec(quote.bestPrice).gt(0) && new Dec(quote.bestPrice).lt(1), 'bestPrice in (0,1)');
+    assert.isTrue(new Dec(quote.worstPrice).lte(quote.bestPrice), 'worstPrice <= bestPrice');
+    assert.isTrue(new Dec(quote.estBorrowRate).gt(0), 'estimated borrow rate should be positive');
+    // maxRate is estimate + slippage.
+    assert.approximately(+quote.maxRate, +quote.estBorrowRate + slippage, 1e-9);
+    // Units follow assets / price; worse price yields more (or equal) debt units → the slippage cap.
+    assert.approximately(+quote.newUnits, +assetsRaw / +quote.bestPrice, 1);
+    assert.isTrue(new Dec(quote.maxUnits).gte(quote.newUnits), 'maxUnits >= newUnits');
+    // estBorrowRate is exactly the annualized best price.
+    const ttmDays = midnightTimeToMaturityDays(market.maturity);
+    assert.approximately(+quote.estBorrowRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
+  });
+
+  it('derives borrow rate + principal/interest split for a borrower, consistent with on-chain debt', async () => {
+    const market = market20260828();
+    const marketInfo = await fetchMarketData(market);
+
+    const client = getViemProvider(provider, network);
+    const view = MorphoMidnightViewContractViem(client, network);
+    const onChain = await view.read.getPositionInfo([market.marketId as `0x${string}`, DOC_BORROWER as `0x${string}`]);
+
+    const info = await getMorphoMidnightUserBorrowInfo(DOC_BORROWER, market.marketId, market.maturity, marketInfo.loanToken);
+    assert.containsAllKeys(info, ['borrowRate', 'debtBase', 'debtInterest', 'debtTotal']);
+    // debtInterest is always debtTotal − debtBase, and base never exceeds total.
+    assert.approximately(+info.debtInterest, +info.debtTotal - +info.debtBase, 1e-6);
+    assert.isTrue(new Dec(info.debtBase).lte(info.debtTotal), 'debtBase <= debtTotal');
+
+    if (isPositive(onChain.debt)) {
+      // Σ borrow units (from the API) should reconcile with the on-chain total debt at maturity.
+      const onChainDebt = new Dec(onChain.debt.toString()).div(1e6); // USDC 6 decimals
+      assert.approximately(+info.debtTotal, onChainDebt.toNumber(), Math.max(0.01, onChainDebt.mul(0.01).toNumber()), 'debtTotal should reconcile with on-chain debt');
+      assert.isTrue(new Dec(info.borrowRate).gt(0), 'borrow rate should be positive for an open borrow');
+
+      // The account getter should surface the same enriched fields.
+      const accData = await sdk.morphoMidnight.getMorphoMidnightAccountData(provider, network, DOC_BORROWER as any, market, marketInfo);
+      assert.strictEqual(accData.borrowRate, info.borrowRate);
+      assert.strictEqual(accData.debtBase, info.debtBase);
+      assert.strictEqual(accData.debtInterest, info.debtInterest);
+      assert.strictEqual(accData.usedAssets.USDC.borrowRate, info.borrowRate);
+    }
+  });
+});
+
+describe('Morpho Midnight rate math (pure)', () => {
+  // Worked examples from the Solidity team spec (fixed-term cbBTC/USDC, maturity 2026-08-28 = 1787929200).
+  const MATURITY = 1787929200;
+
+  it('annualizes a discount price into the borrow APY', () => {
+    // Quote example: average_best_price 0.9959551, ttm 35.22044 days → 4.289815%.
+    assert.approximately(+midnightApyFromPrice(0.9959551, 35.22044), 4.289815, 1e-4);
+    // A price of 1 (no discount) is a 0% rate; degenerate inputs are safe.
+    assert.strictEqual(midnightApyFromPrice(1, 30), '0');
+    assert.strictEqual(midnightApyFromPrice(0, 30), '0');
+    assert.strictEqual(midnightApyFromPrice(0.99, 0), '0');
+  });
+
+  it('computes time-to-maturity in days at a given timestamp', () => {
+    // Fill #4 executed 2026-07-23T08:59:33Z = 1784797173 → 36.250313 days to maturity.
+    assert.approximately(midnightTimeToMaturityDays(MATURITY, 1784797173), 36.250313, 1e-4);
+  });
+
+  it('matches the documented per-fill APY (units / seller_assets annualized)', () => {
+    // Fill #4: seller_assets 1.5, units 1.506341, ttm 36.250313 days → 4.33898%.
+    const price = new Dec('1.5').div('1.506341'); // seller_assets / units
+    assert.approximately(+midnightApyFromPrice(price, 36.250313), 4.33898, 1e-3);
   });
 });
