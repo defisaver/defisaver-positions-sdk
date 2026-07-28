@@ -3,7 +3,7 @@ import { Client } from 'viem';
 import { assetAmountInEth } from '@defisaver/tokens';
 import { EthAddress, NetworkNumber } from '../types';
 import { UniswapTokenDistributorViem } from '../contracts';
-import { ClaimType } from '../types/claiming';
+import { ClaimType, UniswapAirdropClaimableToken } from '../types/claiming';
 
 const EMPTY_DATA = (walletAddress: EthAddress) => ({
   address: walletAddress, index: 0, amount: '0x0', proof: [],
@@ -26,7 +26,7 @@ export const fetchUniswapRewardsData = async (walletAddress: EthAddress) => {
   }
 };
 
-export const getUniswapRewards = async (provider: Client, network: NetworkNumber, walletAddresses: EthAddress[]) => {
+export const getUniswapRewards = async (provider: Client, network: NetworkNumber, walletAddresses: EthAddress[]): Promise<Record<string, UniswapAirdropClaimableToken[]>> => {
   // Fetch all API data in parallel (these are external API calls, can't be batched with multicall)
   const apiDataPromises = walletAddresses.map(address => fetchUniswapRewardsData(address));
   const apiDataArray = await Promise.all(apiDataPromises);
@@ -38,7 +38,7 @@ export const getUniswapRewards = async (provider: Client, network: NetworkNumber
   const cumulativeResults = await Promise.all(cumulativePromises);
 
   // Process results
-  const results: Record<string, any[]> = {};
+  const results: Record<string, UniswapAirdropClaimableToken[]> = {};
 
   for (let i = 0; i < walletAddresses.length; i++) {
     const walletAddress = walletAddresses[i];
@@ -51,12 +51,18 @@ export const getUniswapRewards = async (provider: Client, network: NetworkNumber
       results[walletAddress.toLowerCase() as EthAddress] = [];
     } else {
       results[walletAddress.toLowerCase() as EthAddress] = [{
+        symbol: 'UNI',
+        underlyingSymbol: 'UNI',
+        label: 'Uniswap Airdrop',
+        tokenAddress: '0x1f9840a85d5af5bf1d1762f925bdaddc4201f984',
         amount: assetAmountInEth(amountToClaim.toString(), 'UNI'),
         walletAddress,
         claimType: ClaimType.UNI_REWARDS,
-        index: data.index,
-        proof: data.proof,
-        isClaimed: cumulative,
+        additionalClaimFields: {
+          index: data.index,
+          isClaimed: cumulative,
+          proof: data.proof,
+        },
       }];
     }
   }

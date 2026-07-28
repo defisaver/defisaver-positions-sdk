@@ -90,6 +90,15 @@ export type SparkWstEthRewardsClaimableToken = _ClaimableTokenPartial & { claimT
 
 export type EthenaAirdropClaimableToken = _ClaimableTokenPartial & { claimType: ClaimType.ETHENA_AIRDROP };
 
+export type UniswapAirdropClaimableToken = _ClaimableTokenPartial & {
+  claimType: ClaimType.UNI_REWARDS,
+  additionalClaimFields: {
+    index: number;
+    isClaimed: boolean;
+    proof: string[];
+  };
+};
+
 export type ClaimableToken =
     AaveRewardsClaimableToken
     | AaveMeritRewardsClaimableToken
