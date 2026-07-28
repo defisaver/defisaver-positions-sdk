@@ -1351,3 +1351,12 @@ export const AaveV4View = {
     }
   }
 } as const;
+
+export const UniswapTokenDistributor = {
+  "abi": [{"inputs":[{"internalType":"uint256","name":"index","type":"uint256"}],"name":"isClaimed","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"}],
+  "networks": {
+    "1": {
+      "address": "0x090D4613473dEE047c3f2706764f49E0821D256e",
+    }
+  }
+} as const;

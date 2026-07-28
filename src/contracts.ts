@@ -181,3 +181,5 @@ export const MakerDsrContractViem = createViemContractFromConfigFunc('MakerDsr')
 export const SkySavingsContractView = createViemContractFromConfigFunc('SkySavings');
 
 export const AaveV4ViewContractViem = createViemContractFromConfigFunc('AaveV4View');
+
+export const UniswapTokenDistributorViem = createViemContractFromConfigFunc('UniswapTokenDistributor');
