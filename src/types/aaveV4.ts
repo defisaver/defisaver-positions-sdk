@@ -21,6 +21,7 @@ export enum AaveV4SpokesType {
   AaveV4LombardBtcSpoke = 'aave_v4_lombard_btc_spoke',
   AaveV4MainSpoke = 'aave_v4_main_spoke',
   AaveV4USDGPendleSpoke = 'aave_v4_usdg_pendle_spoke',
+  AaveV4USDGMapleSpoke = 'aave_v4_usdg_maple_spoke',
 }
 
 export interface AaveV4HubInfo {

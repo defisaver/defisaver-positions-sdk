@@ -193,6 +193,17 @@ export const AAVE_V4_USDG_PENDLE_SPOKE = (networkId: NetworkNumber): AaveV4Spoke
   ],
 });
 
+export const AAVE_V4_USDG_MAPLE_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'USDG Maple',
+  value: AaveV4SpokesType.AaveV4USDGMapleSpoke,
+  url: 'usdg-maple',
+  address: '0x774b9655413c34809c1f1b16b654465A89EBE989',
+  hubs: [
+    AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
 export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4BluechipSpoke]: AAVE_V4_BLUECHIP_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4EthenaCorrelatedSpoke]: AAVE_V4_ETHENA_CORRELATED_SPOKE(networkId),
@@ -205,6 +216,7 @@ export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4LombardBtcSpoke]: AAVE_V4_LOMBARD_BTC_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4MainSpoke]: AAVE_V4_MAIN_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4USDGPendleSpoke]: AAVE_V4_USDG_PENDLE_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4USDGMapleSpoke]: AAVE_V4_USDG_MAPLE_SPOKE(networkId),
 }) as const;
 
 export const getAaveV4SpokeTypeInfo = (type: AaveV4SpokesType, network?: NetworkNumber) => ({ ...AaveV4Spokes(network ?? NetworkNumber.Eth) }[type]);
