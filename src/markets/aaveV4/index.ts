@@ -31,7 +31,7 @@ export const AAVE_V4_PRIME_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
 
 export const AAVE_V4_PAXOS_HUB = (networkId: NetworkNumber): AaveV4HubInfo => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'Paxos Hub',
+  label: 'Global Dollar Hub',
   value: AaveV4HubsType.AaveV4PaxosHub,
   address: '0x62d63197660c080236193CA60b70E49A08E90368',
 });
