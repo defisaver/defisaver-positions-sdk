@@ -76,7 +76,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
 
-  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 1_000 : 2_500_000 } } }];
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 2_500_000 } } }];
   const client = getViemProvider(provider, ...args);
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
