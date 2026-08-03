@@ -98,6 +98,7 @@ export const getStakingApy = memoize(async (asset: string, network: number = Net
     if (asset === 'PT sUSDe Jan') return await getApyFromDfsApi('PT sUSDe Jan', network);
     if (asset === 'syrupUSDT') return await getApyFromDfsApi('syrupUSDT');
     if (asset === 'syrupUSDC') return await getApyFromDfsApi('syrupUSDC');
+    if (asset === 'syrupUSDG') return await getApyFromDfsApi('syrupUSDG');
     if (asset === 'wstUSR') return await getApyFromDfsApi('wstUSR');
     if (asset === 'PT sUSDe Feb') return await getApyFromDfsApi('PT sUSDe Feb', network);
     if (asset === 'PT USDe Feb') return await getApyFromDfsApi('PT USDe Feb', network);
