@@ -66,6 +66,7 @@ export const STAKING_ASSETS = [
   'PT sUSDe Nov', 'PT USDe Nov', 'PT USDe Jan', 'PT sUSDe Jan', 'wrsETH', 'wstETH', 'syrupUSDT', 'syrupUSDC', 'wstUSR',
   'PT sUSDe Feb', 'PT USDe Feb', 'PT sUSDe Apr', 'PT USDe Apr', 'PT sUSDe May', 'PT USDe May', 'PT srUSDe Apr', 'GHO',
   'PT sUSDe June', 'PT USDe June', 'PT srUSDe Jun', 'PT srUSDe Oct', 'PT USDG May', 'PT sUSDS Nov', 'PT sUSDe Oct', 'PT USDG Sep',
+  'syrupUSDG',
 ];
 
 export const getStakingApy = memoize(async (asset: string, network: number = NetworkNumber.Eth) => {
@@ -97,6 +98,7 @@ export const getStakingApy = memoize(async (asset: string, network: number = Net
     if (asset === 'PT sUSDe Jan') return await getApyFromDfsApi('PT sUSDe Jan', network);
     if (asset === 'syrupUSDT') return await getApyFromDfsApi('syrupUSDT');
     if (asset === 'syrupUSDC') return await getApyFromDfsApi('syrupUSDC');
+    if (asset === 'syrupUSDG') return await getApyFromDfsApi('syrupUSDG');
     if (asset === 'wstUSR') return await getApyFromDfsApi('wstUSR');
     if (asset === 'PT sUSDe Feb') return await getApyFromDfsApi('PT sUSDe Feb', network);
     if (asset === 'PT USDe Feb') return await getApyFromDfsApi('PT USDe Feb', network);
