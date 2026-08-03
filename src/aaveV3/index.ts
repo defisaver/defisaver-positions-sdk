@@ -84,9 +84,21 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
   const aaveIncentivesContract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const marketAddress = market.providerAddress;
   const networksWithIncentives = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Opt, NetworkNumber.Linea, NetworkNumber.Plasma];
+  // Limit each view call to 10 tokens, run chunks concurrently, then combine their results into loanInfo.
+  const addressesPerRequest = 10;
+  const addressChunks: EthAddress[][] = _addresses.length > addressesPerRequest
+    ? Array.from(
+      { length: Math.ceil(_addresses.length / addressesPerRequest) },
+      (_, index) => _addresses.slice(index * addressesPerRequest, (index + 1) * addressesPerRequest) as EthAddress[],
+    )
+    : [_addresses as EthAddress[]];
+  const loanInfoPromise = Promise.all(addressChunks.map((addresses) => loanInfoContract.read.getFullTokensInfo(
+    [marketAddress, addresses],
+    setViemBlockNumber(blockNumber),
+  ))).then((loanInfoChunks) => loanInfoChunks.flat());
   // eslint-disable-next-line prefer-const
   let [loanInfo, eModesInfo, rewardInfo, merkleRewardsMap, meritRewardsMap] = await Promise.all([
-    loanInfoContract.read.getFullTokensInfo([marketAddress, _addresses as EthAddress[]], setViemBlockNumber(blockNumber)),
+    loanInfoPromise,
     loanInfoContract.read.getAllEmodes([marketAddress], setViemBlockNumber(blockNumber)),
     networksWithIncentives.includes(network) ? aaveIncentivesContract.read.getReservesIncentivesData([marketAddress], setViemBlockNumber(blockNumber)) : null,
     getMerkleCampaigns(network),
