@@ -201,6 +201,7 @@ export const AAVE_V4_USDG_MAPLE_SPOKE = (networkId: NetworkNumber): AaveV4SpokeI
   address: '0x774b9655413c34809c1f1b16b654465A89EBE989',
   hubs: [
     AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address,
+    AAVE_V4_CORE_HUB(NetworkNumber.Eth).address,
   ],
 });
 
