@@ -9,7 +9,8 @@ import { getProvider } from './utils/getProvider';
 import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
 import {
-  getMorphoMidnightBorrowQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightTimeToMaturityDays,
+  getMorphoMidnightBorrowQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightPriceFromApy,
+  midnightSlippageParam, midnightTimeToMaturityDays,
 } from '../src/helpers/morphoMidnightHelpers';
 
 const { assert } = require('chai');
@@ -154,14 +155,54 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.isTrue(new Dec(quote.bestPrice).gt(0) && new Dec(quote.bestPrice).lt(1), 'bestPrice in (0,1)');
     assert.isTrue(new Dec(quote.worstPrice).lte(quote.bestPrice), 'worstPrice <= bestPrice');
     assert.isTrue(new Dec(quote.estBorrowRate).gt(0), 'estimated borrow rate should be positive');
-    // maxRate is estimate + slippage.
-    assert.approximately(+quote.maxRate, +quote.estBorrowRate + slippage, 1e-9);
-    // Units follow assets / price; worse price yields more (or equal) debt units → the slippage cap.
+    // maxRate is the APY the cap permits (the annualized worst price), NOT estimate + slippage — the
+    // API's `slippage` is a price-level knob, so adding it to an APY mixes units.
+    const ttmDays = midnightTimeToMaturityDays(market.maturity);
+    assert.approximately(+quote.maxRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+    assert.isTrue(new Dec(quote.maxRate).gte(quote.estBorrowRate), 'maxRate >= estBorrowRate');
+    // Units follow assets / price; worse price yields more (or equal) debt units → the cap.
     assert.approximately(+quote.newUnits, +assetsRaw / +quote.bestPrice, 1);
     assert.isTrue(new Dec(quote.maxUnits).gte(quote.newUnits), 'maxUnits >= newUnits');
     // estBorrowRate is exactly the annualized best price.
-    const ttmDays = midnightTimeToMaturityDays(market.maturity);
     assert.approximately(+quote.estBorrowRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
+  });
+
+  it('honours an absolute max borrow rate exactly', async function rateCapTest() {
+    const market = market20260828();
+    const assetsRaw = '2000000'; // 2 USDC (6 decimals)
+
+    let base;
+    try {
+      base = await getMorphoMidnightBorrowQuote(market.marketId, assetsRaw, 0.5, market.maturity);
+    } catch (err) {
+      this.skip();
+      return;
+    }
+
+    // A ceiling above the estimate caps at exactly that rate, and loosens as it rises.
+    const cap = new Dec(base.estBorrowRate).add(2);
+    const quote = await getMorphoMidnightBorrowQuote(market.marketId, assetsRaw, 0.5, market.maturity, cap);
+    assert.approximately(+quote.maxRate, cap.toNumber(), 1e-6, 'maxRate should be the requested ceiling');
+    assert.approximately(+quote.maxUnits, +assetsRaw / +midnightPriceFromApy(cap, midnightTimeToMaturityDays(market.maturity)), 1);
+    assert.isTrue(new Dec(quote.maxUnits).gt(quote.newUnits), 'a ceiling above the estimate leaves headroom');
+    // The estimate and the offers to fill against are unaffected by the cap.
+    assert.strictEqual(quote.estBorrowRate, base.estBorrowRate);
+    assert.strictEqual(quote.takeableOffers.length, base.takeableOffers.length);
+
+    // A ceiling below the estimate leaves no headroom — the borrow would revert on-chain, by design.
+    const tight = await getMorphoMidnightBorrowQuote(market.marketId, assetsRaw, 0.5, market.maturity, new Dec(base.estBorrowRate).div(2));
+    assert.isTrue(new Dec(tight.maxUnits).lt(tight.newUnits), 'maxUnits < newUnits when the ceiling is under the market rate');
+  });
+
+  it('reports why the API rejected a quote', async () => {
+    const market = market20260828();
+    // Far beyond any book's depth → INSUFFICIENT_LIQUIDITY rather than a bare "unavailable".
+    try {
+      await getMorphoMidnightBorrowQuote(market.marketId, '99999999999999999999', 0.5, market.maturity);
+      assert.fail('expected the quote to throw');
+    } catch (err) {
+      assert.match((err as Error).message, /Morpho Midnight quote unavailable: .+/, 'error should carry the API reason');
+    }
   });
 
   it('derives borrow rate + principal/interest split for a borrower, consistent with on-chain debt', async () => {
@@ -216,5 +257,26 @@ describe('Morpho Midnight rate math (pure)', () => {
     // Fill #4: seller_assets 1.5, units 1.506341, ttm 36.250313 days → 4.33898%.
     const price = new Dec('1.5').div('1.506341'); // seller_assets / units
     assert.approximately(+midnightApyFromPrice(price, 36.250313), 4.33898, 1e-3);
+  });
+
+  it('round-trips a rate through the price it implies', () => {
+    // midnightPriceFromApy is the exact inverse of midnightApyFromPrice.
+    assert.approximately(+midnightPriceFromApy(4.289815, 35.22044), 0.9959551, 1e-7);
+    for (const [rate, ttm] of [[4.289815, 35.22044], [12.5, 21.96], [0.75, 180]] as const) {
+      assert.approximately(+midnightApyFromPrice(midnightPriceFromApy(rate, ttm), ttm), rate, 1e-6);
+    }
+    // Degenerate inputs price at par rather than blowing up.
+    assert.strictEqual(midnightPriceFromApy(0, 30), '1');
+    assert.strictEqual(midnightPriceFromApy(5, 0), '1');
+  });
+
+  it('coerces slippage to what the API accepts (0.1–100, one decimal place)', () => {
+    // The value the old absolute-rate conversion produced — rejected verbatim by the API.
+    assert.strictEqual(midnightSlippageParam('4.15066671050631467'), '4.1'); // rounded down, never looser
+    assert.strictEqual(midnightSlippageParam(0.5), '0.5');
+    assert.strictEqual(midnightSlippageParam('0.50'), '0.5'); // trailing zeros count as a decimal place
+    assert.strictEqual(midnightSlippageParam(0), '0.1'); // clamped up to the minimum
+    assert.strictEqual(midnightSlippageParam(-3), '0.1');
+    assert.strictEqual(midnightSlippageParam(250), '100'); // clamped down to the maximum
   });
 });

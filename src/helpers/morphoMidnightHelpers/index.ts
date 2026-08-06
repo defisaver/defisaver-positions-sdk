@@ -98,11 +98,30 @@ export const getMorphoMidnightAggregatedPositionData = ({
 const MIDNIGHT_API_BASE = 'https://api.morpho.org/v0/midnight';
 const nowInSeconds = () => Math.floor(Date.now() / 1000);
 
+// The quote endpoint's `slippage` query param is validated as a string: 0.1–100, at most one decimal
+// place (`0.50` is rejected even though `0.5` passes). See `midnightSlippageParam`.
+const MIDNIGHT_SLIPPAGE_MIN = 0.1;
+const MIDNIGHT_SLIPPAGE_MAX = 100;
+
 interface MidnightTransaction {
   event_type: string,
   market_id: string,
   created_at: number,
   data: { seller_assets?: string, units?: string },
+}
+
+interface MidnightApiError {
+  code?: string,
+  message?: string,
+  details?: ({ field?: string, issue?: string })[] | null,
+}
+
+interface MidnightQuoteResponse {
+  average_best_price?: string,
+  average_worst_price?: string,
+  available_assets?: string,
+  available_units?: string,
+  takeable_offers?: unknown[],
 }
 
 export interface MorphoMidnightBorrowInfo {
@@ -116,9 +135,9 @@ export interface MorphoMidnightBorrowQuote {
   bestPrice: string, // average_best_price, loan-per-unit
   worstPrice: string, // average_worst_price, slippage-adjusted
   estBorrowRate: string, // estimated borrow APY as a percent
-  maxRate: string, // estBorrowRate + slippage (display only, not sent on-chain)
+  maxRate: string, // borrow APY the on-chain cap permits, i.e. `maxUnits` annualized (display only)
   newUnits: string, // debt added at best price, raw loan-token base units
-  maxUnits: string, // slippage-capped debt (on-chain cap), raw loan-token base units
+  maxUnits: string, // capped debt (on-chain cap), raw loan-token base units
   availableAssets: string,
   availableUnits: string,
   takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
@@ -137,6 +156,33 @@ export const midnightApyFromPrice = (price: Dec.Value, ttmDays: Dec.Value): stri
     .mul(100)
     .toString();
 };
+
+/**
+ * Inverse of `midnightApyFromPrice`: the loan-per-unit price a borrow APY implies,
+ * price = (1 + rate)^(−ttmDays / 365).
+ *
+ * This is what turns an absolute rate ceiling into an on-chain `maxUnits` cap (units = assets / price),
+ * and equally the principal a unit of borrow power is worth — Midnight debt is recorded at its maturity
+ * face value, so borrowing the full limit as principal would overshoot it by the interest.
+ */
+export const midnightPriceFromApy = (ratePercent: Dec.Value, ttmDays: Dec.Value): string => {
+  const rate = new Dec(ratePercent);
+  const ttm = new Dec(ttmDays);
+  if (rate.lte(0) || ttm.lte(0)) return '1';
+  return new Dec(1).div(new Dec(1).add(rate.div(100)).pow(ttm.div(365))).toString();
+};
+
+/**
+ * Coerce a slippage into what the quote endpoint accepts: 0.1–100 with at most one decimal place. The
+ * validation is lexical, so a computed value (`4.15066671050631467`) is rejected outright — without this
+ * the request 400s and the quote looks unavailable.
+ *
+ * Rounded **down**, since a wider slippage is a looser cap than the caller asked for.
+ */
+export const midnightSlippageParam = (slippagePercent: Dec.Value): string => Dec.min(
+  Dec.max(new Dec(slippagePercent), MIDNIGHT_SLIPPAGE_MIN),
+  MIDNIGHT_SLIPPAGE_MAX,
+).toDP(1, Dec.ROUND_DOWN).toString();
 
 /**
  * Current borrower rate + debt breakdown from the Midnight transactions API. On-chain we can only read the
@@ -179,31 +225,58 @@ export const getMorphoMidnightUserBorrowInfo = async (
   };
 };
 
+// The API says why a quote failed — NOT_FOUND (market matured or not open yet), INSUFFICIENT_LIQUIDITY
+// (book can't fill the size), VALIDATION_ERROR (bad param, with the offending field in `details`).
+// Callers surface this to the user, so keep the reason rather than collapsing everything into one string.
+const midnightQuoteError = (error?: MidnightApiError): string => {
+  const detail = (error?.details || []).map(({ issue }) => issue).filter(Boolean).join('; ');
+  const reason = detail || error?.message || error?.code;
+  return reason ? `Morpho Midnight quote unavailable: ${reason}` : 'Morpho Midnight quote unavailable';
+};
+
 /**
- * Estimate the borrow rate + slippage cap for a prospective borrow by quoting the Midnight order book.
- * `assetsRaw` (and the returned `newUnits`/`maxUnits`) are raw loan-token base units — callers convert to/from
- * human amounts. `maxUnits` (from the slippage-adjusted worst price) is the cap sent on-chain to protect the
- * user if better offers get filled first. Throws if the book can't fill the amount (caller handles).
+ * Quote a prospective borrow against the Midnight order book: the estimated rate, the debt units it adds,
+ * and the `maxUnits` cap sent on-chain to protect the user if better offers get filled first. `assetsRaw`
+ * (and the returned `newUnits`/`maxUnits`) are raw loan-token base units — callers convert to/from human
+ * amounts. Throws if the book can't fill the amount (caller handles).
+ *
+ * Two ways to set the cap:
+ *  - `maxBorrowRate` — an absolute APY ceiling, honoured **exactly**: the cap price is derived locally via
+ *    `midnightPriceFromApy`. Prefer this when a user pins a max rate.
+ *  - otherwise `slippagePercent`, the API's own knob. Note it is a **price**-level slippage, not APY points:
+ *    near maturity the annualisation factor (365 / ttmDays) multiplies it heavily, so on a 22-day market a
+ *    slippage of 0.5 permitted an APY ~9pp above the estimate, not 0.5pp. It also saturates at the book's
+ *    cheapest bid. `maxRate` therefore reports what the cap actually permits, derived from the cap price.
+ *
+ * A `maxBorrowRate` below `estBorrowRate` yields `maxUnits < newUnits` — the borrow would revert on-chain.
+ * Compare the two before submitting and tell the user their ceiling is under the market rate.
  */
 export const getMorphoMidnightBorrowQuote = async (
   marketId: string,
   assetsRaw: string,
   slippagePercent: Dec.Value,
   maturity: number,
+  maxBorrowRate?: Dec.Value,
 ): Promise<MorphoMidnightBorrowQuote> => {
-  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/bids/quote?assets=${assetsRaw}&slippage=${slippagePercent}`;
+  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/bids/quote?assets=${assetsRaw}&slippage=${midnightSlippageParam(slippagePercent)}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
-  const json: { data?: any } = await res.json();
+  const json: { data?: MidnightQuoteResponse, error?: MidnightApiError } = await res.json();
   const d = json?.data;
-  if (!d?.average_best_price) throw new Error('Morpho Midnight quote unavailable');
+  if (!d?.average_best_price) throw new Error(midnightQuoteError(json?.error));
 
   const bestPrice = new Dec(d.average_best_price).div(WAD).toString();
-  const worstPrice = new Dec(d.average_worst_price).div(WAD).toString();
+  const worstPrice = new Dec(d.average_worst_price || 0).div(WAD).toString();
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estBorrowRate = midnightApyFromPrice(bestPrice, ttmDays);
-  const maxRate = new Dec(estBorrowRate).add(slippagePercent).toString();
+
+  // Price the cap sits at, and the rate that price represents — one derivation, so `maxRate` and
+  // `maxUnits` can never disagree about what the user is protected at.
+  const capPrice = maxBorrowRate !== undefined && new Dec(maxBorrowRate).gt(0)
+    ? midnightPriceFromApy(maxBorrowRate, ttmDays)
+    : worstPrice;
+  const maxRate = midnightApyFromPrice(capPrice, ttmDays);
   const newUnits = new Dec(bestPrice).lte(0) ? '0' : new Dec(assetsRaw).div(bestPrice).toFixed(0);
-  const maxUnits = new Dec(worstPrice).lte(0) ? '0' : new Dec(assetsRaw).div(worstPrice).toFixed(0);
+  const maxUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0);
 
   return {
     bestPrice,
@@ -212,8 +285,8 @@ export const getMorphoMidnightBorrowQuote = async (
     maxRate,
     newUnits,
     maxUnits,
-    availableAssets: d.available_assets,
-    availableUnits: d.available_units,
+    availableAssets: d.available_assets || '0',
+    availableUnits: d.available_units || '0',
     takeableOffers: d.takeable_offers || [],
   };
 };
