@@ -24,7 +24,7 @@ const getAndFormatBands = async (provider: Client, network: NetworkNumber, selec
   // getBandsData uses a lot of gas to get all of the bands at once, so we use pagination and fetch 200 bands at a time
   let i = minBand;
   while (i < maxBand) {
-    i += 200;
+    i += 20;
     if (i > maxBand) {
       pivots.push(maxBand);
     } else {

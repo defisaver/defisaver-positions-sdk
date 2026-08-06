@@ -8,7 +8,7 @@ export const SUMMER_VAULT_USDC_MAINNET_LR: SummerVault = {
   asset: 'USDC',
   network: NetworkNumber.Eth,
   deploymentBlock: 21795049,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_USDC_MAINNET_HR: SummerVault = {
@@ -18,7 +18,7 @@ export const SUMMER_VAULT_USDC_MAINNET_HR: SummerVault = {
   asset: 'USDC',
   network: NetworkNumber.Eth,
   deploymentBlock: 22488041,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_USDT_MAINNET_LR: SummerVault = {
@@ -28,7 +28,7 @@ export const SUMMER_VAULT_USDT_MAINNET_LR: SummerVault = {
   asset: 'USDT',
   network: NetworkNumber.Eth,
   deploymentBlock: 21795276,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_ETH_MAINNET_LR: SummerVault = {
@@ -38,7 +38,7 @@ export const SUMMER_VAULT_ETH_MAINNET_LR: SummerVault = {
   asset: 'WETH',
   network: NetworkNumber.Eth,
   deploymentBlock: 21795390,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_ETH_MAINNET_HR: SummerVault = {
@@ -48,7 +48,7 @@ export const SUMMER_VAULT_ETH_MAINNET_HR: SummerVault = {
   asset: 'WETH',
   network: NetworkNumber.Eth,
   deploymentBlock: 22291252,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_USDC_ARBITRUM_LR: SummerVault = {
@@ -58,7 +58,7 @@ export const SUMMER_VAULT_USDC_ARBITRUM_LR: SummerVault = {
   asset: 'USDC',
   network: NetworkNumber.Arb,
   deploymentBlock: 404339289,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_USDT_ARBITRUM_LR: SummerVault = {
@@ -68,7 +68,7 @@ export const SUMMER_VAULT_USDT_ARBITRUM_LR: SummerVault = {
   asset: 'USDT',
   network: NetworkNumber.Arb,
   deploymentBlock: 303594065,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_USDC_BASE_LR: SummerVault = {
@@ -78,7 +78,7 @@ export const SUMMER_VAULT_USDC_BASE_LR: SummerVault = {
   asset: 'USDC',
   network: NetworkNumber.Base,
   deploymentBlock: 303594065,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_EURC_BASE_LR: SummerVault = {
@@ -88,7 +88,7 @@ export const SUMMER_VAULT_EURC_BASE_LR: SummerVault = {
   asset: 'EURC',
   network: NetworkNumber.Base,
   deploymentBlock: 27544064,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULT_ETH_BASE_LR: SummerVault = {
@@ -98,7 +98,7 @@ export const SUMMER_VAULT_ETH_BASE_LR: SummerVault = {
   asset: 'WETH',
   network: NetworkNumber.Base,
   deploymentBlock: 29066887,
-  isLegacy: false,
+  isLegacy: true,
 };
 
 export const SUMMER_VAULTS: Record<SummerVaultType, SummerVault> = {

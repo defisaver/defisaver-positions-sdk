@@ -12,7 +12,7 @@ import {
   MorphoMidnightMarkets,
   SparkMarkets,
 } from '../markets';
-import { _getMorphoBlueAccountData, _getMorphoBlueMarketData, getMorphoEarn } from '../morphoBlue';
+import { _getMorphoBlueAccountData, _getMorphoBluePortfolioMarketData, getMorphoEarn } from '../morphoBlue';
 import { _getMorphoMidnightAccountData, _getMorphoMidnightMarketData, getMorphoMidnightEarn } from '../morphoMidnight';
 import {
   AaveV2MarketData,
@@ -54,6 +54,7 @@ import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
 import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
+import { getUniswapRewards } from '../claiming/uniswap';
 
 export async function getPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], isSim = false): Promise<{
   positions: PortfolioPositionsData;
@@ -78,7 +79,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const liquityV2MarketsStaking = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [];
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
-  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 500_000 : 2_500_000 } } }];
+
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 2_500_000 } } }];
   const client = getViemProvider(provider, ...args);
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
@@ -170,7 +172,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   await Promise.allSettled([
     // === MARKET DATA (needs to be fetched first) ===
     ...morphoMarkets.map(async (market) => {
-      const marketData = await _getMorphoBlueMarketData(client, network, market);
+      const marketData = await _getMorphoBluePortfolioMarketData(client, network, market);
       morphoMarketsData[market.value] = marketData;
     }),
     ...morphoMidnightMarkets.map(async (market) => {
@@ -317,6 +319,33 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         for (const address of addresses) {
           rewardsData[address.toLowerCase() as EthAddress].king = {
             error: 'Error fetching King rewards data in batch',
+            data: null,
+          };
+        }
+      }
+    })(),
+    // Batch UNI rewards
+    (async () => {
+      try {
+        if (!isMainnet) {
+          for (const address of addresses) {
+            rewardsData[address.toLowerCase()].uniswap = { error: '', data: [] };
+          }
+          return;
+        }
+        const uniswapRewards = await getUniswapRewards(client, network, addresses);
+        for (const address of addresses) {
+          const lowerAddress = address.toLowerCase() as EthAddress;
+          rewardsData[lowerAddress].uniswap = {
+            error: '',
+            data: uniswapRewards[lowerAddress] || [],
+          };
+        }
+      } catch (error) {
+        console.error('Error fetching Uniswap rewards data in batch:', error);
+        for (const address of addresses) {
+          rewardsData[address.toLowerCase() as EthAddress].uniswap = {
+            error: 'Error fetching Uniswap rewards data in batch',
             data: null,
           };
         }
