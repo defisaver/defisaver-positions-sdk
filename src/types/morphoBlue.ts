@@ -78,6 +78,7 @@ export enum MorphoBlueVersions {
   MorphoBlueWstEthUSDT_860 = 'morphobluewstethusdt_860', // wstETH/USDT 0.86
   MorphoBlueSyrupUSDCRLUSD_915 = 'morphobluesyrupusdcrlusd_915', // syrupUSDC/RLUSD 0.915
   MorphoBlueWeEthUSDC_770 = 'morphoblueweethusdc_770', // weETH/USDC 0.77
+  MorphoBlueWeEthUSDC_860 = 'morphoblueweethusdc_860', // weETH/USDC 0.86
   MorphoBlueEthUSDC_860_94b823e6 = 'morphoblueethusdc_860_94b823e6', // ETH/USDC 0.86
   MorphoBlueUSD3USDC_915 = 'morphoblueusd3usdc_915', // USD3/USDC 0.915
   MorphoBlueStUSDSUSDC_860 = 'morphobluestusdsusdc_860', // stUSDS/USDC 0.86

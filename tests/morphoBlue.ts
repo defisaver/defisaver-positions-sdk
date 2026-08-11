@@ -598,6 +598,14 @@ describe('Morpho Blue', () => {
     const marketData = await fetchMarketData(network, provider, selectedMarket);
     await fetchAccountData(network, provider, marketData, selectedMarket);
   });
+  it('can fetch weETH/USDC 86% market and account data for Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.MorphoBlueMarkets(network)[sdk.MorphoBlueVersions.MorphoBlueWeEthUSDC_860];
+
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    await fetchAccountData(network, provider, marketData, selectedMarket);
+  });
   it('can fetch ETH/USDC 86% market and account data for Ethereum', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;
