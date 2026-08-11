@@ -70,6 +70,18 @@ export interface MorphoMidnightMarketInfo {
   assetsData: MorphoMidnightAssetsData,
 }
 
+// One resting bid on a market's order book, as an annualized rate rather than the API's raw WAD price.
+export interface MorphoMidnightBookOffer {
+  rate: string, // fixed borrow APY, percent
+  liquidity: string, // loan-token amount available at this rate
+}
+
+export interface MorphoMidnightParsedBook {
+  bestRate: string, // cheapest rate on the book (= offers[0].rate)
+  totalLiquidity: string, // Σ offers[].liquidity, loan-token units
+  offers: MorphoMidnightBookOffer[], // ascending by rate
+}
+
 export interface MorphoMidnightAggregatedPositionData {
   suppliedUsd: string,
   suppliedCollateralUsd: string,

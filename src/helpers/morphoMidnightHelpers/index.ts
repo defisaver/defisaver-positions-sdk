@@ -1,13 +1,20 @@
 import Dec from 'decimal.js';
-import { assetAmountInEth } from '@defisaver/tokens';
+import { assetAmountInEth, getAssetInfoByAddress } from '@defisaver/tokens';
 import {
   calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { calculateNetApy } from '../../staking';
 import {
-  LeverageType, MMAssetsData, MMUsedAsset, MMUsedAssets,
+  LeverageType, MMAssetsData, MMUsedAsset, MMUsedAssets, NetworkNumber,
 } from '../../types/common';
-import { MorphoMidnightAggregatedPositionData, MorphoMidnightAssetsData, MorphoMidnightMarketInfo } from '../../types';
+import {
+  MorphoMidnightAggregatedPositionData,
+  MorphoMidnightAssetsData,
+  MorphoMidnightBookOffer,
+  MorphoMidnightMarketData,
+  MorphoMidnightMarketInfo,
+  MorphoMidnightParsedBook,
+} from '../../types';
 import { SECONDS_PER_DAY, WAD } from '../../constants';
 import { LONGER_TIMEOUT } from '../../services/utils';
 
@@ -98,6 +105,10 @@ export const getMorphoMidnightAggregatedPositionData = ({
 const MIDNIGHT_API_BASE = 'https://api.morpho.org/v0/midnight';
 const nowInSeconds = () => Math.floor(Date.now() / 1000);
 
+// The book endpoint is markedly slower than the rest of the API — `LONGER_TIMEOUT` (5s) aborts it often
+// enough that markets drop out of the list for no reason.
+const MIDNIGHT_BOOK_TIMEOUT = 30000;
+
 // The quote endpoint's `slippage` query param is validated as a string: 0.1–100, at most one decimal
 // place (`0.50` is rejected even though `0.5` passes). See `midnightSlippageParam`.
 const MIDNIGHT_SLIPPAGE_MIN = 0.1;
@@ -114,6 +125,11 @@ interface MidnightApiError {
   code?: string,
   message?: string,
   details?: ({ field?: string, issue?: string })[] | null,
+}
+
+interface MidnightRawBid {
+  price: string, // WAD-scaled loan-per-unit
+  assets: string, // loan-token base units available at this offer
 }
 
 interface MidnightQuoteResponse {
@@ -222,6 +238,42 @@ export const getMorphoMidnightUserBorrowInfo = async (
 
   return {
     borrowRate, debtBase, debtInterest, debtTotal,
+  };
+};
+
+/**
+ * A market's resting bids, as rates rather than the API's WAD-scaled loan-per-unit prices. Annualizing
+ * each price against time-to-maturity gives the rate a borrower filling that offer pays — verified
+ * against Morpho's fixed-market UI, where per-offer rates match to the cent.
+ *
+ * Returns `null` for an empty book: there is nothing to borrow against, so a market listing should skip
+ * the market rather than advertise it at a 0% rate. Throws when the request fails — an error response is
+ * rarely JSON, so without the `res.ok` check it parses as an empty book and the market silently vanishes.
+ */
+export const getMorphoMidnightMarketBook = async (
+  market: MorphoMidnightMarketData,
+  network: NetworkNumber,
+): Promise<MorphoMidnightParsedBook | null> => {
+  const loanSymbol = getAssetInfoByAddress(market.loanToken, network).symbol;
+  const res = await fetch(`${MIDNIGHT_API_BASE}/books/${market.marketId}`, { signal: AbortSignal.timeout(MIDNIGHT_BOOK_TIMEOUT) });
+  if (!res.ok) throw new Error(`Midnight book request failed for ${market.value} (${res.status})`);
+
+  const json: { data?: { bids?: MidnightRawBid[] } } = await res.json();
+  const ttmDays = midnightTimeToMaturityDays(market.maturity);
+
+  const offers: MorphoMidnightBookOffer[] = (json?.data?.bids || [])
+    .map((bid) => ({
+      rate: midnightApyFromPrice(new Dec(bid.price).div(WAD), ttmDays),
+      liquidity: assetAmountInEth(bid.assets, loanSymbol),
+    }))
+    .sort((a, b) => new Dec(a.rate).minus(b.rate).toNumber());
+
+  if (offers.length === 0) return null;
+
+  return {
+    bestRate: offers[0].rate,
+    totalLiquidity: offers.reduce((sum, offer) => sum.add(offer.liquidity), new Dec(0)).toString(),
+    offers,
   };
 };
 
