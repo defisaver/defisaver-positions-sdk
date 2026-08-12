@@ -35,7 +35,7 @@ const hasAnyBalance = (balances: PositionBalances): boolean => (
  * Uses one shared, multicall-batched viem client (same pattern as getPortfolioData) so all
  * per-market reads collapse into a handful of RPC round trips.
  *
- * Not covered: Maker, Liquity, Liquity V2, Fluid, Euler V2 — these already expose cheap,
+ * Not covered: Maker, Liquity, Liquity V2, Fluid — these already expose cheap,
  * user-scoped discovery entry points elsewhere in the SDK (e.g. _getUserCdps, _getUserPositionsPortfolio).
  */
 export async function getUserPositionsExistence(
