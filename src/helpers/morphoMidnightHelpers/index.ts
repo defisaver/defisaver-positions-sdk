@@ -11,6 +11,7 @@ import {
   MorphoMidnightAggregatedPositionData,
   MorphoMidnightAssetsData,
   MorphoMidnightBookOffer,
+  MorphoMidnightBookSide,
   MorphoMidnightMarketData,
   MorphoMidnightMarketInfo,
   MorphoMidnightParsedBook,
@@ -114,11 +115,12 @@ const MIDNIGHT_BOOK_TIMEOUT = 30000;
 const MIDNIGHT_SLIPPAGE_MIN = 0.1;
 const MIDNIGHT_SLIPPAGE_MAX = 100;
 
-interface MidnightTransaction {
-  event_type: string,
+interface MidnightPosition {
   market_id: string,
-  created_at: number,
-  data: { seller_assets?: string, units?: string },
+  type: string, // 'borrow' | 'lend'
+  debt: string, // raw loan-token base units — matches MidnightView.getPositionInfo exactly
+  cost_basis: string, // WAD-scaled raw base units — outstanding principal, net of exits/liquidations
+  effective_rate_wad: string, // WAD-scaled borrow APY, e.g. 0.05e18 = 5%
 }
 
 interface MidnightApiError {
@@ -127,7 +129,7 @@ interface MidnightApiError {
   details?: ({ field?: string, issue?: string })[] | null,
 }
 
-interface MidnightRawBid {
+interface MidnightRawOffer {
   price: string, // WAD-scaled loan-per-unit
   assets: string, // loan-token base units available at this offer
 }
@@ -141,10 +143,10 @@ interface MidnightQuoteResponse {
 }
 
 export interface MorphoMidnightBorrowInfo {
-  borrowRate: string, // weighted-average borrow APY as a percent
-  debtBase: string, // base borrowed (Σ seller_assets), loan-token units
+  borrowRate: string, // effective borrow APY as a percent
+  debtBase: string, // outstanding principal (cost_basis), loan-token units
   debtInterest: string, // debtTotal − debtBase (interest owed at maturity), loan-token units
-  debtTotal: string, // Σ units = on-chain debt at maturity, loan-token units
+  debtTotal: string, // on-chain debt at maturity, loan-token units
 }
 
 export interface MorphoMidnightBorrowQuote {
@@ -154,6 +156,18 @@ export interface MorphoMidnightBorrowQuote {
   maxRate: string, // borrow APY the on-chain cap permits, i.e. `maxUnits` annualized (display only)
   newUnits: string, // debt added at best price, raw loan-token base units
   maxUnits: string, // capped debt (on-chain cap), raw loan-token base units
+  availableAssets: string,
+  availableUnits: string,
+  takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
+}
+
+export interface MorphoMidnightPaybackQuote {
+  bestPrice: string, // average_best_price, loan-per-unit — the cheapest units on the ask side
+  worstPrice: string, // average_worst_price, slippage-adjusted (ABOVE best: a dearer unit)
+  estPaybackRate: string, // APY the repayment retires debt at, as a percent
+  minRate: string, // APY the on-chain floor permits, i.e. `minUnits` annualized (display only)
+  newUnits: string, // debt retired at best price, raw loan-token base units
+  minUnits: string, // floor on debt retired (on-chain guard), raw loan-token base units
   availableAssets: string,
   availableUnits: string,
   takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
@@ -201,40 +215,28 @@ export const midnightSlippageParam = (slippagePercent: Dec.Value): string => Dec
 ).toDP(1, Dec.ROUND_DOWN).toString();
 
 /**
- * Current borrower rate + debt breakdown from the Midnight transactions API. On-chain we can only read the
- * total debt at maturity (`units`); the base-vs-interest split and the effective borrow rate require the
- * fill history. Per fill the rate is (units / seller_assets)^(365 / ttmAtFill) − 1, weighted by base amount.
+ * Current borrower rate + debt breakdown from the Midnight positions API. Reconstructing this from the raw
+ * `/transactions` fill history only sums `borrow` fills, so it overstates debt for any position with an
+ * early exit or partial liquidation (`exit_borrow_primary`, `partial_liquidation`, ... — the fill history
+ * has no exhaustive list of debt-reducing event types). `/positions` instead reports the already-netted
+ * `debt`, matching `MidnightView.getPositionInfo` exactly, plus `cost_basis` (outstanding principal,
+ * WAD-scaled raw base units) and `effective_rate_wad` (borrow APY, WAD-scaled) for the base/interest split.
  * The caller swallows errors — a missing rate must never block position rendering.
  */
 export const getMorphoMidnightUserBorrowInfo = async (
   account: string,
   marketId: string,
-  maturity: number,
   loanTokenSymbol: string,
 ): Promise<MorphoMidnightBorrowInfo> => {
-  const res = await fetch(`${MIDNIGHT_API_BASE}/users/${account}/transactions`, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
-  const json: { data?: MidnightTransaction[] } = await res.json();
-  const borrows = (json?.data || []).filter((t) => t.event_type === 'borrow' && t.market_id?.toLowerCase() === marketId.toLowerCase());
+  const res = await fetch(`${MIDNIGHT_API_BASE}/users/${account}/positions`, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
+  const json: { data?: MidnightPosition[] } = await res.json();
+  const position = (json?.data || []).find((p) => p.type === 'borrow' && p.market_id?.toLowerCase() === marketId.toLowerCase());
 
-  let sumSeller = new Dec(0); // Σ seller_assets (base), raw
-  let sumUnits = new Dec(0); // Σ units (debt at maturity), raw
-  let weightedApy = new Dec(0); // Σ seller_assets × APYᵢ
-
-  borrows.forEach((t) => {
-    const sellerAssets = new Dec(t.data?.seller_assets || 0);
-    const units = new Dec(t.data?.units || 0);
-    if (sellerAssets.lte(0) || units.lte(0)) return;
-    const ttmDays = midnightTimeToMaturityDays(maturity, t.created_at);
-    const apy = midnightApyFromPrice(sellerAssets.div(units), ttmDays); // price = seller_assets / units
-    sumSeller = sumSeller.add(sellerAssets);
-    sumUnits = sumUnits.add(units);
-    weightedApy = weightedApy.add(sellerAssets.mul(apy));
-  });
-
-  const borrowRate = sumSeller.lte(0) ? '0' : weightedApy.div(sumSeller).toString();
-  const debtBase = assetAmountInEth(sumSeller.toFixed(0), loanTokenSymbol);
-  const debtTotal = assetAmountInEth(sumUnits.toFixed(0), loanTokenSymbol);
+  const debtTotal = assetAmountInEth(position?.debt || '0', loanTokenSymbol);
+  const costBasisRaw = new Dec(position?.cost_basis || 0).div(WAD); // WAD-scaled → raw base units
+  const debtBase = Dec.min(assetAmountInEth(costBasisRaw.toString(), loanTokenSymbol), debtTotal).toString();
   const debtInterest = Dec.max(new Dec(debtTotal).sub(debtBase), 0).toString();
+  const borrowRate = new Dec(position?.effective_rate_wad || 0).div(WAD).mul(100).toString();
 
   return {
     borrowRate, debtBase, debtInterest, debtTotal,
@@ -242,31 +244,37 @@ export const getMorphoMidnightUserBorrowInfo = async (
 };
 
 /**
- * A market's resting bids, as rates rather than the API's WAD-scaled loan-per-unit prices. Annualizing
- * each price against time-to-maturity gives the rate a borrower filling that offer pays — verified
- * against Morpho's fixed-market UI, where per-offer rates match to the cent.
+ * One side of a market's resting order book, as rates rather than the API's WAD-scaled loan-per-unit
+ * prices. Annualizing each price against time-to-maturity gives the rate a taker filling that offer gets
+ * — verified against Morpho's fixed-market UI, where per-offer rates match to the cent.
  *
- * Returns `null` for an empty book: there is nothing to borrow against, so a market listing should skip
- * the market rather than advertise it at a 0% rate. Throws when the request fails — an error response is
- * rarely JSON, so without the `res.ok` check it parses as an empty book and the market silently vanishes.
+ * `bids` are the lend offers a borrower fills, so the best of them is the *lowest* rate; `asks` are the
+ * sell offers a repayer buys debt units from, where a lower price buys more units, so the best is the
+ * *highest* rate. Either way `offers` comes back best-first and `bestRate` is `offers[0].rate`.
+ *
+ * Returns `null` for an empty side: there is nothing to take, so a market listing should skip the market
+ * rather than advertise it at a 0% rate. Throws when the request fails — an error response is rarely
+ * JSON, so without the `res.ok` check it parses as an empty book and the market silently vanishes.
  */
 export const getMorphoMidnightMarketBook = async (
   market: MorphoMidnightMarketData,
   network: NetworkNumber,
+  side: MorphoMidnightBookSide = 'bids',
 ): Promise<MorphoMidnightParsedBook | null> => {
   const loanSymbol = getAssetInfoByAddress(market.loanToken, network).symbol;
   const res = await fetch(`${MIDNIGHT_API_BASE}/books/${market.marketId}`, { signal: AbortSignal.timeout(MIDNIGHT_BOOK_TIMEOUT) });
   if (!res.ok) throw new Error(`Midnight book request failed for ${market.value} (${res.status})`);
 
-  const json: { data?: { bids?: MidnightRawBid[] } } = await res.json();
+  const json: { data?: Partial<Record<MorphoMidnightBookSide, MidnightRawOffer[]>> } = await res.json();
   const ttmDays = midnightTimeToMaturityDays(market.maturity);
+  const bestFirst = side === 'asks' ? -1 : 1;
 
-  const offers: MorphoMidnightBookOffer[] = (json?.data?.bids || [])
-    .map((bid) => ({
-      rate: midnightApyFromPrice(new Dec(bid.price).div(WAD), ttmDays),
-      liquidity: assetAmountInEth(bid.assets, loanSymbol),
+  const offers: MorphoMidnightBookOffer[] = (json?.data?.[side] || [])
+    .map((offer) => ({
+      rate: midnightApyFromPrice(new Dec(offer.price).div(WAD), ttmDays),
+      liquidity: assetAmountInEth(offer.assets, loanSymbol),
     }))
-    .sort((a, b) => new Dec(a.rate).minus(b.rate).toNumber());
+    .sort((a, b) => new Dec(a.rate).minus(b.rate).mul(bestFirst).toNumber());
 
   if (offers.length === 0) return null;
 
@@ -284,6 +292,36 @@ const midnightQuoteError = (error?: MidnightApiError): string => {
   const detail = (error?.details || []).map(({ issue }) => issue).filter(Boolean).join('; ');
   const reason = detail || error?.message || error?.code;
   return reason ? `Morpho Midnight quote unavailable: ${reason}` : 'Morpho Midnight quote unavailable';
+};
+
+interface MidnightParsedQuote {
+  bestPrice: string, // loan-per-unit
+  worstPrice: string, // slippage-adjusted; below best on `bids`, above it on `asks`
+  availableAssets: string,
+  availableUnits: string,
+  takeableOffers: any[],
+}
+
+// The raw quote both sides share: prices descaled from WAD, everything else forwarded verbatim.
+const fetchMorphoMidnightQuote = async (
+  marketId: string,
+  side: MorphoMidnightBookSide,
+  assetsRaw: string,
+  slippagePercent: Dec.Value,
+): Promise<MidnightParsedQuote> => {
+  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/${side}/quote?assets=${assetsRaw}&slippage=${midnightSlippageParam(slippagePercent)}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
+  const json: { data?: MidnightQuoteResponse, error?: MidnightApiError } = await res.json();
+  const d = json?.data;
+  if (!d?.average_best_price) throw new Error(midnightQuoteError(json?.error));
+
+  return {
+    bestPrice: new Dec(d.average_best_price).div(WAD).toString(),
+    worstPrice: new Dec(d.average_worst_price || 0).div(WAD).toString(),
+    availableAssets: d.available_assets || '0',
+    availableUnits: d.available_units || '0',
+    takeableOffers: d.takeable_offers || [],
+  };
 };
 
 /**
@@ -310,14 +348,8 @@ export const getMorphoMidnightBorrowQuote = async (
   maturity: number,
   maxBorrowRate?: Dec.Value,
 ): Promise<MorphoMidnightBorrowQuote> => {
-  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/bids/quote?assets=${assetsRaw}&slippage=${midnightSlippageParam(slippagePercent)}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
-  const json: { data?: MidnightQuoteResponse, error?: MidnightApiError } = await res.json();
-  const d = json?.data;
-  if (!d?.average_best_price) throw new Error(midnightQuoteError(json?.error));
-
-  const bestPrice = new Dec(d.average_best_price).div(WAD).toString();
-  const worstPrice = new Dec(d.average_worst_price || 0).div(WAD).toString();
+  const quote = await fetchMorphoMidnightQuote(marketId, 'bids', assetsRaw, slippagePercent);
+  const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estBorrowRate = midnightApyFromPrice(bestPrice, ttmDays);
 
@@ -331,14 +363,58 @@ export const getMorphoMidnightBorrowQuote = async (
   const maxUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0);
 
   return {
-    bestPrice,
-    worstPrice,
+    ...quote,
     estBorrowRate,
     maxRate,
     newUnits,
     maxUnits,
-    availableAssets: d.available_assets || '0',
-    availableUnits: d.available_units || '0',
-    takeableOffers: d.takeable_offers || [],
+  };
+};
+
+/**
+ * Quote a prospective payback against the ask side of the Midnight order book: the rate the repayment
+ * retires debt at, the debt units it buys, and the `minUnits` floor sent on-chain to protect the user if
+ * the cheap offers get taken first. `assetsRaw` is the amount **spent** (raw loan-token base units) —
+ * matching `MidnightPaybackFromOrders`, whose `amount` is what leaves the wallet; the units bought, and
+ * therefore the debt retired, exceed it because a unit costs less than one loan token before maturity.
+ * Throws if the book can't fill the amount (caller handles).
+ *
+ * The mirror image of the borrow quote in every respect. A repayer wants a *high* rate, i.e. cheap units,
+ * so the guard is a floor rather than a ceiling:
+ *  - `minPaybackRate` — an absolute APY floor, honoured **exactly** via `midnightPriceFromApy`. Prefer
+ *    this when a user pins a min rate.
+ *  - otherwise `slippagePercent`, the API's own price-level knob, whose APY effect is amplified by the
+ *    annualisation factor near maturity. `minRate` reports what the floor actually permits.
+ *
+ * A `minPaybackRate` above `estPaybackRate` yields `minUnits > newUnits` — the payback would revert
+ * on-chain. Compare the two before submitting and tell the user their floor is over the market rate.
+ */
+export const getMorphoMidnightPaybackQuote = async (
+  marketId: string,
+  assetsRaw: string,
+  slippagePercent: Dec.Value,
+  maturity: number,
+  minPaybackRate?: Dec.Value,
+): Promise<MorphoMidnightPaybackQuote> => {
+  const quote = await fetchMorphoMidnightQuote(marketId, 'asks', assetsRaw, slippagePercent);
+  const { bestPrice, worstPrice } = quote;
+  const ttmDays = midnightTimeToMaturityDays(maturity);
+  const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
+
+  const capPrice = minPaybackRate !== undefined && new Dec(minPaybackRate).gt(0)
+    ? midnightPriceFromApy(minPaybackRate, ttmDays)
+    : worstPrice;
+  const minRate = midnightApyFromPrice(capPrice, ttmDays);
+  // Rounded down on both counts: `newUnits` must not overstate the debt the user sees retired, and a
+  // `minUnits` rounded up would be a stricter floor than asked for and revert a payback that was fine.
+  const newUnits = new Dec(bestPrice).lte(0) ? '0' : new Dec(assetsRaw).div(bestPrice).toFixed(0, Dec.ROUND_DOWN);
+  const minUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0, Dec.ROUND_DOWN);
+
+  return {
+    ...quote,
+    estPaybackRate,
+    minRate,
+    newUnits,
+    minUnits,
   };
 };

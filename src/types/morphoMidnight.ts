@@ -70,16 +70,20 @@ export interface MorphoMidnightMarketInfo {
   assetsData: MorphoMidnightAssetsData,
 }
 
-// One resting bid on a market's order book, as an annualized rate rather than the API's raw WAD price.
+// Which half of the order book a caller is taking from: `bids` are the lend offers a borrower fills,
+// `asks` the sell offers a repayer buys debt units from.
+export type MorphoMidnightBookSide = 'bids' | 'asks';
+
+// One resting offer on a market's order book, as an annualized rate rather than the API's raw WAD price.
 export interface MorphoMidnightBookOffer {
-  rate: string, // fixed borrow APY, percent
+  rate: string, // fixed APY, percent
   liquidity: string, // loan-token amount available at this rate
 }
 
 export interface MorphoMidnightParsedBook {
-  bestRate: string, // cheapest rate on the book (= offers[0].rate)
+  bestRate: string, // best rate for the taker of this side (= offers[0].rate)
   totalLiquidity: string, // Σ offers[].liquidity, loan-token units
-  offers: MorphoMidnightBookOffer[], // ascending by rate
+  offers: MorphoMidnightBookOffer[], // best-first: bids ascending by rate, asks descending
 }
 
 export interface MorphoMidnightAggregatedPositionData {

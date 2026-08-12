@@ -9,7 +9,8 @@ import { getProvider } from './utils/getProvider';
 import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
 import {
-  getMorphoMidnightBorrowQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightPriceFromApy,
+  getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook, getMorphoMidnightPaybackQuote,
+  getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightPriceFromApy,
   midnightSlippageParam, midnightTimeToMaturityDays,
 } from '../src/helpers/morphoMidnightHelpers';
 
@@ -194,6 +195,82 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.isTrue(new Dec(tight.maxUnits).lt(tight.newUnits), 'maxUnits < newUnits when the ceiling is under the market rate');
   });
 
+  it('quotes a payback from the orderbook as the mirror image of a borrow', async function paybackQuoteTest() {
+    const market = market20260828();
+    const assetsRaw = '2000000'; // 2 USDC (6 decimals) SPENT
+
+    let quote;
+    try {
+      quote = await getMorphoMidnightPaybackQuote(market.marketId, assetsRaw, 0.5, market.maturity);
+    } catch (err) {
+      // Ask side may be unable to fill (empty book / matured) — skip rather than fail on live liquidity.
+      this.skip();
+      return;
+    }
+
+    assert.containsAllKeys(quote, ['bestPrice', 'worstPrice', 'estPaybackRate', 'minRate', 'newUnits', 'minUnits', 'takeableOffers']);
+    assert.isTrue(new Dec(quote.bestPrice).gt(0) && new Dec(quote.bestPrice).lt(1), 'bestPrice in (0,1)');
+    // Opposite of the borrow side: slippage makes a unit DEARER, so the worst price is the higher one.
+    assert.isTrue(new Dec(quote.worstPrice).gte(quote.bestPrice), 'worstPrice >= bestPrice');
+    assert.isTrue(new Dec(quote.estPaybackRate).gt(0), 'estimated payback rate should be positive');
+
+    const ttmDays = midnightTimeToMaturityDays(market.maturity);
+    assert.approximately(+quote.estPaybackRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
+    assert.approximately(+quote.minRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+    assert.isTrue(new Dec(quote.minRate).lte(quote.estPaybackRate), 'minRate <= estPaybackRate');
+    // Spending less than a whole loan token per unit means the debt retired exceeds what is spent.
+    assert.approximately(+quote.newUnits, +assetsRaw / +quote.bestPrice, 1);
+    assert.isTrue(new Dec(quote.newUnits).gt(assetsRaw), 'units bought exceed the assets spent');
+    assert.isTrue(new Dec(quote.minUnits).lte(quote.newUnits), 'minUnits <= newUnits');
+  });
+
+  it('honours an absolute min payback rate exactly', async function rateFloorTest() {
+    const market = market20260828();
+    const assetsRaw = '2000000'; // 2 USDC (6 decimals)
+
+    let base;
+    try {
+      base = await getMorphoMidnightPaybackQuote(market.marketId, assetsRaw, 0.5, market.maturity);
+    } catch (err) {
+      this.skip();
+      return;
+    }
+
+    // A floor below the estimate pins at exactly that rate, and loosens as it drops.
+    const floor = Dec.max(new Dec(base.estPaybackRate).sub(2), 0.01);
+    const quote = await getMorphoMidnightPaybackQuote(market.marketId, assetsRaw, 0.5, market.maturity, floor);
+    assert.approximately(+quote.minRate, floor.toNumber(), 1e-6, 'minRate should be the requested floor');
+    assert.approximately(+quote.minUnits, +assetsRaw / +midnightPriceFromApy(floor, midnightTimeToMaturityDays(market.maturity)), 1);
+    assert.isTrue(new Dec(quote.minUnits).lt(quote.newUnits), 'a floor below the estimate leaves headroom');
+    assert.strictEqual(quote.estPaybackRate, base.estPaybackRate);
+    assert.strictEqual(quote.takeableOffers.length, base.takeableOffers.length);
+
+    // A floor above the estimate leaves no headroom — the payback would revert on-chain, by design.
+    const tight = await getMorphoMidnightPaybackQuote(market.marketId, assetsRaw, 0.5, market.maturity, new Dec(base.estPaybackRate).add(2));
+    assert.isTrue(new Dec(tight.minUnits).gt(tight.newUnits), 'minUnits > newUnits when the floor is over the market rate');
+  });
+
+  it('parses both book sides best-first', async function bookSideTest() {
+    const market = market20260828();
+    const [bids, asks] = await Promise.all([
+      getMorphoMidnightMarketBook(market, network),
+      getMorphoMidnightMarketBook(market, network, 'asks'),
+    ]);
+    if (!bids || !asks) {
+      this.skip();
+      return;
+    }
+
+    // Best-first means cheapest rate on the bids a borrower fills, dearest on the asks a repayer buys.
+    assert.strictEqual(bids.bestRate, bids.offers[0].rate);
+    assert.strictEqual(asks.bestRate, asks.offers[0].rate);
+    bids.offers.forEach((offer, i) => i > 0 && assert.isTrue(new Dec(offer.rate).gte(bids.offers[i - 1].rate), 'bids ascending by rate'));
+    asks.offers.forEach((offer, i) => i > 0 && assert.isTrue(new Dec(offer.rate).lte(asks.offers[i - 1].rate), 'asks descending by rate'));
+    // The spread, in rate terms: sell offers are priced above buy offers, and price is inverse to rate,
+    // so the best rate on the ask side sits at or below the best rate on the bid side.
+    assert.isTrue(new Dec(asks.bestRate).lte(bids.bestRate), 'best ask rate <= best bid rate');
+  });
+
   it('reports why the API rejected a quote', async () => {
     const market = market20260828();
     // Far beyond any book's depth → INSUFFICIENT_LIQUIDITY rather than a bare "unavailable".
@@ -213,7 +290,7 @@ describe('Morpho Midnight', function midnightSuite() {
     const view = MorphoMidnightViewContractViem(client, network);
     const onChain = await view.read.getPositionInfo([market.marketId as `0x${string}`, DOC_BORROWER as `0x${string}`]);
 
-    const info = await getMorphoMidnightUserBorrowInfo(DOC_BORROWER, market.marketId, market.maturity, marketInfo.loanToken);
+    const info = await getMorphoMidnightUserBorrowInfo(DOC_BORROWER, market.marketId, marketInfo.loanToken);
     assert.containsAllKeys(info, ['borrowRate', 'debtBase', 'debtInterest', 'debtTotal']);
     // debtInterest is always debtTotal − debtBase, and base never exceeds total.
     assert.approximately(+info.debtInterest, +info.debtTotal - +info.debtBase, 1e-6);

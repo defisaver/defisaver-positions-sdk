@@ -166,7 +166,7 @@ export async function _getMorphoMidnightAccountData(provider: Client, network: N
   let assetsDataForApy = marketInfo.assetsData;
   if (new Dec(positionInfo.debt.toString()).gt(0)) {
     try {
-      const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.maturity, marketInfo.loanToken);
+      const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.loanToken);
       borrowRate = borrowInfo.borrowRate;
       debtBase = borrowInfo.debtBase;
       debtInterest = borrowInfo.debtInterest;
