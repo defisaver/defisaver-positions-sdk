@@ -52,6 +52,11 @@ export interface AaveV4SpokeInfo {
   value: AaveV4SpokesType,
   url: string,
   address: EthAddress,
+  /**
+   * Known hub addresses, used only to prefetch hub data in parallel with the spoke data.
+   * The on-chain reserves are the source of truth — hubs found there but missing here are
+   * fetched dynamically, so this list going stale can't break spoke loading.
+   */
   hubs: EthAddress[],
 }
 
