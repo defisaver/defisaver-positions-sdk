@@ -21,7 +21,9 @@ import {
 } from '../types';
 import { AaveV4ViewContractViem } from '../contracts';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
-import { isMaxUint, wethToEth, wethToEthByAddress } from '../services/utils';
+import {
+  isMaxUint, shortenAddress, wethToEth, wethToEthByAddress,
+} from '../services/utils';
 import { aaveV4GetAggregatedPositionData, calcUserRiskPremiumBps } from '../helpers/aaveV4Helpers';
 import { findAaveV4SpokeByAddress, getAaveV4HubByAddress } from '../markets/aaveV4';
 import { aprToApy } from '../moneymarket';
@@ -56,10 +58,10 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
   // tokens package. Flag it so consumers can render it read-only instead of feeding NaN into amounts.
   const isUnsupported = assetInfo.symbol === '?';
   const symbol = wethToEth(assetInfo.symbol);
+  // The hub registry only provides display metadata — a hub missing from it (newly deployed by
+  // Aave, SDK not yet updated) must not prevent the reserve from loading, so fall back to a
+  // generated label instead of failing.
   const hubInfo = getAaveV4HubByAddress(network, reserveAsset.hub);
-  if (!hubInfo) {
-    throw new Error(`Hub not found with address: ${reserveAsset.hub}`);
-  }
 
   const isStakingAsset = STAKING_ASSETS.includes(symbol);
   const supplyIncentives: IncentiveData[] = [];
@@ -124,8 +126,8 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
     decimals: reserveAsset.decimals,
     isUnsupported,
     underlying: reserveAsset.underlying,
-    hub: hubInfo.address,
-    hubName: hubInfo?.label,
+    hub: hubInfo?.address ?? reserveAsset.hub,
+    hubName: hubInfo?.label ?? `Hub ${shortenAddress(reserveAsset.hub)}`,
     assetId: reserveAsset.assetId,
     reserveId,
     paused: reserveAsset.paused,
@@ -163,16 +165,32 @@ const formatReserveAsset = async (reserveAsset: AaveV4ReserveAssetOnChain, hubAs
 export async function _getAaveV4SpokeData(provider: Client, network: NetworkNumber, market: AaveV4SpokeInfo, blockNumber: 'latest' | number = 'latest'): Promise<AaveV4SpokeData> {
   const viewContract = AaveV4ViewContractViem(provider, network, blockNumber);
 
-  const hubsData: Record<EthAddress, AaveV4HubOnChainData> = {};
+  const hubsData: Record<string, AaveV4HubOnChainData> = {};
+  const loadHubData = async (hubAddress: EthAddress) => {
+    hubsData[hubAddress.toLowerCase()] = await fetchHubData(viewContract, hubAddress);
+  };
+
+  // market.hubs is only a prefetch hint (lets known hubs load in parallel with the spoke data), so
+  // failures are tolerated here — any hub the reserves actually reference is (re)fetched below.
   const [spokeData, merklCampaigns] = await Promise.all([
     viewContract.read.getSpokeDataFull([market.address]),
     getAaveV4MerkleCampaigns(network),
-    ...market.hubs.map(async (hubAddress) => {
-      hubsData[hubAddress] = await fetchHubData(viewContract, hubAddress);
-    }),
+    ...market.hubs.map((hubAddress) => loadHubData(hubAddress).catch(() => {})),
   ]);
 
-  const reserveAssetsArray = await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => formatReserveAsset(reserveAssetOnChain, hubsData[reserveAssetOnChain.hub].assets[reserveAssetOnChain.assetId], index, +spokeData[0].oracleDecimals.toString(), network)));
+  // The on-chain reserves are the source of truth for which hubs the spoke uses — fetch any hub
+  // the prefetch didn't cover, so an asset listed from a hub unknown to the SDK can't break the spoke.
+  const missingHubs = [...new Set(spokeData[1].map((reserveAsset: AaveV4ReserveAssetOnChain) => reserveAsset.hub.toLowerCase() as EthAddress))]
+    .filter((hubAddress) => !hubsData[hubAddress]);
+  await Promise.all(missingHubs.map(loadHubData));
+
+  const reserveAssetsArray = (await Promise.all(spokeData[1].map(async (reserveAssetOnChain: AaveV4ReserveAssetOnChain, index: number) => {
+    const hubAsset = hubsData[reserveAssetOnChain.hub.toLowerCase()]?.assets[reserveAssetOnChain.assetId];
+    // A reserve whose hub-side asset data can't be resolved is skipped instead of failing the
+    // whole spoke (position math degrades for that one asset only).
+    if (!hubAsset) return null;
+    return formatReserveAsset(reserveAssetOnChain, hubAsset, index, +spokeData[0].oracleDecimals.toString(), network);
+  }))).filter((asset): asset is AaveV4ReserveAssetData => asset !== null);
 
   const enrichedAssets = reserveAssetsArray.map((asset) => attachAaveV4MerklIncentives(asset, market.address, merklCampaigns));
 
