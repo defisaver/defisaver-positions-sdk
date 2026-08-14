@@ -173,6 +173,20 @@ export interface MorphoMidnightPaybackQuote {
   takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
 }
 
+// Payback quoted the other way round: the caller names the debt units to retire, and the quote prices
+// what buying them costs. Same rate guard as the assets-target quote, expressed as a spend ceiling.
+export interface MorphoMidnightPaybackUnitsQuote {
+  bestPrice: string, // average_best_price, loan-per-unit — the cheapest units on the ask side
+  worstPrice: string, // average_worst_price, slippage-adjusted (ABOVE best: a dearer unit)
+  estPaybackRate: string, // APY the repayment retires debt at, as a percent
+  minRate: string, // APY the on-chain ceiling permits, i.e. `maxAssets` annualized (display only)
+  newAssets: string, // assets the target units cost at best price, raw loan-token base units
+  maxAssets: string, // ceiling on assets spent (on-chain guard), raw loan-token base units
+  availableAssets: string,
+  availableUnits: string,
+  takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
+}
+
 // Days remaining until maturity, optionally measured at a past timestamp (for historical fills).
 export const midnightTimeToMaturityDays = (maturity: number, atSeconds: number = nowInSeconds()): number => new Dec(maturity).sub(atSeconds).div(SECONDS_PER_DAY).toNumber();
 
@@ -302,14 +316,22 @@ interface MidnightParsedQuote {
   takeableOffers: any[],
 }
 
+/**
+ * How much of the book to quote. The endpoint takes exactly one of the two — it rejects a request with
+ * neither ("Either assets or units must be provided") — and answers the same `takeable_offers` list either
+ * way, since that list is the whole in-band depth rather than the slice this size consumes.
+ */
+type MidnightQuoteSize = { assets: string } | { units: string };
+
 // The raw quote both sides share: prices descaled from WAD, everything else forwarded verbatim.
 const fetchMorphoMidnightQuote = async (
   marketId: string,
   side: MorphoMidnightBookSide,
-  assetsRaw: string,
+  size: MidnightQuoteSize,
   slippagePercent: Dec.Value,
 ): Promise<MidnightParsedQuote> => {
-  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/${side}/quote?assets=${assetsRaw}&slippage=${midnightSlippageParam(slippagePercent)}`;
+  const [sizeParam, sizeValue] = 'assets' in size ? ['assets', size.assets] : ['units', size.units];
+  const url = `${MIDNIGHT_API_BASE}/books/${marketId}/${side}/quote?${sizeParam}=${sizeValue}&slippage=${midnightSlippageParam(slippagePercent)}`;
   const res = await fetch(url, { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
   const json: { data?: MidnightQuoteResponse, error?: MidnightApiError } = await res.json();
   const d = json?.data;
@@ -348,7 +370,7 @@ export const getMorphoMidnightBorrowQuote = async (
   maturity: number,
   maxBorrowRate?: Dec.Value,
 ): Promise<MorphoMidnightBorrowQuote> => {
-  const quote = await fetchMorphoMidnightQuote(marketId, 'bids', assetsRaw, slippagePercent);
+  const quote = await fetchMorphoMidnightQuote(marketId, 'bids', { assets: assetsRaw }, slippagePercent);
   const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estBorrowRate = midnightApyFromPrice(bestPrice, ttmDays);
@@ -396,7 +418,7 @@ export const getMorphoMidnightPaybackQuote = async (
   maturity: number,
   minPaybackRate?: Dec.Value,
 ): Promise<MorphoMidnightPaybackQuote> => {
-  const quote = await fetchMorphoMidnightQuote(marketId, 'asks', assetsRaw, slippagePercent);
+  const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { assets: assetsRaw }, slippagePercent);
   const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
@@ -416,5 +438,51 @@ export const getMorphoMidnightPaybackQuote = async (
     minRate,
     newUnits,
     minUnits,
+  };
+};
+
+/**
+ * Payback quoted against a **units** target instead of a spend: "retire exactly these debt units, and tell
+ * me what that costs". The sibling of `getMorphoMidnightPaybackQuote` in every other respect — same ask
+ * side, same rate floor, same offer list — but with the two amounts swapped, so the on-chain guard becomes
+ * a ceiling on assets spent rather than a floor on units bought.
+ *
+ * This is what a **full close** must be sized with. Retiring N units costs less than N loan tokens before
+ * maturity, so quoting the close as a spend of the debt's face value asks the book for more depth than the
+ * close needs (and can be refused for liquidity that is in fact there), and caps the taker's spend at more
+ * than the position is worth. Callers that cannot refund an overspend — a taker calling the bundler
+ * directly, rather than through an action contract that sweeps the remainder back — need this quote.
+ *
+ * A `minPaybackRate` above `estPaybackRate` yields `maxAssets < newAssets`: the ceiling is under what the
+ * buy costs and it would revert on-chain, the mirror of the assets-target quote's `minUnits > newUnits`.
+ */
+export const getMorphoMidnightPaybackUnitsQuote = async (
+  marketId: string,
+  unitsRaw: string,
+  slippagePercent: Dec.Value,
+  maturity: number,
+  minPaybackRate?: Dec.Value,
+): Promise<MorphoMidnightPaybackUnitsQuote> => {
+  const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { units: unitsRaw }, slippagePercent);
+  const { bestPrice, worstPrice } = quote;
+  const ttmDays = midnightTimeToMaturityDays(maturity);
+  const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
+
+  const capPrice = minPaybackRate !== undefined && new Dec(minPaybackRate).gt(0)
+    ? midnightPriceFromApy(minPaybackRate, ttmDays)
+    : worstPrice;
+  const minRate = midnightApyFromPrice(capPrice, ttmDays);
+  // Rounded UP on both counts — the mirror of the assets-target quote's ROUND_DOWN. Here the figures are
+  // what the taker SPENDS, so a value rounded down understates the cost by a base unit and would leave the
+  // buy short of the units it was asked for.
+  const newAssets = new Dec(unitsRaw).mul(bestPrice).toFixed(0, Dec.ROUND_UP);
+  const maxAssets = new Dec(unitsRaw).mul(capPrice).toFixed(0, Dec.ROUND_UP);
+
+  return {
+    ...quote,
+    estPaybackRate,
+    minRate,
+    newAssets,
+    maxAssets,
   };
 };

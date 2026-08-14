@@ -10,8 +10,8 @@ import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
 import {
   getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook, getMorphoMidnightPaybackQuote,
-  getMorphoMidnightUserBorrowInfo, midnightApyFromPrice, midnightPriceFromApy,
-  midnightSlippageParam, midnightTimeToMaturityDays,
+  getMorphoMidnightPaybackUnitsQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice,
+  midnightPriceFromApy, midnightSlippageParam, midnightTimeToMaturityDays,
 } from '../src/helpers/morphoMidnightHelpers';
 
 const { assert } = require('chai');
@@ -248,6 +248,62 @@ describe('Morpho Midnight', function midnightSuite() {
     // A floor above the estimate leaves no headroom — the payback would revert on-chain, by design.
     const tight = await getMorphoMidnightPaybackQuote(market.marketId, assetsRaw, 0.5, market.maturity, new Dec(base.estPaybackRate).add(2));
     assert.isTrue(new Dec(tight.minUnits).gt(tight.newUnits), 'minUnits > newUnits when the floor is over the market rate');
+  });
+
+  it('quotes a payback against a units target, pricing what the close costs', async function paybackUnitsQuoteTest() {
+    const market = market20260828();
+    const unitsRaw = '2000000'; // 2 USDC (6 decimals) of debt RETIRED
+
+    let quote;
+    try {
+      quote = await getMorphoMidnightPaybackUnitsQuote(market.marketId, unitsRaw, 0.5, market.maturity);
+    } catch (err) {
+      // Ask side may be unable to fill (empty book / matured) — skip rather than fail on live liquidity.
+      this.skip();
+      return;
+    }
+
+    assert.containsAllKeys(quote, ['bestPrice', 'worstPrice', 'estPaybackRate', 'minRate', 'newAssets', 'maxAssets', 'takeableOffers']);
+    const ttmDays = midnightTimeToMaturityDays(market.maturity);
+    assert.approximately(+quote.estPaybackRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
+    assert.approximately(+quote.minRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+
+    // The whole point of the units target: retiring N units costs LESS than N loan tokens before maturity,
+    // and the ceiling sits above the cost rather than at the debt's face value.
+    assert.approximately(+quote.newAssets, +unitsRaw * +quote.bestPrice, 1);
+    assert.isTrue(new Dec(quote.newAssets).lt(unitsRaw), 'the close costs less than the debt face value');
+    assert.isTrue(new Dec(quote.maxAssets).gte(quote.newAssets), 'maxAssets >= newAssets');
+    assert.isTrue(new Dec(quote.maxAssets).lte(unitsRaw), 'even the ceiling stays under the face value');
+
+    // Same side, same offer list as the assets-target quote — only the two amounts swap roles.
+    const spendQuote = await getMorphoMidnightPaybackQuote(market.marketId, quote.newAssets, 0.5, market.maturity);
+    assert.strictEqual(quote.takeableOffers.length, spendQuote.takeableOffers.length);
+    assert.approximately(+spendQuote.newUnits, +unitsRaw, +unitsRaw * 1e-4, 'the two quotes round-trip');
+  });
+
+  it('honours an absolute min payback rate exactly on a units target', async function unitsRateFloorTest() {
+    const market = market20260828();
+    const unitsRaw = '2000000';
+
+    let base;
+    try {
+      base = await getMorphoMidnightPaybackUnitsQuote(market.marketId, unitsRaw, 0.5, market.maturity);
+    } catch (err) {
+      this.skip();
+      return;
+    }
+
+    // A floor below the estimate pins at exactly that rate, widening the spend ceiling as it drops.
+    const floor = Dec.max(new Dec(base.estPaybackRate).sub(2), 0.01);
+    const quote = await getMorphoMidnightPaybackUnitsQuote(market.marketId, unitsRaw, 0.5, market.maturity, floor);
+    assert.approximately(+quote.minRate, floor.toNumber(), 1e-6, 'minRate should be the requested floor');
+    assert.approximately(+quote.maxAssets, +unitsRaw * +midnightPriceFromApy(floor, midnightTimeToMaturityDays(market.maturity)), 1);
+    assert.isTrue(new Dec(quote.maxAssets).gt(quote.newAssets), 'a floor below the estimate leaves headroom');
+    assert.strictEqual(quote.estPaybackRate, base.estPaybackRate);
+
+    // A floor above the estimate leaves no headroom — the payback would revert on-chain, by design.
+    const tight = await getMorphoMidnightPaybackUnitsQuote(market.marketId, unitsRaw, 0.5, market.maturity, new Dec(base.estPaybackRate).add(2));
+    assert.isTrue(new Dec(tight.maxAssets).lt(tight.newAssets), 'maxAssets < newAssets when the floor is over the market rate');
   });
 
   it('parses both book sides best-first', async function bookSideTest() {
