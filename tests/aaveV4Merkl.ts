@@ -1,11 +1,21 @@
+import { getAssetInfo } from '@defisaver/tokens';
 import { attachAaveV4MerklIncentives, buildAaveV4MerklRewardMap } from '../src/aaveV4/merkl';
 import { calculateNetApyAaveV4, getAaveV4ApplicableIncentives } from '../src/helpers/aaveV4Helpers';
+import {
+  AAVE_V4_BLUECHIP_SPOKE,
+  AAVE_V4_MAIN_SPOKE,
+  AAVE_V4_PAXOS_HUB,
+  AAVE_V4_PRIME_HUB,
+  AAVE_V4_USDG_PENDLE_SPOKE,
+} from '../src/markets/aaveV4';
 import { aprToApy } from '../src/moneymarket';
 import {
   AaveV4AssetsData,
   AaveV4ReserveAssetData,
   AaveV4UsedReserveAssets,
+  EthAddress,
   IncentiveKind,
+  IncentiveSide,
   MerklOpportunity,
   NetworkNumber,
   OpportunityAction,
@@ -14,14 +24,16 @@ import {
 
 const { assert } = require('chai');
 
-// Real mainnet contracts + the live Merkl campaigns from DEV-13263 / DEV-13284
-const BLUECHIP_SPOKE = '0x973a023A77420ba610f06b3858aD991Df6d85A08';
-const USDG_PENDLE_SPOKE = '0x956d8e0A89cfa3744428C4641b5a53B56167a7f9';
-const MAIN_SPOKE = '0x94e7A5dCbE816e498b89aB752661904E2F56c485';
-const PRIME_HUB = '0x943827DCA022D0F354a8a8c332dA1e5Eb9f9F931';
-const PAXOS_HUB = '0x62d63197660c080236193CA60b70E49A08E90368';
-const USDC = '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48';
+const BLUECHIP_SPOKE = AAVE_V4_BLUECHIP_SPOKE(NetworkNumber.Eth).address;
+const USDG_PENDLE_SPOKE = AAVE_V4_USDG_PENDLE_SPOKE(NetworkNumber.Eth).address;
+const MAIN_SPOKE = AAVE_V4_MAIN_SPOKE(NetworkNumber.Eth).address;
+const PRIME_HUB = AAVE_V4_PRIME_HUB(NetworkNumber.Eth).address;
+const PAXOS_HUB = AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address;
+const USDC = getAssetInfo('USDC').address as EthAddress;
+const WBTC = getAssetInfo('WBTC').address as EthAddress;
+const USDG = getAssetInfo('USDG').address as EthAddress;
 
+// The live campaigns from DEV-13263 / DEV-13284
 const SPOKE_CAMPAIGN_APR = 2.0075355051683546;
 const HUB_CAMPAIGN_APR = 2;
 
@@ -94,14 +106,14 @@ describe('Aave V4 Merkl campaign matching', () => {
 describe('Aave V4 applicable incentives', () => {
   it('counts the same reward stream listed at both scopes only once (DEV-13263)', () => {
     const enriched = attachAaveV4MerklIncentives(reserve({}), BLUECHIP_SPOKE, campaigns);
-    const applicable = getAaveV4ApplicableIncentives(enriched, 'borrow');
+    const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
     assert.lengthOf(applicable, 1);
     assert.equal(applicable[0].apy, aprToApy(SPOKE_CAMPAIGN_APR));
   });
 
   it('applies the hub reward when no spoke campaign exists', () => {
     const enriched = attachAaveV4MerklIncentives(reserve({}), MAIN_SPOKE, campaigns);
-    const applicable = getAaveV4ApplicableIncentives(enriched, 'borrow');
+    const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
     assert.lengthOf(applicable, 1);
     assert.equal(applicable[0].apy, aprToApy(HUB_CAMPAIGN_APR));
   });
@@ -111,7 +123,7 @@ describe('Aave V4 applicable incentives', () => {
       apy: '-3', token: 'weETH', incentiveKind: IncentiveKind.Staking, description: '',
     };
     const enriched = attachAaveV4MerklIncentives(reserve({ borrowIncentives: [staking] }), BLUECHIP_SPOKE, campaigns);
-    const applicable = getAaveV4ApplicableIncentives(enriched, 'borrow');
+    const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
     assert.lengthOf(applicable, 2);
     assert.deepEqual(applicable[0], staking);
   });
@@ -120,9 +132,7 @@ describe('Aave V4 applicable incentives', () => {
 describe('Aave V4 net APY with Merkl incentives', () => {
   // The DEV-13263 position: 2.15 WBTC ($137,885) supplied at 0%, 98,615 USDC ($98,601)
   // borrowed at ~4.005% APY on the Bluechip Spoke from the Prime Hub, no risk premium.
-  const wbtcReserve = reserve({
-    symbol: 'WBTC', underlying: '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599', collateralFactor: 0.845,
-  });
+  const wbtcReserve = reserve({ symbol: 'WBTC', underlying: WBTC, collateralFactor: 0.845 });
   const usdcReserve = reserve({ drawnRate: '0.0392695' });
 
   const assetsData = {
@@ -155,7 +165,7 @@ describe('Aave V4 net APY with Merkl incentives', () => {
   it('does not apply another hub\'s reward to the borrowed asset', () => {
     const ptUsdgReserve = reserve({
       symbol: 'PT USDG',
-      underlying: '0x33dD4A2560DDe8f0Ec6d38f2664c8B3Aa7fEBB50',
+      underlying: USDG,
       hub: PAXOS_HUB,
       collateralFactor: 0.94,
       supplyIncentives: [{

@@ -5,6 +5,7 @@ import {
   AaveV4ReserveAssetData,
   IncentiveData,
   IncentiveKind,
+  IncentiveSide,
   MerklOpportunity,
   OpportunityAction,
   OpportunityStatus,
@@ -48,7 +49,7 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
       const scopeAddress = o.explorerAddress?.toLowerCase();
       if (!scopeAddress) return;
 
-      const side: 'supply' | 'borrow' = o.action === OpportunityAction.BORROW ? 'borrow' : 'supply';
+      const side = o.action === OpportunityAction.BORROW ? IncentiveSide.Borrow : IncentiveSide.Supply;
       const incentive = buildIncentive(o);
       const key = scopeKey(scopeAddress, underlying);
 

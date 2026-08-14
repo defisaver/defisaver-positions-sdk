@@ -17,6 +17,7 @@ import {
   AaveV4UsedReserveAssets,
   EthereumProvider,
   IncentiveData,
+  IncentiveSide,
   LeverageType,
   NetworkNumber,
 } from '../../types';
@@ -110,7 +111,7 @@ const mergeScopedIncentives = (base: IncentiveData[] = [], spokeScoped?: Incenti
  * intrinsic (staking) incentives plus the single applicable Merkl reward. Display surfaces should
  * use this rather than picking a scoped list directly, so badges always match the net APY math.
  */
-export const getAaveV4ApplicableIncentives = (assetData: AaveV4ReserveAssetData, side: 'supply' | 'borrow'): IncentiveData[] => (side === 'supply'
+export const getAaveV4ApplicableIncentives = (assetData: AaveV4ReserveAssetData, side: IncentiveSide): IncentiveData[] => (side === IncentiveSide.Supply
   ? mergeScopedIncentives(assetData.supplyIncentives, assetData.spokeSupplyIncentives, assetData.hubSupplyIncentives)
   : mergeScopedIncentives(assetData.borrowIncentives, assetData.spokeBorrowIncentives, assetData.hubBorrowIncentives));
 
@@ -135,7 +136,7 @@ export const calculateNetApyAaveV4 = ({
       const supplyInterest = calculateInterestEarned(amount, assetData.supplyRate, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
 
-      const supplyIncentives = getAaveV4ApplicableIncentives(assetData, 'supply');
+      const supplyIncentives = getAaveV4ApplicableIncentives(assetData, IncentiveSide.Supply);
       for (const supplyIncentive of supplyIncentives) {
         const incentiveInterest = calculateInterestEarned(amount, supplyIncentive.apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
@@ -153,7 +154,7 @@ export const calculateNetApyAaveV4 = ({
       const borrowInterest = calculateInterestEarned(amount, userBorrowRate, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
 
-      const borrowIncentives = getAaveV4ApplicableIncentives(assetData, 'borrow');
+      const borrowIncentives = getAaveV4ApplicableIncentives(assetData, IncentiveSide.Borrow);
       for (const borrowIncentive of borrowIncentives) {
         const incentiveInterest = calculateInterestEarned(amount, borrowIncentive.apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();

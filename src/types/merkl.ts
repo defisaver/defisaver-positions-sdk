@@ -1,4 +1,4 @@
-import { EthAddress, IncentiveData } from './common';
+import { EthAddress, IncentiveData, IncentiveSide } from './common';
 
 export enum OpportunityAction {
   LEND = 'LEND',
@@ -70,7 +70,7 @@ export type MerklOpportunity = {
 export type MerkleRewardInfo = { apy: string; rewardTokenSymbol: string, description: string, identifier: string };
 export type MerkleRewardMap = Record<EthAddress, { supply?: MerkleRewardInfo; borrow?: MerkleRewardInfo }>;
 
-export type AaveV4MerklScopedReward = { supply?: IncentiveData; borrow?: IncentiveData };
+export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: IncentiveData };
 
 /**
  * Aave V4 Merkl reward campaigns split by scope:
