@@ -74,7 +74,7 @@ export type AaveV4MerklScopedReward = { supply?: IncentiveData; borrow?: Incenti
 
 /**
  * Aave V4 Merkl reward campaigns split by scope:
- *   - `hub`: keyed by underlying token address (lowercase) — rewards for supplying to a hub
+ *   - `hub`: keyed by `${hubAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing via a hub
  *   - `spoke`: keyed by `${spokeAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing on a spoke
  */
 export type AaveV4MerklRewardMap = {
