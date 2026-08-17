@@ -12,7 +12,25 @@ export enum MorphoMidnightVersions {
   MorphoMidnightCbBTCUSDC_860_20261030_Base = 'morphomidnightcbbtcusdc_860_20261030_base',
   MorphoMidnightCbBTCUSDC_860_20261127_Base = 'morphomidnightcbbtcusdc_860_20261127_base',
   MorphoMidnightCbBTCUSDC_860_20261225_Base = 'morphomidnightcbbtcusdc_860_20261225_base',
+  // Tenor-hosted Midnight markets (same core, different order book)
+  MorphoMidnightTenorCbBTCUSDC_20260827_Base = 'morphomidnighttenorcbbtcusdc_20260827_base',
+  MorphoMidnightTenorCbBTCUSDC_20260924_Base = 'morphomidnighttenorcbbtcusdc_20260924_base',
+  MorphoMidnightTenorCbBTCUSDC_20261022_Base = 'morphomidnighttenorcbbtcusdc_20261022_base',
+  MorphoMidnightTenorCbBTCUSDC_20261119_Base = 'morphomidnighttenorcbbtcusdc_20261119_base',
+  MorphoMidnightTenorCbBTCUSDC_20261217_Base = 'morphomidnighttenorcbbtcusdc_20261217_base',
+  MorphoMidnightTenorWETHUSDC_20260827_Base = 'morphomidnighttenorwethusdc_20260827_base',
+  MorphoMidnightTenorWETHUSDC_20260924_Base = 'morphomidnighttenorwethusdc_20260924_base',
+  MorphoMidnightTenorWETHUSDC_20261022_Base = 'morphomidnighttenorwethusdc_20261022_base',
+  MorphoMidnightTenorWETHUSDC_20261119_Base = 'morphomidnighttenorwethusdc_20261119_base',
+  MorphoMidnightTenorWETHUSDC_20261217_Base = 'morphomidnighttenorwethusdc_20261217_base',
+  MorphoMidnightTenorCbETHWETH_20260827_Base = 'morphomidnighttenorcbethweth_20260827_base',
+  MorphoMidnightTenorCbETHWETH_20260924_Base = 'morphomidnighttenorcbethweth_20260924_base',
+  MorphoMidnightTenorCbETHWETH_20261022_Base = 'morphomidnighttenorcbethweth_20261022_base',
+  MorphoMidnightTenorCbETHWETH_20261119_Base = 'morphomidnighttenorcbethweth_20261119_base',
+  MorphoMidnightTenorCbETHWETH_20261217_Base = 'morphomidnighttenorcbethweth_20261217_base',
 }
+
+export type MorphoMidnightCurator = 'Morpho' | 'Tenor';
 
 export interface MorphoMidnightCollateralParams {
   token: EthAddress,
@@ -36,6 +54,7 @@ export interface MorphoMidnightMarketData {
   liquidatorGate: EthAddress,
   marketId: string, // bytes32, precomputed off-chain (verify with MidnightView.toId)
   protocolName: string,
+  curator: MorphoMidnightCurator,
 }
 
 export interface MorphoMidnightAssetData {

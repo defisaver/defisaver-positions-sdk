@@ -83,12 +83,43 @@ describe('Morpho Midnight', function midnightSuite() {
     }
   });
 
-  it('has marketIds that match MidnightView.toId(struct)', async () => {
+  /**
+   * Every configured market must describe the market its `marketId` actually resolves to on-chain.
+   *
+   * Tenor-curated markets carry a second collateral — Tenor's own ERC-4626 vault — that the config
+   * deliberately omits (it is not a token the app supplies, and `@defisaver/tokens` doesn't know it), so
+   * their config is a *prefix* of the on-chain collateral set rather than the whole of it. Hashing such a
+   * struct would not reproduce the id, so the invariant is checked against `toMarket` instead, and `toId`
+   * is only re-derived for markets that do list every collateral.
+   */
+  it('has marketIds that resolve to the configured market on-chain', async () => {
     const client = getViemProvider(provider, network);
     const view = MorphoMidnightViewContractViem(client, network);
     for (const market of markets()) {
-      const id = await view.read.toId([marketToStruct(market, network)]);
-      assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
+      const onChain = await view.read.toMarket([market.marketId as `0x${string}`]);
+      const struct = marketToStruct(market, network);
+
+      assert.strictEqual(onChain.midnight.toLowerCase(), struct.midnight.toLowerCase(), `midnight mismatch for ${market.value}`);
+      assert.strictEqual(onChain.loanToken.toLowerCase(), struct.loanToken.toLowerCase(), `loanToken mismatch for ${market.value}`);
+      assert.strictEqual(onChain.maturity, struct.maturity, `maturity mismatch for ${market.value}`);
+      assert.strictEqual(onChain.rcfThreshold, struct.rcfThreshold, `rcfThreshold mismatch for ${market.value}`);
+      assert.strictEqual(onChain.enterGate.toLowerCase(), struct.enterGate.toLowerCase(), `enterGate mismatch for ${market.value}`);
+      assert.strictEqual(onChain.liquidatorGate.toLowerCase(), struct.liquidatorGate.toLowerCase(), `liquidatorGate mismatch for ${market.value}`);
+
+      // Configured collaterals must be the on-chain ones, in the same order: the SDK reads `prices[i]` and
+      // `collateral[i]` by that index, so a shifted or extra entry would price the wrong asset.
+      assert.isAtMost(struct.collateralParams.length, onChain.collateralParams.length, `too many collaterals configured for ${market.value}`);
+      struct.collateralParams.forEach((coll, i) => {
+        assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `collateral[${i}] token mismatch for ${market.value}`);
+        assert.strictEqual(onChain.collateralParams[i].lltv, coll.lltv, `collateral[${i}] lltv mismatch for ${market.value}`);
+        assert.strictEqual(onChain.collateralParams[i].liquidationCursor, coll.liquidationCursor, `collateral[${i}] cursor mismatch for ${market.value}`);
+        assert.strictEqual(onChain.collateralParams[i].oracle.toLowerCase(), coll.oracle.toLowerCase(), `collateral[${i}] oracle mismatch for ${market.value}`);
+      });
+
+      if (struct.collateralParams.length === onChain.collateralParams.length) {
+        const id = await view.read.toId([struct]);
+        assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
+      }
     }
   });
 
@@ -186,8 +217,9 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.approximately(+quote.maxRate, cap.toNumber(), 1e-6, 'maxRate should be the requested ceiling');
     assert.approximately(+quote.maxUnits, +assetsRaw / +midnightPriceFromApy(cap, midnightTimeToMaturityDays(market.maturity)), 1);
     assert.isTrue(new Dec(quote.maxUnits).gt(quote.newUnits), 'a ceiling above the estimate leaves headroom');
-    // The estimate and the offers to fill against are unaffected by the cap.
-    assert.strictEqual(quote.estBorrowRate, base.estBorrowRate);
+    // The estimate and the offers to fill against are unaffected by the cap. Compared with a tolerance:
+    // the two quotes are taken seconds apart and the rate is annualized against a live time-to-maturity.
+    assert.approximately(+quote.estBorrowRate, +base.estBorrowRate, 1e-3);
     assert.strictEqual(quote.takeableOffers.length, base.takeableOffers.length);
 
     // A ceiling below the estimate leaves no headroom — the borrow would revert on-chain, by design.
@@ -323,8 +355,10 @@ describe('Morpho Midnight', function midnightSuite() {
     bids.offers.forEach((offer, i) => i > 0 && assert.isTrue(new Dec(offer.rate).gte(bids.offers[i - 1].rate), 'bids ascending by rate'));
     asks.offers.forEach((offer, i) => i > 0 && assert.isTrue(new Dec(offer.rate).lte(asks.offers[i - 1].rate), 'asks descending by rate'));
     // The spread, in rate terms: sell offers are priced above buy offers, and price is inverse to rate,
-    // so the best rate on the ask side sits at or below the best rate on the bid side.
-    assert.isTrue(new Dec(asks.bestRate).lte(bids.bestRate), 'best ask rate <= best bid rate');
+    // so the best rate on the ask side sits at or below the best rate on the bid side. Compared with a
+    // tolerance because the two sides are fetched separately and each annualizes against its own clock —
+    // when the book is uncrossed (both sides resting on the same price level) that drift alone can flip it.
+    assert.isTrue(new Dec(asks.bestRate).lte(new Dec(bids.bestRate).add(1e-3)), 'best ask rate <= best bid rate');
   });
 
   it('reports why the API rejected a quote', async () => {

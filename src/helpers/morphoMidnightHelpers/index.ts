@@ -16,8 +16,29 @@ import {
   MorphoMidnightMarketInfo,
   MorphoMidnightParsedBook,
 } from '../../types';
-import { SECONDS_PER_DAY, WAD } from '../../constants';
+import { WAD } from '../../constants';
 import { LONGER_TIMEOUT } from '../../services/utils';
+import { isTenorMidnightMarket } from '../../markets/morphoMidnight';
+import {
+  buildMidnightParsedBook, midnightApyFromPrice, midnightPriceFromApy, midnightTimeToMaturityDays,
+} from './rate';
+import {
+  getTenorBorrowQuote, getTenorMarketBook, getTenorPaybackQuote, getTenorPaybackUnitsQuote,
+} from './tenor';
+
+export {
+  buildMidnightParsedBook,
+  midnightApyFromPrice,
+  midnightBookBestFirst,
+  midnightPriceFromApy,
+  midnightTimeToMaturityDays,
+} from './rate';
+export {
+  tenorBookKeyFor,
+  tenorBookRateToApyPercent,
+  tenorOfferFillToApiFill,
+  tenorOfferToApiOffer,
+} from './tenor';
 
 /**
  * Aggregate a Morpho Midnight position. Midnight markets are multi-collateral, so the borrow limit is
@@ -104,7 +125,6 @@ export const getMorphoMidnightAggregatedPositionData = ({
 // loan-per-unit ratios (< 1 for a discounted fixed-term borrow); annualizing them yields the borrow APY.
 
 const MIDNIGHT_API_BASE = 'https://api.morpho.org/v0/midnight';
-const nowInSeconds = () => Math.floor(Date.now() / 1000);
 
 // The book endpoint is markedly slower than the rest of the API — `LONGER_TIMEOUT` (5s) aborts it often
 // enough that markets drop out of the list for no reason.
@@ -187,35 +207,6 @@ export interface MorphoMidnightPaybackUnitsQuote {
   takeableOffers: any[], // opaque orderbook offers, forwarded verbatim to on-chain execution
 }
 
-// Days remaining until maturity, optionally measured at a past timestamp (for historical fills).
-export const midnightTimeToMaturityDays = (maturity: number, atSeconds: number = nowInSeconds()): number => new Dec(maturity).sub(atSeconds).div(SECONDS_PER_DAY).toNumber();
-
-// Annualize a fixed-term discount price into an APY percent: (1 / price)^(365 / ttmDays) − 1.
-// `price` is loan-per-unit (assets received / units owed), so 1/price ≥ 1.
-export const midnightApyFromPrice = (price: Dec.Value, ttmDays: Dec.Value): string => {
-  const p = new Dec(price);
-  const ttm = new Dec(ttmDays);
-  if (p.lte(0) || ttm.lte(0)) return '0';
-  return new Dec(1).div(p).pow(new Dec(365).div(ttm)).sub(1)
-    .mul(100)
-    .toString();
-};
-
-/**
- * Inverse of `midnightApyFromPrice`: the loan-per-unit price a borrow APY implies,
- * price = (1 + rate)^(−ttmDays / 365).
- *
- * This is what turns an absolute rate ceiling into an on-chain `maxUnits` cap (units = assets / price),
- * and equally the principal a unit of borrow power is worth — Midnight debt is recorded at its maturity
- * face value, so borrowing the full limit as principal would overshoot it by the interest.
- */
-export const midnightPriceFromApy = (ratePercent: Dec.Value, ttmDays: Dec.Value): string => {
-  const rate = new Dec(ratePercent);
-  const ttm = new Dec(ttmDays);
-  if (rate.lte(0) || ttm.lte(0)) return '1';
-  return new Dec(1).div(new Dec(1).add(rate.div(100)).pow(ttm.div(365))).toString();
-};
-
 /**
  * Coerce a slippage into what the quote endpoint accepts: 0.1–100 with at most one decimal place. The
  * validation is lexical, so a computed value (`4.15066671050631467`) is rejected outright — without this
@@ -275,28 +266,23 @@ export const getMorphoMidnightMarketBook = async (
   network: NetworkNumber,
   side: MorphoMidnightBookSide = 'bids',
 ): Promise<MorphoMidnightParsedBook | null> => {
+  if (isTenorMidnightMarket(market)) {
+    return getTenorMarketBook(market, network, side);
+  }
+
   const loanSymbol = getAssetInfoByAddress(market.loanToken, network).symbol;
   const res = await fetch(`${MIDNIGHT_API_BASE}/books/${market.marketId}`, { signal: AbortSignal.timeout(MIDNIGHT_BOOK_TIMEOUT) });
   if (!res.ok) throw new Error(`Midnight book request failed for ${market.value} (${res.status})`);
 
   const json: { data?: Partial<Record<MorphoMidnightBookSide, MidnightRawOffer[]>> } = await res.json();
   const ttmDays = midnightTimeToMaturityDays(market.maturity);
-  const bestFirst = side === 'asks' ? -1 : 1;
 
-  const offers: MorphoMidnightBookOffer[] = (json?.data?.[side] || [])
-    .map((offer) => ({
-      rate: midnightApyFromPrice(new Dec(offer.price).div(WAD), ttmDays),
-      liquidity: assetAmountInEth(offer.assets, loanSymbol),
-    }))
-    .sort((a, b) => new Dec(a.rate).minus(b.rate).mul(bestFirst).toNumber());
+  const offers: MorphoMidnightBookOffer[] = (json?.data?.[side] || []).map((offer) => ({
+    rate: midnightApyFromPrice(new Dec(offer.price).div(WAD), ttmDays),
+    liquidity: assetAmountInEth(offer.assets, loanSymbol),
+  }));
 
-  if (offers.length === 0) return null;
-
-  return {
-    bestRate: offers[0].rate,
-    totalLiquidity: offers.reduce((sum, offer) => sum.add(offer.liquidity), new Dec(0)).toString(),
-    offers,
-  };
+  return buildMidnightParsedBook(offers, side);
 };
 
 // The API says why a quote failed — NOT_FOUND (market matured or not open yet), INSUFFICIENT_LIQUIDITY
@@ -362,6 +348,9 @@ const fetchMorphoMidnightQuote = async (
  *
  * A `maxBorrowRate` below `estBorrowRate` yields `maxUnits < newUnits` — the borrow would revert on-chain.
  * Compare the two before submitting and tell the user their ceiling is under the market rate.
+ *
+ * Tenor-hosted markets (see `isTenorMidnightMarket`) are quoted against Tenor's router instead of Morpho's
+ * book API. Slippage is applied locally to `maxUnits`; `taker` is the position owner (the smart wallet).
  */
 export const getMorphoMidnightBorrowQuote = async (
   marketId: string,
@@ -369,7 +358,12 @@ export const getMorphoMidnightBorrowQuote = async (
   slippagePercent: Dec.Value,
   maturity: number,
   maxBorrowRate?: Dec.Value,
+  taker?: string,
 ): Promise<MorphoMidnightBorrowQuote> => {
+  if (isTenorMidnightMarket(marketId)) {
+    return getTenorBorrowQuote(marketId, assetsRaw, slippagePercent, maturity, maxBorrowRate, taker);
+  }
+
   const quote = await fetchMorphoMidnightQuote(marketId, 'bids', { assets: assetsRaw }, slippagePercent);
   const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
@@ -417,7 +411,12 @@ export const getMorphoMidnightPaybackQuote = async (
   slippagePercent: Dec.Value,
   maturity: number,
   minPaybackRate?: Dec.Value,
+  taker?: string,
 ): Promise<MorphoMidnightPaybackQuote> => {
+  if (isTenorMidnightMarket(marketId)) {
+    return getTenorPaybackQuote(marketId, assetsRaw, slippagePercent, maturity, minPaybackRate, taker);
+  }
+
   const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { assets: assetsRaw }, slippagePercent);
   const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
@@ -462,7 +461,12 @@ export const getMorphoMidnightPaybackUnitsQuote = async (
   slippagePercent: Dec.Value,
   maturity: number,
   minPaybackRate?: Dec.Value,
+  taker?: string,
 ): Promise<MorphoMidnightPaybackUnitsQuote> => {
+  if (isTenorMidnightMarket(marketId)) {
+    return getTenorPaybackUnitsQuote(marketId, unitsRaw, slippagePercent, maturity, minPaybackRate, taker);
+  }
+
   const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { units: unitsRaw }, slippagePercent);
   const { bestPrice, worstPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
