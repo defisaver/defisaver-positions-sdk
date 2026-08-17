@@ -1,4 +1,6 @@
-import { MorphoMidnightMarketData, MorphoMidnightVersions, NetworkNumber } from '../../types';
+import {
+  MorphoMidnightCollateralParams, MorphoMidnightMarketData, MorphoMidnightVersions, NetworkNumber,
+} from '../../types';
 import { ZERO_ADDRESS } from '../../constants';
 
 /**
@@ -12,6 +14,13 @@ const USDC_BASE = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' as const;
 const WETH_BASE = '0x4200000000000000000000000000000000000006' as const;
 const CBBTC_BASE = '0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf' as const;
 const CBETH_BASE = '0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22' as const;
+
+// Tenor's ERC-4626 collateral vaults, one per pair and shared by that pair's whole maturity ladder. Each
+// is a collateral of its markets on-chain without being an asset the app deals in — see the note above
+// the Tenor markets below, and https://www.docs.tenor.finance/technical-docs/addresses/#vaults.
+const TENOR_CBBTC_USDC_VAULT_BASE = '0xf6a70085b7f79FA76B04EbF7A2D7D87C3c5c04BC' as const;
+const TENOR_WETH_USDC_VAULT_BASE = '0xe690a58EF52854513462745237F6A213a0d54dF1' as const;
+const TENOR_CBETH_WETH_VAULT_BASE = '0xFa750DD0099eAdB72d401244De73ce7B89edf90F' as const;
 
 
 // Sourced from the official listing at https://markets.morpho.org/fixed/base
@@ -168,10 +177,14 @@ export const MORPHO_MIDNIGHT_CBBTC_USDC_860_20261225 = (networkId = NetworkNumbe
 // collaterals — the pair's own token at index 0, and Tenor's ERC-4626 vault at index 1 (98% LLTV; the
 // `metadata.vault` of the parent tenor market, listed at
 // https://www.docs.tenor.finance/technical-docs/addresses/#vaults). The vault is not an asset the app
-// deals in, so these are modelled as single-collateral markets: the app supplies and prices index 0, and
-// the SDK reads `prices[i]` / `collateral[i]` positionally, so listing the primary alone keeps those
-// lookups aligned. The on-chain take path is unaffected — offer tuples carry the market's full collateral
-// set straight from the router's offer JSON, which is what the market hash is built from.
+// deals in, so it is split out into `hiddenCollaterals` instead of `collaterals`: everything that renders
+// or prices a position sees a single-collateral market, and because the vault stays the *suffix* of the
+// set, the SDK's positional `prices[i]` / `collateral[i]` reads stay aligned with `collaterals`.
+//
+// It is only split out, never dropped: the market id is the hash of the full struct, so a `Market` handed
+// to the core has to be `[...collaterals, ...hiddenCollaterals]` or the call addresses a market of its own
+// making. The take path builds no struct — offer tuples carry the market's full collateral set straight
+// from the router's offer JSON.
 
 export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20260827 = (networkId = NetworkNumber.Base): MorphoMidnightMarketData => ({
   chainIds: [NetworkNumber.Base],
@@ -186,6 +199,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20260827 = (networkId = Networ
     lltv: 0.86,
     liquidationCursor: '300000000000000000',
     oracle: '0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBBTC_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x4a24e4bf269cE26aAD2dF00437e7730d25FCdE26',
   }],
   maturity: 1787788800, // 2026-08-27T00:00:00Z
   rcfThreshold: '3000000000',
@@ -210,6 +229,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20260924 = (networkId = Networ
     liquidationCursor: '300000000000000000',
     oracle: '0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_CBBTC_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x4a24e4bf269cE26aAD2dF00437e7730d25FCdE26',
+  }],
   maturity: 1790208000, // 2026-09-24T00:00:00Z
   rcfThreshold: '3000000000',
   enterGate: ZERO_ADDRESS,
@@ -232,6 +257,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20261022 = (networkId = Networ
     lltv: 0.86,
     liquidationCursor: '300000000000000000',
     oracle: '0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBBTC_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x4a24e4bf269cE26aAD2dF00437e7730d25FCdE26',
   }],
   maturity: 1792627200, // 2026-10-22T00:00:00Z
   rcfThreshold: '3000000000',
@@ -256,6 +287,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20261119 = (networkId = Networ
     liquidationCursor: '300000000000000000',
     oracle: '0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_CBBTC_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x4a24e4bf269cE26aAD2dF00437e7730d25FCdE26',
+  }],
   maturity: 1795046400, // 2026-11-19T00:00:00Z
   rcfThreshold: '3000000000',
   enterGate: ZERO_ADDRESS,
@@ -278,6 +315,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBBTC_USDC_860_20261217 = (networkId = Networ
     lltv: 0.86,
     liquidationCursor: '300000000000000000',
     oracle: '0x663BECd10daE6C4A3Dcd89F1d76c1174199639B9',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBBTC_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x4a24e4bf269cE26aAD2dF00437e7730d25FCdE26',
   }],
   maturity: 1797465600, // 2026-12-17T00:00:00Z
   rcfThreshold: '3000000000',
@@ -302,6 +345,12 @@ export const MORPHO_MIDNIGHT_TENOR_WETH_USDC_860_20260827 = (networkId = Network
     liquidationCursor: '300000000000000000',
     oracle: '0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_WETH_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x784519B1b59A1e1498f077066bB9336672bcc3EE',
+  }],
   maturity: 1787788800,
   rcfThreshold: '3000000000',
   enterGate: ZERO_ADDRESS,
@@ -324,6 +373,12 @@ export const MORPHO_MIDNIGHT_TENOR_WETH_USDC_860_20260924 = (networkId = Network
     lltv: 0.86,
     liquidationCursor: '300000000000000000',
     oracle: '0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_WETH_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x784519B1b59A1e1498f077066bB9336672bcc3EE',
   }],
   maturity: 1790208000,
   rcfThreshold: '3000000000',
@@ -348,6 +403,12 @@ export const MORPHO_MIDNIGHT_TENOR_WETH_USDC_860_20261022 = (networkId = Network
     liquidationCursor: '300000000000000000',
     oracle: '0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_WETH_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x784519B1b59A1e1498f077066bB9336672bcc3EE',
+  }],
   maturity: 1792627200,
   rcfThreshold: '3000000000',
   enterGate: ZERO_ADDRESS,
@@ -370,6 +431,12 @@ export const MORPHO_MIDNIGHT_TENOR_WETH_USDC_860_20261119 = (networkId = Network
     lltv: 0.86,
     liquidationCursor: '300000000000000000',
     oracle: '0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_WETH_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x784519B1b59A1e1498f077066bB9336672bcc3EE',
   }],
   maturity: 1795046400,
   rcfThreshold: '3000000000',
@@ -394,6 +461,12 @@ export const MORPHO_MIDNIGHT_TENOR_WETH_USDC_860_20261217 = (networkId = Network
     liquidationCursor: '300000000000000000',
     oracle: '0xFEa2D58cEfCb9fcb597723c6bAE66fFE4193aFE4',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_WETH_USDC_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0x784519B1b59A1e1498f077066bB9336672bcc3EE',
+  }],
   maturity: 1797465600,
   rcfThreshold: '3000000000',
   enterGate: ZERO_ADDRESS,
@@ -416,6 +489,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBETH_WETH_945_20260827 = (networkId = Networ
     lltv: 0.945,
     liquidationCursor: '300000000000000000',
     oracle: '0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBETH_WETH_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0xa02f629871be35d6db0F88C944cF955554Ec87c0',
   }],
   maturity: 1787788800,
   rcfThreshold: '4000000000000000000',
@@ -440,6 +519,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBETH_WETH_945_20260924 = (networkId = Networ
     liquidationCursor: '300000000000000000',
     oracle: '0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_CBETH_WETH_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0xa02f629871be35d6db0F88C944cF955554Ec87c0',
+  }],
   maturity: 1790208000,
   rcfThreshold: '4000000000000000000',
   enterGate: ZERO_ADDRESS,
@@ -462,6 +547,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBETH_WETH_945_20261022 = (networkId = Networ
     lltv: 0.945,
     liquidationCursor: '300000000000000000',
     oracle: '0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBETH_WETH_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0xa02f629871be35d6db0F88C944cF955554Ec87c0',
   }],
   maturity: 1792627200,
   rcfThreshold: '4000000000000000000',
@@ -486,6 +577,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBETH_WETH_945_20261119 = (networkId = Networ
     liquidationCursor: '300000000000000000',
     oracle: '0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6',
   }],
+  hiddenCollaterals: [{
+    token: TENOR_CBETH_WETH_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0xa02f629871be35d6db0F88C944cF955554Ec87c0',
+  }],
   maturity: 1795046400,
   rcfThreshold: '4000000000000000000',
   enterGate: ZERO_ADDRESS,
@@ -508,6 +605,12 @@ export const MORPHO_MIDNIGHT_TENOR_CBETH_WETH_945_20261217 = (networkId = Networ
     lltv: 0.945,
     liquidationCursor: '300000000000000000',
     oracle: '0xB03855Ad5AFD6B8db8091DD5551CAC4ed621d9E6',
+  }],
+  hiddenCollaterals: [{
+    token: TENOR_CBETH_WETH_VAULT_BASE,
+    lltv: 0.98,
+    liquidationCursor: '300000000000000000',
+    oracle: '0xa02f629871be35d6db0F88C944cF955554Ec87c0',
   }],
   maturity: 1797465600,
   rcfThreshold: '4000000000000000000',
@@ -560,3 +663,13 @@ export const isTenorMidnightMarket = (market: Pick<MorphoMidnightMarketData, 'cu
 export const findMorphoMidnightMarket = (marketId: string, network: NetworkNumber = NetworkNumber.Base): MorphoMidnightMarketData | undefined => Object.values(MorphoMidnightMarkets(network)).find(
   (market) => market.marketId.toLowerCase() === marketId.toLowerCase(),
 );
+
+/**
+ * The market's collateral set as the chain knows it: the listed collaterals followed by the curator's
+ * hidden ones. This — not `collaterals` — is what a `Market` struct takes, since the market id is the hash
+ * of that struct. Anything assembling one for a contract call goes through here so it can't quietly build
+ * a market of its own instead.
+ */
+export const morphoMidnightMarketCollateralParams = (
+  market: Pick<MorphoMidnightMarketData, 'collaterals' | 'hiddenCollaterals'>,
+): MorphoMidnightCollateralParams[] => [...market.collaterals, ...(market.hiddenCollaterals || [])];

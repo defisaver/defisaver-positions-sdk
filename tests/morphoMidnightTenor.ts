@@ -201,7 +201,10 @@ describe('Tenor Midnight markets', () => {
     const tenor = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbBTCUSDC_20260827_Base];
     assert.strictEqual(morpho.curator, 'Morpho');
     assert.strictEqual(tenor.curator, 'Tenor');
-    assert.sameMembers(Object.keys(tenor), Object.keys(morpho));
+    // `hiddenCollaterals` is the one field a Tenor market carries that a Morpho one has no use for: only
+    // curated markets put a collateral in the struct that the app doesn't surface.
+    assert.sameMembers(Object.keys(tenor), [...Object.keys(morpho), 'hiddenCollaterals']);
+    assert.isUndefined(morpho.hiddenCollaterals);
     assert.isTrue(isTenorMidnightMarket(tenor));
     assert.isFalse(isTenorMidnightMarket(morpho));
   });
@@ -228,6 +231,22 @@ describe('Tenor Midnight markets', () => {
     assert.strictEqual(cbeth.collaterals[0].token.toLowerCase(), '0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22');
     assert.strictEqual(new Dec(cbeth.collaterals[0].lltv).toNumber(), 0.945);
     assert.strictEqual(cbeth.rcfThreshold, '4000000000000000000');
+  });
+
+  /**
+   * The curator's vault is hidden from the app but not from the market: it is the second half of what the
+   * id is hashed from, so every Tenor market has to carry one and the shared getter has to hand back both.
+   * Without it a `Market` struct addresses a market of the caller's own making rather than this one — the
+   * on-chain half of this invariant is the `toId` check in the Morpho Midnight suite.
+   */
+  it('keep the curator vault out of `collaterals` but in the market struct', () => {
+    Object.values(tenorMarkets).forEach((market) => {
+      assert.strictEqual(market.hiddenCollaterals?.length, 1, `${market.value} should hide exactly the curator vault`);
+      const all = sdk.markets.morphoMidnightMarketCollateralParams(market);
+      assert.strictEqual(all.length, 2, `${market.value} should hash from both collaterals`);
+      assert.strictEqual(all[0].token, market.collaterals[0].token, `${market.value} should keep the listed collateral first`);
+      assert.strictEqual(all[1].token, market.hiddenCollaterals![0].token, `${market.value} should append the hidden one`);
+    });
   });
 });
 

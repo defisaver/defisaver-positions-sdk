@@ -26,12 +26,14 @@ const DOC_BORROWER = '0x2e3Cc8Cd22812eaa229CbE85f3de7c9a39A8f4f7';
 
 const isPositive = (value: bigint): boolean => new Dec(value.toString()).gt(0);
 
-// Rebuild the on-chain Market struct from the hardcoded config so we can recompute its id.
+// Rebuild the on-chain Market struct from the hardcoded config so we can recompute its id. Collaterals
+// come from the shared getter rather than `market.collaterals`, for the same reason the app's tx builder
+// uses it: the hidden ones are part of the hash.
 const marketToStruct = (market: MorphoMidnightMarketData, network: NetworkNumber) => ({
   chainId: BigInt(network),
   midnight: market.midnight as `0x${string}`,
   loanToken: market.loanToken as `0x${string}`,
-  collateralParams: market.collaterals.map((c) => ({
+  collateralParams: sdk.markets.morphoMidnightMarketCollateralParams(market).map((c) => ({
     token: c.token as `0x${string}`,
     lltv: BigInt(new Dec(c.lltv).mul(1e18).toFixed(0)),
     liquidationCursor: BigInt(c.liquidationCursor),
@@ -84,13 +86,15 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   /**
-   * Every configured market must describe the market its `marketId` actually resolves to on-chain.
+   * Every configured market must describe the market its `marketId` actually resolves to on-chain, and
+   * hash back to it. The `toId` half is the one that matters for writes: a struct missing a collateral is
+   * still a perfectly valid market to the core, so a call built from it lands in a market of its own
+   * making instead of reverting. Tenor's markets carry a collateral the app never surfaces (the curator's
+   * ERC-4626 vault) — `hiddenCollaterals` keeps it out of the UI without dropping it from the hash.
    *
-   * Tenor-curated markets carry a second collateral — Tenor's own ERC-4626 vault — that the config
-   * deliberately omits (it is not a token the app supplies, and `@defisaver/tokens` doesn't know it), so
-   * their config is a *prefix* of the on-chain collateral set rather than the whole of it. Hashing such a
-   * struct would not reproduce the id, so the invariant is checked against `toMarket` instead, and `toId`
-   * is only re-derived for markets that do list every collateral.
+   * The listed collaterals are additionally asserted to be the on-chain *prefix*: the SDK reads
+   * `prices[i]` and `collateral[i]` positionally against `collaterals`, so a hidden entry that sorted
+   * ahead of a listed one would price the wrong asset.
    */
   it('has marketIds that resolve to the configured market on-chain', async () => {
     const client = getViemProvider(provider, network);
@@ -106,20 +110,19 @@ describe('Morpho Midnight', function midnightSuite() {
       assert.strictEqual(onChain.enterGate.toLowerCase(), struct.enterGate.toLowerCase(), `enterGate mismatch for ${market.value}`);
       assert.strictEqual(onChain.liquidatorGate.toLowerCase(), struct.liquidatorGate.toLowerCase(), `liquidatorGate mismatch for ${market.value}`);
 
-      // Configured collaterals must be the on-chain ones, in the same order: the SDK reads `prices[i]` and
-      // `collateral[i]` by that index, so a shifted or extra entry would price the wrong asset.
-      assert.isAtMost(struct.collateralParams.length, onChain.collateralParams.length, `too many collaterals configured for ${market.value}`);
+      assert.strictEqual(struct.collateralParams.length, onChain.collateralParams.length, `collateral count mismatch for ${market.value}`);
       struct.collateralParams.forEach((coll, i) => {
         assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `collateral[${i}] token mismatch for ${market.value}`);
         assert.strictEqual(onChain.collateralParams[i].lltv, coll.lltv, `collateral[${i}] lltv mismatch for ${market.value}`);
         assert.strictEqual(onChain.collateralParams[i].liquidationCursor, coll.liquidationCursor, `collateral[${i}] cursor mismatch for ${market.value}`);
         assert.strictEqual(onChain.collateralParams[i].oracle.toLowerCase(), coll.oracle.toLowerCase(), `collateral[${i}] oracle mismatch for ${market.value}`);
       });
+      market.collaterals.forEach((coll, i) => {
+        assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `listed collateral[${i}] is not the on-chain one for ${market.value}`);
+      });
 
-      if (struct.collateralParams.length === onChain.collateralParams.length) {
-        const id = await view.read.toId([struct]);
-        assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
-      }
+      const id = await view.read.toId([struct]);
+      assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
     }
   });
 

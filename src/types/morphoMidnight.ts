@@ -48,6 +48,10 @@ export interface MorphoMidnightMarketData {
   midnight: EthAddress,
   loanToken: EthAddress,
   collaterals: MorphoMidnightCollateralParams[],
+  /**
+   * Tenor's curated markets list the curator's own vault share token next to the real collateral.
+   */
+  hiddenCollaterals?: MorphoMidnightCollateralParams[],
   maturity: number, // unix timestamp (seconds)
   rcfThreshold: number | string,
   enterGate: EthAddress,

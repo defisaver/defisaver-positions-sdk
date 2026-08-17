@@ -17,7 +17,9 @@ export {
 export { SparkMarkets } from './spark';
 export { CrvUsdMarkets } from './curveUsd';
 export { MorphoBlueMarkets, findMorphoBlueMarket } from './morphoBlue';
-export { MorphoMidnightMarkets, findMorphoMidnightMarket, isTenorMidnightMarket } from './morphoMidnight';
+export {
+  MorphoMidnightMarkets, findMorphoMidnightMarket, isTenorMidnightMarket, morphoMidnightMarketCollateralParams,
+} from './morphoMidnight';
 export { LlamaLendMarkets } from './llamaLend';
 export { LiquityV2Markets, findLiquityV2MarketByAddress } from './liquityV2';
 export { EulerV2Markets } from './euler';
