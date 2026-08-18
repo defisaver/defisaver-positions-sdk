@@ -4,11 +4,16 @@ import {
   parseTenorOrderBook,
   tenorBookKeyFor,
   tenorBookRateToApyPercent,
-  tenorCapPrice,
   tenorOfferFillToApiFill,
   tenorOfferToApiOffer,
 } from '../src/helpers/morphoMidnightHelpers/tenor';
-import { midnightApyFromPrice, midnightTimeToMaturityDays } from '../src/helpers/morphoMidnightHelpers/rate';
+import {
+  midnightApyFromPrice,
+  midnightBoundPrice,
+  midnightPriceFromApy,
+  midnightTimeToMaturityDays,
+  MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
+} from '../src/helpers/morphoMidnightHelpers/rate';
 import { getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook } from '../src/helpers/morphoMidnightHelpers';
 import { isTenorMidnightMarket, MorphoMidnightMarkets } from '../src/markets/morphoMidnight';
 import { MorphoMidnightVersions, NetworkNumber } from '../src/types';
@@ -57,27 +62,67 @@ describe('Tenor Midnight rate math (pure)', () => {
   });
 });
 
-describe('Tenor Midnight guard prices', () => {
+describe('Midnight guard prices', () => {
   const ttmDays = 30;
   const bestPrice = '0.996';
+  const estRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  it('honours a pinned borrow ceiling exactly, whatever the default slippage is', () => {
-    const capPrice = tenorCapPrice(bestPrice, 0.5, -1, ttmDays, 5);
+  it('honours a pinned borrow ceiling exactly, whatever the rate slippage is', () => {
+    const capPrice = midnightBoundPrice(estRate, ttmDays, 'ceiling', 5, 0.5);
     assert.approximately(+midnightApyFromPrice(capPrice, ttmDays), 5, 1e-9);
   });
 
   it('honours a pinned payback floor exactly', () => {
-    const capPrice = tenorCapPrice(bestPrice, 0.5, 1, ttmDays, 3);
+    const capPrice = midnightBoundPrice(estRate, ttmDays, 'floor', 3, 0.5);
     assert.approximately(+midnightApyFromPrice(capPrice, ttmDays), 3, 1e-9);
   });
 
-  it('widens the borrow cap and tightens the payback floor by the slippage band when no rate is pinned', () => {
-    assert.strictEqual(tenorCapPrice(bestPrice, 0.5, -1, ttmDays), '0.99102');
-    assert.strictEqual(tenorCapPrice(bestPrice, 0.5, 1, ttmDays), '1.00098');
+  it('places an unpinned guard exactly `rateSlippagePercent` APY points from the estimate', () => {
+    const ceiling = midnightApyFromPrice(midnightBoundPrice(estRate, ttmDays, 'ceiling', undefined, 0.5), ttmDays);
+    const floor = midnightApyFromPrice(midnightBoundPrice(estRate, ttmDays, 'floor', undefined, 0.5), ttmDays);
+    assert.approximately(+ceiling - +estRate, 0.5, 1e-9);
+    assert.approximately(+estRate - +floor, 0.5, 1e-9);
   });
 
-  it('leaves the price untouched at 0 slippage', () => {
-    assert.strictEqual(tenorCapPrice(bestPrice, 0, -1, ttmDays), bestPrice);
+  it('defaults the unpinned band to MIDNIGHT_DEFAULT_RATE_SLIPPAGE', () => {
+    const ceiling = midnightApyFromPrice(midnightBoundPrice(estRate, ttmDays, 'ceiling'), ttmDays);
+    assert.approximately(+ceiling - +estRate, MIDNIGHT_DEFAULT_RATE_SLIPPAGE, 1e-9);
+  });
+
+  it('is insensitive to maturity, unlike the price band it replaced', () => {
+    [7, 30, 365].forEach((days) => {
+      const est = midnightApyFromPrice(bestPrice, days);
+      const ceiling = midnightApyFromPrice(midnightBoundPrice(est, days, 'ceiling', undefined, 0.5), days);
+      assert.approximately(+ceiling - +est, 0.5, 1e-9, `${days}d market drifted from the requested band`);
+    });
+  });
+
+  it('keeps a payback floor meaningful when the estimate is thinner than the band', () => {
+    const capPrice = midnightBoundPrice(0.05, ttmDays, 'floor', undefined, 0.5);
+    assert.approximately(+midnightApyFromPrice(capPrice, ttmDays), 0.025, 1e-9);
+    assert.isTrue(new Dec(capPrice).lt(1), 'a floor priced at 1 loan token per unit guards nothing');
+  });
+
+
+  it('never places an unpinned guard stricter than the estimate it came from', () => {
+    const negativeEst = midnightApyFromPrice('1.01', ttmDays); // price above 1 → rate below 0
+    assert.isTrue(+negativeEst < 0, 'fixture should produce a negative estimate');
+
+    [negativeEst, '-1', '0', '0.001', '0.05', '0.1', '0.5', '4', '15', '100'].forEach((est) => {
+      [0, 0.1, 0.5, 2].forEach((slippage) => {
+        const estPrice = midnightPriceFromApy(est, ttmDays);
+        const ceiling = midnightBoundPrice(est, ttmDays, 'ceiling', undefined, slippage);
+        const floor = midnightBoundPrice(est, ttmDays, 'floor', undefined, slippage);
+        assert.isTrue(new Dec(ceiling).lte(estPrice), `borrow guard priced above the estimate at ${est}/${slippage}`);
+        assert.isTrue(new Dec(floor).gte(estPrice), `payback guard priced below the estimate at ${est}/${slippage}`);
+      });
+    });
+  });
+
+  it('leaves a matured market with a guard that cannot revert the fill it guards', () => {
+    // ttmDays <= 0 makes both conversions degenerate to 1; the guard must still not go stricter.
+    assert.strictEqual(midnightBoundPrice(5, 0, 'ceiling'), '1');
+    assert.strictEqual(midnightBoundPrice(5, 0, 'floor'), '1');
   });
 
   it('caps borrow units at the pinned rate rather than the quoted fill', () => {
@@ -85,7 +130,7 @@ describe('Tenor Midnight guard prices', () => {
     // short market let the on-chain cap sit tens of percent above the rate the user actually pinned.
     const assets = '100000000';
     const maturity = Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
-    const capPrice = tenorCapPrice(bestPrice, 0.5, -1, midnightTimeToMaturityDays(maturity), 5);
+    const capPrice = midnightBoundPrice(estRate, midnightTimeToMaturityDays(maturity), 'ceiling', 5);
     const maxUnits = new Dec(assets).div(capPrice).toFixed(0);
     const impliedRate = midnightApyFromPrice(new Dec(assets).div(maxUnits), midnightTimeToMaturityDays(maturity));
     assert.approximately(+impliedRate, 5, 1e-3);

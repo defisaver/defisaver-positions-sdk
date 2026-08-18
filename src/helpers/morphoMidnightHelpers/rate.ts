@@ -29,6 +29,31 @@ export const midnightPriceFromApy = (ratePercent: Dec.Value, ttmDays: Dec.Value)
   return new Dec(1).div(new Dec(1).add(rate.div(100)).pow(ttm.div(365))).toString();
 };
 
+export const MIDNIGHT_DEFAULT_RATE_SLIPPAGE = 0.1;
+
+const MIDNIGHT_MIN_FLOOR_RATIO = 0.5;
+
+/** Which side of the estimate a guard sits on: a ceiling for borrows, a floor for paybacks. */
+export type MidnightRateBoundKind = 'ceiling' | 'floor';
+
+export const midnightBoundPrice = (
+  estRate: Dec.Value,
+  ttmDays: Dec.Value,
+  kind: MidnightRateBoundKind,
+  boundRate?: Dec.Value,
+  rateSlippagePercent: Dec.Value = MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
+): string => {
+  if (boundRate !== undefined && new Dec(boundRate).gt(0)) return midnightPriceFromApy(boundRate, ttmDays);
+
+  const est = new Dec(estRate);
+  const slippage = new Dec(rateSlippagePercent);
+  const bound = kind === 'ceiling'
+    ? est.add(slippage)
+    : Dec.max(est.sub(slippage), est.mul(MIDNIGHT_MIN_FLOOR_RATIO));
+
+  return midnightPriceFromApy(bound, ttmDays);
+};
+
 export const midnightBookBestFirst = (side: MorphoMidnightBookSide): 1 | -1 => (side === 'asks' ? -1 : 1);
 
 export const buildMidnightParsedBook = (

@@ -17,7 +17,7 @@ import type {
 import {
   buildMidnightParsedBook,
   midnightApyFromPrice,
-  midnightPriceFromApy,
+  midnightBoundPrice,
   midnightTimeToMaturityDays,
 } from './rate';
 
@@ -42,18 +42,6 @@ export const tenorBookRateToApyPercent = (rate: Dec.Value): string => new Dec(ra
 const tenorFillPrice = (assets: Dec.Value, units: Dec.Value): string => (
   new Dec(units).lte(0) ? '0' : new Dec(assets).div(units).toString()
 );
-
-export const tenorCapPrice = (
-  bestPrice: string,
-  slippagePercent: Dec.Value,
-  direction: 1 | -1,
-  ttmDays: Dec.Value,
-  boundRate?: Dec.Value,
-): string => {
-  if (boundRate !== undefined && new Dec(boundRate).gt(0)) return midnightPriceFromApy(boundRate, ttmDays);
-  const band = new Dec(1).add(new Dec(slippagePercent || 0).div(100).mul(direction));
-  return Dec.max(0, new Dec(bestPrice).mul(band)).toString();
-};
 
 interface TenorOfferCollateral {
   token: string;
@@ -286,6 +274,11 @@ const fetchTenorQuote = async ({
 
 const TENOR_NO_AVAILABLE_UNITS = '0';
 
+/**
+ * Tenor's router takes no slippage of its own — it prices the fill and hands back the offers. `slippagePercent`
+ * is therefore accepted only to keep the signature aligned with the Morpho-hosted quote that `index.ts`
+ * forwards to positionally; the guard comes from `rateSlippagePercent` via `midnightBoundPrice`.
+ */
 export const getTenorBorrowQuote = async (
   marketId: string,
   assetsRaw: string,
@@ -293,6 +286,7 @@ export const getTenorBorrowQuote = async (
   maturity: number,
   maxBorrowRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
   network: NetworkNumber = NetworkNumber.Base,
 ): Promise<MorphoMidnightBorrowQuote> => {
   if (!isTenorMidnightMarket(marketId)) {
@@ -310,7 +304,7 @@ export const getTenorBorrowQuote = async (
   const bestPrice = tenorFillPrice(assetsRaw, quote.units);
   const estBorrowRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  const capPrice = tenorCapPrice(bestPrice, slippagePercent, -1, ttmDays, maxBorrowRate);
+  const capPrice = midnightBoundPrice(estBorrowRate, ttmDays, 'ceiling', maxBorrowRate, rateSlippagePercent);
   const maxRate = midnightApyFromPrice(capPrice, ttmDays);
   const maxUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0);
 
@@ -334,6 +328,7 @@ export const getTenorPaybackQuote = async (
   maturity: number,
   minPaybackRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
   network: NetworkNumber = NetworkNumber.Base,
 ): Promise<MorphoMidnightPaybackQuote> => {
   if (!isTenorMidnightMarket(marketId)) {
@@ -351,7 +346,7 @@ export const getTenorPaybackQuote = async (
   const bestPrice = tenorFillPrice(assetsRaw, quote.units);
   const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  const capPrice = tenorCapPrice(bestPrice, slippagePercent, 1, ttmDays, minPaybackRate);
+  const capPrice = midnightBoundPrice(estPaybackRate, ttmDays, 'floor', minPaybackRate, rateSlippagePercent);
   const minRate = midnightApyFromPrice(capPrice, ttmDays);
   const minUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0, Dec.ROUND_DOWN);
 
@@ -375,6 +370,7 @@ export const getTenorPaybackUnitsQuote = async (
   maturity: number,
   minPaybackRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
   network: NetworkNumber = NetworkNumber.Base,
 ): Promise<MorphoMidnightPaybackUnitsQuote> => {
   if (!isTenorMidnightMarket(marketId)) {
@@ -393,7 +389,7 @@ export const getTenorPaybackUnitsQuote = async (
   const bestPrice = tenorFillPrice(newAssets, unitsRaw);
   const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  const capPrice = tenorCapPrice(bestPrice, slippagePercent, 1, ttmDays, minPaybackRate);
+  const capPrice = midnightBoundPrice(estPaybackRate, ttmDays, 'floor', minPaybackRate, rateSlippagePercent);
   const minRate = midnightApyFromPrice(capPrice, ttmDays);
   const maxAssets = new Dec(unitsRaw).mul(capPrice).toFixed(0, Dec.ROUND_UP);
 

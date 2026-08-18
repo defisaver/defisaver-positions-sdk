@@ -20,7 +20,7 @@ import { WAD } from '../../constants';
 import { LONGER_TIMEOUT } from '../../services/utils';
 import { isTenorMidnightMarket } from '../../markets/morphoMidnight';
 import {
-  buildMidnightParsedBook, midnightApyFromPrice, midnightPriceFromApy, midnightTimeToMaturityDays,
+  buildMidnightParsedBook, midnightApyFromPrice, midnightBoundPrice, midnightTimeToMaturityDays,
 } from './rate';
 import {
   getTenorBorrowQuote, getTenorMarketBook, getTenorPaybackQuote, getTenorPaybackUnitsQuote,
@@ -30,8 +30,10 @@ export {
   buildMidnightParsedBook,
   midnightApyFromPrice,
   midnightBookBestFirst,
+  midnightBoundPrice,
   midnightPriceFromApy,
   midnightTimeToMaturityDays,
+  MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
 } from './rate';
 export {
   tenorBookKeyFor,
@@ -332,26 +334,6 @@ const fetchMorphoMidnightQuote = async (
   };
 };
 
-/**
- * Quote a prospective borrow against the Midnight order book: the estimated rate, the debt units it adds,
- * and the `maxUnits` cap sent on-chain to protect the user if better offers get filled first. `assetsRaw`
- * (and the returned `newUnits`/`maxUnits`) are raw loan-token base units — callers convert to/from human
- * amounts. Throws if the book can't fill the amount (caller handles).
- *
- * Two ways to set the cap:
- *  - `maxBorrowRate` — an absolute APY ceiling, honoured **exactly**: the cap price is derived locally via
- *    `midnightPriceFromApy`. Prefer this when a user pins a max rate.
- *  - otherwise `slippagePercent`, the API's own knob. Note it is a **price**-level slippage, not APY points:
- *    near maturity the annualisation factor (365 / ttmDays) multiplies it heavily, so on a 22-day market a
- *    slippage of 0.5 permitted an APY ~9pp above the estimate, not 0.5pp. It also saturates at the book's
- *    cheapest bid. `maxRate` therefore reports what the cap actually permits, derived from the cap price.
- *
- * A `maxBorrowRate` below `estBorrowRate` yields `maxUnits < newUnits` — the borrow would revert on-chain.
- * Compare the two before submitting and tell the user their ceiling is under the market rate.
- *
- * Tenor-hosted markets (see `isTenorMidnightMarket`) are quoted against Tenor's router instead of Morpho's
- * book API. Slippage is applied locally to `maxUnits`; `taker` is the position owner (the smart wallet).
- */
 export const getMorphoMidnightBorrowQuote = async (
   marketId: string,
   assetsRaw: string,
@@ -359,21 +341,20 @@ export const getMorphoMidnightBorrowQuote = async (
   maturity: number,
   maxBorrowRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
 ): Promise<MorphoMidnightBorrowQuote> => {
   if (isTenorMidnightMarket(marketId)) {
-    return getTenorBorrowQuote(marketId, assetsRaw, slippagePercent, maturity, maxBorrowRate, taker);
+    return getTenorBorrowQuote(marketId, assetsRaw, slippagePercent, maturity, maxBorrowRate, taker, rateSlippagePercent);
   }
 
   const quote = await fetchMorphoMidnightQuote(marketId, 'bids', { assets: assetsRaw }, slippagePercent);
-  const { bestPrice, worstPrice } = quote;
+  const { bestPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estBorrowRate = midnightApyFromPrice(bestPrice, ttmDays);
 
   // Price the cap sits at, and the rate that price represents — one derivation, so `maxRate` and
   // `maxUnits` can never disagree about what the user is protected at.
-  const capPrice = maxBorrowRate !== undefined && new Dec(maxBorrowRate).gt(0)
-    ? midnightPriceFromApy(maxBorrowRate, ttmDays)
-    : worstPrice;
+  const capPrice = midnightBoundPrice(estBorrowRate, ttmDays, 'ceiling', maxBorrowRate, rateSlippagePercent);
   const maxRate = midnightApyFromPrice(capPrice, ttmDays);
   const newUnits = new Dec(bestPrice).lte(0) ? '0' : new Dec(assetsRaw).div(bestPrice).toFixed(0);
   const maxUnits = new Dec(capPrice).lte(0) ? '0' : new Dec(assetsRaw).div(capPrice).toFixed(0);
@@ -387,24 +368,6 @@ export const getMorphoMidnightBorrowQuote = async (
   };
 };
 
-/**
- * Quote a prospective payback against the ask side of the Midnight order book: the rate the repayment
- * retires debt at, the debt units it buys, and the `minUnits` floor sent on-chain to protect the user if
- * the cheap offers get taken first. `assetsRaw` is the amount **spent** (raw loan-token base units) —
- * matching `MidnightPaybackFromOrders`, whose `amount` is what leaves the wallet; the units bought, and
- * therefore the debt retired, exceed it because a unit costs less than one loan token before maturity.
- * Throws if the book can't fill the amount (caller handles).
- *
- * The mirror image of the borrow quote in every respect. A repayer wants a *high* rate, i.e. cheap units,
- * so the guard is a floor rather than a ceiling:
- *  - `minPaybackRate` — an absolute APY floor, honoured **exactly** via `midnightPriceFromApy`. Prefer
- *    this when a user pins a min rate.
- *  - otherwise `slippagePercent`, the API's own price-level knob, whose APY effect is amplified by the
- *    annualisation factor near maturity. `minRate` reports what the floor actually permits.
- *
- * A `minPaybackRate` above `estPaybackRate` yields `minUnits > newUnits` — the payback would revert
- * on-chain. Compare the two before submitting and tell the user their floor is over the market rate.
- */
 export const getMorphoMidnightPaybackQuote = async (
   marketId: string,
   assetsRaw: string,
@@ -412,19 +375,18 @@ export const getMorphoMidnightPaybackQuote = async (
   maturity: number,
   minPaybackRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
 ): Promise<MorphoMidnightPaybackQuote> => {
   if (isTenorMidnightMarket(marketId)) {
-    return getTenorPaybackQuote(marketId, assetsRaw, slippagePercent, maturity, minPaybackRate, taker);
+    return getTenorPaybackQuote(marketId, assetsRaw, slippagePercent, maturity, minPaybackRate, taker, rateSlippagePercent);
   }
 
   const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { assets: assetsRaw }, slippagePercent);
-  const { bestPrice, worstPrice } = quote;
+  const { bestPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  const capPrice = minPaybackRate !== undefined && new Dec(minPaybackRate).gt(0)
-    ? midnightPriceFromApy(minPaybackRate, ttmDays)
-    : worstPrice;
+  const capPrice = midnightBoundPrice(estPaybackRate, ttmDays, 'floor', minPaybackRate, rateSlippagePercent);
   const minRate = midnightApyFromPrice(capPrice, ttmDays);
   // Rounded down on both counts: `newUnits` must not overstate the debt the user sees retired, and a
   // `minUnits` rounded up would be a stricter floor than asked for and revert a payback that was fine.
@@ -440,21 +402,7 @@ export const getMorphoMidnightPaybackQuote = async (
   };
 };
 
-/**
- * Payback quoted against a **units** target instead of a spend: "retire exactly these debt units, and tell
- * me what that costs". The sibling of `getMorphoMidnightPaybackQuote` in every other respect — same ask
- * side, same rate floor, same offer list — but with the two amounts swapped, so the on-chain guard becomes
- * a ceiling on assets spent rather than a floor on units bought.
- *
- * This is what a **full close** must be sized with. Retiring N units costs less than N loan tokens before
- * maturity, so quoting the close as a spend of the debt's face value asks the book for more depth than the
- * close needs (and can be refused for liquidity that is in fact there), and caps the taker's spend at more
- * than the position is worth. Callers that cannot refund an overspend — a taker calling the bundler
- * directly, rather than through an action contract that sweeps the remainder back — need this quote.
- *
- * A `minPaybackRate` above `estPaybackRate` yields `maxAssets < newAssets`: the ceiling is under what the
- * buy costs and it would revert on-chain, the mirror of the assets-target quote's `minUnits > newUnits`.
- */
+
 export const getMorphoMidnightPaybackUnitsQuote = async (
   marketId: string,
   unitsRaw: string,
@@ -462,19 +410,18 @@ export const getMorphoMidnightPaybackUnitsQuote = async (
   maturity: number,
   minPaybackRate?: Dec.Value,
   taker?: string,
+  rateSlippagePercent?: Dec.Value,
 ): Promise<MorphoMidnightPaybackUnitsQuote> => {
   if (isTenorMidnightMarket(marketId)) {
-    return getTenorPaybackUnitsQuote(marketId, unitsRaw, slippagePercent, maturity, minPaybackRate, taker);
+    return getTenorPaybackUnitsQuote(marketId, unitsRaw, slippagePercent, maturity, minPaybackRate, taker, rateSlippagePercent);
   }
 
   const quote = await fetchMorphoMidnightQuote(marketId, 'asks', { units: unitsRaw }, slippagePercent);
-  const { bestPrice, worstPrice } = quote;
+  const { bestPrice } = quote;
   const ttmDays = midnightTimeToMaturityDays(maturity);
   const estPaybackRate = midnightApyFromPrice(bestPrice, ttmDays);
 
-  const capPrice = minPaybackRate !== undefined && new Dec(minPaybackRate).gt(0)
-    ? midnightPriceFromApy(minPaybackRate, ttmDays)
-    : worstPrice;
+  const capPrice = midnightBoundPrice(estPaybackRate, ttmDays, 'floor', minPaybackRate, rateSlippagePercent);
   const minRate = midnightApyFromPrice(capPrice, ttmDays);
   // Rounded UP on both counts — the mirror of the assets-target quote's ROUND_DOWN. Here the figures are
   // what the taker SPENDS, so a value rounded down understates the cost by a base unit and would leave the

@@ -10,8 +10,8 @@ import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
 import {
   getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook, getMorphoMidnightPaybackQuote,
-  getMorphoMidnightPaybackUnitsQuote, getMorphoMidnightUserBorrowInfo, midnightApyFromPrice,
-  midnightPriceFromApy, midnightSlippageParam, midnightTimeToMaturityDays,
+  getMorphoMidnightPaybackUnitsQuote, getMorphoMidnightUserBorrowInfo, MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
+  midnightApyFromPrice, midnightPriceFromApy, midnightSlippageParam, midnightTimeToMaturityDays,
 } from '../src/helpers/morphoMidnightHelpers';
 
 const { assert } = require('chai');
@@ -190,10 +190,8 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.isTrue(new Dec(quote.bestPrice).gt(0) && new Dec(quote.bestPrice).lt(1), 'bestPrice in (0,1)');
     assert.isTrue(new Dec(quote.worstPrice).lte(quote.bestPrice), 'worstPrice <= bestPrice');
     assert.isTrue(new Dec(quote.estBorrowRate).gt(0), 'estimated borrow rate should be positive');
-    // maxRate is the APY the cap permits (the annualized worst price), NOT estimate + slippage — the
-    // API's `slippage` is a price-level knob, so adding it to an APY mixes units.
     const ttmDays = midnightTimeToMaturityDays(market.maturity);
-    assert.approximately(+quote.maxRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+    assert.approximately(+quote.maxRate - +quote.estBorrowRate, MIDNIGHT_DEFAULT_RATE_SLIPPAGE, 1e-6);
     assert.isTrue(new Dec(quote.maxRate).gte(quote.estBorrowRate), 'maxRate >= estBorrowRate');
     // Units follow assets / price; worse price yields more (or equal) debt units → the cap.
     assert.approximately(+quote.newUnits, +assetsRaw / +quote.bestPrice, 1);
@@ -251,7 +249,9 @@ describe('Morpho Midnight', function midnightSuite() {
 
     const ttmDays = midnightTimeToMaturityDays(market.maturity);
     assert.approximately(+quote.estPaybackRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
-    assert.approximately(+quote.minRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+    // The mirror of the borrow cap, and the side the old price band failed hardest on: `worstPrice` came
+    // back equal to `bestPrice` here, leaving the floor sitting on the estimate — i.e. no floor at all.
+    assert.approximately(+quote.estPaybackRate - +quote.minRate, MIDNIGHT_DEFAULT_RATE_SLIPPAGE, 1e-6);
     assert.isTrue(new Dec(quote.minRate).lte(quote.estPaybackRate), 'minRate <= estPaybackRate');
     // Spending less than a whole loan token per unit means the debt retired exceeds what is spent.
     assert.approximately(+quote.newUnits, +assetsRaw / +quote.bestPrice, 1);
@@ -301,7 +301,7 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.containsAllKeys(quote, ['bestPrice', 'worstPrice', 'estPaybackRate', 'minRate', 'newAssets', 'maxAssets', 'takeableOffers']);
     const ttmDays = midnightTimeToMaturityDays(market.maturity);
     assert.approximately(+quote.estPaybackRate, +midnightApyFromPrice(quote.bestPrice, ttmDays), 1e-6);
-    assert.approximately(+quote.minRate, +midnightApyFromPrice(quote.worstPrice, ttmDays), 1e-6);
+    assert.approximately(+quote.estPaybackRate - +quote.minRate, MIDNIGHT_DEFAULT_RATE_SLIPPAGE, 1e-6);
 
     // The whole point of the units target: retiring N units costs LESS than N loan tokens before maturity,
     // and the ceiling sits above the cost rather than at the debt's face value.
