@@ -65,7 +65,7 @@ export async function _getMorphoMidnightMarketData(provider: Client, network: Ne
     borrowRate: '0',
     totalSupply: assetAmountInEth(totalUnits, loanSym),
     totalBorrow: assetAmountInEth(totalDebt, loanSym),
-    canBeSupplied: true,
+    canBeSupplied: false,
     canBeBorrowed: true,
     supplyIncentives: [],
     borrowIncentives: [],
