@@ -7,6 +7,5 @@ export * as morphoBlueHelpers from './morphoBlueHelpers';
 export * as morphoMidnightHelpers from './morphoMidnightHelpers';
 export * as llamaLendHelpers from './llamaLendHelpers';
 export * as liquityV2Helpers from './liquityV2Helpers';
-export * as eulerV2Helpers from './eulerHelpers';
 export * as fluidHelpers from './fluidHelpers';
 export * as aaveV4Helpers from './aaveV4Helpers';

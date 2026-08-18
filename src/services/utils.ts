@@ -20,6 +20,8 @@ export const isAddress = (address: string) => typeof address === 'string' && (ne
 
 export const compareAddresses = (addr1 = '', addr2 = '') => addr1.toLowerCase() === addr2.toLowerCase();
 
+export const shortenAddress = (address = '', start = 8, end = 4) => `${address.substring(0, start)}...${address.slice(-end)}`;
+
 export const getWeiAmountForDecimals = (amount: string | number, decimals: number) => new Dec(amount).mul(10 ** decimals).floor().toString();
 
 export const getEthAmountForDecimals = (amount: string | number, decimals: string | number) => new Dec(amount).div(10 ** +decimals).toString();

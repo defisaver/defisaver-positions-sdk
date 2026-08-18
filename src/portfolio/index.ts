@@ -5,7 +5,6 @@ import {
   AaveV4Spokes,
   CompoundMarkets,
   CrvUsdMarkets,
-  EulerV2Markets,
   LiquityV2Markets,
   LlamaLendMarkets,
   MorphoBlueMarkets,
@@ -24,7 +23,6 @@ import {
   CompoundV3MarketsData,
   CompoundVersions,
   CrvUSDGlobalMarketData,
-  EulerV2FullMarketData,
   LiquityV2MarketData,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
@@ -34,7 +32,6 @@ import {
 } from '../types';
 import { _getCompoundV3AccountData, _getCompoundV3MarketsData } from '../compoundV3';
 import { _getSparkAccountData, _getSparkMarketsData } from '../spark';
-import { _getEulerV2AccountData, _getEulerV2MarketsData } from '../eulerV2';
 import { _getCurveUsdGlobalData, _getCurveUsdUserData } from '../curveUsd';
 import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
 import { _getAaveV3AccountData, _getAaveV3MarketData, getStakeAaveData } from '../aaveV3';
@@ -46,7 +43,6 @@ import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
 import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
-import { getEulerV2SubAccounts } from '../helpers/eulerHelpers';
 import { getUmbrellaData } from '../umbrella';
 import { getMeritUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
 import { getCompoundV3Rewards } from '../claiming/compV3';
@@ -69,7 +65,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const morphoMidnightMarkets = Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
   const sparkMarkets = Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network));
-  const eulerV2Markets = Object.values(EulerV2Markets(network)).filter((market) => market.chainIds.includes(network));
   const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const aaveV2Markets = [AaveVersions.AaveV2].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
   const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
@@ -88,7 +83,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const morphoMidnightMarketsData: Record<string, MorphoMidnightMarketInfo> = {};
   const compoundV3MarketsData: Record<string, CompoundV3MarketsData> = {};
   const sparkMarketsData: Record<string, SparkMarketsData> = {};
-  const eulerV2MarketsData: Record<string, EulerV2FullMarketData> = {};
   const aaveV3MarketsData: Record<string, AaveV3MarketData> = {};
   const makerCdps: Record<string, CdpInfo[]> = {};
   const aaveV2MarketsData: Record<string, AaveV2MarketData> = {};
@@ -103,7 +97,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     morphoMidnightMarketsData,
     compoundV3MarketsData,
     sparkMarketsData,
-    eulerV2MarketsData,
     aaveV3MarketsData,
     aaveV2MarketsData,
     compoundV2MarketsData,
@@ -126,7 +119,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       morphoMidnight: {},
       compoundV3: {},
       spark: {},
-      eulerV2: {},
       maker: {},
       aaveV2: {},
       compoundV2: {},
@@ -186,10 +178,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     ...sparkMarkets.map(async (market) => {
       const marketData = await _getSparkMarketsData(client, network, market);
       sparkMarketsData[market.value] = marketData;
-    }),
-    ...eulerV2Markets.map(async (market) => {
-      const marketData = await _getEulerV2MarketsData(client, network, market);
-      eulerV2MarketsData[market.value] = marketData;
     }),
     ...aaveV3Markets.map(async (market) => {
       const marketData = await _getAaveV3MarketData(client, network, market);
@@ -547,27 +535,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
-    ...eulerV2Markets.map((market) => addresses.map((address) => {
-      const eulerV2SubAccounts = getEulerV2SubAccounts(address);
-      const eulerV2Addresses = [address, ...eulerV2SubAccounts];
-      return Promise.all(eulerV2Addresses.map(async (eulerAddress) => {
-        try {
-          const accData = await _getEulerV2AccountData(client, network, eulerAddress, eulerAddress, { selectedMarket: market, ...eulerV2MarketsData[market.value] });
-          if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-            if (!positions[address.toLowerCase() as EthAddress].eulerV2[market.value]) {
-              positions[address.toLowerCase() as EthAddress].eulerV2[market.value] = {};
-            }
-            positions[address.toLowerCase() as EthAddress].eulerV2[market.value]![eulerAddress.toLowerCase() as EthAddress] = { error: '', data: accData };
-          }
-        } catch (error) {
-          console.error(`Error fetching EulerV2 account data for address ${eulerAddress} on market ${market.value}:`, error);
-          if (!positions[address.toLowerCase() as EthAddress].eulerV2[market.value]) {
-            positions[address.toLowerCase() as EthAddress].eulerV2[market.value] = {};
-          }
-          positions[address.toLowerCase() as EthAddress].eulerV2[market.value]![eulerAddress.toLowerCase() as EthAddress] = { error: `Error fetching EulerV2 account data for address ${eulerAddress} on market ${market.value}`, data: null };
-        }
-      }));
-    }).flat()).flat(),
     ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
       try {
         const cdpData = await _getMakerCdpData(client, network, cdpInfo);

@@ -17,6 +17,7 @@ import {
   AaveV4UsedReserveAssets,
   EthereumProvider,
   IncentiveData,
+  IncentiveSide,
   LeverageType,
   NetworkNumber,
 } from '../../types';
@@ -93,14 +94,26 @@ export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, asse
 
 /**
  * `spokeXIncentives`/`hubXIncentives` are each the intrinsic `base` list with at most one Merkl
- * reward appended (see attachAaveV4MerklIncentives). Both scopes can apply to the same position at
- * once (spoke-specific + hub-wide), so the full applicable set is base + whatever each scope appended.
+ * reward appended (see attachAaveV4MerklIncentives). Merkl regularly publishes the same reward
+ * stream at both scopes (a spoke campaign and a hub campaign covering the same borrows, e.g. USDC
+ * borrowed from the Prime Hub via the Bluechip Spoke), so the scopes must never be summed — the
+ * more specific spoke reward wins and the hub reward only applies when no spoke campaign exists,
+ * which is also what every per-asset APY badge (and Aave's own UI) shows.
  */
-const mergeScopedIncentives = (base: IncentiveData[] = [], spokeScoped?: IncentiveData[], hubScoped?: IncentiveData[]): IncentiveData[] => [
-  ...base,
-  ...(spokeScoped ? spokeScoped.slice(base.length) : []),
-  ...(hubScoped ? hubScoped.slice(base.length) : []),
-];
+const mergeScopedIncentives = (base: IncentiveData[] = [], spokeScoped?: IncentiveData[], hubScoped?: IncentiveData[]): IncentiveData[] => {
+  const spokeExtras = spokeScoped ? spokeScoped.slice(base.length) : [];
+  const hubExtras = hubScoped ? hubScoped.slice(base.length) : [];
+  return [...base, ...(spokeExtras.length ? spokeExtras : hubExtras)];
+};
+
+/**
+ * The incentives that actually accrue to a position on this reserve for the given side: the
+ * intrinsic (staking) incentives plus the single applicable Merkl reward. Display surfaces should
+ * use this rather than picking a scoped list directly, so badges always match the net APY math.
+ */
+export const getAaveV4ApplicableIncentives = (assetData: AaveV4ReserveAssetData, side: IncentiveSide): IncentiveData[] => (side === IncentiveSide.Supply
+  ? mergeScopedIncentives(assetData.supplyIncentives, assetData.spokeSupplyIncentives, assetData.hubSupplyIncentives)
+  : mergeScopedIncentives(assetData.borrowIncentives, assetData.spokeBorrowIncentives, assetData.hubBorrowIncentives));
 
 export const calculateNetApyAaveV4 = ({
   usedAssets,
@@ -123,7 +136,7 @@ export const calculateNetApyAaveV4 = ({
       const supplyInterest = calculateInterestEarned(amount, assetData.supplyRate, 'year', true);
       acc.supplyInterest = new Dec(acc.supplyInterest).add(supplyInterest.toString()).toString();
 
-      const supplyIncentives = mergeScopedIncentives(assetData.supplyIncentives, assetData.spokeSupplyIncentives, assetData.hubSupplyIncentives);
+      const supplyIncentives = getAaveV4ApplicableIncentives(assetData, IncentiveSide.Supply);
       for (const supplyIncentive of supplyIncentives) {
         const incentiveInterest = calculateInterestEarned(amount, supplyIncentive.apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
@@ -141,7 +154,7 @@ export const calculateNetApyAaveV4 = ({
       const borrowInterest = calculateInterestEarned(amount, userBorrowRate, 'year', true);
       acc.borrowInterest = new Dec(acc.borrowInterest).sub(borrowInterest.toString()).toString();
 
-      const borrowIncentives = mergeScopedIncentives(assetData.borrowIncentives, assetData.spokeBorrowIncentives, assetData.hubBorrowIncentives);
+      const borrowIncentives = getAaveV4ApplicableIncentives(assetData, IncentiveSide.Borrow);
       for (const borrowIncentive of borrowIncentives) {
         const incentiveInterest = calculateInterestEarned(amount, borrowIncentive.apy, 'year', true);
         acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();

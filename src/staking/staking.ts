@@ -8,7 +8,6 @@ import {
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { EligibilityMapping } from './eligibility';
-import { EulerV2UsedAsset } from '../types';
 
 const getSsrApy = async () => {
   try {
@@ -143,7 +142,7 @@ export const calculateNetApy = ({
 }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, optionalData?: any }) => {
   const sumValues = Object.values(usedAssets).reduce((_acc, usedAsset) => {
     const acc = { ..._acc };
-    const assetData = assetsData[usedAsset.symbol] || assetsData[(usedAsset as EulerV2UsedAsset).vaultAddress?.toLowerCase() || ''];
+    const assetData = assetsData[usedAsset.symbol];
 
     if (usedAsset.isSupplied) {
       const amount = usedAsset.suppliedUsd;

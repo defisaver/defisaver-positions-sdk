@@ -3,7 +3,6 @@ import { AaveV4AccountData, AaveV4SpokesType } from './aaveV4';
 import { EthAddress } from './common';
 import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
 import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
-import { EulerV2PositionData, EulerV2Versions } from './euler';
 import { FluidVaultData } from './fluid';
 import { LiquityTroveInfo } from './liquity';
 import { LiquityV2TroveData, LiquityV2Versions } from './liquityV2';
@@ -33,9 +32,6 @@ export interface PortfolioPositionsDataForAddress {
   };
   spark: {
     [key in SparkVersions]?: PortfolioProtocolData<SparkPositionData>;
-  };
-  eulerV2: {
-    [key in EulerV2Versions]?: Record<EthAddress, PortfolioProtocolData<EulerV2PositionData>>;
   };
   maker: {
     [key: string]: PortfolioProtocolData<CdpData>;

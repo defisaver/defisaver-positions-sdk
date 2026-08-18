@@ -59,6 +59,23 @@ describe('Aave v4', () => {
     await fetchAccountBalances(network, provider, 'latest');
   });
 
+  it('can fetch spoke data with hubs missing from the configured hubs list', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+
+    // Aave can list an asset from a hub the SDK doesn't know yet — every hub must be
+    // discoverable from the on-chain reserves alone, so an empty hint list must still work
+    const mapleSpoke = sdk.markets.AaveV4Spokes(network)[sdk.AaveV4SpokesType.AaveV4USDGMapleSpoke];
+    const spokeWithoutHubs = { ...mapleSpoke, hubs: [] };
+    const marketData = await sdk.aaveV4.getAaveV4SpokeData(provider, network, spokeWithoutHubs as sdk.AaveV4SpokeInfo);
+    const assets = Object.values(marketData.assetsData);
+    assert.isNotEmpty(assets);
+    assets.forEach((asset) => {
+      assert.isNotEmpty(asset.hubName);
+      assert.isNotEmpty(asset.hub);
+    });
+  });
+
   it('can fetch asset from reserveId', async function () {
     this.timeout(10000);
     const network = NetworkNumber.Eth;

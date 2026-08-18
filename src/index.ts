@@ -19,7 +19,6 @@ import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
 import * as morphoMidnight from './morphoMidnight';
 import * as llamaLend from './llamaLend';
-import * as eulerV2 from './eulerV2';
 import * as portfolio from './portfolio';
 import * as claiming from './claiming';
 import * as savings from './savings';
@@ -45,7 +44,6 @@ export {
   morphoBlue,
   morphoMidnight,
   llamaLend,
-  eulerV2,
   fluid,
   portfolio,
   claiming,

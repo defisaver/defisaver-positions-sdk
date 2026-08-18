@@ -135,7 +135,6 @@ export const WstETHPriceFeedContractViem = createViemContractFromConfigFunc('Wst
 export const CompV3ViewContractViem = createViemContractFromConfigFunc('CompV3View');
 export const SparkViewContractViem = createViemContractFromConfigFunc('SparkView');
 export const SparkIncentiveDataProviderContractViem = createViemContractFromConfigFunc('SparkIncentiveDataProvider');
-export const EulerV2ViewContractViem = createViemContractFromConfigFunc('EulerV2View');
 export const CrvUSDViewContractViem = createViemContractFromConfigFunc('crvUSDView');
 export const CrvUSDFactoryContractViem = createViemContractFromConfigFunc('crvUSDFactory');
 export const LlamaLendViewContractViem = createViemContractFromConfigFunc('LlamaLendView');

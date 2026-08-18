@@ -8,7 +8,6 @@ export * from './maker';
 export * from './morphoBlue';
 export * from './morphoMidnight';
 export * from './llamaLend';
-export * from './euler';
 export * from './fluid';
 export * from './portfolio';
 export * from './merit';

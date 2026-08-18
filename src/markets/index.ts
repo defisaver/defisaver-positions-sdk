@@ -22,7 +22,6 @@ export {
 } from './morphoMidnight';
 export { LlamaLendMarkets } from './llamaLend';
 export { LiquityV2Markets, findLiquityV2MarketByAddress } from './liquityV2';
-export { EulerV2Markets } from './euler';
 export {
   FluidMarkets,
   getFluidVersionsDataForNetwork,
