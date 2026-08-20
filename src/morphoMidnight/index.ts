@@ -167,15 +167,17 @@ export async function _getMorphoMidnightAccountData(provider: Client, network: N
   if (new Dec(positionInfo.debt.toString()).gt(0)) {
     try {
       const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.loanToken);
-      borrowRate = borrowInfo.borrowRate;
-      debtBase = borrowInfo.debtBase;
-      debtInterest = borrowInfo.debtInterest;
-      usedAssets[marketInfo.loanToken].borrowRate = borrowRate;
-      // Reflect the real borrow cost in netApy without mutating the shared marketInfo.assetsData.
-      assetsDataForApy = {
-        ...marketInfo.assetsData,
-        [marketInfo.loanToken]: { ...loanTokenData, borrowRate },
-      };
+      if (new Dec(borrowInfo.debtTotal).gt(0)) {
+        borrowRate = borrowInfo.borrowRate;
+        debtBase = borrowInfo.debtBase;
+        debtInterest = borrowInfo.debtInterest;
+        usedAssets[marketInfo.loanToken].borrowRate = borrowRate;
+        // Reflect the real borrow cost in netApy without mutating the shared marketInfo.assetsData.
+        assetsDataForApy = {
+          ...marketInfo.assetsData,
+          [marketInfo.loanToken]: { ...loanTokenData, borrowRate },
+        };
+      }
     } catch (err) {
       // Orderbook API unavailable — keep the on-chain-only fallback above.
     }
