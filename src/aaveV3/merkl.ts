@@ -31,7 +31,9 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
+    // status/items narrow the query because Merkl paginates at 20 items by default — an
+    // unfiltered query silently drops live campaigns once the protocol has enough opportunities
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave&status=LIVE&items=100', {
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
@@ -40,7 +42,8 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
       .filter((o: MerklOpportunity) => o.chainId === chainId)
       .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
     return relevantOpportunities.reduce((acc, opportunity) => {
-      const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
+      const rewardToken = opportunity.rewardsRecord?.breakdowns?.[0]?.token;
+      if (!rewardToken) return acc;
       const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
       if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
         const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;

@@ -19,6 +19,15 @@ import {
 import { getChainlinkAssetAddress } from '../services/priceService';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
+import { addMorphoBlueMerklOpportunitiesToMarketInfo, getMorphoBlueMerklOpportunities } from './merkl';
+
+export {
+  MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES,
+  addMorphoBlueMerklOpportunitiesToMarketInfo,
+  getMorphoBlueMerklOpportunities,
+  addMorphoBlueMerklRewardsToMarketInfo,
+} from './merkl';
+
 const HARDCODED_USD_STABLE_PRICE = '100000000'; // $1 with 8 decimals
 
 const getMorphoRewardIncentives = (apy: string) => [{
@@ -151,15 +160,21 @@ async function getMorphoBlueMarketDataInternal(
 }
 
 export async function _getMorphoBlueMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {
-  const marketInfo = await getMorphoBlueMarketDataInternal(provider, network, selectedMarket);
+  const [marketInfo, rewards, merklOpportunities] = await Promise.all([
+    getMorphoBlueMarketDataInternal(provider, network, selectedMarket),
+    getRewardsForMarket(selectedMarket.marketId, network).catch((error) => {
+      console.error(error);
+      return { supplyApy: '0', borrowApy: '0' };
+    }),
+    getMorphoBlueMerklOpportunities(),
+  ]);
 
-  try {
-    const rewards = await getRewardsForMarket(selectedMarket.marketId, network);
-    return addMorphoBlueRewardsToMarketInfo(marketInfo, rewards);
-  } catch (error) {
-    console.error(error);
-    return addMorphoBlueRewardsToMarketInfo(marketInfo, { supplyApy: '0', borrowApy: '0' });
-  }
+  return addMorphoBlueMerklOpportunitiesToMarketInfo(
+    addMorphoBlueRewardsToMarketInfo(marketInfo, rewards),
+    selectedMarket,
+    network,
+    merklOpportunities,
+  );
 }
 
 export function _getMorphoBluePortfolioMarketData(provider: Client, network: NetworkNumber, selectedMarket: MorphoBlueMarketData): Promise<MorphoBlueMarketInfo> {

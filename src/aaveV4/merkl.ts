@@ -67,7 +67,7 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
 
 export const getAaveV4MerkleCampaigns = async (chainId: NetworkNumber): Promise<AaveV4MerklRewardMap> => {
   try {
-    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave&type=AAVE_V4_HUB_SUPPLY,AAVE_V4_HUB_BORROW,AAVE_V4_SPOKE_SUPPLY,AAVE_V4_SPOKE_BORROW', {
+    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave&type=AAVE_V4_HUB_SUPPLY,AAVE_V4_HUB_BORROW,AAVE_V4_SPOKE_SUPPLY,AAVE_V4_SPOKE_BORROW&status=LIVE&items=100', {
       signal: AbortSignal.timeout(LONGER_TIMEOUT),
     });
     if (!res.ok) throw new Error('Failed to fetch Aave V4 Merkle campaigns');
