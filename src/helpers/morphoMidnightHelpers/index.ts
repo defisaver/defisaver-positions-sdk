@@ -74,6 +74,12 @@ export const getMorphoMidnightAggregatedPositionData = ({
   );
   payload.liquidationLimitUsd = payload.borrowLimitUsd;
 
+  // Same subtraction every other money market uses, but it does NOT mean the same thing here. Elsewhere
+  // `borrowedUsd` is debt at present value, so the remainder is what a borrow would pay out. Midnight
+  // records debt at its face value at maturity, so this is face-value headroom: borrowing it would add
+  // more debt than the number says, by the market's discount. Anything surfacing this as "what you can
+  // borrow" has to scale it by the loan-per-unit price first (`midnightPriceFromApy` off a book rate) —
+  // a correction that grows with the term, past 7% on a one-year market.
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
 
@@ -247,6 +253,38 @@ export const getMorphoMidnightUserBorrowInfo = async (
 
   return {
     borrowRate, debtBase, debtInterest, debtTotal,
+  };
+};
+
+/**
+ * The inverse of the split above: where `getMorphoMidnightUserBorrowInfo` reads a position's principal and
+ * interest off the indexer, this carries that same split forward through a payback, from a debt of
+ * `borrowedBefore` down to one of `borrowedAfter`. Retiring units retires principal and interest pro rata,
+ * so both scale by the same fraction.
+ *
+ * Deriving the interest as `borrowedAfter − debtBase` instead reads it off two different sources —
+ * `borrowed` is the chain's debt, `debtBase` the indexer's principal — so the entire gap between them lands
+ * in the interest whenever they disagree, which they do until the indexer catches up with a fresh borrow or
+ * payback: behind a borrow it inflates the interest by the debt the indexer has not seen yet, behind a
+ * payback it goes negative on a position that still owes. Callers detect that window as
+ * `debtBase + debtInterest !== debt`.
+ *
+ * Pro rata is also what keeps the answer sane when a payback retires debt at a different rate than the one
+ * it was opened at. Mirroring a borrow instead — principal growing by the assets received, interest by the
+ * rest — hands back a negative interest as soon as the book sells units back cheaper than they were bought.
+ */
+export const scaleMorphoMidnightDebtSplit = <T extends Pick<MorphoMidnightBorrowInfo, 'debtBase' | 'debtInterest'>>(
+  { debtBase, debtInterest }: T,
+  borrowedBefore: Dec.Value,
+  borrowedAfter: Dec.Value,
+): Pick<MorphoMidnightBorrowInfo, 'debtBase' | 'debtInterest'> => {
+  const fractionRemaining = new Dec(borrowedBefore).lte(0)
+    ? new Dec(0)
+    : Dec.max(0, new Dec(borrowedAfter)).div(borrowedBefore);
+
+  return {
+    debtBase: new Dec(debtBase).mul(fractionRemaining).toString(),
+    debtInterest: new Dec(debtInterest).mul(fractionRemaining).toString(),
   };
 };
 
