@@ -132,18 +132,35 @@ export interface MorphoMidnightAggregatedPositionData {
   exposure: string,
 }
 
+/**
+ * How much weight `borrowRate` / `debtBase` / `debtInterest` carry on a given position. They fall back to
+ * `'0'` / `debt` / `'0'`, which is indistinguishable from a real 0%-interest position, so anything
+ * displaying them has to read this to know whether it is looking at a number or at a placeholder.
+ *
+ * - `Available` — reported and reconciled against the on-chain debt (also lenders and debt-free positions,
+ *   which have nothing to report).
+ * - `Pending` — the indexer has not caught up with the chain yet: it does not know the position, or its
+ *   split describes a different debt. Refetching resolves it; `getMorphoMidnightUserBorrowInfo` failing
+ *   outright lands here too, since the next call may well succeed.
+ * - `Unavailable` — no source covers this market, so refetching changes nothing. See
+ *   `morphoMidnightMarketReportsBorrowInfo`.
+ */
+export enum MorphoMidnightBorrowInfoStatus {
+  Available = 'available',
+  Pending = 'pending',
+  Unavailable = 'unavailable',
+}
+
 // Fixed-rate/YTM (derived from entry price + orderbook) is intentionally absent in MVP:
 // MidnightView exposes no per-position rate, so a variable-MM-style APY would be misleading.
 export interface MorphoMidnightPositionData extends MorphoMidnightAggregatedPositionData {
   usedAssets: MMUsedAssets,
   credit: string, // lender credit units, face value at maturity (with interest); 0 for borrowers
   debt: string, // borrower debt, face value at maturity (with interest); 0 for lenders
-  // Borrow rate + base/interest split are orderbook-derived off-chain (from the Midnight transactions API):
-  // MidnightView only stores `debt` (= face value at maturity), so principal-vs-interest and the effective
-  // rate are computed from the fill history. Default to '0'/`debt`/'0' for lenders or when the API is unavailable.
   borrowRate: string, // weighted-average borrow APY as a percent
   debtBase: string, // base borrowed (principal), loan-token units
   debtInterest: string, // debt − debtBase (fixed interest owed at maturity), loan-token units
+  borrowInfoStatus: MorphoMidnightBorrowInfoStatus,
   maturity: number,
   isMatured: boolean,
 }

@@ -227,6 +227,10 @@ export const midnightSlippageParam = (slippagePercent: Dec.Value): string => Dec
   MIDNIGHT_SLIPPAGE_MAX,
 ).toDP(1, Dec.ROUND_DOWN).toString();
 
+export const morphoMidnightMarketReportsBorrowInfo = (market: Pick<MorphoMidnightMarketData, 'curator'> | string): boolean => (
+  !isTenorMidnightMarket(market)
+);
+
 /**
  * Current borrower rate + debt breakdown from the Midnight positions API. Reconstructing this from the raw
  * `/transactions` fill history only sums `borrow` fills, so it overstates debt for any position with an
@@ -273,8 +277,8 @@ export const getMorphoMidnightUserBorrowInfo = async (
  * it was opened at. Mirroring a borrow instead — principal growing by the assets received, interest by the
  * rest — hands back a negative interest as soon as the book sells units back cheaper than they were bought.
  */
-export const scaleMorphoMidnightDebtSplit = <T extends Pick<MorphoMidnightBorrowInfo, 'debtBase' | 'debtInterest'>>(
-  { debtBase, debtInterest }: T,
+export const scaleMorphoMidnightDebtSplit = (
+  { debtBase, debtInterest }: Pick<MorphoMidnightBorrowInfo, 'debtBase' | 'debtInterest'>,
   borrowedBefore: Dec.Value,
   borrowedAfter: Dec.Value,
 ): Pick<MorphoMidnightBorrowInfo, 'debtBase' | 'debtInterest'> => {
