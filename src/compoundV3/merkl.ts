@@ -1,6 +1,7 @@
 import { getAssetInfoByAddress } from '@defisaver/tokens';
 import { aprToApy } from '../moneymarket';
-import { compareAddresses, LONGER_TIMEOUT, wethToEth } from '../services/utils';
+import { fetchAllMerklOpportunities } from '../services/merkl';
+import { compareAddresses, wethToEth } from '../services/utils';
 import {
   CompoundV3AssetData,
   IncentiveData,
@@ -22,12 +23,10 @@ import {
  */
 export const getCompoundV3MerklOpportunities = async (): Promise<MerklOpportunity[]> => {
   try {
-    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=compound-v3&status=LIVE&items=100', {
-      signal: AbortSignal.timeout(LONGER_TIMEOUT),
+    return await fetchAllMerklOpportunities({
+      mainProtocolId: 'compound-v3',
+      status: OpportunityStatus.LIVE,
     });
-    if (!res.ok) throw new Error('Failed to fetch Compound V3 Merkl campaigns');
-    const data = await res.json();
-    return Array.isArray(data) ? data as MerklOpportunity[] : [];
   } catch (e) {
     console.error('Failed to fetch Compound V3 Merkl campaigns', e);
     return [];

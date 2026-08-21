@@ -1,5 +1,6 @@
 import { aprToApy } from '../moneymarket';
-import { LONGER_TIMEOUT, wethToEth } from '../services/utils';
+import { fetchAllMerklOpportunities } from '../services/merkl';
+import { wethToEth } from '../services/utils';
 import {
   MerkleRewardMap, MerklOpportunity, OpportunityAction, OpportunityStatus,
   EthAddress, NetworkNumber,
@@ -31,13 +32,10 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    // status/items narrow the query because Merkl paginates at 20 items by default — an
-    // unfiltered query silently drops live campaigns once the protocol has enough opportunities
-    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave&status=LIVE&items=100', {
-      signal: AbortSignal.timeout(LONGER_TIMEOUT),
+    const opportunities = await fetchAllMerklOpportunities({
+      mainProtocolId: 'aave',
+      status: OpportunityStatus.LIVE,
     });
-    if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
-    const opportunities = await res.json() as MerklOpportunity[];
     const relevantOpportunities = opportunities
       .filter((o: MerklOpportunity) => o.chainId === chainId)
       .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
@@ -74,4 +72,3 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
     return {};
   }
 };
-

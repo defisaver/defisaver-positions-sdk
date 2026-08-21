@@ -1,5 +1,5 @@
 import { aprToApy } from '../moneymarket';
-import { LONGER_TIMEOUT } from '../services/utils';
+import { fetchAllMerklOpportunities } from '../services/merkl';
 import {
   FluidMarketData,
   FluidMerklRewardMap,
@@ -61,17 +61,16 @@ export const buildFluidMerklRewardMap = (opportunities: MerklOpportunity[], chai
 
 /**
  * Fetches live vault-scoped Fluid campaigns for the chain, keyed by vault address. Never throws —
- * on any failure it returns an empty map, so Merkl being down can't break market data. The query
- * is narrowed by `type=` and capped at `items=100` because Merkl paginates at 20 items by default.
+ * on any failure it returns an empty map, so Merkl being down can't break market data.
  */
 export const getFluidMerklCampaigns = async (chainId: NetworkNumber): Promise<FluidMerklRewardMap> => {
   try {
-    const res = await fetch(`https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=fluid&type=${FLUID_MERKL_OPPORTUNITY_TYPES.join(',')}&status=LIVE&items=100`, {
-      signal: AbortSignal.timeout(LONGER_TIMEOUT),
+    const opportunities = await fetchAllMerklOpportunities({
+      mainProtocolId: 'fluid',
+      type: FLUID_MERKL_OPPORTUNITY_TYPES.join(','),
+      status: OpportunityStatus.LIVE,
     });
-    if (!res.ok) throw new Error('Failed to fetch Fluid Merkl campaigns');
-    const opportunities = await res.json();
-    return buildFluidMerklRewardMap(Array.isArray(opportunities) ? opportunities : [], chainId);
+    return buildFluidMerklRewardMap(opportunities, chainId);
   } catch (e) {
     console.error('Failed to fetch Fluid Merkl campaigns', e);
     return {};

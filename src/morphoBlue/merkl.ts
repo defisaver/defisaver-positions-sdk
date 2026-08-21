@@ -1,5 +1,5 @@
 import { aprToApy } from '../moneymarket';
-import { LONGER_TIMEOUT } from '../services/utils';
+import { fetchAllMerklOpportunities } from '../services/merkl';
 import {
   IncentiveData,
   IncentiveKind,
@@ -91,18 +91,15 @@ export const addMorphoBlueMerklOpportunitiesToMarketInfo = (
 
 /**
  * Fetches live market-scoped Morpho Blue campaigns for all chains. Never throws — on any failure
- * it returns an empty list, so Merkl being down can't break market data. The query is narrowed by
- * `type=` and capped at `items=100` because Merkl paginates at 20 items by default — an
- * unfiltered protocol query would silently drop campaigns once Morpho has enough opportunities.
+ * it returns an empty list, so Merkl being down can't break market data.
  */
 export const getMorphoBlueMerklOpportunities = async (): Promise<MerklOpportunity[]> => {
   try {
-    const res = await fetch(`https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=morpho&type=${MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES.join(',')}&status=LIVE&items=100`, {
-      signal: AbortSignal.timeout(LONGER_TIMEOUT),
+    return await fetchAllMerklOpportunities({
+      mainProtocolId: 'morpho',
+      type: MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES.join(','),
+      status: OpportunityStatus.LIVE,
     });
-    if (!res.ok) throw new Error('Failed to fetch Morpho Blue Merkl campaigns');
-    const data = await res.json();
-    return Array.isArray(data) ? data as MerklOpportunity[] : [];
   } catch (e) {
     console.error('Failed to fetch Morpho Blue Merkl campaigns', e);
     return [];
