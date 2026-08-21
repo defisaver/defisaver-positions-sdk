@@ -17,6 +17,7 @@ import * as markets from './markets';
 import * as helpers from './helpers';
 import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
+import * as morphoMidnight from './morphoMidnight';
 import * as llamaLend from './llamaLend';
 import * as portfolio from './portfolio';
 import * as claiming from './claiming';
@@ -41,6 +42,7 @@ export {
   markets,
   helpers,
   morphoBlue,
+  morphoMidnight,
   llamaLend,
   fluid,
   portfolio,
