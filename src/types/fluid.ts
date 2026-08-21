@@ -340,6 +340,8 @@ export interface FluidAggregatedVaultData {
   leftToBorrowUsd: string,
   netApy: string,
   incentiveUsd: string,
+  merklSupplyIncentives: IncentiveData[],
+  merklBorrowIncentives: IncentiveData[],
   ratio: string,
   collRatio: string,
   minRatio: string,

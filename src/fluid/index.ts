@@ -1154,6 +1154,8 @@ export const EMPTY_FLUID_DATA = {
   minRatio: '0',
   netApy: '0',
   incentiveUsd: '0',
+  merklSupplyIncentives: [],
+  merklBorrowIncentives: [],
   totalInterestUsd: '0',
   isSubscribedToAutomation: false,
   automationResubscribeRequired: false,
@@ -1809,9 +1811,13 @@ export const _getUserPositionsPortfolio = async (provider: PublicClient, network
   if (!tokens.includes('ETH')) tokens.push('ETH');
   if (!tokens.includes('WBTC')) tokens.push('WBTC');
 
-  const tokenPrices = await getTokensPricesForPortfolio(tokens, provider, network);
+  const [tokenPrices, merklCampaigns] = await Promise.all([
+    getTokensPricesForPortfolio(tokens, provider, network),
+    getFluidMerklCampaigns(network),
+  ]);
 
-  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices))));
+  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices))))
+    .map(marketData => (marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData));
 
   const userData = data[0].map((position, i) => (parsedMarketData[i] && { ...parseUserData(position, parsedMarketData[i]) }));
 

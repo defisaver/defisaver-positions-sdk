@@ -5,16 +5,56 @@ import {
   FluidAssetsData, FluidDexBorrowDataStructOutput, FluidDexSupplyDataStructOutput, FluidUsedAsset,
   FluidUsedAssets,
   FluidVaultType,
+  IncentiveData,
+  IncentiveSource,
   InnerFluidMarketData,
 } from '../../types';
 import {
   calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
-import { calculateNetApy } from '../../staking';
-import { LeverageType, MMAssetsData } from '../../types/common';
+import { calculateInterestEarned, calculateNetApy, EligibilityMapping } from '../../staking';
+import { IncentiveSide, LeverageType, MMAssetsData } from '../../types/common';
 import { getEthAmountForDecimals } from '../../services/utils';
 
-const calculateNetApyDex = ({ marketData, suppliedUsd, borrowedUsd }: { marketData: InnerFluidMarketData, suppliedUsd: string, borrowedUsd: string }) => {
+export const getUniqueFluidMerklIncentives = (assetsData: FluidAssetsData, side: IncentiveSide): IncentiveData[] => {
+  const field = side === IncentiveSide.Supply ? 'supplyIncentives' : 'borrowIncentives';
+  const incentives = Object.values(assetsData)
+    .flatMap(asset => asset[field])
+    .filter(incentive => incentive.source === IncentiveSource.Merkl);
+
+  return [...new Map(incentives.map(incentive => [
+    [incentive.eligibilityId, incentive.token, incentive.apy, incentive.description].join('|'),
+    incentive,
+  ])).values()];
+};
+
+const getMerklIncentiveInterest = (
+  incentives: IncentiveData[],
+  principal: string,
+  usedAssets: FluidUsedAssets,
+) => incentives.reduce((total, { apy, eligibilityId }) => {
+  const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
+  const { isEligible, eligibleUSDAmount } = eligibilityCheck
+    ? eligibilityCheck(usedAssets, undefined)
+    : { isEligible: true, eligibleUSDAmount: principal };
+  const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : 0;
+
+  return new Dec(total).add(incentiveInterest).toString();
+}, '0');
+
+const calculateNetApyDex = ({
+  marketData,
+  assetsData,
+  usedAssets,
+  suppliedUsd,
+  borrowedUsd,
+}: {
+  marketData: InnerFluidMarketData,
+  assetsData: FluidAssetsData,
+  usedAssets: FluidUsedAssets,
+  suppliedUsd: string,
+  borrowedUsd: string,
+}) => {
   const {
     borrowRate,
     supplyRate,
@@ -29,7 +69,21 @@ const calculateNetApyDex = ({ marketData, suppliedUsd, borrowedUsd }: { marketDa
 
   const borrowIncentive = new Dec(incentiveBorrowRate || '0').mul(borrowedUsd).div(100).toString();
   const supplyIncentive = new Dec(incentiveSupplyRate || '0').mul(suppliedUsd).div(100).toString();
-  const incentiveUsd = new Dec(supplyIncentive).minus(borrowIncentive).toString();
+  const merklSupplyIncentive = getMerklIncentiveInterest(
+    getUniqueFluidMerklIncentives(assetsData, IncentiveSide.Supply),
+    suppliedUsd,
+    usedAssets,
+  );
+  const merklBorrowIncentive = getMerklIncentiveInterest(
+    getUniqueFluidMerklIncentives(assetsData, IncentiveSide.Borrow),
+    borrowedUsd,
+    usedAssets,
+  );
+  const incentiveUsd = new Dec(supplyIncentive)
+    .minus(borrowIncentive)
+    .add(merklSupplyIncentive)
+    .add(merklBorrowIncentive)
+    .toString();
 
   const borrowInterest = new Dec(totalBorrowRate).mul(borrowedUsd).div(100).toString();
   const supplyInterest = new Dec(totalSupplyRate).mul(suppliedUsd).div(100).toString();
@@ -66,7 +120,15 @@ borrowShares?: string,
     : new Dec(marketData.debtSharePrice!).mul(borrowShares!).toString();
 
   const isDex = [FluidVaultType.T2, FluidVaultType.T3, FluidVaultType.T4].includes(marketData.vaultType);
-  const { netApy, incentiveUsd, totalInterestUsd } = isDex ? calculateNetApyDex({ marketData, suppliedUsd: payload.suppliedUsd, borrowedUsd: payload.borrowedUsd }) : calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
+  payload.merklSupplyIncentives = getUniqueFluidMerklIncentives(assetsData, IncentiveSide.Supply);
+  payload.merklBorrowIncentives = getUniqueFluidMerklIncentives(assetsData, IncentiveSide.Borrow);
+  const { netApy, incentiveUsd, totalInterestUsd } = isDex ? calculateNetApyDex({
+    marketData,
+    assetsData,
+    usedAssets,
+    suppliedUsd: payload.suppliedUsd,
+    borrowedUsd: payload.borrowedUsd,
+  }) : calculateNetApy({ usedAssets, assetsData: assetsData as unknown as MMAssetsData });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
