@@ -13,7 +13,7 @@ import {
 import { USD_QUOTE } from '../constants';
 import { calculateNetApy } from '../staking';
 import { isMainnetNetwork, wethToEth } from '../services/utils';
-import { getMorphoMidnightAggregatedPositionData, getMorphoMidnightUserBorrowInfo, morphoMidnightMarketReportsBorrowInfo } from '../helpers/morphoMidnightHelpers';
+import { getMorphoMidnightAggregatedPositionData, getMorphoMidnightUserBorrowInfo } from '../helpers/morphoMidnightHelpers';
 import { getChainlinkAssetAddress } from '../services/priceService';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 
@@ -166,34 +166,32 @@ export async function _getMorphoMidnightAccountData(provider: Client, network: N
   let borrowInfoStatus = MorphoMidnightBorrowInfoStatus.Available;
   let assetsDataForApy = marketInfo.assetsData;
   if (new Dec(positionInfo.debt.toString()).gt(0)) {
-    if (!morphoMidnightMarketReportsBorrowInfo(selectedMarket)) {
-      borrowInfoStatus = MorphoMidnightBorrowInfoStatus.Unavailable;
-    } else {
-      try {
-        const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.loanToken);
-        if (new Dec(borrowInfo.debtTotal).gt(0)) {
-          borrowRate = borrowInfo.borrowRate;
-          debtBase = borrowInfo.debtBase;
-          debtInterest = borrowInfo.debtInterest;
-          usedAssets[marketInfo.loanToken].borrowRate = borrowRate;
-          // Reflect the real borrow cost in netApy without mutating the shared marketInfo.assetsData.
-          assetsDataForApy = {
-            ...marketInfo.assetsData,
-            [marketInfo.loanToken]: { ...loanTokenData, borrowRate },
-          };
-          const describesChainDebt = new Dec(borrowInfo.debtTotal).eq(debt);
-          const ratePriced = new Dec(borrowRate).gt(0) || new Dec(debtInterest).lte(0);
-          borrowInfoStatus = describesChainDebt && ratePriced
-            ? MorphoMidnightBorrowInfoStatus.Available
-            : MorphoMidnightBorrowInfoStatus.Pending;
-        } else {
-          // No entry for the position: the API does not know it yet, rather than it having no principal.
-          borrowInfoStatus = MorphoMidnightBorrowInfoStatus.Pending;
-        }
-      } catch (err) {
-        // Positions API unreachable — the fallback above still renders, and the next call may succeed.
+    try {
+      // Curator-agnostic: `/users/:account/positions` is indexed off the Midnight singleton, so it carries
+      // Tenor-curated markets too. Only the *book* differs by curator, and that is quoted elsewhere.
+      const borrowInfo = await getMorphoMidnightUserBorrowInfo(account, marketId, marketInfo.loanToken);
+      if (new Dec(borrowInfo.debtTotal).gt(0)) {
+        borrowRate = borrowInfo.borrowRate;
+        debtBase = borrowInfo.debtBase;
+        debtInterest = borrowInfo.debtInterest;
+        usedAssets[marketInfo.loanToken].borrowRate = borrowRate;
+        // Reflect the real borrow cost in netApy without mutating the shared marketInfo.assetsData.
+        assetsDataForApy = {
+          ...marketInfo.assetsData,
+          [marketInfo.loanToken]: { ...loanTokenData, borrowRate },
+        };
+        const describesChainDebt = new Dec(borrowInfo.debtTotal).eq(debt);
+        const ratePriced = new Dec(borrowRate).gt(0) || new Dec(debtInterest).lte(0);
+        borrowInfoStatus = describesChainDebt && ratePriced
+          ? MorphoMidnightBorrowInfoStatus.Available
+          : MorphoMidnightBorrowInfoStatus.Pending;
+      } else {
+        // No entry for the position: the API does not know it yet, rather than it having no principal.
         borrowInfoStatus = MorphoMidnightBorrowInfoStatus.Pending;
       }
+    } catch (err) {
+      // Positions API unreachable — the fallback above still renders, and the next call may succeed.
+      borrowInfoStatus = MorphoMidnightBorrowInfoStatus.Pending;
     }
   }
 

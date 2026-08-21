@@ -142,13 +142,10 @@ export interface MorphoMidnightAggregatedPositionData {
  * - `Pending` — the indexer has not caught up with the chain yet: it does not know the position, or its
  *   split describes a different debt. Refetching resolves it; `getMorphoMidnightUserBorrowInfo` failing
  *   outright lands here too, since the next call may well succeed.
- * - `Unavailable` — no source covers this market, so refetching changes nothing. See
- *   `morphoMidnightMarketReportsBorrowInfo`.
  */
 export enum MorphoMidnightBorrowInfoStatus {
   Available = 'available',
   Pending = 'pending',
-  Unavailable = 'unavailable',
 }
 
 // Fixed-rate/YTM (derived from entry price + orderbook) is intentionally absent in MVP:
