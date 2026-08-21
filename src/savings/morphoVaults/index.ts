@@ -1,9 +1,9 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
-import { request as graphqlRequest } from 'graphql-request';
 import { assetAmountInEth } from '@defisaver/tokens';
 import * as morphoVaultsOptions from './options';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../../types/common';
+import { LONGER_TIMEOUT } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
 import { getMorphoVaultContractViem } from '../../contracts';
 import { MorphoVault, SavingsVaultData } from '../../types';
@@ -30,6 +30,22 @@ const vaultDataQuery = `
 
 const MORPHO_BLUE_API = 'https://api.morpho.org/graphql';
 
+const fetchVaultData = async (address: EthAddress, chainId: NetworkNumber) => {
+  const res = await fetch(MORPHO_BLUE_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: vaultDataQuery,
+      variables: { address, chainId },
+    }),
+    signal: AbortSignal.timeout(LONGER_TIMEOUT),
+  });
+  if (!res.ok) throw new Error(`Morpho vault request failed: ${res.status}`);
+  const body = await res.json();
+  if (!body?.data) throw new Error('Morpho vault response missing data');
+  return body.data;
+};
+
 export const _getMorphoVaultData = async (provider: Client, network: NetworkNumber, morphoVault: MorphoVault, accounts: EthAddress[]): Promise<SavingsVaultData> => {
   const morphoVaultContract = getMorphoVaultContractViem(provider, morphoVault.address);
 
@@ -40,7 +56,7 @@ export const _getMorphoVaultData = async (provider: Client, network: NetworkNumb
     morphoVaultContract.read.totalSupply(),
     morphoVaultContract.read.decimals(),
     morphoVaultContract.read.DECIMALS_OFFSET(),
-    graphqlRequest(MORPHO_BLUE_API, vaultDataQuery, { address: morphoVault.address, chainId: network }),
+    fetchVaultData(morphoVault.address, network),
     ...accounts.map(async (account) => {
       const share = await morphoVaultContract.read.balanceOf([account]);
       shares[account] = share;

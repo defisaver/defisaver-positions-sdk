@@ -1,4 +1,4 @@
-import { getContract, Client } from 'viem';
+import { getContract, Client, GetContractReturnType } from 'viem';
 import * as configRaw from './config/contracts';
 import {
   Blockish, EthAddress, HexString, NetworkNumber,
@@ -57,7 +57,7 @@ export const getConfigContractAbi = <TKey extends ConfigKey>(name: TKey, network
   return latestAbi as unknown as typeof configRaw[TKey]['abi'];
 };
 
-export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: HexString) => (client: Client, network: NetworkNumber, block?: Blockish) => {
+export const createViemContractFromConfigFunc = <TKey extends ConfigKey>(name: TKey, _address?: HexString) => (client: Client, network: NetworkNumber, block?: Blockish): GetContractReturnType<typeof configRaw[TKey]['abi'], Client, HexString> => {
   const address = (_address || getConfigContractAddress(name, network, block));
   const abi = getConfigContractAbi(name, network, block) as typeof configRaw[TKey]['abi'];
   return getContract({
