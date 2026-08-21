@@ -22,7 +22,7 @@ import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { addMorphoBlueMerklOpportunitiesToMarketInfo, getMorphoBlueMerklOpportunities } from './merkl';
 
 export {
-  MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES,
+  MorphoBlueMerklOpportunityType,
   addMorphoBlueMerklOpportunitiesToMarketInfo,
   getMorphoBlueMerklOpportunities,
   addMorphoBlueMerklRewardsToMarketInfo,

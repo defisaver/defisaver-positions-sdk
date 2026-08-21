@@ -69,7 +69,7 @@ import { getViemProvider } from '../services/viem';
 import { attachFluidMerklIncentives, getFluidMerklCampaigns } from './merkl';
 
 export {
-  FLUID_MERKL_OPPORTUNITY_TYPES,
+  FluidMerklOpportunityType,
   buildFluidMerklRewardMap,
   getFluidMerklCampaigns,
   attachFluidMerklIncentives,

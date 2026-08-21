@@ -23,7 +23,11 @@ import {
  * identifier (e.g. `0x54cf…c46WHITELIST_CAMPAIGN`); their rewards only accrue to whitelisted
  * addresses, so they are skipped rather than advertised to every user.
  */
-export const MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES = ['MORPHOSUPPLY', 'MORPHOCOLLATERAL', 'MORPHOBORROW'] as const;
+export enum MorphoBlueMerklOpportunityType {
+  Supply = 'MORPHOSUPPLY',
+  Collateral = 'MORPHOCOLLATERAL',
+  Borrow = 'MORPHOBORROW',
+}
 
 const MERKL_DESCRIPTION_MARKER = 'through Merkl';
 
@@ -61,16 +65,16 @@ export const addMorphoBlueMerklOpportunitiesToMarketInfo = (
 
   const relevant = opportunities.filter((o) => o.chainId === chainId
     && o.status === OpportunityStatus.LIVE
-    && (MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES as readonly string[]).includes(o.type)
+    && Object.values(MorphoBlueMerklOpportunityType).includes(o.type as MorphoBlueMerklOpportunityType)
     // a suffixed identifier marks a whitelist-gated campaign — skip those
     && o.identifier?.length === MARKET_ID_PREFIX_LENGTH
     && o.identifier.toLowerCase() === marketIdPrefix);
   if (!relevant.length) return marketInfo;
 
-  const incentivesByType = (type: string) => relevant.filter((o) => o.type === type).map(buildMerklIncentive);
-  const collateralSupply = incentivesByType('MORPHOCOLLATERAL');
-  const loanSupply = incentivesByType('MORPHOSUPPLY');
-  const loanBorrow = incentivesByType('MORPHOBORROW');
+  const incentivesByType = (type: MorphoBlueMerklOpportunityType) => relevant.filter((o) => o.type === type).map(buildMerklIncentive);
+  const collateralSupply = incentivesByType(MorphoBlueMerklOpportunityType.Collateral);
+  const loanSupply = incentivesByType(MorphoBlueMerklOpportunityType.Supply);
+  const loanBorrow = incentivesByType(MorphoBlueMerklOpportunityType.Borrow);
 
   return {
     ...marketInfo,
@@ -97,7 +101,7 @@ export const getMorphoBlueMerklOpportunities = async (): Promise<MerklOpportunit
   try {
     return await fetchAllMerklOpportunities({
       mainProtocolId: 'morpho',
-      type: MORPHO_BLUE_MERKL_OPPORTUNITY_TYPES.join(','),
+      type: Object.values(MorphoBlueMerklOpportunityType).join(','),
       status: OpportunityStatus.LIVE,
     });
   } catch (e) {

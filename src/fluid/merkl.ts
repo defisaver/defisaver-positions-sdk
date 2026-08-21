@@ -25,7 +25,10 @@ import {
  * ids apply unconditionally, mirroring Aave V3. Whitelist-gated campaigns only accrue to
  * whitelisted addresses, so they are skipped rather than advertised to every user.
  */
-export const FLUID_MERKL_OPPORTUNITY_TYPES = ['FLUIDVAULT_COLLATERAL', 'FLUIDVAULT_BORROW'] as const;
+export enum FluidMerklOpportunityType {
+  Collateral = 'FLUIDVAULT_COLLATERAL',
+  Borrow = 'FLUIDVAULT_BORROW',
+}
 
 // '0x' + 20-byte vault address; conditional campaigns append a marker after it
 const VAULT_ADDRESS_LENGTH = 42;
@@ -47,13 +50,13 @@ export const buildFluidMerklRewardMap = (opportunities: MerklOpportunity[], chai
   opportunities
     .filter((o) => o.chainId === chainId)
     .filter((o) => o.status === OpportunityStatus.LIVE)
-    .filter((o) => (FLUID_MERKL_OPPORTUNITY_TYPES as readonly string[]).includes(o.type))
+    .filter((o) => Object.values(FluidMerklOpportunityType).includes(o.type as FluidMerklOpportunityType))
     .filter((o) => !o.identifier?.includes('WHITELIST'))
     .forEach((o) => {
       const vaultAddress = o.identifier?.slice(0, VAULT_ADDRESS_LENGTH).toLowerCase();
       if (!vaultAddress || vaultAddress.length !== VAULT_ADDRESS_LENGTH) return;
       if (!result[vaultAddress]) result[vaultAddress] = { supply: [], borrow: [] };
-      result[vaultAddress][o.type === 'FLUIDVAULT_BORROW' ? 'borrow' : 'supply'].push(buildMerklIncentive(o));
+      result[vaultAddress][o.type === FluidMerklOpportunityType.Borrow ? 'borrow' : 'supply'].push(buildMerklIncentive(o));
     });
 
   return result;
@@ -67,7 +70,7 @@ export const getFluidMerklCampaigns = async (chainId: NetworkNumber): Promise<Fl
   try {
     const opportunities = await fetchAllMerklOpportunities({
       mainProtocolId: 'fluid',
-      type: FLUID_MERKL_OPPORTUNITY_TYPES.join(','),
+      type: Object.values(FluidMerklOpportunityType).join(','),
       status: OpportunityStatus.LIVE,
     });
     return buildFluidMerklRewardMap(opportunities, chainId);
