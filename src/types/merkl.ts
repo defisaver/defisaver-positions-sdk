@@ -73,6 +73,12 @@ export type MerkleRewardMap = Record<EthAddress, { supply?: MerkleRewardInfo; bo
 export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: IncentiveData };
 
 /**
+ * Fluid vault-scoped Merkl campaigns keyed by lowercase vault address — `supply` rewards apply to
+ * the vault's collateral side, `borrow` rewards to its debt side.
+ */
+export type FluidMerklRewardMap = Record<string, { supply: IncentiveData[], borrow: IncentiveData[] }>;
+
+/**
  * Aave V4 Merkl reward campaigns split by scope:
  *   - `hub`: keyed by `${hubAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing via a hub
  *   - `spoke`: keyed by `${spokeAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing on a spoke

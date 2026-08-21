@@ -66,6 +66,14 @@ import {
 } from '../services/priceService';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getViemProvider } from '../services/viem';
+import { attachFluidMerklIncentives, getFluidMerklCampaigns } from './merkl';
+
+export {
+  FluidMerklOpportunityType,
+  buildFluidMerklRewardMap,
+  getFluidMerklCampaigns,
+  attachFluidMerklIncentives,
+} from './merkl';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -1442,9 +1450,13 @@ const parseUserData = (userPositionData: FluidUserPositionStructOutputStruct, va
 export const _getFluidMarketData = async (provider: PublicClient, network: NetworkNumber, market: FluidMarketInfo) => {
   const view = FluidViewContractViem(provider, network);
 
-  const data = await view.read.getVaultData([market.marketAddress]);
+  const [data, merklCampaigns] = await Promise.all([
+    view.read.getVaultData([market.marketAddress]),
+    getFluidMerklCampaigns(network),
+  ]);
 
-  return parseMarketData(provider, data, network);
+  const marketData = await parseMarketData(provider, data, network);
+  return marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData;
 };
 
 export const getFluidMarketData = async (
@@ -1500,11 +1512,15 @@ export const getFluidPosition = async (
 
 export const _getFluidPositionWithMarket = async (provider: PublicClient, network: NetworkNumber, vaultId: string) => {
   const view = FluidViewContractViem(provider, network);
-  const data = await view.read.getPositionByNftId([BigInt(vaultId)]);
-  const marketData = await parseMarketData(provider, data[1], network);
-  if (!marketData) {
+  const [data, merklCampaigns] = await Promise.all([
+    view.read.getPositionByNftId([BigInt(vaultId)]),
+    getFluidMerklCampaigns(network),
+  ]);
+  const parsedMarketData = await parseMarketData(provider, data[1], network);
+  if (!parsedMarketData) {
     return;
   }
+  const marketData = attachFluidMerklIncentives(parsedMarketData, merklCampaigns);
   const userData = parseUserData(data[0], marketData);
 
   return {
@@ -1522,8 +1538,14 @@ export const getFluidPositionWithMarket = async (
 export const _getAllFluidMarketDataChunked = async (network: NetworkNumber, provider: PublicClient) => {
   const versions = getFluidVersionsDataForNetwork(network);
   const view = FluidViewContractViem(provider, network);
-  const data = await Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress])));
-  return Promise.all(data.map(async (item, i) => parseMarketData(provider, item, network)));
+  const [data, merklCampaigns] = await Promise.all([
+    Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress]))),
+    getFluidMerklCampaigns(network),
+  ]);
+  return Promise.all(data.map(async (item) => {
+    const marketData = await parseMarketData(provider, item, network);
+    return marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData;
+  }));
 };
 
 export const getAllFluidMarketDataChunked = async (
