@@ -12,7 +12,7 @@ import {
 import {
   calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
-import { calculateInterestEarned, calculateNetApy, EligibilityMapping } from '../../staking';
+import { calculateInterestEarned, calculateNetApy, getIncentiveEligibility } from '../../staking';
 import { IncentiveSide, LeverageType, MMAssetsData } from '../../types/common';
 import { getEthAmountForDecimals } from '../../services/utils';
 
@@ -33,10 +33,11 @@ const getMerklIncentiveInterest = (
   principal: string,
   usedAssets: FluidUsedAssets,
 ) => incentives.reduce((total, { apy, eligibilityId }) => {
-  const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
-  const { isEligible, eligibleUSDAmount } = eligibilityCheck
-    ? eligibilityCheck(usedAssets, undefined)
-    : { isEligible: true, eligibleUSDAmount: principal };
+  const { isEligible, eligibleUSDAmount } = getIncentiveEligibility({
+    incentive: { eligibilityId },
+    usedAssets,
+    defaultEligibleUSDAmount: principal,
+  });
   const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : 0;
 
   return new Dec(total).add(incentiveInterest).toString();

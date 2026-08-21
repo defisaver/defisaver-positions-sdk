@@ -1,5 +1,5 @@
 import Dec from 'decimal.js';
-import { IncentiveEligibilityId, MMUsedAssets } from '../types/common';
+import { IncentiveData, IncentiveEligibilityId, MMUsedAssets } from '../types/common';
 
 type EthenaPairEligibilityConfig = {
   baseSymbol: string;
@@ -113,4 +113,31 @@ export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets:
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasma]: isEligibleForEthenaUSDeRewards,
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasmaGHO]: isEligibleForEthenaGHORewards,
   [IncentiveEligibilityId.CompoundV3PufEthWethBorrow]: isEligibleForCompoundV3PufEthWethBorrow,
+};
+
+export type IncentiveEligibilityResult = {
+  isEligible: boolean;
+  eligibleUSDAmount: string;
+};
+
+/**
+ * Resolves an incentive's position-specific eligibility and rewarded USD principal. Incentives
+ * without a curated eligibility rule apply to the full side amount supplied by the caller.
+ */
+export const getIncentiveEligibility = ({
+  incentive,
+  usedAssets,
+  defaultEligibleUSDAmount,
+  optionalData,
+}: {
+  incentive: Pick<IncentiveData, 'eligibilityId'>;
+  usedAssets: MMUsedAssets;
+  defaultEligibleUSDAmount: string;
+  optionalData?: any;
+}): IncentiveEligibilityResult => {
+  const eligibilityCheck = incentive.eligibilityId ? EligibilityMapping[incentive.eligibilityId] : null;
+
+  return eligibilityCheck
+    ? eligibilityCheck(usedAssets, optionalData)
+    : { isEligible: true, eligibleUSDAmount: defaultEligibleUSDAmount };
 };
