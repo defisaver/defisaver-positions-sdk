@@ -36,6 +36,11 @@ export {
   MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
 } from './rate';
 export {
+  getMorphoMidnightBorrowHeadroom,
+  MIDNIGHT_MIN_HEALTH_RATIO,
+} from './headroom';
+export type { MidnightBorrowHeadroom, MidnightBorrowHeadroomParams } from './headroom';
+export {
   tenorBookKeyFor,
   tenorBookRateToApyPercent,
   tenorOfferFillToApiFill,
@@ -77,9 +82,12 @@ export const getMorphoMidnightAggregatedPositionData = ({
   // Same subtraction every other money market uses, but it does NOT mean the same thing here. Elsewhere
   // `borrowedUsd` is debt at present value, so the remainder is what a borrow would pay out. Midnight
   // records debt at its face value at maturity, so this is face-value headroom: borrowing it would add
-  // more debt than the number says, by the market's discount. Anything surfacing this as "what you can
-  // borrow" has to scale it by the loan-per-unit price first (`midnightPriceFromApy` off a book rate) —
-  // a correction that grows with the term, past 7% on a one-year market.
+  // more debt than the number says, by the market's discount. It also reserves no safety margin, and this
+  // aggregate is synchronous so it has no book rate to discount by.
+  //
+  // DO NOT SURFACE THIS AS "what you can borrow" — use `getMorphoMidnightBorrowHeadroom` instead, which
+  // applies both corrections (the margin, and the loan-per-unit price off a book rate) and caps on the
+  // depth the book can fill. The discount alone grows past 7% on a one-year market.
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
 
