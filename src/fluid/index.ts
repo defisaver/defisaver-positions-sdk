@@ -66,6 +66,14 @@ import {
 } from '../services/priceService';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import { getViemProvider } from '../services/viem';
+import { attachFluidMerklIncentives, getFluidMerklCampaigns } from './merkl';
+
+export {
+  FluidMerklOpportunityType,
+  buildFluidMerklRewardMap,
+  getFluidMerklCampaigns,
+  attachFluidMerklIncentives,
+} from './merkl';
 
 export const EMPTY_USED_ASSET = {
   isSupplied: false,
@@ -1146,6 +1154,8 @@ export const EMPTY_FLUID_DATA = {
   minRatio: '0',
   netApy: '0',
   incentiveUsd: '0',
+  merklSupplyIncentives: [],
+  merklBorrowIncentives: [],
   totalInterestUsd: '0',
   isSubscribedToAutomation: false,
   automationResubscribeRequired: false,
@@ -1442,9 +1452,13 @@ const parseUserData = (userPositionData: FluidUserPositionStructOutputStruct, va
 export const _getFluidMarketData = async (provider: PublicClient, network: NetworkNumber, market: FluidMarketInfo) => {
   const view = FluidViewContractViem(provider, network);
 
-  const data = await view.read.getVaultData([market.marketAddress]);
+  const [data, merklCampaigns] = await Promise.all([
+    view.read.getVaultData([market.marketAddress]),
+    getFluidMerklCampaigns(network),
+  ]);
 
-  return parseMarketData(provider, data, network);
+  const marketData = await parseMarketData(provider, data, network);
+  return marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData;
 };
 
 export const getFluidMarketData = async (
@@ -1500,11 +1514,15 @@ export const getFluidPosition = async (
 
 export const _getFluidPositionWithMarket = async (provider: PublicClient, network: NetworkNumber, vaultId: string) => {
   const view = FluidViewContractViem(provider, network);
-  const data = await view.read.getPositionByNftId([BigInt(vaultId)]);
-  const marketData = await parseMarketData(provider, data[1], network);
-  if (!marketData) {
+  const [data, merklCampaigns] = await Promise.all([
+    view.read.getPositionByNftId([BigInt(vaultId)]),
+    getFluidMerklCampaigns(network),
+  ]);
+  const parsedMarketData = await parseMarketData(provider, data[1], network);
+  if (!parsedMarketData) {
     return;
   }
+  const marketData = attachFluidMerklIncentives(parsedMarketData, merklCampaigns);
   const userData = parseUserData(data[0], marketData);
 
   return {
@@ -1522,8 +1540,14 @@ export const getFluidPositionWithMarket = async (
 export const _getAllFluidMarketDataChunked = async (network: NetworkNumber, provider: PublicClient) => {
   const versions = getFluidVersionsDataForNetwork(network);
   const view = FluidViewContractViem(provider, network);
-  const data = await Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress])));
-  return Promise.all(data.map(async (item, i) => parseMarketData(provider, item, network)));
+  const [data, merklCampaigns] = await Promise.all([
+    Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress]))),
+    getFluidMerklCampaigns(network),
+  ]);
+  return Promise.all(data.map(async (item) => {
+    const marketData = await parseMarketData(provider, item, network);
+    return marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData;
+  }));
 };
 
 export const getAllFluidMarketDataChunked = async (
@@ -1787,9 +1811,13 @@ export const _getUserPositionsPortfolio = async (provider: PublicClient, network
   if (!tokens.includes('ETH')) tokens.push('ETH');
   if (!tokens.includes('WBTC')) tokens.push('WBTC');
 
-  const tokenPrices = await getTokensPricesForPortfolio(tokens, provider, network);
+  const [tokenPrices, merklCampaigns] = await Promise.all([
+    getTokensPricesForPortfolio(tokens, provider, network),
+    getFluidMerklCampaigns(network),
+  ]);
 
-  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices))));
+  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices))))
+    .map(marketData => (marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData));
 
   const userData = data[0].map((position, i) => (parsedMarketData[i] && { ...parseUserData(position, parsedMarketData[i]) }));
 

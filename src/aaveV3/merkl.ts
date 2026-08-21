@@ -1,5 +1,6 @@
 import { aprToApy } from '../moneymarket';
-import { LONGER_TIMEOUT, wethToEth } from '../services/utils';
+import { fetchAllMerklOpportunities } from '../services/merkl';
+import { wethToEth } from '../services/utils';
 import {
   MerkleRewardMap, MerklOpportunity, OpportunityAction, OpportunityStatus,
   EthAddress, NetworkNumber,
@@ -31,16 +32,16 @@ export const formatAaveAsset = (_symbol: string) => {
 
 export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<MerkleRewardMap> => {
   try {
-    const res = await fetch('https://fe.defisaver.com/api/merkl/opportunities?mainProtocolId=aave', {
-      signal: AbortSignal.timeout(LONGER_TIMEOUT),
+    const opportunities = await fetchAllMerklOpportunities({
+      mainProtocolId: 'aave',
+      status: OpportunityStatus.LIVE,
     });
-    if (!res.ok) throw new Error('Failed to fetch Merkle campaigns');
-    const opportunities = await res.json() as MerklOpportunity[];
     const relevantOpportunities = opportunities
       .filter((o: MerklOpportunity) => o.chainId === chainId)
       .filter((o: MerklOpportunity) => o.status === OpportunityStatus.LIVE);
     return relevantOpportunities.reduce((acc, opportunity) => {
-      const rewardToken = opportunity.rewardsRecord.breakdowns[0].token;
+      const rewardToken = opportunity.rewardsRecord?.breakdowns?.[0]?.token;
+      if (!rewardToken) return acc;
       const description = `Eligible for ${formatAaveAsset(rewardToken.symbol)} rewards through Merkl. ${opportunity.description ? `\n${opportunity.description}` : ''}`;
       if (opportunity.action === OpportunityAction.LEND && opportunity.explorerAddress) {
         const supplyAToken = opportunity.explorerAddress?.toLowerCase() as EthAddress;
@@ -71,4 +72,3 @@ export const getMerkleCampaigns = async (chainId: NetworkNumber): Promise<Merkle
     return {};
   }
 };
-

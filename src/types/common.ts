@@ -8,12 +8,17 @@ export enum IncentiveSide {
   Borrow = 'borrow',
 }
 
+export enum IncentiveSource {
+  Merkl = 'merkl',
+}
+
 export enum IncentiveEligibilityId {
   AaveV3EthenaLiquidLeverage = '0x0dC599DBB180E64E42b87332FDeC3a551445ea44BORROW_BL',
   AaveV3ArbitrumEthSupply = '0x5d16261c6715a653248269861bbacf68a9774cde',
   AaveV3ArbitrumETHLSBorrow = '0x0c84331e39d6658Cd6e6b9ba04736cC4c4734351',
   AaveV3EthenaLiquidLeveragePlasma = '0x2E8f1FA9c73F9d975B46BDFe40C92b6dDEFA3f31BORROW_BL',
   AaveV3EthenaLiquidLeveragePlasmaGHO = '2b2f6fefcd3df634',
+  CompoundV3PufEthWethBorrow = 'e6e49b79e83041f9',
 }
 
 export enum LeverageType {
@@ -28,6 +33,7 @@ export interface IncentiveData {
   token: string,
   apy: string,
   incentiveKind?: IncentiveKind;
+  source?: IncentiveSource;
   description?: string;
   eligibilityId?: IncentiveEligibilityId;
 }

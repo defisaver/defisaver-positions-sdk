@@ -52,16 +52,19 @@ export const getLiquityV2AggregatedPositionData = ({
   assetsData,
   minCollRatio,
   interestRate,
+  liqRatio,
 }: {
   usedAssets: LiquityV2UsedAssets
   assetsData: LiquityV2AssetsData
   minCollRatio: string
   interestRate: string
+  liqRatio?: string // liquidation threshold (MCR), when different from minCollRatio (MCR + BCR for troves in a batch)
 }): LiquityV2AggregatedTroveData => {
   const payload = {} as LiquityV2AggregatedTroveData;
   payload.suppliedUsd = getAssetsTotal(usedAssets, (usedAsset: LiquityV2UsedAsset) => usedAsset, ({ suppliedUsd }: { suppliedUsd: string }) => suppliedUsd);
   payload.borrowedUsd = getAssetsTotal(usedAssets, (usedAsset: LiquityV2UsedAsset) => usedAsset, ({ borrowedUsd }: { borrowedUsd: string }) => borrowedUsd);
   payload.borrowLimitUsd = new Dec(payload.suppliedUsd).div(minCollRatio).mul(100).toString();
+  payload.liquidationLimitUsd = new Dec(payload.suppliedUsd).div(liqRatio ?? minCollRatio).mul(100).toString();
   const leftToBorrowUsd = new Dec(payload.borrowLimitUsd).sub(payload.borrowedUsd);
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = (+payload.suppliedUsd && +payload.borrowedUsd) ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
@@ -77,7 +80,7 @@ export const getLiquityV2AggregatedPositionData = ({
   payload.liquidationPrice = '';
   if (leveragedType !== '') {
     const assetPrice = assetsData[leveragedAsset].price;
-    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.borrowLimitUsd);
+    payload.liquidationPrice = calcLeverageLiqPrice(leveragedType, assetPrice, payload.borrowedUsd, payload.liquidationLimitUsd);
   }
   payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
 

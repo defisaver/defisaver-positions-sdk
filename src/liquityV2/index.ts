@@ -425,7 +425,7 @@ export const _getLiquityV2TroveData = async (
   const lastInterestRateAdjTime = data.lastInterestRateAdjTime.toString();
 
   const hasInterestBatchManager = !compareAddresses(interestBatchManager, ZERO_ADDRESS);
-  const liqRatio = hasInterestBatchManager ? new Dec(minCollRatio).add(batchCollRatio).toString() : minCollRatio;
+  const borrowLimitRatio = hasInterestBatchManager ? new Dec(minCollRatio).add(batchCollRatio).toString() : minCollRatio;
 
   const payload: LiquityV2TroveData = {
     usedAssets,
@@ -434,10 +434,11 @@ export const _getLiquityV2TroveData = async (
     interestBatchManager,
     debtInFront,
     lastInterestRateAdjTime,
-    liqRatio,
+    liqRatio: minCollRatio,
+    borrowLimitRatio,
     troveStatus: LIQUITY_V2_TROVE_STATUS_ENUM[parseInt(data.status.toString(), 10)],
     ...getLiquityV2AggregatedPositionData({
-      usedAssets, assetsData, minCollRatio: liqRatio, interestRate,
+      usedAssets, assetsData, minCollRatio: borrowLimitRatio, interestRate, liqRatio: minCollRatio,
     }),
     collRatio,
   };

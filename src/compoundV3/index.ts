@@ -24,6 +24,9 @@ import {
   getEthPrice, getCompPrice, getUSDCPrice, getWstETHPrice,
 } from '../services/priceService';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { attachCompoundV3MerklIncentives, getCompoundV3MerklOpportunities } from './merkl';
+
+export { getCompoundV3MerklOpportunities, attachCompoundV3MerklIncentives } from './merkl';
 
 const getSupportedAssetsAddressesForMarket = (selectedMarket: CompoundMarketData, network: NetworkNumber) => selectedMarket.collAssets.map(asset => getAssetInfo(ethToWeth(asset), network)).map(addr => addr.address.toLowerCase());
 
@@ -41,12 +44,13 @@ const getBaseAssetPriceFunction = (asset: string) => {
 export const _getCompoundV3MarketsData = async (provider: Client, network: NetworkNumber, selectedMarket: CompoundMarketData, defaultProvider: Client): Promise<CompoundV3MarketsData> => {
   const contract = CompV3ViewContractViem(provider, network);
 
-  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos, govInfo] = await Promise.all([
+  const [baseAssetPrice, compPrice, baseTokenInfo, collInfos, govInfo, merklOpportunities] = await Promise.all([
     getBaseAssetPriceFunction(selectedMarket.baseAsset)(defaultProvider),
     getCompPrice(defaultProvider),
     contract.read.getFullBaseTokenInfo([selectedMarket.baseMarketAddress]),
     contract.read.getFullCollInfos([selectedMarket.baseMarketAddress]),
     contract.read.getGovernanceInfoFull([selectedMarket.baseMarketAddress]),
+    getCompoundV3MerklOpportunities(),
   ]);
 
   const { isSupplyPaused, isWithdrawPaused } = govInfo;
@@ -72,6 +76,7 @@ export const _getCompoundV3MarketsData = async (provider: Client, network: Netwo
   const payload: CompoundV3AssetsData = {};
 
   const baseObj = { ...base, ...(await getIncentiveApys(base, compPrice)) };
+  attachCompoundV3MerklIncentives(baseObj, colls, selectedMarket.baseMarketAddress, network, merklOpportunities);
   const allAssets = [baseObj, ...colls];
 
   allAssets

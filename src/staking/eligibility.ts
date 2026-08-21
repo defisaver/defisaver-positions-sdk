@@ -97,10 +97,20 @@ export const isEligibleForAaveV3ArbitrumETHLSBorrow = (usedAssets: MMUsedAssets)
   return { isEligible: true, eligibleUSDAmount: ETHAmountBorrowed };
 };
 
+// "Borrow WETH with pufETH collateral" — rewards are calculated as min(collateral * 80% LTV, borrow amount)
+export const isEligibleForCompoundV3PufEthWethBorrow = (usedAssets: MMUsedAssets) => {
+  const collateralUsd = usedAssets.pufETH?.suppliedUsd || '0';
+  const borrowedUsd = usedAssets.ETH?.borrowedUsd || '0';
+  const eligibleUSDAmount = Dec.min(new Dec(collateralUsd).mul('0.8'), borrowedUsd).toString();
+
+  return { isEligible: new Dec(eligibleUSDAmount).gt(0), eligibleUSDAmount };
+};
+
 export const EligibilityMapping: { [key in IncentiveEligibilityId]: (usedAssets: MMUsedAssets, optionalData: any) => { isEligible: boolean; eligibleUSDAmount: string } } = {
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeverage]: isEligibleForEthenaUSDeRewards,
   [IncentiveEligibilityId.AaveV3ArbitrumEthSupply]: isEligibleForAaveV3ArbitrumEthSupply,
   [IncentiveEligibilityId.AaveV3ArbitrumETHLSBorrow]: isEligibleForAaveV3ArbitrumETHLSBorrow,
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasma]: isEligibleForEthenaUSDeRewards,
   [IncentiveEligibilityId.AaveV3EthenaLiquidLeveragePlasmaGHO]: isEligibleForEthenaGHORewards,
+  [IncentiveEligibilityId.CompoundV3PufEthWethBorrow]: isEligibleForCompoundV3PufEthWethBorrow,
 };

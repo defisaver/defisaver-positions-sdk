@@ -44,7 +44,7 @@ import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
 import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getUmbrellaData } from '../umbrella';
-import { getMeritUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
+import { getMerklUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
 import { getCompoundV3Rewards } from '../claiming/compV3';
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { getKingRewards } from '../claiming/king';
@@ -151,7 +151,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     };
 
     rewardsData[address.toLowerCase() as EthAddress] = {
-      aaveV3merit: {},
+      merkl: {},
       aaveV3: {},
       compV3: {},
       spark: {},
@@ -364,11 +364,11 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...addresses.map(async (address) => {
       try {
-        const aaveMeritData = await getMeritUnclaimedRewards(address, network);
-        rewardsData[address.toLowerCase() as EthAddress].aaveV3merit = { error: '', data: aaveMeritData };
+        const merklData = await getMerklUnclaimedRewards(address, network);
+        rewardsData[address.toLowerCase() as EthAddress].merkl = { error: '', data: merklData };
       } catch (error) {
-        console.error(`Error fetching Aave V3 Merit rewards data for address ${address}:`, error);
-        rewardsData[address.toLowerCase() as EthAddress].aaveV3merit = { error: `Error fetching Aave V3 Merit rewards data for address ${address}`, data: null };
+        console.error(`Error fetching Merkl rewards data for address ${address}:`, error);
+        rewardsData[address.toLowerCase() as EthAddress].merkl = { error: `Error fetching Merkl rewards data for address ${address}`, data: null };
       }
     }),
     ...aaveV3Markets.map(market => addresses.map(async (address) => {
