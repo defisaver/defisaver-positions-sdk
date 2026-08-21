@@ -1,7 +1,7 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
 import { EthAddress, NetworkNumber } from '../types';
-import { ClaimableToken, ClaimType } from '../types/claiming';
+import { ClaimableToken, ClaimType, MerklRewardsClaimableToken } from '../types/claiming';
 import {
   AaveIncentiveDataProviderV3ContractViem,
   AaveRewardsControllerViem,
@@ -103,18 +103,18 @@ export async function getUnclaimedRewardsForAllMarkets(
   return mapAaveRewardsToClaimableTokens(Object.values(totalUnclaimedPerRewardToken), marketAddress, walletAddress);
 }
 
-export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
+export async function getMerklUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<MerklRewardsClaimableToken[]> {
   let data;
   try {
     const res = await fetch(`https://fe.defisaver.com/api/merkl/get-user-rewards/${account}?chainId=${network}`,
       { signal: AbortSignal.timeout(LONGER_TIMEOUT) });
     data = await res.json();
   } catch (error) {
-    console.error('External API Failure: Aave Merit', error);
+    console.error('External API Failure: Merkl rewards', error);
     data = [];
   }
 
-  const claimableTokens: ClaimableToken[] = [];
+  const claimableTokens: MerklRewardsClaimableToken[] = [];
 
   // Merkl (or our proxy, on a non-2xx) can return a non-array error body; `fetch` doesn't throw on
   // HTTP errors, so guard before iterating. Mirrors the app-side getMeritUnclaimedRewards.
@@ -137,12 +137,12 @@ export async function getMeritUnclaimedRewards(account: EthAddress, network: Net
       const unclaimed = getEthAmountForDecimals(unclaimedAmount, token.decimals);
 
       claimableTokens.push({
-        claimType: ClaimType.AAVE_MERIT_REWARDS,
+        claimType: ClaimType.MERKL_REWARDS,
         amount: unclaimed,
         symbol: token.symbol,
         tokenAddress: token.address,
         walletAddress: account,
-        label: 'AAVE Merit Rewards',
+        label: 'Merkl Rewards',
         underlyingSymbol: getAaveUnderlyingSymbol(token.symbol),
         additionalClaimFields: {
           accumulated: amount,
@@ -155,4 +155,16 @@ export async function getMeritUnclaimedRewards(account: EthAddress, network: Net
   });
 
   return claimableTokens;
+}
+
+export async function getMeritUnclaimedRewards(account: EthAddress, network: NetworkNumber): Promise<ClaimableToken[]> {
+  const rewards = await getMerklUnclaimedRewards(account, network);
+
+  return rewards
+    .filter(reward => reward.symbol.startsWith('a'))
+    .map(reward => ({
+      ...reward,
+      claimType: ClaimType.AAVE_MERIT_REWARDS,
+      label: 'AAVE Merit Rewards',
+    }));
 }

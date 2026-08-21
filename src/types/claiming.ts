@@ -5,6 +5,8 @@ export enum ClaimType {
   AAVE_REWARDS = 'AAVE_REWARDS',
   /** Merit rewards from AAVE (various tokens) */
   AAVE_MERIT_REWARDS = 'AAVE_MERIT_REWARDS',
+  /** Rewards distributed through Merkl across supported protocols */
+  MERKL_REWARDS = 'MERKL_REWARDS',
   /** Rewards from Compound V3 (only in COMP) */
   COMPOUND_V3_COMP = 'COMPOUND_V3_COMP',
   /** Rewards from Spark (wstETH only for now) */
@@ -39,6 +41,16 @@ export type AaveRewardsClaimableToken = _ClaimableTokenPartial & {
 };
 export type AaveMeritRewardsClaimableToken = _ClaimableTokenPartial & {
   claimType: ClaimType.AAVE_MERIT_REWARDS;
+  additionalClaimFields: {
+    accumulated: string;
+    proof: string[];
+    decimals: string;
+    unclaimed: string;
+  };
+};
+
+export type MerklRewardsClaimableToken = _ClaimableTokenPartial & {
+  claimType: ClaimType.MERKL_REWARDS;
   additionalClaimFields: {
     accumulated: string;
     proof: string[];
@@ -102,6 +114,7 @@ export type UniswapAirdropClaimableToken = _ClaimableTokenPartial & {
 export type ClaimableToken =
     AaveRewardsClaimableToken
     | AaveMeritRewardsClaimableToken
+    | MerklRewardsClaimableToken
     | CompoundV3CompClaimableToken
     | SparkRewardsClaimableToken
     | KingRewardsClaimableToken

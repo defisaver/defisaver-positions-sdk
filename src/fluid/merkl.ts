@@ -1,3 +1,4 @@
+import memoize from 'memoizee';
 import { aprToApy } from '../moneymarket';
 import { fetchAllMerklOpportunities } from '../services/merkl';
 import {
@@ -6,6 +7,7 @@ import {
   IncentiveData,
   IncentiveEligibilityId,
   IncentiveKind,
+  IncentiveSource,
   MerklOpportunity,
   NetworkNumber,
   OpportunityStatus,
@@ -39,6 +41,7 @@ const buildMerklIncentive = (opportunity: MerklOpportunity): IncentiveData => {
     apy: aprToApy(opportunity.apr),
     token,
     incentiveKind: IncentiveKind.Reward,
+    source: IncentiveSource.Merkl,
     description: `Eligible for ${token} rewards through Merkl.${opportunity.description ? `\n${opportunity.description}` : ''}`,
     eligibilityId: opportunity.identifier as IncentiveEligibilityId,
   };
@@ -66,7 +69,7 @@ export const buildFluidMerklRewardMap = (opportunities: MerklOpportunity[], chai
  * Fetches live vault-scoped Fluid campaigns for the chain, keyed by vault address. Never throws —
  * on any failure it returns an empty map, so Merkl being down can't break market data.
  */
-export const getFluidMerklCampaigns = async (chainId: NetworkNumber): Promise<FluidMerklRewardMap> => {
+export const getFluidMerklCampaigns = memoize(async (chainId: NetworkNumber): Promise<FluidMerklRewardMap> => {
   try {
     const opportunities = await fetchAllMerklOpportunities({
       mainProtocolId: 'fluid',
@@ -78,7 +81,7 @@ export const getFluidMerklCampaigns = async (chainId: NetworkNumber): Promise<Fl
     console.error('Failed to fetch Fluid Merkl campaigns', e);
     return {};
   }
-};
+}, { promise: true, maxAge: 60 * 1000 });
 
 /**
  * Appends the vault's Merkl campaigns to its assets' incentive arrays — supply rewards on every
