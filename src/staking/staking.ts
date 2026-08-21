@@ -7,7 +7,7 @@ import {
 } from '../types/common';
 import { BLOCKS_IN_A_YEAR } from '../constants';
 import { DEFAULT_TIMEOUT } from '../services/utils';
-import { EligibilityMapping } from './eligibility';
+import { getIncentiveEligibility } from './eligibility';
 
 const getSsrApy = async () => {
   try {
@@ -153,16 +153,15 @@ export const calculateNetApy = ({
 
       if (assetData.supplyIncentives) {
         for (const supplyIncentive of assetData.supplyIncentives) {
-          const { apy, eligibilityId } = supplyIncentive;
-          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
-          if (eligibilityCheck) {
-            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
-            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          } else {
-            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          }
+          const { apy } = supplyIncentive;
+          const { isEligible, eligibleUSDAmount } = getIncentiveEligibility({
+            incentive: supplyIncentive,
+            usedAssets,
+            defaultEligibleUSDAmount: amount,
+            optionalData,
+          });
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         }
       }
     }
@@ -176,16 +175,15 @@ export const calculateNetApy = ({
 
       if (assetData.borrowIncentives) {
         for (const borrowIncentive of assetData.borrowIncentives) {
-          const { apy, eligibilityId } = borrowIncentive;
-          const eligibilityCheck = eligibilityId ? EligibilityMapping[eligibilityId] : null;
-          if (eligibilityCheck) {
-            const { isEligible, eligibleUSDAmount } = eligibilityCheck(usedAssets, optionalData);
-            const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          } else {
-            const incentiveInterest = calculateInterestEarned(amount, apy, 'year', true);
-            acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
-          }
+          const { apy } = borrowIncentive;
+          const { isEligible, eligibleUSDAmount } = getIncentiveEligibility({
+            incentive: borrowIncentive,
+            usedAssets,
+            defaultEligibleUSDAmount: amount,
+            optionalData,
+          });
+          const incentiveInterest = isEligible ? calculateInterestEarned(eligibleUSDAmount, apy, 'year', true) : '0';
+          acc.incentiveUsd = new Dec(acc.incentiveUsd).add(incentiveInterest).toString();
         }
       }
     }

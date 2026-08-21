@@ -1689,9 +1689,13 @@ export const getAllUserEarnPositionsWithFTokens = async (
 export const _getUserPositions = async (provider: PublicClient, network: NetworkNumber, user: EthAddress) => {
   const view = FluidViewContractViem(provider, network);
 
-  const data = await view.read.getUserPositions([user]);
+  const [data, merklCampaigns] = await Promise.all([
+    view.read.getUserPositions([user]),
+    getFluidMerklCampaigns(network),
+  ]);
 
-  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network))));
+  const parsedMarketData = (await Promise.all(data[1].map(async (vaultData) => parseMarketData(provider, vaultData, network))))
+    .map(marketData => (marketData ? attachFluidMerklIncentives(marketData, merklCampaigns) : marketData));
 
   const userData = data[0].map((position, i) => (parsedMarketData[i] && { ...parseUserData(position, parsedMarketData[i]) }));
 
