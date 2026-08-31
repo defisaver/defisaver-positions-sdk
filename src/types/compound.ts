@@ -32,6 +32,7 @@ export interface CompoundMarketData {
   chainIds: NetworkNumber[],
   label: string,
   shortLabel: string,
+  url: string,
   value: CompoundVersions,
   baseAsset: string,
   collAssets: readonly string[],
