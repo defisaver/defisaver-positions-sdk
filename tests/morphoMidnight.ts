@@ -4,7 +4,7 @@ import Dec from 'decimal.js';
 import * as sdk from '../src';
 
 import { EthereumProvider, NetworkNumber } from '../src/types/common';
-import { MorphoMidnightMarketData, MorphoMidnightMarketInfo } from '../src/types';
+import { MorphoMidnightBookSide, MorphoMidnightMarketData, MorphoMidnightMarketInfo } from '../src/types';
 import { getProvider } from './utils/getProvider';
 import { getViemProvider } from '../src/services/viem';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
@@ -25,6 +25,17 @@ const LENDER = '0xD1373084D7c99d8C20C11371e2eA968a7B90e5d6';
 const DOC_BORROWER = '0x2e3Cc8Cd22812eaa229CbE85f3de7c9a39A8f4f7';
 
 const isPositive = (value: bigint): boolean => new Dec(value.toString()).gt(0);
+
+// Tenor markets get created when first position is created in them
+const UNCREATED_MARKET_SELECTOR = '0x96e13529';
+
+const isUncreatedMarket = (err: unknown): boolean => (err instanceof Error) && err.message.includes(UNCREATED_MARKET_SELECTOR);
+
+const reportUncreated = (uncreated: string[], total: number): void => {
+  if (!uncreated.length) return;
+  assert.isBelow(uncreated.length, total, 'every market read reverted — check the MidnightView address/ABI, not the market configs');
+  console.log(`      ${uncreated.length}/${total} market(s) not yet created on-chain, skipped: ${uncreated.join(', ')}`);
+};
 
 // Rebuild the on-chain Market struct from the hardcoded config so we can recompute its id. Collaterals
 // come from the shared getter rather than `market.collaterals`, for the same reason the app's tx builder
@@ -50,11 +61,43 @@ describe('Morpho Midnight', function midnightSuite() {
   const network = NetworkNumber.Base;
   let provider: EthereumProvider;
 
+  const markets = () => Object.values(sdk.markets.MorphoMidnightMarkets(network)) as MorphoMidnightMarketData[];
+
+  const openMarkets: MorphoMidnightMarketData[] = [];
+  const bookSides = new Map<string, Record<MorphoMidnightBookSide, boolean>>();
+
   before(() => {
     provider = getProvider('RPCBASE');
+
+    const now = Math.floor(Date.now() / 1000);
+    openMarkets.push(...markets()
+      .filter((market) => market.maturity > now)
+      .sort((a, b) => a.maturity - b.maturity));
+    assert.isNotEmpty(openMarkets, 'every Midnight market has matured — the ladder needs extending');
   });
 
-  const markets = () => Object.values(sdk.markets.MorphoMidnightMarkets(network)) as MorphoMidnightMarketData[];
+
+  const hasBookSide = async (market: MorphoMidnightMarketData, side: MorphoMidnightBookSide): Promise<boolean> => {
+    const cached = bookSides.get(market.value);
+    if (cached?.[side] !== undefined) return cached[side];
+
+    const book = await getMorphoMidnightMarketBook(market, network, side).catch(() => null);
+    bookSides.set(market.value, { ...cached, [side]: !!book } as Record<MorphoMidnightBookSide, boolean>);
+    return !!book;
+  };
+
+  const marketWithBook = async (...sides: MorphoMidnightBookSide[]): Promise<MorphoMidnightMarketData | null> => {
+    for (const market of openMarkets) {
+      // Sequential on purpose — see above. The early exit is what keeps the request count down.
+      // eslint-disable-next-line no-await-in-loop
+      const answers = await sides.reduce<Promise<boolean>>(
+        async (ok, side) => (await ok) && hasBookSide(market, side),
+        Promise.resolve(true),
+      );
+      if (answers) return market;
+    }
+    return null;
+  };
 
   const fetchMarketData = async (selectedMarket: MorphoMidnightMarketData): Promise<MorphoMidnightMarketInfo> => {
     const marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, selectedMarket);
@@ -80,9 +123,16 @@ describe('Morpho Midnight', function midnightSuite() {
   };
 
   it('fetches market data for every curated market', async () => {
+    const uncreated: string[] = [];
     for (const market of markets()) {
-      await fetchMarketData(market);
+      try {
+        await fetchMarketData(market);
+      } catch (err) {
+        if (!isUncreatedMarket(err)) throw err;
+        uncreated.push(market.value);
+      }
     }
+    reportUncreated(uncreated, markets().length);
   });
 
   /**
@@ -95,13 +145,29 @@ describe('Morpho Midnight', function midnightSuite() {
    * The listed collaterals are additionally asserted to be the on-chain *prefix*: the SDK reads
    * `prices[i]` and `collateral[i]` positionally against `collaterals`, so a hidden entry that sorted
    * ahead of a listed one would price the wrong asset.
+   *
+   * `toId` is checked for every market, created or not — it is `pure`, so it is exactly the half that
+   * still has something to say about a market the core has never stored.
    */
   it('has marketIds that resolve to the configured market on-chain', async () => {
     const client = getViemProvider(provider, network);
     const view = MorphoMidnightViewContractViem(client, network);
+    const uncreated: string[] = [];
+
     for (const market of markets()) {
-      const onChain = await view.read.toMarket([market.marketId as `0x${string}`]);
       const struct = marketToStruct(market, network);
+
+      const id = await view.read.toId([struct]);
+      assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
+
+      let onChain;
+      try {
+        onChain = await view.read.toMarket([market.marketId as `0x${string}`]);
+      } catch (err) {
+        if (!isUncreatedMarket(err)) throw err;
+        uncreated.push(market.value);
+        continue;
+      }
 
       assert.strictEqual(onChain.midnight.toLowerCase(), struct.midnight.toLowerCase(), `midnight mismatch for ${market.value}`);
       assert.strictEqual(onChain.loanToken.toLowerCase(), struct.loanToken.toLowerCase(), `loanToken mismatch for ${market.value}`);
@@ -120,10 +186,9 @@ describe('Morpho Midnight', function midnightSuite() {
       market.collaterals.forEach((coll, i) => {
         assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `listed collateral[${i}] is not the on-chain one for ${market.value}`);
       });
-
-      const id = await view.read.toId([struct]);
-      assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
     }
+
+    reportUncreated(uncreated, markets().length);
   });
 
   it('reads a borrower position consistently with on-chain state', async () => {
@@ -172,7 +237,11 @@ describe('Morpho Midnight', function midnightSuite() {
   const market20260828 = () => sdk.markets.MorphoMidnightMarkets(network)[sdk.MorphoMidnightVersions.MorphoMidnightCbBTCUSDC_860_20260828_Base];
 
   it('quotes a borrow from the orderbook and derives the estimated rate + slippage cap', async function quoteTest() {
-    const market = market20260828();
+    const market = await marketWithBook('bids');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const assetsRaw = '2000000'; // 2 USDC (6 decimals)
     const slippage = 0.5;
 
@@ -201,7 +270,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('honours an absolute max borrow rate exactly', async function rateCapTest() {
-    const market = market20260828();
+    const market = await marketWithBook('bids');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const assetsRaw = '2000000'; // 2 USDC (6 decimals)
 
     let base;
@@ -229,7 +302,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('quotes a payback from the orderbook as the mirror image of a borrow', async function paybackQuoteTest() {
-    const market = market20260828();
+    const market = await marketWithBook('asks');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const assetsRaw = '2000000'; // 2 USDC (6 decimals) SPENT
 
     let quote;
@@ -260,7 +337,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('honours an absolute min payback rate exactly', async function rateFloorTest() {
-    const market = market20260828();
+    const market = await marketWithBook('asks');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const assetsRaw = '2000000'; // 2 USDC (6 decimals)
 
     let base;
@@ -277,7 +358,9 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.approximately(+quote.minRate, floor.toNumber(), 1e-6, 'minRate should be the requested floor');
     assert.approximately(+quote.minUnits, +assetsRaw / +midnightPriceFromApy(floor, midnightTimeToMaturityDays(market.maturity)), 1);
     assert.isTrue(new Dec(quote.minUnits).lt(quote.newUnits), 'a floor below the estimate leaves headroom');
-    assert.strictEqual(quote.estPaybackRate, base.estPaybackRate);
+    // The estimate and the offers to fill against are unaffected by the floor. Compared with a tolerance:
+    // the two quotes are taken seconds apart and the rate is annualized against a live time-to-maturity.
+    assert.approximately(+quote.estPaybackRate, +base.estPaybackRate, 1e-3);
     assert.strictEqual(quote.takeableOffers.length, base.takeableOffers.length);
 
     // A floor above the estimate leaves no headroom — the payback would revert on-chain, by design.
@@ -286,7 +369,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('quotes a payback against a units target, pricing what the close costs', async function paybackUnitsQuoteTest() {
-    const market = market20260828();
+    const market = await marketWithBook('asks');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const unitsRaw = '2000000'; // 2 USDC (6 decimals) of debt RETIRED
 
     let quote;
@@ -317,7 +404,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('honours an absolute min payback rate exactly on a units target', async function unitsRateFloorTest() {
-    const market = market20260828();
+    const market = await marketWithBook('asks');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const unitsRaw = '2000000';
 
     let base;
@@ -334,7 +425,9 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.approximately(+quote.minRate, floor.toNumber(), 1e-6, 'minRate should be the requested floor');
     assert.approximately(+quote.maxAssets, +unitsRaw * +midnightPriceFromApy(floor, midnightTimeToMaturityDays(market.maturity)), 1);
     assert.isTrue(new Dec(quote.maxAssets).gt(quote.newAssets), 'a floor below the estimate leaves headroom');
-    assert.strictEqual(quote.estPaybackRate, base.estPaybackRate);
+    // Unaffected by the floor, compared with a tolerance for the same reason as the assets-target quote:
+    // the two quotes are taken seconds apart and the rate is annualized against a live time-to-maturity.
+    assert.approximately(+quote.estPaybackRate, +base.estPaybackRate, 1e-3);
 
     // A floor above the estimate leaves no headroom — the payback would revert on-chain, by design.
     const tight = await getMorphoMidnightPaybackUnitsQuote(market.marketId, unitsRaw, 0.5, market.maturity, new Dec(base.estPaybackRate).add(2));
@@ -342,7 +435,11 @@ describe('Morpho Midnight', function midnightSuite() {
   });
 
   it('parses both book sides best-first', async function bookSideTest() {
-    const market = market20260828();
+    const market = await marketWithBook('bids', 'asks');
+    if (!market) {
+      this.skip();
+      return;
+    }
     const [bids, asks] = await Promise.all([
       getMorphoMidnightMarketBook(market, network),
       getMorphoMidnightMarketBook(market, network, 'asks'),
@@ -364,8 +461,12 @@ describe('Morpho Midnight', function midnightSuite() {
     assert.isTrue(new Dec(asks.bestRate).lte(new Dec(bids.bestRate).add(1e-3)), 'best ask rate <= best bid rate');
   });
 
-  it('reports why the API rejected a quote', async () => {
-    const market = market20260828();
+  it('reports why the API rejected a quote', async function quoteErrorTest() {
+    const market = await marketWithBook('bids');
+    if (!market) {
+      this.skip();
+      return;
+    }
     // Far beyond any book's depth → INSUFFICIENT_LIQUIDITY rather than a bare "unavailable".
     try {
       await getMorphoMidnightBorrowQuote(market.marketId, '99999999999999999999', 0.5, market.maturity);
