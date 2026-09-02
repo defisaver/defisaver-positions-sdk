@@ -19,6 +19,7 @@ import {
   cUSDCv3,
   cETHv3,
   cUSDTv3,
+  ciUSDCv3,
 // eslint-disable-next-line import/extensions
 } from '../../esm/config/contracts.js';
 
@@ -146,6 +147,7 @@ const compound = {
         [cETHv3.networks[1].address.toLowerCase()]: 'v3ETHCollAssetsEth',
         [cUSDCv3.networks[1].address.toLowerCase()]: 'v3USDCCollAssetsEth',
         [cUSDTv3.networks[1].address.toLowerCase()]: 'v3USDTCollAssetsEth',
+        [ciUSDCv3.networks[1].address.toLowerCase()]: 'v3InstitutionalUSDCCollAssetsEth',
       },
       10: {
         [cUSDCv3.networks[10].address.toLowerCase()]: 'v3USDCCollAssetsOpt',
