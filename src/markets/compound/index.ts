@@ -16,6 +16,7 @@ import {
   v3USDSCollAssets,
   v3USDTCollAssets,
   v3wstETHCollAssets,
+  v3InstitutionalUSDCCollAssets,
 } from './marketsAssets';
 
 export {
@@ -41,6 +42,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDT]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: STANDARD_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: STANDARD_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: STANDARD_BULKER_OPTIONS,
 
     // Non-existing markets, keeping it because of typescript
     [CompoundVersions.CompoundV2]: EMPTY_BULKER_OPTIONS,
@@ -58,6 +60,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDbC]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Base]: {
     [CompoundVersions.CompoundV3ETH]: STANDARD_BULKER_OPTIONS,
@@ -70,6 +73,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDT]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Opt]: {
     [CompoundVersions.CompoundV3USDC]: STANDARD_BULKER_OPTIONS,
@@ -81,6 +85,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Linea]: {
     // Non-existing markets, keeping it because of typescript
@@ -92,6 +97,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: EMPTY_BULKER_OPTIONS,
   },
   [NetworkNumber.Plasma]: {
     // Non-existing markets, keeping it because of typescript
@@ -103,6 +109,7 @@ const BULKER_OPTIONS: Record<NetworkNumber, Record<CompoundVersions, CompoundBul
     [CompoundVersions.CompoundV3USDCe]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3wstETH]: EMPTY_BULKER_OPTIONS,
     [CompoundVersions.CompoundV3USDS]: EMPTY_BULKER_OPTIONS,
+    [CompoundVersions.CompoundV3InstitutionalUSDC]: EMPTY_BULKER_OPTIONS,
   },
 };
 
@@ -240,6 +247,22 @@ export const COMPOUND_V3_USDS = (networkId: NetworkNumber): CompoundMarketData =
   bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3USDS],
 });
 
+export const COMPOUND_V3_INSTITUTIONAL_USDC = (networkId: NetworkNumber): CompoundMarketData => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'Compound V3 - Institutional USDC',
+  shortLabel: CompoundVersionType.V3,
+  url: 'ciusdcv3',
+  value: CompoundVersions.CompoundV3InstitutionalUSDC,
+  baseAsset: 'USDC',
+  collAssets: networkId ? v3InstitutionalUSDCCollAssets[networkId] : [],
+  baseMarket: 'ciUSDCv3',
+  baseMarketAddress: getConfigContractAddress('ciUSDCv3', networkId),
+  secondLabel: 'Market',
+  bulkerName: networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2',
+  bulkerAddress: getConfigContractAddress(networkId === NetworkNumber.Eth ? 'CompV3BulkerMainnetETH' : 'CompV3BulkerL2', networkId),
+  bulkerOptions: BULKER_OPTIONS[networkId][CompoundVersions.CompoundV3InstitutionalUSDC],
+});
+
 export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV2]: COMPOUND_V2,
   [CompoundVersions.CompoundV3ETH]: COMPOUND_V3_ETH(networkId),
@@ -249,4 +272,5 @@ export const CompoundMarkets = (networkId: NetworkNumber) => ({
   [CompoundVersions.CompoundV3USDT]: COMPOUND_V3_USDT(networkId),
   [CompoundVersions.CompoundV3wstETH]: COMPOUND_V3_WSTETH(networkId),
   [CompoundVersions.CompoundV3USDS]: COMPOUND_V3_USDS(networkId),
+  [CompoundVersions.CompoundV3InstitutionalUSDC]: COMPOUND_V3_INSTITUTIONAL_USDC(networkId),
 }) as const;

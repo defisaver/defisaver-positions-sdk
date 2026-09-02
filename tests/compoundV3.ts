@@ -260,4 +260,15 @@ describe('Compound v3', () => {
     const marketData = await fetchMarketData(network, providerBase, selectedMarket);
     await fetchAccountData(network, providerBase, marketData, selectedMarket);
   });
+
+  it('can fetch market and account data for Institutional USDC Market on Ethereum', async function () {
+    this.timeout(10000);
+    const network = NetworkNumber.Eth;
+    const selectedMarket = sdk.markets.CompoundMarkets(network)[sdk.CompoundVersions.CompoundV3InstitutionalUSDC];
+
+    const marketData = await fetchMarketData(network, provider, selectedMarket);
+    assert.hasAllKeys(marketData.assetsData, ['USDC', 'ETH', 'wstETH', 'cbBTC', 'WBTC']);
+
+    await fetchAccountData(network, provider, marketData, selectedMarket);
+  });
 });

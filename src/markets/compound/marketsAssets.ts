@@ -96,3 +96,14 @@ export const v3wstETHCollAssets = {
   [NetworkNumber.Linea]: [],
   [NetworkNumber.Plasma]: [],
 };
+
+export const v3InstitutionalUSDCCollAssetsEth = ['ETH', 'wstETH', 'cbBTC', 'WBTC'];
+
+export const v3InstitutionalUSDCCollAssets = {
+  [NetworkNumber.Eth]: v3InstitutionalUSDCCollAssetsEth,
+  [NetworkNumber.Opt]: [],
+  [NetworkNumber.Arb]: [],
+  [NetworkNumber.Base]: [],
+  [NetworkNumber.Linea]: [],
+  [NetworkNumber.Plasma]: [],
+};
