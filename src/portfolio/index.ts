@@ -12,7 +12,7 @@ import {
   SparkMarkets,
 } from '../markets';
 import { _getMorphoBlueAccountData, _getMorphoBluePortfolioMarketData, getMorphoEarn } from '../morphoBlue';
-import { _getMorphoMidnightAccountData, _getMorphoMidnightMarketData, getMorphoMidnightEarn } from '../morphoMidnight';
+import { _getMorphoMidnightAccountData, _getMorphoMidnightMarketData } from '../morphoMidnight';
 import {
   AaveV2MarketData,
   AaveV3MarketData,
@@ -137,7 +137,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     stakingPositions[address.toLowerCase() as EthAddress] = {
       aaveV3: {},
       morphoBlue: {},
-      morphoMidnight: {},
       compoundV3: {},
       spark: {},
       aaveV2: {},
@@ -487,31 +486,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
       try {
-        const [accDataPromise, earnDataPromise] = await Promise.allSettled([
-          _getMorphoMidnightAccountData(client, network, address, market, morphoMidnightMarketsData[market.value]),
-          getMorphoMidnightEarn(client, network, address, market, morphoMidnightMarketsData[market.value]),
-        ]);
-        if (accDataPromise.status === 'rejected') {
-          console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, accDataPromise.reason);
-          positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
-        }
-        if (earnDataPromise.status === 'rejected') {
-          console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, earnDataPromise.reason);
-          positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
-        }
-        if (accDataPromise.status !== 'rejected') {
-          const accData = accDataPromise.value;
-          if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
-        }
-        if (earnDataPromise.status !== 'rejected') {
-          const earnData = earnDataPromise.value;
-          if (earnData && new Dec(earnData.amount).gt(0)) {
-            stakingPositions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = {
-              error: '',
-              data: earnData,
-            };
-          }
-        }
+        const accData = await _getMorphoMidnightAccountData(client, network, address, market, morphoMidnightMarketsData[market.value]);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
