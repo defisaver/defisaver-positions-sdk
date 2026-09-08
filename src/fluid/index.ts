@@ -1830,3 +1830,43 @@ export const _getUserPositionsPortfolio = async (provider: PublicClient, network
     userData: userData[i],
   })).filter(md => md.marketData !== undefined);
 };
+
+
+export const _getAllFluidMarketDataPortfolio = async (provider: PublicClient, network: NetworkNumber): Promise<Record<string, FluidMarketData>> => {
+  const versions = getFluidVersionsDataForNetwork(network);
+  if (versions.length === 0) return {};
+
+  const view = FluidViewContractViem(provider, network);
+  const vaultsData = await Promise.all(versions.map((version) => view.read.getVaultData([version.marketAddress])));
+
+  const tokens = Array.from(new Set(vaultsData.map((vaultData) => {
+    const vaultTokens = [getAssetInfoByAddress(vaultData.supplyToken0, network).symbol, getAssetInfoByAddress(vaultData.borrowToken0, network).symbol];
+    if (vaultData.supplyToken1 && !compareAddresses(ZERO_ADDRESS, vaultData.supplyToken1)) vaultTokens.push(getAssetInfoByAddress(vaultData.supplyToken1, network).symbol);
+    if (vaultData.borrowToken1 && !compareAddresses(ZERO_ADDRESS, vaultData.borrowToken1)) vaultTokens.push(getAssetInfoByAddress(vaultData.borrowToken1, network).symbol);
+    return vaultTokens;
+  }).flat()));
+
+  // ETH and WBTC needed for other tokens prices
+  if (!tokens.includes('ETH')) tokens.push('ETH');
+  if (!tokens.includes('WBTC')) tokens.push('WBTC');
+
+  const [tokenPrices, merklCampaigns] = await Promise.all([
+    getTokensPricesForPortfolio(tokens, provider, network),
+    getFluidMerklCampaigns(network),
+  ]);
+
+  const parsedMarketsData = await Promise.all(vaultsData.map(async (vaultData) => parseMarketData(provider, vaultData, network, tokenPrices)));
+
+  const marketsData: Record<string, FluidMarketData> = {};
+  parsedMarketsData.forEach((marketData, i) => {
+    if (!marketData) return;
+    marketsData[versions[i].value] = attachFluidMerklIncentives(marketData, merklCampaigns);
+  });
+
+  return marketsData;
+};
+
+export const getAllFluidMarketDataPortfolio = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+): Promise<Record<string, FluidMarketData>> => _getAllFluidMarketDataPortfolio(getViemProvider(provider, network, { batch: { multicall: true } }), network);
