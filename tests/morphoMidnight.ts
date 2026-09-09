@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import Dec from 'decimal.js';
+import { getAssetInfoByAddress } from '@defisaver/tokens';
 
 import * as sdk from '../src';
 
@@ -7,6 +8,7 @@ import { EthereumProvider, NetworkNumber } from '../src/types/common';
 import { MorphoMidnightBookSide, MorphoMidnightMarketData, MorphoMidnightMarketInfo } from '../src/types';
 import { getProvider } from './utils/getProvider';
 import { getViemProvider } from '../src/services/viem';
+import { wethToEth } from '../src/services/utils';
 import { MorphoMidnightViewContractViem } from '../src/contracts';
 import {
   getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook, getMorphoMidnightPaybackQuote,
@@ -61,7 +63,11 @@ describe('Morpho Midnight', function midnightSuite() {
   const network = NetworkNumber.Base;
   let provider: EthereumProvider;
 
-  const markets = () => Object.values(sdk.markets.MorphoMidnightMarkets(network)) as MorphoMidnightMarketData[];
+  // `MorphoMidnightMarkets` keys every market on every chain, so the network filter is the caller's job —
+  // without it this suite would read Ethereum's markets off Base's core and hash their ids with Base's
+  // chain id.
+  const markets = () => (Object.values(sdk.markets.MorphoMidnightMarkets(network)) as MorphoMidnightMarketData[])
+    .filter((market) => market.chainIds.includes(network));
 
   const openMarkets: MorphoMidnightMarketData[] = [];
   const bookSides = new Map<string, Record<MorphoMidnightBookSide, boolean>>();
@@ -139,12 +145,11 @@ describe('Morpho Midnight', function midnightSuite() {
    * Every configured market must describe the market its `marketId` actually resolves to on-chain, and
    * hash back to it. The `toId` half is the one that matters for writes: a struct missing a collateral is
    * still a perfectly valid market to the core, so a call built from it lands in a market of its own
-   * making instead of reverting. Tenor's markets carry a collateral the app never surfaces (the curator's
-   * ERC-4626 vault) — `hiddenCollaterals` keeps it out of the UI without dropping it from the hash.
-   *
-   * The listed collaterals are additionally asserted to be the on-chain *prefix*: the SDK reads
-   * `prices[i]` and `collateral[i]` positionally against `collaterals`, so a hidden entry that sorted
-   * ahead of a listed one would price the wrong asset.
+   * making instead of reverting. Curated markets carry a collateral the app never surfaces (Tenor's
+   * ERC-4626 vault) — the `hidden` flag keeps it out of the UI without dropping it from the hash or
+   * moving it out of the chain's own order, which is what `prices[i]` and `collateral[i]` are read
+   * against. Hence the collateral assertion below runs over the whole ordered set, hidden ones included:
+   * one entry out of place prices every collateral after it off the wrong oracle.
    *
    * `toId` is checked for every market, created or not — it is `pure`, so it is exactly the half that
    * still has something to say about a market the core has never stored.
@@ -183,9 +188,10 @@ describe('Morpho Midnight', function midnightSuite() {
         assert.strictEqual(onChain.collateralParams[i].liquidationCursor, coll.liquidationCursor, `collateral[${i}] cursor mismatch for ${market.value}`);
         assert.strictEqual(onChain.collateralParams[i].oracle.toLowerCase(), coll.oracle.toLowerCase(), `collateral[${i}] oracle mismatch for ${market.value}`);
       });
-      market.collaterals.forEach((coll, i) => {
-        assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `listed collateral[${i}] is not the on-chain one for ${market.value}`);
-      });
+      assert.isNotEmpty(
+        sdk.markets.morphoMidnightVisibleCollaterals(market),
+        `${market.value} hides every collateral, leaving nothing to supply`,
+      );
     }
 
     reportUncreated(uncreated, markets().length);
@@ -503,6 +509,107 @@ describe('Morpho Midnight', function midnightSuite() {
       assert.strictEqual(accData.debtInterest, info.debtInterest);
       assert.strictEqual(accData.usedAssets.USDC.borrowRate, info.borrowRate);
     }
+  });
+});
+
+/**
+ * Ethereum's markets
+ */
+describe('Morpho Midnight (Ethereum)', function midnightEthSuite() {
+  this.timeout(60000);
+  const network = NetworkNumber.Eth;
+  let provider: EthereumProvider;
+
+  before(() => { provider = getProvider('RPC'); });
+
+  const ethMarkets = () => (Object.values(sdk.markets.MorphoMidnightMarkets(network)) as MorphoMidnightMarketData[])
+    .filter((market) => market.chainIds.includes(network));
+
+  it('has marketIds that resolve to the configured market on-chain', async () => {
+    const view = MorphoMidnightViewContractViem(getViemProvider(provider, network), network);
+    assert.isNotEmpty(ethMarkets(), 'no Ethereum markets configured');
+    const uncreated: string[] = [];
+
+    for (const market of ethMarkets()) {
+      const struct = marketToStruct(market, network);
+      const id = await view.read.toId([struct]);
+      assert.strictEqual(id.toLowerCase(), market.marketId.toLowerCase(), `toId mismatch for ${market.value}`);
+
+      let onChain;
+      try {
+        onChain = await view.read.toMarket([market.marketId as `0x${string}`]);
+      } catch (err) {
+        if (!isUncreatedMarket(err)) throw err;
+        uncreated.push(market.value);
+        continue;
+      }
+
+      assert.strictEqual(onChain.midnight.toLowerCase(), struct.midnight.toLowerCase(), `midnight mismatch for ${market.value}`);
+      assert.strictEqual(struct.collateralParams.length, onChain.collateralParams.length, `collateral count mismatch for ${market.value}`);
+      struct.collateralParams.forEach((coll, i) => {
+        assert.strictEqual(onChain.collateralParams[i].token.toLowerCase(), coll.token.toLowerCase(), `collateral[${i}] token mismatch for ${market.value}`);
+        assert.strictEqual(onChain.collateralParams[i].lltv, coll.lltv, `collateral[${i}] lltv mismatch for ${market.value}`);
+      });
+    }
+
+    reportUncreated(uncreated, ethMarkets().length);
+  });
+
+  /**
+   * The read the whole app is built on, and the one that would have gone wrong silently: `prices` is
+   * index-aligned with the market's *full* collateral set, so a hidden entry sorted to the end would
+   * price the visible collateral off the wrong oracle. Mainnet's cbBTC ladder lists its hidden USDC
+   * first, so this is a real check here in a way it never was on Base.
+   */
+  it('prices each collateral off its own oracle', async () => {
+    const uncreated: string[] = [];
+
+    for (const market of ethMarkets()) {
+      let marketData;
+      try {
+        marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, market);
+      } catch (err) {
+        if (!isUncreatedMarket(err)) throw err;
+        uncreated.push(market.value);
+        continue;
+      }
+
+      const visible = sdk.markets.morphoMidnightVisibleCollaterals(market);
+      assert.deepStrictEqual(
+        marketData.collaterals,
+        visible.map((coll) => wethToEth(getAssetInfoByAddress(coll.token, network).symbol)),
+        `${market.value} surfaced the wrong collateral set`,
+      );
+
+      for (const collSymbol of marketData.collaterals) {
+        assert.isTrue(
+          new Dec(marketData.assetsData[collSymbol].price).gt(0),
+          `${market.value}: ${collSymbol} priced at 0 — check the prices[i] alignment`,
+        );
+      }
+    }
+
+    reportUncreated(uncreated, ethMarkets().length);
+  });
+
+  it('surfaces exactly the collateral its pair is named for', () => {
+    ethMarkets().forEach((market) => {
+      const visible = sdk.markets.morphoMidnightVisibleCollaterals(market);
+      assert.strictEqual(visible.length, 1, `${market.value} should surface one collateral, not ${visible.length}`);
+      assert.notStrictEqual(
+        visible[0].token.toLowerCase(),
+        market.loanToken.toLowerCase(),
+        `${market.value} surfaces its own loan token as collateral`,
+      );
+    });
+  });
+
+  it('collateralises every market with an asset @defisaver/tokens knows', () => {
+    const unknown = ethMarkets().flatMap((market) => sdk.markets.morphoMidnightVisibleCollaterals(market)
+      .filter((collateral) => !getAssetInfoByAddress(collateral.token, NetworkNumber.Eth).address)
+      .map((collateral) => `${market.value} → ${collateral.token}`));
+
+    assert.isEmpty(unknown, `add these to @defisaver/tokens and bump the dep: ${unknown.join(', ')}`);
   });
 });
 

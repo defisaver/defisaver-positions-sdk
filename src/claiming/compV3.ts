@@ -9,7 +9,6 @@ import { ClaimType } from '../types/claiming';
 // Not decodable by name, since the error lives in CometRewards' ABI and we call through CompV3View.
 const NOT_SUPPORTED_ERROR_SIG = '0x9c58e3b6';
 
-// Only an actual on-chain revert counts - viem reports transport failures as ContractFunctionExecutionError too.
 const isMarketWithoutRewardsConfig = (err: unknown) => {
   if (!(err instanceof BaseError)) return false;
   const revert = err.walk((e) => e instanceof ContractFunctionRevertedError);

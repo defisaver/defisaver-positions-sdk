@@ -8,7 +8,7 @@ import {
   MorphoMidnightParsedBook,
   NetworkNumber,
 } from '../../types';
-import { isTenorMidnightMarket, MIDNIGHT_BASE } from '../../markets/morphoMidnight';
+import { isTenorMidnightMarket, midnightCoreAddress } from '../../markets/morphoMidnight';
 import type {
   MorphoMidnightBorrowQuote,
   MorphoMidnightPaybackQuote,
@@ -83,11 +83,15 @@ interface TenorOfferFill {
 /**
  * Tenor's offer JSON is flat (market fields live on the offer). Morpho's is nested, and that nested
  * shape is what the app encodes for `Midnight.take`. Map Tenor into that shape so recipes stay on one encoder.
+ *
+ * The core address is the one field Tenor's offer does not carry, so it is derived from the offer's own
+ * `chain_id` rather than the caller's network — an offer names the chain it was made on, and taking it
+ * against another chain's core would address a market that does not exist.
  */
 export const tenorOfferToApiOffer = (offer: TenorOffer) => ({
   market: {
     chain_id: offer.chain_id,
-    midnight: MIDNIGHT_BASE,
+    midnight: midnightCoreAddress(Number(offer.chain_id) as NetworkNumber),
     loan_token: offer.loan_token_address,
     collaterals: offer.collaterals || [],
     maturity: offer.maturity,
