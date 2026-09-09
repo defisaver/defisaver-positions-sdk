@@ -71,8 +71,12 @@ export async function _getMorphoMidnightMarketData(provider: Client, network: Ne
     borrowIncentives: [],
   };
 
+  // `collaterals` is the full on-chain set, so `i` is the index `prices` is keyed by. Hidden entries
+  // (curator vaults, the loan token itself) are skipped rather than filtered out beforehand, which would
+  // shift every later collateral onto the wrong price.
   const collateralSymbols: string[] = [];
   collaterals.forEach((coll, i) => {
+    if (coll.hidden) return;
     const collInfo = getAssetInfoByAddress(coll.token, network);
     const collSym = wethToEth(collInfo.symbol);
     collateralSymbols.push(collSym);
@@ -138,8 +142,10 @@ export async function _getMorphoMidnightAccountData(provider: Client, network: N
     borrowedUsd: new Dec(debt).mul(loanTokenData.price).toString(),
   };
 
-  // positionInfo.collateral is index-aligned with the market's collateral set (0 where unused).
+  // positionInfo.collateral is index-aligned with the market's full on-chain collateral set (0 where
+  // unused), so hidden entries are skipped in place rather than filtered out first.
   collaterals.forEach((coll, i) => {
+    if (coll.hidden) return;
     const collInfo = getAssetInfoByAddress(coll.token, network);
     const collSym = wethToEth(collInfo.symbol);
     const rawAmount = positionInfo.collateral[i] ? positionInfo.collateral[i].toString() : '0';
@@ -228,6 +234,7 @@ export const _getMorphoMidnightAccountBalances = async (provider: Client, networ
 
   const collateral: Record<string, string> = {};
   collaterals.forEach((coll, i) => {
+    if (coll.hidden) return;
     const collInfo = getAssetInfoByAddress(coll.token, network);
     const rawAmount = positionInfo.collateral[i] ? positionInfo.collateral[i].toString() : '0';
     collateral[addressMapping ? collInfo.address.toLowerCase() : wethToEth(collInfo.symbol)] = assetAmountInEth(rawAmount, wethToEth(collInfo.symbol));

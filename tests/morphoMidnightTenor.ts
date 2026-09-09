@@ -15,7 +15,7 @@ import {
   MIDNIGHT_DEFAULT_RATE_SLIPPAGE,
 } from '../src/helpers/morphoMidnightHelpers/rate';
 import { getMorphoMidnightBorrowQuote, getMorphoMidnightMarketBook } from '../src/helpers/morphoMidnightHelpers';
-import { isTenorMidnightMarket, MorphoMidnightMarkets } from '../src/markets/morphoMidnight';
+import { isTenorMidnightMarket, MorphoMidnightMarkets, morphoMidnightVisibleCollaterals } from '../src/markets/morphoMidnight';
 import { MorphoMidnightVersions, NetworkNumber } from '../src/types';
 import * as sdk from '../src';
 
@@ -211,9 +211,12 @@ describe('Tenor Midnight order book parse', () => {
 
 describe('Tenor Midnight markets', () => {
   const allMarkets = MorphoMidnightMarkets(NetworkNumber.Base);
+  // `MorphoMidnightMarkets` keys every chain's markets, so the pair/count assertions below scope to Base
+  // themselves. The vault invariant deliberately does not — it holds on every chain.
   const tenorMarkets = Object.fromEntries(
-    Object.entries(allMarkets).filter(([, market]) => market.curator === 'Tenor'),
+    Object.entries(allMarkets).filter(([, market]) => market.curator === 'Tenor' && market.chainIds.includes(NetworkNumber.Base)),
   ) as typeof allMarkets;
+  const allTenorMarkets = Object.values(allMarkets).filter((market) => market.curator === 'Tenor');
 
   it('are included in MorphoMidnightMarkets and flagged as Tenor', () => {
     const markets = sdk.markets.MorphoMidnightMarkets(NetworkNumber.Base);
@@ -254,10 +257,10 @@ describe('Tenor Midnight markets', () => {
     const tenor = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbBTCUSDC_20260827_Base];
     assert.strictEqual(morpho.curator, 'Morpho');
     assert.strictEqual(tenor.curator, 'Tenor');
-    // `hiddenCollaterals` is the one field a Tenor market carries that a Morpho one has no use for: only
-    // curated markets put a collateral in the struct that the app doesn't surface.
-    assert.sameMembers(Object.keys(tenor), [...Object.keys(morpho), 'hiddenCollaterals']);
-    assert.isUndefined(morpho.hiddenCollaterals);
+    // The shapes are identical — a curated market differs only inside `collaterals`, where the curator's
+    // vault rides along flagged `hidden` because the app doesn't surface it.
+    assert.sameMembers(Object.keys(tenor), Object.keys(morpho));
+    assert.isUndefined(morpho.collaterals.find((collateral) => collateral.hidden));
     assert.isTrue(isTenorMidnightMarket(tenor));
     assert.isFalse(isTenorMidnightMarket(morpho));
   });
@@ -269,36 +272,43 @@ describe('Tenor Midnight markets', () => {
     assert.isFalse(isTenorMidnightMarket(morpho.marketId));
   });
 
-  it('list only the primary collateral, which is index 0 of the on-chain market', () => {
-    const cbbtc = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbBTCUSDC_20260827_Base];
-    assert.strictEqual(cbbtc.collaterals.length, 1);
-    assert.strictEqual(cbbtc.collaterals[0].token.toLowerCase(), '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf');
-    assert.strictEqual(new Dec(cbbtc.collaterals[0].lltv).toNumber(), 0.86);
+  it('surface only the primary collateral', () => {
+    const cbbtc = morphoMidnightVisibleCollaterals(tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbBTCUSDC_20260827_Base]);
+    assert.strictEqual(cbbtc.length, 1);
+    assert.strictEqual(cbbtc[0].token.toLowerCase(), '0xcbb7c0000ab88b473b1f5afd9ef808440eed33bf');
+    assert.strictEqual(new Dec(cbbtc[0].lltv).toNumber(), 0.86);
 
-    const weth = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorWETHUSDC_20260827_Base];
-    assert.strictEqual(weth.collaterals.length, 1);
-    assert.strictEqual(weth.collaterals[0].token.toLowerCase(), '0x4200000000000000000000000000000000000006');
+    const weth = morphoMidnightVisibleCollaterals(tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorWETHUSDC_20260827_Base]);
+    assert.strictEqual(weth.length, 1);
+    assert.strictEqual(weth[0].token.toLowerCase(), '0x4200000000000000000000000000000000000006');
 
-    const cbeth = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbETHWETH_20260827_Base];
-    assert.strictEqual(cbeth.collaterals.length, 1);
-    assert.strictEqual(cbeth.collaterals[0].token.toLowerCase(), '0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22');
-    assert.strictEqual(new Dec(cbeth.collaterals[0].lltv).toNumber(), 0.945);
-    assert.strictEqual(cbeth.rcfThreshold, '4000000000000000000');
+    const cbethMarket = tenorMarkets[MorphoMidnightVersions.MorphoMidnightTenorCbETHWETH_20260827_Base];
+    const cbeth = morphoMidnightVisibleCollaterals(cbethMarket);
+    assert.strictEqual(cbeth.length, 1);
+    assert.strictEqual(cbeth[0].token.toLowerCase(), '0x2ae3f1ec7f1f5012cfeab0185bfc7aa3cf0dec22');
+    assert.strictEqual(new Dec(cbeth[0].lltv).toNumber(), 0.945);
+    assert.strictEqual(cbethMarket.rcfThreshold, '4000000000000000000');
   });
 
   /**
    * The curator's vault is hidden from the app but not from the market: it is the second half of what the
-   * id is hashed from, so every Tenor market has to carry one and the shared getter has to hand back both.
-   * Without it a `Market` struct addresses a market of the caller's own making rather than this one — the
-   * on-chain half of this invariant is the `toId` check in the Morpho Midnight suite.
+   * id is hashed from, so every Tenor market has to carry one and the struct getter has to hand back both,
+   * in the chain's own order. Without it a `Market` struct addresses a market of the caller's own making
+   * rather than this one — the on-chain half of this invariant is the `toId` check in the Midnight suite.
    */
-  it('keep the curator vault out of `collaterals` but in the market struct', () => {
-    Object.values(tenorMarkets).forEach((market) => {
-      assert.strictEqual(market.hiddenCollaterals?.length, 1, `${market.value} should hide exactly the curator vault`);
+  it('keep the curator vault out of the UI but in the market struct', () => {
+    allTenorMarkets.forEach((market) => {
+      const hidden = market.collaterals.filter((collateral) => collateral.hidden);
+      assert.strictEqual(hidden.length, 1, `${market.value} should hide exactly the curator vault`);
       const all = sdk.markets.morphoMidnightMarketCollateralParams(market);
       assert.strictEqual(all.length, 2, `${market.value} should hash from both collaterals`);
-      assert.strictEqual(all[0].token, market.collaterals[0].token, `${market.value} should keep the listed collateral first`);
-      assert.strictEqual(all[1].token, market.hiddenCollaterals![0].token, `${market.value} should append the hidden one`);
+      assert.deepStrictEqual(
+        all.map(({ token }) => token),
+        market.collaterals.map(({ token }) => token),
+        `${market.value} should keep the on-chain collateral order`,
+      );
+      // The struct takes four fields; the display flag must not leak into what gets encoded.
+      all.forEach((collateral) => assert.sameMembers(Object.keys(collateral), ['token', 'lltv', 'liquidationCursor', 'oracle']));
     });
   });
 });

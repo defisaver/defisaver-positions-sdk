@@ -39,6 +39,51 @@ export enum MorphoMidnightVersions {
   MorphoMidnightTenorCbETHWETH_20261127_Base = 'morphomidnighttenorcbethweth_20261127_base',
   MorphoMidnightTenorCbETHWETH_20261225_Base = 'morphomidnighttenorcbethweth_20261225_base',
   MorphoMidnightTenorCbETHWETH_20270129_Base = 'morphomidnighttenorcbethweth_20270129_base',
+  // ETHEREUM
+  // Sourced from the official listing at https://markets.morpho.org/fixed?chains=1
+  MorphoMidnightWBTCUSDC_860_20260925_Eth = 'morphomidnightwbtcusdc_860_20260925_eth',
+  MorphoMidnightWBTCUSDC_860_20261030_Eth = 'morphomidnightwbtcusdc_860_20261030_eth',
+  MorphoMidnightWBTCUSDC_860_20261127_Eth = 'morphomidnightwbtcusdc_860_20261127_eth',
+  MorphoMidnightWBTCUSDC_860_20261225_Eth = 'morphomidnightwbtcusdc_860_20261225_eth',
+  MorphoMidnightWBTCUSDC_860_20270129_Eth = 'morphomidnightwbtcusdc_860_20270129_eth',
+  MorphoMidnightWBTCUSDC_860_20270226_Eth = 'morphomidnightwbtcusdc_860_20270226_eth',
+  MorphoMidnightWBTCUSDC_860_20270326_Eth = 'morphomidnightwbtcusdc_860_20270326_eth',
+  MorphoMidnightCbBTCUSDC_860_20260925_Eth = 'morphomidnightcbbtcusdc_860_20260925_eth',
+  MorphoMidnightCbBTCUSDC_860_20261030_Eth = 'morphomidnightcbbtcusdc_860_20261030_eth',
+  MorphoMidnightCbBTCUSDC_860_20261127_Eth = 'morphomidnightcbbtcusdc_860_20261127_eth',
+  MorphoMidnightCbBTCUSDC_860_20261225_Eth = 'morphomidnightcbbtcusdc_860_20261225_eth',
+  MorphoMidnightCbBTCUSDC_860_20270129_Eth = 'morphomidnightcbbtcusdc_860_20270129_eth',
+  MorphoMidnightCbBTCUSDC_860_20270226_Eth = 'morphomidnightcbbtcusdc_860_20270226_eth',
+  MorphoMidnightCbBTCUSDC_860_20270326_Eth = 'morphomidnightcbbtcusdc_860_20270326_eth',
+  // Tenor-hosted Midnight markets (same core, different order book)
+  MorphoMidnightTenorReUSDUSDC_20260925_Eth = 'morphomidnighttenorreusdusdc_20260925_eth',
+  MorphoMidnightTenorReUSDUSDC_20261030_Eth = 'morphomidnighttenorreusdusdc_20261030_eth',
+  MorphoMidnightTenorReUSDUSDC_20261127_Eth = 'morphomidnighttenorreusdusdc_20261127_eth',
+  MorphoMidnightTenorReUSDUSDC_20261225_Eth = 'morphomidnighttenorreusdusdc_20261225_eth',
+  MorphoMidnightTenorSiUSDUSDC_20260925_Eth = 'morphomidnighttenorsiusdusdc_20260925_eth',
+  MorphoMidnightTenorSiUSDUSDC_20261030_Eth = 'morphomidnighttenorsiusdusdc_20261030_eth',
+  MorphoMidnightTenorSiUSDUSDC_20261127_Eth = 'morphomidnighttenorsiusdusdc_20261127_eth',
+  MorphoMidnightTenorSiUSDUSDC_20261225_Eth = 'morphomidnighttenorsiusdusdc_20261225_eth',
+  MorphoMidnightTenorStrUSDUSDC_20260925_Eth = 'morphomidnighttenorstrusdusdc_20260925_eth',
+  MorphoMidnightTenorStrUSDUSDC_20261030_Eth = 'morphomidnighttenorstrusdusdc_20261030_eth',
+  MorphoMidnightTenorStrUSDUSDC_20261127_Eth = 'morphomidnighttenorstrusdusdc_20261127_eth',
+  MorphoMidnightTenorStrUSDUSDC_20261225_Eth = 'morphomidnighttenorstrusdusdc_20261225_eth',
+  MorphoMidnightTenorUSD3USDC_20260925_Eth = 'morphomidnighttenorusd3usdc_20260925_eth',
+  MorphoMidnightTenorUSD3USDC_20261030_Eth = 'morphomidnighttenorusd3usdc_20261030_eth',
+  MorphoMidnightTenorUSD3USDC_20261127_Eth = 'morphomidnighttenorusd3usdc_20261127_eth',
+  MorphoMidnightTenorUSD3USDC_20261225_Eth = 'morphomidnighttenorusd3usdc_20261225_eth',
+  MorphoMidnightTenorWETHUSDC_20260925_Eth = 'morphomidnighttenorwethusdc_20260925_eth',
+  MorphoMidnightTenorWETHUSDC_20261030_Eth = 'morphomidnighttenorwethusdc_20261030_eth',
+  MorphoMidnightTenorWETHUSDC_20261127_Eth = 'morphomidnighttenorwethusdc_20261127_eth',
+  MorphoMidnightTenorWETHUSDC_20261225_Eth = 'morphomidnighttenorwethusdc_20261225_eth',
+  MorphoMidnightTenorWsrUSDUSDC_20260925_Eth = 'morphomidnighttenorwsrusdusdc_20260925_eth',
+  MorphoMidnightTenorWsrUSDUSDC_20261030_Eth = 'morphomidnighttenorwsrusdusdc_20261030_eth',
+  MorphoMidnightTenorWsrUSDUSDC_20261127_Eth = 'morphomidnighttenorwsrusdusdc_20261127_eth',
+  MorphoMidnightTenorWsrUSDUSDC_20261225_Eth = 'morphomidnighttenorwsrusdusdc_20261225_eth',
+  MorphoMidnightTenorWstETHWETH_20260925_Eth = 'morphomidnighttenorwstethweth_20260925_eth',
+  MorphoMidnightTenorWstETHWETH_20261030_Eth = 'morphomidnighttenorwstethweth_20261030_eth',
+  MorphoMidnightTenorWstETHWETH_20261127_Eth = 'morphomidnighttenorwstethweth_20261127_eth',
+  MorphoMidnightTenorWstETHWETH_20261225_Eth = 'morphomidnighttenorwstethweth_20261225_eth',
 }
 
 export type MorphoMidnightCurator = 'Morpho' | 'Tenor';
@@ -48,6 +93,13 @@ export interface MorphoMidnightCollateralParams {
   lltv: number | string,
   liquidationCursor: number | string,
   oracle: EthAddress,
+  /**
+   * A collateral the market carries on-chain but the app never surfaces: a curator's own vault share
+   * token (Tenor's collateral vaults) or the loan token itself (Morpho's mainnet ladders list USDC at
+   * 98% next to the real collateral). It is not an asset the app deals in — nothing renders, prices or
+   * supplies it — but it stays in `collaterals` because the market id is the hash of the full set.
+   */
+  hidden?: boolean,
 }
 
 export interface MorphoMidnightMarketData {
@@ -58,11 +110,15 @@ export interface MorphoMidnightMarketData {
   value: MorphoMidnightVersions,
   midnight: EthAddress,
   loanToken: EthAddress,
-  collaterals: MorphoMidnightCollateralParams[],
   /**
-   * Tenor's curated markets list the curator's own vault share token next to the real collateral.
+   * Every collateral the market carries on-chain, in the chain's own order — which is what the id is
+   * hashed from, so neither the set nor the order may be rearranged. Entries the app does not deal in
+   * are flagged `hidden` rather than kept in a second list: their on-chain position varies per market
+   * (Morpho's mainnet cbBTC ladder lists USDC first, its WBTC ladder second), so a separate list can
+   * only be re-joined by guessing, and every positional read — `MarketInfo.prices[i]`,
+   * `PositionInfo.collateral[i]`, the collateral index a supply call takes — indexes into *this* array.
    */
-  hiddenCollaterals?: MorphoMidnightCollateralParams[],
+  collaterals: MorphoMidnightCollateralParams[],
   maturity: number, // unix timestamp (seconds)
   rcfThreshold: number | string,
   enterGate: EthAddress,
