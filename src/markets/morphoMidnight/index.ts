@@ -1376,18 +1376,14 @@ export const MORPHO_MIDNIGHT_TENOR_WSTETH_WETH_965_20261225_ETH = () => createTe
 );
 
 /**
- * Collaterals `@defisaver/tokens` does not carry yet. Their markets are defined and verified above, but
- * withheld from the map below, because an unknown asset resolves to the `?` proto and renders an unnamed
- * collateral at a NaN price.
- *
- * Emptying this array releases every one of them — including maturities added later, since the filter is
- * on the collateral rather than a list of market versions. It is the only place they are held back.
+ * Collaterals we deliberately do not list. Their markets are defined and verified above — they are real
+ * markets — but withheld from the map below, so nothing in the app offers, prices or routes to them.
  */
-const COLLATERALS_PENDING_TOKEN_SUPPORT: string[] = [STRUSD_ETH, WSRUSD_ETH, REUSD_ETH, SIUSD_ETH];
+const EXCLUDED_COLLATERALS: string[] = [STRUSD_ETH, WSRUSD_ETH, REUSD_ETH, SIUSD_ETH, USD3_ETH];
 
-const isPendingTokenSupport = (market: MorphoMidnightMarketData): boolean => market.collaterals.some(
+const isExcludedMarket = (market: MorphoMidnightMarketData): boolean => market.collaterals.some(
   (collateral) => !collateral.hidden
-    && COLLATERALS_PENDING_TOKEN_SUPPORT.some((token) => token.toLowerCase() === collateral.token.toLowerCase()),
+    && EXCLUDED_COLLATERALS.some((token) => token.toLowerCase() === collateral.token.toLowerCase()),
 );
 
 const allMorphoMidnightMarkets = (networkId: NetworkNumber) => ({
@@ -1473,9 +1469,9 @@ const allMorphoMidnightMarkets = (networkId: NetworkNumber) => ({
 
 export const MorphoMidnightMarkets = (networkId: NetworkNumber) => {
   const all = allMorphoMidnightMarkets(networkId);
-  if (!COLLATERALS_PENDING_TOKEN_SUPPORT.length) return all;
+  if (!EXCLUDED_COLLATERALS.length) return all;
   return Object.fromEntries(
-    Object.entries(all).filter(([, market]) => !isPendingTokenSupport(market)),
+    Object.entries(all).filter(([, market]) => !isExcludedMarket(market)),
   ) as typeof all;
 };
 
