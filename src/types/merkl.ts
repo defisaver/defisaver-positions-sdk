@@ -11,6 +11,18 @@ export enum OpportunityStatus {
   UPCOMING = 'UPCOMING',
 }
 
+export type MerklCampaign = {
+  id: string;
+  campaignId: string;
+  params?: {
+    reserveId?: string | number;
+    spokeAddress?: EthAddress;
+    hubAddress?: EthAddress;
+    hubAssetId?: string | number;
+    assetId?: string | number;
+  };
+};
+
 export type MerklOpportunity = {
   chainId: number;
   type: string;
@@ -25,6 +37,7 @@ export type MerklOpportunity = {
   id: string;
   explorerAddress?: EthAddress;
   description?: string;
+  campaigns?: MerklCampaign[];
   tokens: {
     id: string;
     name: string;
@@ -80,8 +93,8 @@ export type FluidMerklRewardMap = Record<string, { supply: IncentiveData[], borr
 
 /**
  * Aave V4 Merkl reward campaigns split by scope:
- *   - `hub`: keyed by `${hubAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing via a hub
- *   - `spoke`: keyed by `${spokeAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing on a spoke
+ *   - `hub`: keyed by `${hubAddress}_${assetId}` — rewards for supplying/borrowing via a hub asset
+ *   - `spoke`: keyed by `${spokeAddress}_${reserveId}` — rewards for supplying/borrowing on a spoke reserve
  */
 export type AaveV4MerklRewardMap = {
   hub: Record<string, AaveV4MerklScopedReward>;

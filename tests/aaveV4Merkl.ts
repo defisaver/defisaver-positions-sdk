@@ -3,8 +3,11 @@ import { attachAaveV4MerklIncentives, buildAaveV4MerklRewardMap } from '../src/a
 import { calculateNetApyAaveV4, getAaveV4ApplicableIncentives } from '../src/helpers/aaveV4Helpers';
 import {
   AAVE_V4_BLUECHIP_SPOKE,
+  AAVE_V4_CORE_HUB,
+  AAVE_V4_ETHENA_ECOSYSTEM_SPOKE,
   AAVE_V4_MAIN_SPOKE,
   AAVE_V4_PAXOS_HUB,
+  AAVE_V4_PLUS_HUB,
   AAVE_V4_PRIME_HUB,
   AAVE_V4_USDG_PENDLE_SPOKE,
 } from '../src/markets/aaveV4';
@@ -25,13 +28,17 @@ import {
 const { assert } = require('chai');
 
 const BLUECHIP_SPOKE = AAVE_V4_BLUECHIP_SPOKE(NetworkNumber.Eth).address;
+const ETHENA_ECOSYSTEM_SPOKE = AAVE_V4_ETHENA_ECOSYSTEM_SPOKE(NetworkNumber.Eth).address;
 const USDG_PENDLE_SPOKE = AAVE_V4_USDG_PENDLE_SPOKE(NetworkNumber.Eth).address;
 const MAIN_SPOKE = AAVE_V4_MAIN_SPOKE(NetworkNumber.Eth).address;
+const CORE_HUB = AAVE_V4_CORE_HUB(NetworkNumber.Eth).address;
+const PLUS_HUB = AAVE_V4_PLUS_HUB(NetworkNumber.Eth).address;
 const PRIME_HUB = AAVE_V4_PRIME_HUB(NetworkNumber.Eth).address;
 const PAXOS_HUB = AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address;
 const USDC = getAssetInfo('USDC').address as EthAddress;
 const WBTC = getAssetInfo('WBTC').address as EthAddress;
 const USDG = getAssetInfo('USDG').address as EthAddress;
+const USDE = '0x4c9EDD5852cd905f086C759E8383e09bff1E68B3' as EthAddress;
 
 // The live campaigns from DEV-13263 / DEV-13284
 const SPOKE_CAMPAIGN_APR = 2.0075355051683546;
@@ -47,16 +54,35 @@ const opportunity = (over: Partial<MerklOpportunity>): MerklOpportunity => ({
   ...over,
 } as unknown as MerklOpportunity);
 
+const campaign = (
+  params: NonNullable<NonNullable<MerklOpportunity['campaigns']>[number]['params']>,
+  campaignId = '0x1234',
+) => ({ id: '1', campaignId, params });
+
 // Merkl lists the same USDC borrow reward twice: once scoped to the Bluechip Spoke, once to the Prime Hub
 const campaigns = buildAaveV4MerklRewardMap([
-  opportunity({ type: 'AAVE_V4_SPOKE_BORROW', explorerAddress: BLUECHIP_SPOKE, apr: SPOKE_CAMPAIGN_APR }),
-  opportunity({ type: 'AAVE_V4_HUB_BORROW', explorerAddress: PRIME_HUB, apr: HUB_CAMPAIGN_APR }),
+  opportunity({
+    type: 'AAVE_V4_SPOKE_BORROW',
+    explorerAddress: BLUECHIP_SPOKE,
+    apr: SPOKE_CAMPAIGN_APR,
+    campaigns: [campaign({
+      spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
+    }, '3413192378461955844')],
+  }),
+  opportunity({
+    type: 'AAVE_V4_HUB_BORROW',
+    explorerAddress: PRIME_HUB,
+    apr: HUB_CAMPAIGN_APR,
+    campaigns: [campaign({ hubAddress: PRIME_HUB, assetId: '4' })],
+  }),
 ], NetworkNumber.Eth);
 
 const reserve = (over: Partial<AaveV4ReserveAssetData>): AaveV4ReserveAssetData => ({
   symbol: 'USDC',
   underlying: USDC,
   hub: PRIME_HUB,
+  assetId: 4,
+  reserveId: 4,
   supplyIncentives: [],
   borrowIncentives: [],
   supplyRate: '0',
@@ -67,22 +93,115 @@ const reserve = (over: Partial<AaveV4ReserveAssetData>): AaveV4ReserveAssetData 
 } as unknown as AaveV4ReserveAssetData);
 
 describe('Aave V4 Merkl campaign matching', () => {
-  it('attaches a spoke campaign only to reserves of that spoke', () => {
+  it('attaches a spoke campaign only to its exact reserve', () => {
     const onBluechip = attachAaveV4MerklIncentives(reserve({}), BLUECHIP_SPOKE, campaigns);
     assert.lengthOf(onBluechip.spokeBorrowIncentives!, 1);
     assert.equal(onBluechip.spokeBorrowIncentives![0].apy, aprToApy(SPOKE_CAMPAIGN_APR));
+
+    const anotherBluechipReserve = attachAaveV4MerklIncentives(reserve({ reserveId: 7 }), BLUECHIP_SPOKE, campaigns);
+    assert.lengthOf(anotherBluechipReserve.spokeBorrowIncentives!, 0);
 
     const onPendle = attachAaveV4MerklIncentives(reserve({ hub: PAXOS_HUB }), USDG_PENDLE_SPOKE, campaigns);
     assert.lengthOf(onPendle.spokeBorrowIncentives!, 0);
   });
 
-  it('attaches a hub campaign only to reserves of that hub (DEV-13284)', () => {
+  it('attaches a hub campaign only to its exact hub asset (DEV-13284)', () => {
     const onPrime = attachAaveV4MerklIncentives(reserve({ hub: PRIME_HUB }), MAIN_SPOKE, campaigns);
     assert.lengthOf(onPrime.hubBorrowIncentives!, 1);
+
+    const anotherPrimeAsset = attachAaveV4MerklIncentives(reserve({ assetId: 5 }), MAIN_SPOKE, campaigns);
+    assert.lengthOf(anotherPrimeAsset.hubBorrowIncentives!, 0);
 
     // USDC borrowed from the Paxos Hub must not inherit the Prime Hub reward
     const onPaxos = attachAaveV4MerklIncentives(reserve({ hub: PAXOS_HUB }), USDG_PENDLE_SPOKE, campaigns);
     assert.lengthOf(onPaxos.hubBorrowIncentives!, 0);
+  });
+
+  it('does not leak a Core USDC reward onto the same token from the Plus Hub', () => {
+    const ethenaCampaigns = buildAaveV4MerklRewardMap([
+      opportunity({
+        type: 'AAVE_V4_SPOKE_BORROW',
+        apr: SPOKE_CAMPAIGN_APR,
+        campaigns: [campaign({
+          spokeAddress: ETHENA_ECOSYSTEM_SPOKE,
+          reserveId: '7',
+          hubAddress: CORE_HUB,
+          hubAssetId: '5',
+        }, '9654310212108407598')],
+      }),
+      opportunity({
+        type: 'AAVE_V4_HUB_BORROW',
+        apr: HUB_CAMPAIGN_APR,
+        campaigns: [campaign({ hubAddress: CORE_HUB, assetId: '5' })],
+      }),
+    ], NetworkNumber.Eth);
+
+    const fromCore = attachAaveV4MerklIncentives(
+      reserve({ hub: CORE_HUB, assetId: 5, reserveId: 7 }),
+      ETHENA_ECOSYSTEM_SPOKE,
+      ethenaCampaigns,
+    );
+    assert.lengthOf(fromCore.spokeBorrowIncentives!, 1);
+    assert.lengthOf(fromCore.hubBorrowIncentives!, 1);
+
+    const fromPlus = attachAaveV4MerklIncentives(
+      reserve({ hub: PLUS_HUB, assetId: 4, reserveId: 4 }),
+      ETHENA_ECOSYSTEM_SPOKE,
+      ethenaCampaigns,
+    );
+    assert.lengthOf(fromPlus.spokeBorrowIncentives!, 0);
+    assert.lengthOf(fromPlus.hubBorrowIncentives!, 0);
+  });
+
+  it('distinguishes two same-token reserves on Bluechip by reserve id', () => {
+    const bluechipCampaigns = buildAaveV4MerklRewardMap([
+      opportunity({
+        apr: 2,
+        campaigns: [campaign({
+          spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
+        })],
+      }),
+      opportunity({
+        apr: 3,
+        campaigns: [campaign({
+          spokeAddress: BLUECHIP_SPOKE, reserveId: '7', hubAddress: CORE_HUB, hubAssetId: '5',
+        })],
+      }),
+    ], NetworkNumber.Eth);
+
+    const fromPrime = attachAaveV4MerklIncentives(
+      reserve({ hub: PRIME_HUB, assetId: 4, reserveId: 4 }), BLUECHIP_SPOKE, bluechipCampaigns,
+    );
+    const fromCore = attachAaveV4MerklIncentives(
+      reserve({ hub: CORE_HUB, assetId: 5, reserveId: 7 }), BLUECHIP_SPOKE, bluechipCampaigns,
+    );
+    assert.equal(fromPrime.spokeBorrowIncentives![0].apy, aprToApy(2));
+    assert.equal(fromCore.spokeBorrowIncentives![0].apy, aprToApy(3));
+  });
+
+  it('supports a direct spoke campaign without a parent campaign', () => {
+    const directCampaigns = buildAaveV4MerklRewardMap([
+      opportunity({
+        type: 'AAVE_V4_SPOKE_SUPPLY',
+        action: OpportunityAction.LEND,
+        apr: 5.25,
+        tokens: [{ address: USDE, symbol: 'USDe' }] as MerklOpportunity['tokens'],
+        campaigns: [campaign({
+          spokeAddress: ETHENA_ECOSYSTEM_SPOKE,
+          reserveId: '3',
+          hubAddress: PLUS_HUB,
+          hubAssetId: '3',
+        }, '0xd0560a6ca8cd5b0b7e35252ef59f53fefd30058781afd1777daf775b72e4ba37')],
+      }),
+    ], NetworkNumber.Eth);
+
+    const direct = attachAaveV4MerklIncentives(
+      reserve({ underlying: USDE, hub: PLUS_HUB, assetId: 3, reserveId: 3 }),
+      ETHENA_ECOSYSTEM_SPOKE,
+      directCampaigns,
+    );
+    assert.lengthOf(direct.spokeSupplyIncentives!, 1);
+    assert.equal(direct.spokeSupplyIncentives![0].apy, aprToApy(5.25));
   });
 
   it('matches addresses regardless of casing', () => {
@@ -95,11 +214,48 @@ describe('Aave V4 Merkl campaign matching', () => {
     assert.lengthOf(lowercased.hubBorrowIncentives!, 1);
   });
 
-  it('ignores campaigns without an explorerAddress', () => {
+  it('deduplicates repeated campaign params for one opportunity', () => {
+    const repeated = buildAaveV4MerklRewardMap([
+      opportunity({
+        campaigns: [
+          campaign({ spokeAddress: BLUECHIP_SPOKE, reserveId: '4' }),
+          campaign({ spokeAddress: BLUECHIP_SPOKE, reserveId: 4 }),
+        ],
+      }),
+    ], NetworkNumber.Eth);
+    const enriched = attachAaveV4MerklIncentives(reserve({}), BLUECHIP_SPOKE, repeated);
+    assert.lengthOf(enriched.spokeBorrowIncentives!, 1);
+  });
+
+  it('supports zero-valued reserve and asset ids', () => {
+    const zeroIds = buildAaveV4MerklRewardMap([
+      opportunity({ campaigns: [campaign({ spokeAddress: BLUECHIP_SPOKE, reserveId: 0 })] }),
+      opportunity({
+        type: 'AAVE_V4_HUB_BORROW', campaigns: [campaign({ hubAddress: PRIME_HUB, assetId: 0 })],
+      }),
+    ], NetworkNumber.Eth);
+    const enriched = attachAaveV4MerklIncentives(reserve({ reserveId: 0, assetId: 0 }), BLUECHIP_SPOKE, zeroIds);
+    assert.lengthOf(enriched.spokeBorrowIncentives!, 1);
+    assert.lengthOf(enriched.hubBorrowIncentives!, 1);
+  });
+
+  it('fails closed when embedded campaign params are missing', () => {
     const withoutScope = buildAaveV4MerklRewardMap([
-      opportunity({ type: 'AAVE_V4_HUB_BORROW', explorerAddress: undefined }),
+      opportunity({
+        type: 'AAVE_V4_HUB_BORROW', explorerAddress: PRIME_HUB, campaigns: [{ id: '1', campaignId: '0x1234' }],
+      }),
     ], NetworkNumber.Eth);
     assert.isEmpty(withoutScope.hub);
+  });
+
+  it('ignores matching opportunities from another chain', () => {
+    const anotherChain = buildAaveV4MerklRewardMap([
+      opportunity({
+        chainId: NetworkNumber.Opt,
+        campaigns: [campaign({ spokeAddress: BLUECHIP_SPOKE, reserveId: '4' })],
+      }),
+    ], NetworkNumber.Eth);
+    assert.isEmpty(anotherChain.spoke);
   });
 });
 
@@ -132,20 +288,22 @@ describe('Aave V4 applicable incentives', () => {
 describe('Aave V4 net APY with Merkl incentives', () => {
   // The DEV-13263 position: 2.15 WBTC ($137,885) supplied at 0%, 98,615 USDC ($98,601)
   // borrowed at ~4.005% APY on the Bluechip Spoke from the Prime Hub, no risk premium.
-  const wbtcReserve = reserve({ symbol: 'WBTC', underlying: WBTC, collateralFactor: 0.845 });
+  const wbtcReserve = reserve({
+    symbol: 'WBTC', underlying: WBTC, assetId: 0, reserveId: 0, collateralFactor: 0.845,
+  });
   const usdcReserve = reserve({ drawnRate: '0.0392695' });
 
   const assetsData = {
     'WBTC-0': attachAaveV4MerklIncentives(wbtcReserve, BLUECHIP_SPOKE, campaigns),
-    'USDC-1': attachAaveV4MerklIncentives(usdcReserve, BLUECHIP_SPOKE, campaigns),
+    'USDC-4': attachAaveV4MerklIncentives(usdcReserve, BLUECHIP_SPOKE, campaigns),
   } as unknown as AaveV4AssetsData;
 
   const usedAssets = {
     'WBTC-0': {
       symbol: 'WBTC', reserveId: 0, isSupplied: true, isBorrowed: false, collateral: true, collateralFactor: 0.845, suppliedUsd: '137885', borrowedUsd: '0',
     },
-    'USDC-1': {
-      symbol: 'USDC', reserveId: 1, isSupplied: false, isBorrowed: true, collateral: false, collateralFactor: 0, suppliedUsd: '0', borrowedUsd: '98601',
+    'USDC-4': {
+      symbol: 'USDC', reserveId: 4, isSupplied: false, isBorrowed: true, collateral: false, collateralFactor: 0, suppliedUsd: '0', borrowedUsd: '98601',
     },
   } as unknown as AaveV4UsedReserveAssets;
 
