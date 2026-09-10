@@ -181,6 +181,17 @@ export const AAVE_V4_MAIN_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo =>
   ],
 });
 
+export const AAVE_V4_PAXG_GOLD_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
+  chainIds: [NetworkNumber.Eth],
+  label: 'PAXG Gold',
+  value: AaveV4SpokesType.AaveV4PaxgGoldSpoke,
+  url: 'paxg-gold',
+  address: '0xAD75cE6354f87F3135cE10621d385d8D1e2562C2',
+  hubs: [
+    AAVE_V4_PAXOS_HUB(NetworkNumber.Eth).address,
+  ],
+});
+
 export const AAVE_V4_USDG_PENDLE_SPOKE = (networkId: NetworkNumber): AaveV4SpokeInfo => ({
   chainIds: [NetworkNumber.Eth],
   label: 'USDG Pendle',
@@ -216,6 +227,7 @@ export const AaveV4Spokes = (networkId: NetworkNumber) => ({
   [AaveV4SpokesType.AaveV4LidoSpoke]: AAVE_V4_LIDO_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4LombardBtcSpoke]: AAVE_V4_LOMBARD_BTC_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4MainSpoke]: AAVE_V4_MAIN_SPOKE(networkId),
+  [AaveV4SpokesType.AaveV4PaxgGoldSpoke]: AAVE_V4_PAXG_GOLD_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4USDGPendleSpoke]: AAVE_V4_USDG_PENDLE_SPOKE(networkId),
   [AaveV4SpokesType.AaveV4USDGMapleSpoke]: AAVE_V4_USDG_MAPLE_SPOKE(networkId),
 }) as const;

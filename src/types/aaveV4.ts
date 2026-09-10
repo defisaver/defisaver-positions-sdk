@@ -20,6 +20,7 @@ export enum AaveV4SpokesType {
   AaveV4LidoSpoke = 'aave_v4_lido_spoke',
   AaveV4LombardBtcSpoke = 'aave_v4_lombard_btc_spoke',
   AaveV4MainSpoke = 'aave_v4_main_spoke',
+  AaveV4PaxgGoldSpoke = 'aave_v4_paxg_gold_spoke',
   AaveV4USDGPendleSpoke = 'aave_v4_usdg_pendle_spoke',
   AaveV4USDGMapleSpoke = 'aave_v4_usdg_maple_spoke',
 }
