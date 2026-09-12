@@ -7,6 +7,7 @@ export * from './liquityV2';
 export * from './maker';
 export * from './morphoBlue';
 export * from './morphoMidnight';
+export * from './ftDnmm';
 export * from './llamaLend';
 export * from './fluid';
 export * from './portfolio';

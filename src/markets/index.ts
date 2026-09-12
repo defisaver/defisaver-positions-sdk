@@ -21,6 +21,7 @@ export {
   MorphoMidnightMarkets, findMorphoMidnightMarket, isTenorMidnightMarket, morphoMidnightMarketCollateralParams,
   morphoMidnightVisibleCollaterals,
 } from './morphoMidnight';
+export { FT_DNMM, FtDnmmMarkets } from './ftDnmm';
 export { LlamaLendMarkets } from './llamaLend';
 export { LiquityV2Markets, findLiquityV2MarketByAddress } from './liquityV2';
 export {
