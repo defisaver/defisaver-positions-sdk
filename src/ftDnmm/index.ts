@@ -18,12 +18,6 @@ const amountUsd = (amountWei: string, priceWad: string, decimals: number) => (
   new Dec(amountWei).div(new Dec(10).pow(decimals)).mul(new Dec(priceWad).div(WAD)).toString()
 );
 
-// WETH is displayed as ETH only where the ETH asset resolves (mainnet convention);
-// on Sonic/BNB the underlying stays WETH/WBNB
-const displaySymbolFor = (symbol: string, network: NetworkNumber) => (
-  network === NetworkNumber.Eth ? wethToEth(symbol) : symbol
-);
-
 export async function _getFtDnmmMarketData(provider: Client, network: NetworkNumber, selectedMarket: FtDnmmMarketData): Promise<FtDnmmMarketInfo> {
   const viewContract = FtDnmmViewContractViem(provider, network);
   const oracleContract = FtDnmmOracleContractViem(provider, network);
@@ -39,7 +33,7 @@ export async function _getFtDnmmMarketData(provider: Client, network: NetworkNum
       oracleContract.read.priceUSD([assetInfo.address as `0x${string}`]),
     ]);
 
-    const displaySymbol = displaySymbolFor(symbol, network);
+    const displaySymbol = wethToEth(symbol);
     assetsData[displaySymbol] = {
       symbol: displaySymbol,
       address: assetInfo.address,
@@ -84,7 +78,7 @@ export async function _getFtDnmmAccountData(
   collateralInfos.forEach((c) => {
     if (c.avail === BigInt(0) && c.hold === BigInt(0)) return;
     const info = getAssetInfoByAddress(c.asset, network);
-    const symbol = displaySymbolFor(info.symbol, network);
+    const symbol = wethToEth(info.symbol);
     const priceWad = c.priceUSD.toString();
     const supplied = assetAmountInEth(c.avail.toString(), symbol);
     const collateral = assetAmountInEth(new Dec(c.avail.toString()).plus(c.hold.toString()).toString(), symbol);
@@ -108,7 +102,7 @@ export async function _getFtDnmmAccountData(
   debtInfos.forEach((d) => {
     if (d.debt === BigInt(0)) return;
     const info = getAssetInfoByAddress(d.asset, network);
-    const symbol = displaySymbolFor(info.symbol, network);
+    const symbol = wethToEth(info.symbol);
     const borrowed = assetAmountInEth(d.debt.toString(), symbol);
     const borrowedUsdAmount = amountUsd(d.debt.toString(), d.priceUSD.toString(), info.decimals);
 
@@ -175,13 +169,13 @@ export async function _getFtDnmmAccountBalances(
 
   collateralInfos.forEach((c) => {
     if (c.avail === BigInt(0) && c.hold === BigInt(0)) return;
-    const key = addressMapping ? c.asset.toLowerCase() : displaySymbolFor(getAssetInfoByAddress(c.asset, network).symbol, network);
+    const key = addressMapping ? c.asset.toLowerCase() : wethToEth(getAssetInfoByAddress(c.asset, network).symbol);
     collateral[key] = new Dec(c.avail.toString()).plus(c.hold.toString()).toString();
   });
 
   debtInfos.forEach((d) => {
     if (d.debt === BigInt(0)) return;
-    const key = addressMapping ? d.asset.toLowerCase() : displaySymbolFor(getAssetInfoByAddress(d.asset, network).symbol, network);
+    const key = addressMapping ? d.asset.toLowerCase() : wethToEth(getAssetInfoByAddress(d.asset, network).symbol);
     debt[key] = d.debt.toString();
   });
 

@@ -6,8 +6,8 @@ import { FtDnmmMarketData, FtDnmmVersions, NetworkNumber } from '../../types';
  */
 export const FT_DNMM = (networkId: NetworkNumber): FtDnmmMarketData => ({
   chainIds: [NetworkNumber.Eth],
-  label: 'ftDNMM',
-  shortLabel: 'ftDNMM',
+  label: 'Flying Tulip',
+  shortLabel: 'Flying Tulip',
   url: 'ftdnmm',
   value: FtDnmmVersions.FtDnmm,
   assets: ['WETH', 'USDC', 'WBTC', 'USDT', 'wstETH'],

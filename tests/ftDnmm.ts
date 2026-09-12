@@ -2,16 +2,14 @@ import 'dotenv/config';
 
 import * as sdk from '../src';
 
-import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber,
-} from '../src/types/common';
+import { EthAddress, EthereumProvider, NetworkNumber } from '../src/types/common';
 import { getProvider } from './utils/getProvider';
 
 const { assert } = require('chai');
 
 // NOTE: requires the FtDnmmView contract to be deployed (addresses in src/config/contracts.ts
-// are zero placeholders until then) and RPC/RPCSONIC/RPCBNB set in .env
-describe('ftDnmm', function () {
+// are zero placeholders until then) and RPC set in .env
+describe('ftDnmm', function ftDnmmTests() {
   this.timeout(30_000);
 
   let provider: EthereumProvider;
@@ -36,11 +34,6 @@ describe('ftDnmm', function () {
     assert.isAtLeast(accountData.hfTargetBps, 10_000);
   };
 
-  const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, address: EthAddress, block: Blockish = 'latest') => {
-    const balances = await sdk.ftDnmm.getFtDnmmAccountBalances(_provider, network, block, false, address);
-    assert.containsAllKeys(balances, ['collateral', 'debt']);
-  };
-
   // empty accounts are always fetchable, even before the first user exists
   const EMPTY: EthAddress = '0x00000000000000000000000000000000000000aa';
 
@@ -51,5 +44,4 @@ describe('ftDnmm', function () {
   it('fetches empty account data on Ethereum', async () => {
     await fetchAccountData(NetworkNumber.Eth, provider, EMPTY);
   });
-
 });
