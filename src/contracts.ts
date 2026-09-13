@@ -123,6 +123,8 @@ export const getYearnV3VaultContractViem = (client: Client, address: HexString) 
 
 export const MorphoBlueViewContractViem = createViemContractFromConfigFunc('MorphoBlueView');
 export const MorphoMidnightViewContractViem = createViemContractFromConfigFunc('MidnightView');
+export const FtDnmmViewContractViem = createViemContractFromConfigFunc('FtDnmmView');
+export const FtDnmmOracleContractViem = createViemContractFromConfigFunc('FtDnmmOracle');
 export const AaveLoanInfoV2ContractViem = createViemContractFromConfigFunc('AaveLoanInfoV2');
 export const AaveV3ViewContractViem = createViemContractFromConfigFunc('AaveV3View');
 export const AaveIncentiveDataProviderV3ContractViem = createViemContractFromConfigFunc('AaveUiIncentiveDataProviderV3');

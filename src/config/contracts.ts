@@ -1386,3 +1386,30 @@ export const UniswapTokenDistributor = {
     }
   }
 } as const;
+
+export const FtDnmmView = {
+  "abi": [
+    { "inputs": [{ "internalType": "address", "name": "_user", "type": "address" }], "name": "getAccountData", "outputs": [{ "components": [{ "internalType": "uint256", "name": "ratio", "type": "uint256" }, { "internalType": "uint256", "name": "equityUSD", "type": "uint256" }, { "internalType": "uint256", "name": "maintUSD", "type": "uint256" }, { "internalType": "uint256", "name": "collUSD", "type": "uint256" }, { "internalType": "uint256", "name": "debtUSD", "type": "uint256" }, { "internalType": "int256", "name": "enginePnlUSD", "type": "int256" }, { "internalType": "uint16", "name": "hfTargetBps", "type": "uint16" }, { "internalType": "uint16", "name": "hfSafeBps", "type": "uint16" }, { "internalType": "uint256", "name": "minEquityUSD", "type": "uint256" }], "internalType": "struct FtDnmmView.AccountData", "name": "data", "type": "tuple" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "_user", "type": "address" }], "name": "getUserCollateral", "outputs": [{ "components": [{ "internalType": "address", "name": "asset", "type": "address" }, { "internalType": "uint256", "name": "avail", "type": "uint256" }, { "internalType": "uint256", "name": "hold", "type": "uint256" }, { "internalType": "uint256", "name": "priceUSD", "type": "uint256" }], "internalType": "struct FtDnmmView.CollateralInfo[]", "name": "infos", "type": "tuple[]" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "_user", "type": "address" }], "name": "getUserDebts", "outputs": [{ "components": [{ "internalType": "address", "name": "asset", "type": "address" }, { "internalType": "uint256", "name": "debt", "type": "uint256" }, { "internalType": "uint256", "name": "priceUSD", "type": "uint256" }], "internalType": "struct FtDnmmView.DebtInfo[]", "name": "infos", "type": "tuple[]" }], "stateMutability": "view", "type": "function" },
+    { "inputs": [{ "internalType": "address", "name": "_asset", "type": "address" }], "name": "getAssetConfig", "outputs": [{ "components": [{ "internalType": "address", "name": "irm", "type": "address" }, { "internalType": "uint16", "name": "mmBps", "type": "uint16" }, { "internalType": "bool", "name": "enabled", "type": "bool" }, { "internalType": "address", "name": "ftYieldWrapper", "type": "address" }, { "internalType": "bool", "name": "borrowable", "type": "bool" }, { "internalType": "bool", "name": "collateral", "type": "bool" }], "internalType": "struct IConfigRegistry.AssetCfg", "name": "", "type": "tuple" }], "stateMutability": "view", "type": "function" }
+  ],
+  "networks": {
+    "1": {
+      "address": "0x0000000000000000000000000000000000000000",
+      "createdBlock": 0
+    }
+  }
+} as const;
+
+export const FtDnmmOracle = {
+  "abi": [
+    { "inputs": [{ "internalType": "address", "name": "asset", "type": "address" }], "name": "priceUSD", "outputs": [{ "internalType": "uint256", "name": "pxWad", "type": "uint256" }], "stateMutability": "view", "type": "function" }
+  ],
+  "networks": {
+    "1": {
+      "address": "0xe4372dB43D2814750a19b93950157AD81D93674A",
+      "createdBlock": 0
+    }
+  }
+} as const;

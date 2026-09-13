@@ -18,6 +18,7 @@ import * as helpers from './helpers';
 import * as exchange from './exchange';
 import * as morphoBlue from './morphoBlue';
 import * as morphoMidnight from './morphoMidnight';
+import * as ftDnmm from './ftDnmm';
 import * as llamaLend from './llamaLend';
 import * as portfolio from './portfolio';
 import * as claiming from './claiming';
@@ -43,6 +44,7 @@ export {
   helpers,
   morphoBlue,
   morphoMidnight,
+  ftDnmm,
   llamaLend,
   fluid,
   portfolio,
