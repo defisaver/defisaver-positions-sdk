@@ -16,6 +16,7 @@ export enum CompoundVersions {
   'CompoundV3USDT' = 'v3-USDT',
   'CompoundV3USDS' = 'v3-USDS',
   'CompoundV3wstETH' = 'v3-wstETH',
+  'CompoundV3InstitutionalUSDC' = 'v3-institutional-USDC',
 }
 
 export enum CompoundVersionType {
@@ -32,6 +33,7 @@ export interface CompoundMarketData {
   chainIds: NetworkNumber[],
   label: string,
   shortLabel: string,
+  url: string,
   value: CompoundVersions,
   baseAsset: string,
   collAssets: readonly string[],
