@@ -258,6 +258,7 @@ export const aaveV4GetAggregatedPositionData = ({
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.minRatio = '100';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  payload.safetyRatio = payload.ratio;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPosAaveV4(usedAssets);

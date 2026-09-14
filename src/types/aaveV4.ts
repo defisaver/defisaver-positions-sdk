@@ -183,6 +183,7 @@ export interface AaveV4AggregatedPositionData {
   leftToBorrowUsd: string,
   ratio: string,
   collRatio: string,
+  safetyRatio: string,
   liqRatio: string,
   liqPercent: string,
   leveragedType: LeverageType,

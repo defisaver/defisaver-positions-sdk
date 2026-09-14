@@ -208,6 +208,8 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
   let ratio = new Dec(ink).times(collInfo.assetPrice).div(debt).times(100)
     .toString();
   if (new Dec(debt).eq(0)) ratio = '0';
+  // Collateral ratio rebased so 100 sits on the ilk's liquidation ratio (normalised safety ratio).
+  const safetyRatio = +collInfo.liqPercent > 0 ? new Dec(ratio).div(collInfo.liqPercent).mul(100).toString() : '0';
 
   const debtTooLow = new Dec(debt).gt(0) && new Dec(assetAmountInEth(debt, 'DAI')).lt(collInfo.minDebt);
 
@@ -229,6 +231,7 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     debtAssetMarketPrice: '1',
     liquidationPrice,
     ratio,
+    safetyRatio,
     liqRatio: collInfo.liqRatio.toString(),
     liqPercent: parseFloat(collInfo.liqPercent.toString()),
     assetPrice: collInfo.assetPrice,

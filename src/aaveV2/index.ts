@@ -210,6 +210,8 @@ export const _getAaveV2AccountData = async (provider: Client, network: NetworkNu
   payload.collRatio = payload.borrowedUsd && payload.borrowedUsd !== '0'
     ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString()
     : '0';
+  // Aave v2 has no LTV-0 fallback (AaveV3View only), so its safety ratio is the plain ratio.
+  payload.safetyRatio = payload.ratio;
 
   // Calculate borrow limits per asset
   Object.values(payload.usedAssets).forEach((item) => {

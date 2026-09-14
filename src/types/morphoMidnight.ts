@@ -190,6 +190,7 @@ export interface MorphoMidnightAggregatedPositionData {
   ltv: string,
   ratio: string, // health ratio as a percentage (from MidnightView.ratio, 1e18-scaled)
   healthRatio: string, // liquidationLimitUsd / borrowedUsd
+  safetyRatio: string, // borrowLimitUsd / borrowedUsd as a percentage (100 = liquidation)
   leveragedType: LeverageType,
   leveragedAsset?: string,
   currentVolatilePairRatio?: string,
