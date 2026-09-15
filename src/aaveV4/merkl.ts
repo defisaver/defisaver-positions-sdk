@@ -6,6 +6,7 @@ import {
   IncentiveData,
   IncentiveKind,
   IncentiveSide,
+  MerklCampaign,
   MerklOpportunity,
   OpportunityAction,
   OpportunityStatus,
@@ -18,6 +19,9 @@ import {
  *   - AAVE_V4_SPOKE_SUPPLY / AAVE_V4_SPOKE_BORROW → reward tied to a spoke reserve
  * Embedded campaign params provide the exact on-chain identifiers. Token addresses cannot safely
  * identify Aave V4 rewards because one spoke can expose the same underlying from multiple hubs.
+ * Each stored reward is also tagged with campaign identity (`campaignIds`/`parentCampaignIds`) so
+ * a hub (parent) campaign's child re-listing on a spoke can be told apart from a genuinely
+ * distinct spoke campaign — the former replaces the hub reward, the latter combines with it.
  */
 
 const scopeKey = (scopeAddress: string, id: string | number) => `${scopeAddress.toLowerCase()}_${id.toString()}`;
@@ -43,25 +47,32 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
     .forEach((o) => {
       const side = o.action === OpportunityAction.BORROW ? IncentiveSide.Borrow : IncentiveSide.Supply;
       const incentive = buildIncentive(o);
-      const keys = new Set<string>();
+      // one opportunity can span several campaigns (e.g. renewed periods), so campaign identity is
+      // collected per scope key before the reward entries are written
+      const idsByKey: Record<string, { campaignIds: Set<string>, parentCampaignIds: Set<string> }> = {};
+      const collect = (key: string, campaign: MerklCampaign) => {
+        if (!idsByKey[key]) idsByKey[key] = { campaignIds: new Set(), parentCampaignIds: new Set() };
+        if (campaign.id) idsByKey[key].campaignIds.add(campaign.id);
+        if (campaign.parentCampaignId) idsByKey[key].parentCampaignIds.add(campaign.parentCampaignId);
+      };
 
       if (o.type.includes('HUB')) {
-        o.campaigns?.forEach(({ params }) => {
-          if (!params?.hubAddress || params.assetId === undefined || params.assetId === null) return;
-          keys.add(scopeKey(params.hubAddress, params.assetId));
+        o.campaigns?.forEach((c) => {
+          if (!c.params?.hubAddress || c.params.assetId === undefined || c.params.assetId === null) return;
+          collect(scopeKey(c.params.hubAddress, c.params.assetId), c);
         });
-        keys.forEach((key) => {
+        Object.entries(idsByKey).forEach(([key, ids]) => {
           if (!result.hub[key]) result.hub[key] = {};
-          result.hub[key][side] = incentive;
+          result.hub[key][side] = [...(result.hub[key][side] || []), { ...incentive, campaignIds: [...ids.campaignIds] }];
         });
       } else if (o.type.includes('SPOKE')) {
-        o.campaigns?.forEach(({ params }) => {
-          if (!params?.spokeAddress || params.reserveId === undefined || params.reserveId === null) return;
-          keys.add(scopeKey(params.spokeAddress, params.reserveId));
+        o.campaigns?.forEach((c) => {
+          if (!c.params?.spokeAddress || c.params.reserveId === undefined || c.params.reserveId === null) return;
+          collect(scopeKey(c.params.spokeAddress, c.params.reserveId), c);
         });
-        keys.forEach((key) => {
+        Object.entries(idsByKey).forEach(([key, ids]) => {
           if (!result.spoke[key]) result.spoke[key] = {};
-          result.spoke[key][side] = incentive;
+          result.spoke[key][side] = [...(result.spoke[key][side] || []), { ...incentive, campaignIds: [...ids.campaignIds], parentCampaignIds: [...ids.parentCampaignIds] }];
         });
       }
     });
@@ -97,9 +108,9 @@ export const attachAaveV4MerklIncentives = (asset: AaveV4ReserveAssetData, spoke
 
   return {
     ...asset,
-    spokeSupplyIncentives: spokeScoped?.supply ? [...baseSupply, spokeScoped.supply] : baseSupply,
-    spokeBorrowIncentives: spokeScoped?.borrow ? [...baseBorrow, spokeScoped.borrow] : baseBorrow,
-    hubSupplyIncentives: hubScoped?.supply ? [...baseSupply, hubScoped.supply] : baseSupply,
-    hubBorrowIncentives: hubScoped?.borrow ? [...baseBorrow, hubScoped.borrow] : baseBorrow,
+    spokeSupplyIncentives: spokeScoped?.supply?.length ? [...baseSupply, ...spokeScoped.supply] : baseSupply,
+    spokeBorrowIncentives: spokeScoped?.borrow?.length ? [...baseBorrow, ...spokeScoped.borrow] : baseBorrow,
+    hubSupplyIncentives: hubScoped?.supply?.length ? [...baseSupply, ...hubScoped.supply] : baseSupply,
+    hubBorrowIncentives: hubScoped?.borrow?.length ? [...baseBorrow, ...hubScoped.borrow] : baseBorrow,
   };
 };

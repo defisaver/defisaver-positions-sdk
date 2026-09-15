@@ -19,6 +19,7 @@ import {
   EthAddress,
   IncentiveKind,
   IncentiveSide,
+  MerklCampaign,
   MerklOpportunity,
   NetworkNumber,
   OpportunityAction,
@@ -55,11 +56,14 @@ const opportunity = (over: Partial<MerklOpportunity>): MerklOpportunity => ({
 } as unknown as MerklOpportunity);
 
 const campaign = (
-  params: NonNullable<NonNullable<MerklOpportunity['campaigns']>[number]['params']>,
-  campaignId = '0x1234',
-) => ({ id: '1', campaignId, params });
+  params: NonNullable<MerklCampaign['params']>,
+  over: Partial<Omit<MerklCampaign, 'params'>> = {},
+): MerklCampaign => ({
+  id: '1', campaignId: '0x1234', ...over, params,
+});
 
-// Merkl lists the same USDC borrow reward twice: once scoped to the Bluechip Spoke, once to the Prime Hub
+// Merkl lists the same USDC borrow reward twice: once as the Prime Hub parent campaign, once as
+// its child campaign scoped to the Bluechip Spoke (linked via parentCampaignId → parent's id)
 const campaigns = buildAaveV4MerklRewardMap([
   opportunity({
     type: 'AAVE_V4_SPOKE_BORROW',
@@ -67,13 +71,16 @@ const campaigns = buildAaveV4MerklRewardMap([
     apr: SPOKE_CAMPAIGN_APR,
     campaigns: [campaign({
       spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
-    }, '3413192378461955844')],
+    }, { campaignId: '3413192378461955844', parentCampaignId: '4136256609526176092' })],
   }),
   opportunity({
     type: 'AAVE_V4_HUB_BORROW',
     explorerAddress: PRIME_HUB,
     apr: HUB_CAMPAIGN_APR,
-    campaigns: [campaign({ hubAddress: PRIME_HUB, assetId: '4' })],
+    campaigns: [campaign(
+      { hubAddress: PRIME_HUB, assetId: '4' },
+      { id: '4136256609526176092', childCampaignIds: ['1'] },
+    )],
   }),
 ], NetworkNumber.Eth);
 
@@ -127,12 +134,12 @@ describe('Aave V4 Merkl campaign matching', () => {
           reserveId: '7',
           hubAddress: CORE_HUB,
           hubAssetId: '5',
-        }, '9654310212108407598')],
+        }, { campaignId: '9654310212108407598', parentCampaignId: '7197768104610876659' })],
       }),
       opportunity({
         type: 'AAVE_V4_HUB_BORROW',
         apr: HUB_CAMPAIGN_APR,
-        campaigns: [campaign({ hubAddress: CORE_HUB, assetId: '5' })],
+        campaigns: [campaign({ hubAddress: CORE_HUB, assetId: '5' }, { id: '7197768104610876659' })],
       }),
     ], NetworkNumber.Eth);
 
@@ -191,12 +198,14 @@ describe('Aave V4 Merkl campaign matching', () => {
           reserveId: '3',
           hubAddress: PLUS_HUB,
           hubAssetId: '3',
-        }, '0xd0560a6ca8cd5b0b7e35252ef59f53fefd30058781afd1777daf775b72e4ba37')],
+        }, { campaignId: '0xd0560a6ca8cd5b0b7e35252ef59f53fefd30058781afd1777daf775b72e4ba37' })],
       }),
     ], NetworkNumber.Eth);
 
     const direct = attachAaveV4MerklIncentives(
-      reserve({ underlying: USDE, hub: PLUS_HUB, assetId: 3, reserveId: 3 }),
+      reserve({
+        underlying: USDE, hub: PLUS_HUB, assetId: 3, reserveId: 3,
+      }),
       ETHENA_ECOSYSTEM_SPOKE,
       directCampaigns,
     );
@@ -282,6 +291,60 @@ describe('Aave V4 applicable incentives', () => {
     const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
     assert.lengthOf(applicable, 2);
     assert.deepEqual(applicable[0], staking);
+  });
+
+  it('combines a hub campaign with a distinct (non-child) spoke campaign on the same reserve', () => {
+    const mixedCampaigns = buildAaveV4MerklRewardMap([
+      // a standalone spoke campaign: no parentCampaignId even though params name the hub asset
+      opportunity({
+        type: 'AAVE_V4_SPOKE_BORROW',
+        apr: 5,
+        campaigns: [campaign({
+          spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
+        }, { id: '10020234287529041958', campaignId: '0xec49' })],
+      }),
+      opportunity({
+        type: 'AAVE_V4_HUB_BORROW',
+        apr: HUB_CAMPAIGN_APR,
+        campaigns: [campaign({ hubAddress: PRIME_HUB, assetId: '4' }, { id: '4136256609526176092' })],
+      }),
+    ], NetworkNumber.Eth);
+
+    const enriched = attachAaveV4MerklIncentives(reserve({}), BLUECHIP_SPOKE, mixedCampaigns);
+    const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
+    assert.lengthOf(applicable, 2);
+    assert.sameMembers(applicable.map((i) => i.apy), [aprToApy(5), aprToApy(HUB_CAMPAIGN_APR)]);
+  });
+
+  it('keeps a distinct spoke campaign while still dropping the parent of a sibling child campaign', () => {
+    // one reserve carries both a child campaign (of the prime hub campaign) and a standalone
+    // spoke campaign — the parent hub reward must stay out, the standalone reward must stay in
+    const mixedCampaigns = buildAaveV4MerklRewardMap([
+      opportunity({
+        type: 'AAVE_V4_SPOKE_BORROW',
+        apr: SPOKE_CAMPAIGN_APR,
+        campaigns: [campaign({
+          spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
+        }, { id: '2', campaignId: '3413192378461955844', parentCampaignId: '4136256609526176092' })],
+      }),
+      opportunity({
+        type: 'AAVE_V4_SPOKE_BORROW',
+        apr: 5,
+        campaigns: [campaign({
+          spokeAddress: BLUECHIP_SPOKE, reserveId: '4', hubAddress: PRIME_HUB, hubAssetId: '4',
+        }, { id: '10020234287529041958', campaignId: '0xec49' })],
+      }),
+      opportunity({
+        type: 'AAVE_V4_HUB_BORROW',
+        apr: HUB_CAMPAIGN_APR,
+        campaigns: [campaign({ hubAddress: PRIME_HUB, assetId: '4' }, { id: '4136256609526176092' })],
+      }),
+    ], NetworkNumber.Eth);
+
+    const enriched = attachAaveV4MerklIncentives(reserve({}), BLUECHIP_SPOKE, mixedCampaigns);
+    const applicable = getAaveV4ApplicableIncentives(enriched, IncentiveSide.Borrow);
+    assert.lengthOf(applicable, 2);
+    assert.sameMembers(applicable.map((i) => i.apy), [aprToApy(SPOKE_CAMPAIGN_APR), aprToApy(5)]);
   });
 });
 

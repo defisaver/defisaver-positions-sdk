@@ -11,6 +11,7 @@ import { calculateInterestEarned } from '../../staking';
 import {
   AaveV4AggregatedPositionData,
   AaveV4AssetsData,
+  AaveV4MerklIncentive,
   AaveV4ReserveAssetData,
   AaveV4SpokeInfo,
   AaveV4UsedReserveAsset,
@@ -93,22 +94,33 @@ export const calcUserRiskPremiumBps = (usedAssets: AaveV4UsedReserveAssets, asse
 };
 
 /**
- * `spokeXIncentives`/`hubXIncentives` are each the intrinsic `base` list with at most one Merkl
- * reward appended (see attachAaveV4MerklIncentives). Merkl regularly publishes the same reward
- * stream at both scopes (a spoke campaign and a hub campaign covering the same borrows, e.g. USDC
- * borrowed from the Prime Hub via the Bluechip Spoke), so the scopes must never be summed — the
- * more specific spoke reward wins and the hub reward only applies when no spoke campaign exists,
- * which is also what every per-asset APY badge (and Aave's own UI) shows.
+ * `spokeXIncentives`/`hubXIncentives` are each the intrinsic `base` list with the Merkl rewards
+ * of that scope appended (see attachAaveV4MerklIncentives). Merkl publishes a hub reward stream at both
+ * scopes — the hub (parent) campaign plus a child campaign per covered spoke (e.g. USDC borrowed
+ * from the Prime Hub via the Bluechip Spoke) — so a child must never be summed with its parent:
+ * the more specific spoke listing wins. A hub reward the spoke reward is not a child of comes from
+ * a distinct campaign, and both genuinely accrue, so they are shown together — which is also what
+ * every per-asset APY badge (and Aave's own UI) shows.
  */
 const mergeScopedIncentives = (base: IncentiveData[] = [], spokeScoped?: IncentiveData[], hubScoped?: IncentiveData[]): IncentiveData[] => {
-  const spokeExtras = spokeScoped ? spokeScoped.slice(base.length) : [];
-  const hubExtras = hubScoped ? hubScoped.slice(base.length) : [];
-  return [...base, ...(spokeExtras.length ? spokeExtras : hubExtras)];
+  const spokeExtras: AaveV4MerklIncentive[] = spokeScoped ? spokeScoped.slice(base.length) : [];
+  const hubExtras: AaveV4MerklIncentive[] = hubScoped ? hubScoped.slice(base.length) : [];
+
+  const parentIds = new Set<string>();
+  spokeExtras.forEach((extra) => extra.parentCampaignIds?.forEach((id) => parentIds.add(id)));
+
+  const distinctHubExtras = hubExtras.filter((extra) => {
+    // without campaign identity the parent/child relation is unknowable — fail closed to spoke-wins
+    if (!extra.campaignIds?.length) return !spokeExtras.length;
+    return !extra.campaignIds.some((id) => parentIds.has(id));
+  });
+
+  return [...base, ...spokeExtras, ...distinctHubExtras];
 };
 
 /**
  * The incentives that actually accrue to a position on this reserve for the given side: the
- * intrinsic (staking) incentives plus the single applicable Merkl reward. Display surfaces should
+ * intrinsic (staking) incentives plus the applicable Merkl rewards. Display surfaces should
  * use this rather than picking a scoped list directly, so badges always match the net APY math.
  */
 export const getAaveV4ApplicableIncentives = (assetData: AaveV4ReserveAssetData, side: IncentiveSide): IncentiveData[] => (side === IncentiveSide.Supply
