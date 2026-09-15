@@ -7,8 +7,6 @@ export enum ClaimType {
   AAVE_MERIT_REWARDS = 'AAVE_MERIT_REWARDS',
   /** Rewards distributed through Merkl across supported protocols */
   MERKL_REWARDS = 'MERKL_REWARDS',
-  /** Rewards from Compound V3 (only in COMP) */
-  COMPOUND_V3_COMP = 'COMPOUND_V3_COMP',
   /** Rewards from Spark (wstETH only for now) */
   SPARK_REWARDS = 'SPARK_REWARDS',
   /** Rewards from King (prev LTR^2 - received for weETH holding) */
@@ -75,13 +73,6 @@ export type KingRewardsClaimableToken = _ClaimableTokenPartial & {
   };
 };
 
-export type CompoundV3CompClaimableToken = _ClaimableTokenPartial & {
-  claimType: ClaimType.COMPOUND_V3_COMP,
-  additionalClaimFields: {
-    marketAddress: EthAddress;
-  }
-};
-
 export enum SparkAirdropType {
   SPARK_IGNITION = 'spark-ignition',
   PRE_FARMING_AND_SOCIAL = 'pre-farming-and-social',
@@ -115,7 +106,6 @@ export type ClaimableToken =
     AaveRewardsClaimableToken
     | AaveMeritRewardsClaimableToken
     | MerklRewardsClaimableToken
-    | CompoundV3CompClaimableToken
     | SparkRewardsClaimableToken
     | KingRewardsClaimableToken
     | SparkAirdropClaimableToken

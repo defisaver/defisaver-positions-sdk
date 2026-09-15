@@ -45,7 +45,6 @@ import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } fro
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getUmbrellaData } from '../umbrella';
 import { getMerklUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
-import { getCompoundV3Rewards } from '../claiming/compV3';
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
@@ -157,7 +156,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     rewardsData[address.toLowerCase() as EthAddress] = {
       merkl: {},
       aaveV3: {},
-      compV3: {},
       spark: {},
       spk: {},
       king: {},
@@ -354,16 +352,6 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
       } catch (error) {
         console.error(`Error fetching Spark rewards data for address ${address}, market ${market.value}:`, error);
         rewardsData[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark rewards data for address ${address}`, data: null };
-      }
-    })).flat(),
-    // CompV3 rewards
-    ...compoundV3Markets.map(market => addresses.map(async (address) => {
-      try {
-        const compV3Rewards = await getCompoundV3Rewards(client, network, address, market.baseMarketAddress);
-        rewardsData[address.toLowerCase() as EthAddress].compV3[market.value] = { error: '', data: compV3Rewards };
-      } catch (error) {
-        console.error(`Error fetching Compound V3 rewards data for address ${address}:`, error);
-        rewardsData[address.toLowerCase() as EthAddress].compV3[market.value] = { error: `Error fetching Compound V3 rewards data for address ${address}`, data: null };
       }
     })).flat(),
     ...addresses.map(async (address) => {
