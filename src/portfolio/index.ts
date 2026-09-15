@@ -75,7 +75,12 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
 
-  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 2_500_000 } } }];
+  // batchSize is viem's cap on a batch's raw subcall calldata (bytes); the JSON-RPC body ends up
+  // ~4x larger (hex + aggregate3 ABI + JSON overhead) and RPC providers reject bodies over
+  // ~2.5MB with HTTP 413, so keep this small enough that no single body gets near that.
+  // 250k gives the largest body of around 1.26MB - if we bump, we can save maybe 2-3 rpc calls but scaling takes a hit
+  // (e.g. adding new markets may result in body size going over alchemy body size limit)
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 250_000 } } }];
   const client = getViemProvider(provider, ...args);
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
