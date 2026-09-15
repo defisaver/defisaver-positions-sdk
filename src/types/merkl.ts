@@ -11,6 +11,25 @@ export enum OpportunityStatus {
   UPCOMING = 'UPCOMING',
 }
 
+export type MerklCampaign = {
+  id: string;
+  campaignId: string;
+  /**
+   * Merkl-internal `id` of the parent campaign — set on child campaigns, which re-publish a hub
+   * (parent) campaign's reward scoped to a single spoke reserve. Absent on standalone campaigns,
+   * whose `params` still carry `hubAddress`/`hubAssetId`, so only this field tells the two apart.
+   */
+  parentCampaignId?: string;
+  childCampaignIds?: string[];
+  params?: {
+    reserveId?: string | number;
+    spokeAddress?: EthAddress;
+    hubAddress?: EthAddress;
+    hubAssetId?: string | number;
+    assetId?: string | number;
+  };
+};
+
 export type MerklOpportunity = {
   chainId: number;
   type: string;
@@ -25,6 +44,7 @@ export type MerklOpportunity = {
   id: string;
   explorerAddress?: EthAddress;
   description?: string;
+  campaigns?: MerklCampaign[];
   tokens: {
     id: string;
     name: string;
@@ -70,7 +90,19 @@ export type MerklOpportunity = {
 export type MerkleRewardInfo = { apy: string; rewardTokenSymbol: string, description: string, identifier: string };
 export type MerkleRewardMap = Record<EthAddress, { supply?: MerkleRewardInfo; borrow?: MerkleRewardInfo }>;
 
-export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: IncentiveData };
+/**
+ * A scoped Aave V4 Merkl reward tagged with the campaign identity needed to resolve parent/child
+ * listings downstream: `campaignIds` are the Merkl-internal ids of the campaigns behind this
+ * entry, `parentCampaignIds` (spoke entries only) the ids of the hub campaigns those are children
+ * of. A hub reward is dropped only for a spoke reward that is its own child re-listing — a spoke
+ * reward from a distinct campaign combines with it instead.
+ */
+export type AaveV4MerklIncentive = IncentiveData & {
+  campaignIds?: string[];
+  parentCampaignIds?: string[];
+};
+
+export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: AaveV4MerklIncentive[] };
 
 /**
  * Fluid vault-scoped Merkl campaigns keyed by lowercase vault address — `supply` rewards apply to
@@ -80,8 +112,8 @@ export type FluidMerklRewardMap = Record<string, { supply: IncentiveData[], borr
 
 /**
  * Aave V4 Merkl reward campaigns split by scope:
- *   - `hub`: keyed by `${hubAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing via a hub
- *   - `spoke`: keyed by `${spokeAddress}_${underlyingAddress}` (both lowercase) — rewards for supplying/borrowing on a spoke
+ *   - `hub`: keyed by `${hubAddress}_${assetId}` — rewards for supplying/borrowing via a hub asset
+ *   - `spoke`: keyed by `${spokeAddress}_${reserveId}` — rewards for supplying/borrowing on a spoke reserve
  */
 export type AaveV4MerklRewardMap = {
   hub: Record<string, AaveV4MerklScopedReward>;
