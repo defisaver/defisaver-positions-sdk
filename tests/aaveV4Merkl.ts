@@ -1,4 +1,5 @@
 import { getAssetInfo } from '@defisaver/tokens';
+import Dec from 'decimal.js';
 import { attachAaveV4MerklIncentives, buildAaveV4MerklRewardMap } from '../src/aaveV4/merkl';
 import { calculateNetApyAaveV4, getAaveV4ApplicableIncentives } from '../src/helpers/aaveV4Helpers';
 import {
@@ -204,13 +205,95 @@ describe('Aave V4 Merkl campaign matching', () => {
 
     const direct = attachAaveV4MerklIncentives(
       reserve({
-        underlying: USDE, hub: PLUS_HUB, assetId: 3, reserveId: 3,
+        underlying: USDE, hub: PLUS_HUB, assetId: 3, reserveId: 3, supplyRate: '1.32',
       }),
       ETHENA_ECOSYSTEM_SPOKE,
       directCampaigns,
     );
     assert.lengthOf(direct.spokeSupplyIncentives!, 1);
-    assert.equal(direct.spokeSupplyIncentives![0].apy, aprToApy(5.25));
+    assert.equal(direct.spokeSupplyIncentives![0].apy, new Dec(aprToApy(5.25)).minus(1.32).toString());
+    assert.equal(getAaveV4ApplicableIncentives(direct, IncentiveSide.Supply)[0].apy, direct.spokeSupplyIncentives![0].apy);
+  });
+
+  it('maps net-lending targets from nested Hub parameters without crossing Hub assets', () => {
+    const netLending = buildAaveV4MerklRewardMap([
+      opportunity({
+        type: 'AAVE_V4_HUB_NET_LENDING', action: OpportunityAction.LEND, apr: 6,
+        tokens: [{ address: USDG, symbol: 'USDG' }] as MerklOpportunity['tokens'],
+        campaigns: [campaign({ distributionMethodParameters: {
+          distributionMethod: 'AAVE_V4_NET_APR', distributionSettings: { hubAddress: CORE_HUB, assetId: '8' },
+        } })],
+      }),
+      opportunity({
+        type: 'AAVE_V4_HUB_NET_LENDING', action: OpportunityAction.LEND, apr: 5,
+        tokens: [{ address: USDG, symbol: 'USDG' }] as MerklOpportunity['tokens'],
+        campaigns: [campaign({ distributionMethodParameters: {
+          distributionMethod: 'AAVE_V4_NET_APR', distributionSettings: { hubAddress: PAXOS_HUB, assetId: '3' },
+        } })],
+      }),
+    ], NetworkNumber.Eth);
+
+    const nativeSupplyApy = aprToApy(2);
+    const core = attachAaveV4MerklIncentives(
+      reserve({ hub: CORE_HUB, assetId: 8, supplyRate: nativeSupplyApy }), MAIN_SPOKE, netLending,
+    );
+    const paxos = attachAaveV4MerklIncentives(
+      reserve({ hub: PAXOS_HUB, assetId: 3, supplyRate: nativeSupplyApy }), MAIN_SPOKE, netLending,
+    );
+    const wrongAsset = attachAaveV4MerklIncentives(
+      reserve({ hub: CORE_HUB, assetId: 3, supplyRate: nativeSupplyApy }), MAIN_SPOKE, netLending,
+    );
+
+    assert.equal(new Dec(core.hubSupplyIncentives![0].apy).plus(nativeSupplyApy).toString(), aprToApy(6));
+    assert.equal(new Dec(paxos.hubSupplyIncentives![0].apy).plus(nativeSupplyApy).toString(), aprToApy(5));
+    assert.isEmpty(wrongAsset.hubSupplyIncentives);
+    const aboveTarget = attachAaveV4MerklIncentives(
+      reserve({ hub: CORE_HUB, assetId: 8, supplyRate: aprToApy(7) }), MAIN_SPOKE, netLending,
+    );
+    assert.equal(aboveTarget.hubSupplyIncentives![0].apy, '0');
+
+    const { netApy } = calculateNetApyAaveV4({
+      assetsData: { 'USDG-4': core } as AaveV4AssetsData,
+      usedAssets: { 'USDG-4': {
+        symbol: 'USDG', reserveId: 4, isSupplied: true, isBorrowed: false, collateral: false,
+        collateralFactor: 0, suppliedUsd: '1000', borrowedUsd: '0',
+      } } as unknown as AaveV4UsedReserveAssets,
+    });
+    assert.approximately(+netApy, +aprToApy(6), 0.000001);
+  });
+
+  it('adds a fixed-APR LEND reward on top of native supply APY', () => {
+    const now = Math.floor(Date.now() / 1000);
+    const additive = buildAaveV4MerklRewardMap([opportunity({
+      type: 'AAVE_V4_SPOKE_SUPPLY', action: OpportunityAction.LEND, apr: 4,
+      campaigns: [
+        campaign({
+          spokeAddress: ETHENA_ECOSYSTEM_SPOKE, reserveId: '3',
+          distributionMethodParameters: { distributionMethod: 'AAVE_V4_NET_APR' },
+        }, { startTimestamp: now - 1000, endTimestamp: now - 1 }),
+        campaign({
+          spokeAddress: ETHENA_ECOSYSTEM_SPOKE, reserveId: '3',
+          distributionMethodParameters: { distributionMethod: 'FIX_APR' },
+        }, { startTimestamp: now - 1, endTimestamp: now + 1000 }),
+      ],
+    })], NetworkNumber.Eth);
+    const nativeSupplyApy = aprToApy(2);
+    const enriched = attachAaveV4MerklIncentives(
+      reserve({ reserveId: 3, supplyRate: nativeSupplyApy }), ETHENA_ECOSYSTEM_SPOKE, additive,
+    );
+
+    assert.equal(getAaveV4ApplicableIncentives(enriched, IncentiveSide.Supply)[0].apy, aprToApy(4));
+  });
+
+  it('does not guess how to split a mixed net/additive opportunity APR', () => {
+    const mixed = buildAaveV4MerklRewardMap([opportunity({
+      type: 'AAVE_V4_SPOKE_SUPPLY', action: OpportunityAction.LEND,
+      campaigns: ['AAVE_V4_NET_APR', 'FIX_APR'].map((distributionMethod) => campaign({
+        spokeAddress: ETHENA_ECOSYSTEM_SPOKE, reserveId: '3',
+        distributionMethodParameters: { distributionMethod },
+      })),
+    })], NetworkNumber.Eth);
+    assert.isEmpty(mixed.spoke);
   });
 
   it('matches addresses regardless of casing', () => {

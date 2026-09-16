@@ -14,6 +14,8 @@ export enum OpportunityStatus {
 export type MerklCampaign = {
   id: string;
   campaignId: string;
+  startTimestamp?: number;
+  endTimestamp?: number;
   /**
    * Merkl-internal `id` of the parent campaign — set on child campaigns, which re-publish a hub
    * (parent) campaign's reward scoped to a single spoke reserve. Absent on standalone campaigns,
@@ -27,6 +29,13 @@ export type MerklCampaign = {
     hubAddress?: EthAddress;
     hubAssetId?: string | number;
     assetId?: string | number;
+    distributionMethodParameters?: {
+      distributionMethod?: string;
+      distributionSettings?: {
+        hubAddress?: EthAddress;
+        assetId?: string | number;
+      };
+    };
   };
 };
 
@@ -100,6 +109,7 @@ export type MerkleRewardMap = Record<EthAddress, { supply?: MerkleRewardInfo; bo
 export type AaveV4MerklIncentive = IncentiveData & {
   campaignIds?: string[];
   parentCampaignIds?: string[];
+  isAdditiveReward?: boolean;
 };
 
 export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: AaveV4MerklIncentive[] };
