@@ -21,12 +21,32 @@ export type MerklCampaign = {
    */
   parentCampaignId?: string;
   childCampaignIds?: string[];
+  startTimestamp?: number;
+  endTimestamp?: number;
   params?: {
     reserveId?: string | number;
     spokeAddress?: EthAddress;
     hubAddress?: EthAddress;
     hubAssetId?: string | number;
     assetId?: string | number;
+    /**
+     * AAVE_V4_HUB_NET_* campaigns scope per hub: the reward applies to the ids on the campaign's
+     * own side (`lendingAssetIds` for LEND, `borrowAssetIds` for BORROW) — the opposite-side ids
+     * only describe positions that reduce the net accrual, so they never map to a reward.
+     */
+    hubs?: {
+      hubAddress: EthAddress;
+      assets?: { symbol: string; assetId: string | number; decimals?: number; underlyingToken?: EthAddress }[];
+      lendingAssetIds?: (string | number)[];
+      borrowAssetIds?: (string | number)[];
+    }[];
+    /** AAVE_V4_SPOKE_NET_* campaigns scope per spoke, with the same own-side rule as `hubs`. */
+    spokes?: {
+      spokeAddress: EthAddress;
+      spokeName?: string;
+      supplyTokens?: { symbol: string; reserveId: string | number; hubAddress?: EthAddress; hubAssetId?: string | number; underlyingToken?: EthAddress }[];
+      borrowTokens?: { symbol: string; reserveId: string | number; hubAddress?: EthAddress; hubAssetId?: string | number; underlyingToken?: EthAddress }[];
+    }[];
   };
 };
 
