@@ -47,6 +47,13 @@ export type MerklCampaign = {
       supplyTokens?: { symbol: string; reserveId: string | number; hubAddress?: EthAddress; hubAssetId?: string | number; underlyingToken?: EthAddress }[];
       borrowTokens?: { symbol: string; reserveId: string | number; hubAddress?: EthAddress; hubAssetId?: string | number; underlyingToken?: EthAddress }[];
     }[];
+    distributionMethodParameters?: {
+      distributionMethod?: string;
+      distributionSettings?: {
+        hubAddress?: EthAddress;
+        assetId?: string | number;
+      };
+    };
   };
 };
 
@@ -120,6 +127,7 @@ export type MerkleRewardMap = Record<EthAddress, { supply?: MerkleRewardInfo; bo
 export type AaveV4MerklIncentive = IncentiveData & {
   campaignIds?: string[];
   parentCampaignIds?: string[];
+  isAdditiveReward?: boolean;
 };
 
 export type AaveV4MerklScopedReward = { [side in IncentiveSide]?: AaveV4MerklIncentive[] };

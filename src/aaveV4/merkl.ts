@@ -1,7 +1,9 @@
+import Dec from 'decimal.js';
 import { aprToApy } from '../moneymarket';
 import { fetchAllMerklOpportunities } from '../services/merkl';
 import {
   AaveV4MerklRewardMap,
+  AaveV4MerklIncentive,
   AaveV4ReserveAssetData,
   IncentiveData,
   IncentiveKind,
@@ -62,8 +64,23 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
     .filter((o) => typeof o.type === 'string' && o.type.startsWith('AAVE_V4_'))
     .forEach((o) => {
       const side = o.action === OpportunityAction.BORROW ? IncentiveSide.Borrow : IncentiveSide.Supply;
-      const incentive = buildIncentive(o);
-     const idsByKey: Record<string, { campaignIds: Set<string>, parentCampaignIds: Set<string>, endTimestamp?: number }> = {};
+      const now = Date.now() / 1000;
+      const methods = o.campaigns
+        ?.filter((c) => (c.startTimestamp === undefined || c.startTimestamp <= now)
+          && (c.endTimestamp === undefined || c.endTimestamp > now))
+        .map((c) => c.params?.distributionMethodParameters?.distributionMethod);
+      // An opportunity-level APR cannot be split between simultaneous net and additive campaigns.
+      if (side === IncentiveSide.Supply && methods?.includes('AAVE_V4_NET_APR')
+        && methods.some((method) => !!method && method !== 'AAVE_V4_NET_APR')) return;
+      const incentive = {
+        ...buildIncentive(o),
+        // Missing methods keep the existing target-yield behavior.
+        isAdditiveReward: side === IncentiveSide.Supply && !!methods?.length
+          && methods.every((method) => !!method && method !== 'AAVE_V4_NET_APR'),
+      };
+      // one opportunity can span several campaigns (e.g. renewed periods), so campaign identity is
+      // collected per scope key before the reward entries are written
+      const idsByKey: Record<string, { campaignIds: Set<string>, parentCampaignIds: Set<string>, endTimestamp?: number }> = {};
       const collect = (key: string, campaign: MerklCampaign) => {
         if (!idsByKey[key]) idsByKey[key] = { campaignIds: new Set(), parentCampaignIds: new Set() };
         if (campaign.id) idsByKey[key].campaignIds.add(campaign.id);
@@ -82,8 +99,10 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
             });
             return;
           }
-          if (!c.params?.hubAddress || c.params.assetId === undefined || c.params.assetId === null) return;
-          collect(scopeKey(c.params.hubAddress, c.params.assetId), c);
+          const hubAddress = c.params?.hubAddress ?? c.params?.distributionMethodParameters?.distributionSettings?.hubAddress;
+          const assetId = c.params?.assetId ?? c.params?.distributionMethodParameters?.distributionSettings?.assetId;
+          if (!hubAddress || assetId === undefined || assetId === null) return;
+          collect(scopeKey(hubAddress, assetId), c);
         });
         Object.entries(idsByKey).forEach(([key, ids]) => {
           if (!result.hub[key]) result.hub[key] = {};
@@ -142,12 +161,17 @@ export const attachAaveV4MerklIncentives = (asset: AaveV4ReserveAssetData, spoke
 
   const spokeScoped = spokeAddress ? campaigns.spoke[scopeKey(spokeAddress, asset.reserveId)] : undefined;
   const hubScoped = asset.hub ? campaigns.hub[scopeKey(asset.hub, asset.assetId)] : undefined;
+  // Net-APR campaigns top up native yield; additive campaigns pay their APR on top.
+  const supplyRewards = (rewards: AaveV4MerklIncentive[] = []) => rewards.map((reward) => ({
+    ...reward,
+    apy: reward.isAdditiveReward ? reward.apy : Dec.max(0, new Dec(reward.apy).minus(asset.supplyRate || 0)).toString(),
+  }));
 
   return {
     ...asset,
-    spokeSupplyIncentives: spokeScoped?.supply?.length ? [...baseSupply, ...spokeScoped.supply] : baseSupply,
+    spokeSupplyIncentives: spokeScoped?.supply?.length ? [...baseSupply, ...supplyRewards(spokeScoped.supply)] : baseSupply,
     spokeBorrowIncentives: spokeScoped?.borrow?.length ? [...baseBorrow, ...spokeScoped.borrow] : baseBorrow,
-    hubSupplyIncentives: hubScoped?.supply?.length ? [...baseSupply, ...hubScoped.supply] : baseSupply,
+    hubSupplyIncentives: hubScoped?.supply?.length ? [...baseSupply, ...supplyRewards(hubScoped.supply)] : baseSupply,
     hubBorrowIncentives: hubScoped?.borrow?.length ? [...baseBorrow, ...hubScoped.borrow] : baseBorrow,
   };
 };
