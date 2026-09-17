@@ -8,6 +8,7 @@ import {
   IncentiveData,
   IncentiveKind,
   IncentiveSide,
+  IncentiveSource,
   MerklCampaign,
   MerklOpportunity,
   OpportunityAction,
@@ -17,8 +18,12 @@ import {
 
 /**
  * Merkl tags Aave V4 reward campaigns by scope via the `type` field:
- *   - AAVE_V4_HUB_SUPPLY / AAVE_V4_HUB_BORROW / AAVE_V4_HUB_NET_LENDING → hub asset
+ *   - AAVE_V4_HUB_SUPPLY / AAVE_V4_HUB_BORROW   → reward tied to a hub asset
  *   - AAVE_V4_SPOKE_SUPPLY / AAVE_V4_SPOKE_BORROW → reward tied to a spoke reserve
+ *   - AAVE_V4_HUB_NET_LENDING / AAVE_V4_SPOKE_NET_BORROWING → reward on the NET position
+ *     (supply minus same-token borrows, or vice versa); params list scopes as `hubs[]`/`spokes[]`
+ *     arrays instead of a flat address+id pair, and only the campaign's own side maps to a reward
+ *     (the opposite-side ids describe what reduces the accrual)
  * Embedded campaign params provide the exact on-chain identifiers. Token addresses cannot safely
  * identify Aave V4 rewards because one spoke can expose the same underlying from multiple hubs.
  * Each stored reward is also tagged with campaign identity (`campaignIds`/`parentCampaignIds`) so
@@ -35,12 +40,23 @@ const buildIncentive = (opportunity: MerklOpportunity): IncentiveData => {
     apy: aprToApy(opportunity.apr),
     token,
     incentiveKind: IncentiveKind.Reward,
-    description: `Eligible for ${token} rewards through Merkl.${opportunity.description ? `\n${opportunity.description}` : ''}`,
+    source: IncentiveSource.Merkl,
+    name: opportunity.name,
+    description: opportunity.description || `Eligible for ${token} rewards through Merkl.`,
   };
 };
 
 export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], chainId: NetworkNumber): AaveV4MerklRewardMap => {
   const result: AaveV4MerklRewardMap = { hub: {}, spoke: {} };
+
+  const endByCampaignId: Record<string, number> = {};
+  opportunities.forEach((o) => o.campaigns?.forEach((c) => {
+    if (c.id && c.endTimestamp) endByCampaignId[c.id] = +c.endTimestamp;
+  }));
+  const effectiveEndTimestamp = (campaign: MerklCampaign): number => Math.max(
+    campaign.endTimestamp ? +campaign.endTimestamp : 0,
+    ...(campaign.childCampaignIds || []).map((id) => endByCampaignId[id] || 0),
+  );
 
   opportunities
     .filter((o) => o.chainId === chainId)
@@ -64,15 +80,25 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
       };
       // one opportunity can span several campaigns (e.g. renewed periods), so campaign identity is
       // collected per scope key before the reward entries are written
-      const idsByKey: Record<string, { campaignIds: Set<string>, parentCampaignIds: Set<string> }> = {};
+      const idsByKey: Record<string, { campaignIds: Set<string>, parentCampaignIds: Set<string>, endTimestamp?: number }> = {};
       const collect = (key: string, campaign: MerklCampaign) => {
         if (!idsByKey[key]) idsByKey[key] = { campaignIds: new Set(), parentCampaignIds: new Set() };
         if (campaign.id) idsByKey[key].campaignIds.add(campaign.id);
         if (campaign.parentCampaignId) idsByKey[key].parentCampaignIds.add(campaign.parentCampaignId);
+        const endTimestamp = effectiveEndTimestamp(campaign);
+        if (endTimestamp) idsByKey[key].endTimestamp = Math.max(idsByKey[key].endTimestamp || 0, endTimestamp);
       };
 
       if (o.type.includes('HUB')) {
         o.campaigns?.forEach((c) => {
+          if (c.params?.hubs?.length) {
+            c.params.hubs.forEach((hub) => {
+              if (!hub.hubAddress) return;
+              const rewardedIds = (side === IncentiveSide.Borrow ? hub.borrowAssetIds : hub.lendingAssetIds) || [];
+              rewardedIds.forEach((assetId) => collect(scopeKey(hub.hubAddress, assetId), c));
+            });
+            return;
+          }
           const hubAddress = c.params?.hubAddress ?? c.params?.distributionMethodParameters?.distributionSettings?.hubAddress;
           const assetId = c.params?.assetId ?? c.params?.distributionMethodParameters?.distributionSettings?.assetId;
           if (!hubAddress || assetId === undefined || assetId === null) return;
@@ -80,16 +106,29 @@ export const buildAaveV4MerklRewardMap = (opportunities: MerklOpportunity[], cha
         });
         Object.entries(idsByKey).forEach(([key, ids]) => {
           if (!result.hub[key]) result.hub[key] = {};
-          result.hub[key][side] = [...(result.hub[key][side] || []), { ...incentive, campaignIds: [...ids.campaignIds] }];
+          result.hub[key][side] = [...(result.hub[key][side] || []), { ...incentive, endTimestamp: ids.endTimestamp, campaignIds: [...ids.campaignIds] }];
         });
       } else if (o.type.includes('SPOKE')) {
         o.campaigns?.forEach((c) => {
+          if (c.params?.spokes?.length) {
+            c.params.spokes.forEach((spoke) => {
+              if (!spoke.spokeAddress) return;
+              const rewardedTokens = (side === IncentiveSide.Borrow ? spoke.borrowTokens : spoke.supplyTokens) || [];
+              rewardedTokens.forEach((tokenScope) => {
+                if (tokenScope.reserveId === undefined || tokenScope.reserveId === null) return;
+                collect(scopeKey(spoke.spokeAddress, tokenScope.reserveId), c);
+              });
+            });
+            return;
+          }
           if (!c.params?.spokeAddress || c.params.reserveId === undefined || c.params.reserveId === null) return;
           collect(scopeKey(c.params.spokeAddress, c.params.reserveId), c);
         });
         Object.entries(idsByKey).forEach(([key, ids]) => {
           if (!result.spoke[key]) result.spoke[key] = {};
-          result.spoke[key][side] = [...(result.spoke[key][side] || []), { ...incentive, campaignIds: [...ids.campaignIds], parentCampaignIds: [...ids.parentCampaignIds] }];
+          result.spoke[key][side] = [...(result.spoke[key][side] || []), {
+            ...incentive, endTimestamp: ids.endTimestamp, campaignIds: [...ids.campaignIds], parentCampaignIds: [...ids.parentCampaignIds],
+          }];
         });
       }
     });
@@ -101,7 +140,7 @@ export const getAaveV4MerkleCampaigns = async (chainId: NetworkNumber): Promise<
   try {
     const opportunities = await fetchAllMerklOpportunities({
       mainProtocolId: 'aave',
-      type: 'AAVE_V4_HUB_SUPPLY,AAVE_V4_HUB_BORROW,AAVE_V4_HUB_NET_LENDING,AAVE_V4_SPOKE_SUPPLY,AAVE_V4_SPOKE_BORROW',
+      type: 'AAVE_V4_HUB_SUPPLY,AAVE_V4_HUB_BORROW,AAVE_V4_SPOKE_SUPPLY,AAVE_V4_SPOKE_BORROW,AAVE_V4_HUB_NET_LENDING,AAVE_V4_HUB_NET_BORROWING,AAVE_V4_SPOKE_NET_LENDING,AAVE_V4_SPOKE_NET_BORROWING',
       status: OpportunityStatus.LIVE,
       campaigns: 'true',
     });

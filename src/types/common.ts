@@ -34,7 +34,9 @@ export interface IncentiveData {
   apy: string,
   incentiveKind?: IncentiveKind;
   source?: IncentiveSource;
+  name?: string;
   description?: string;
+  endTimestamp?: number;
   eligibilityId?: IncentiveEligibilityId;
 }
 
