@@ -50,7 +50,7 @@ export const _getMakerAccountBalances = async (provider: PublicClient, network: 
   const [
     par,
     [_, mat],
-    [artGlobal, rate, spot, line],
+    [artGlobal, rate, spot, line, dust],
     [duty],
     futureRate,
     chop,
@@ -71,6 +71,7 @@ export const _getMakerAccountBalances = async (provider: PublicClient, network: 
     rate.toString(),
     spot.toString(),
     line.toString(),
+    dust.toString(),
     duty.toString(),
     futureRate.toString(),
     chop.toString(),
@@ -143,7 +144,7 @@ export const _getMakerIlksData = async (provider: Client, network: NetworkNumber
     const ilk = stringToBytes(ilkLabel) as HexString;
     const [
       [_, mat],
-      [artGlobal, rate, spot, line],
+      [artGlobal, rate, spot, line, dust],
       [duty],
       futureRate,
       chop,
@@ -163,6 +164,7 @@ export const _getMakerIlksData = async (provider: Client, network: NetworkNumber
       rate.toString(),
       spot.toString(),
       line.toString(),
+      dust.toString(),
       duty.toString(),
       futureRate.toString(),
       chop.toString(),
