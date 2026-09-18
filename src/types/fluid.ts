@@ -344,6 +344,7 @@ export interface FluidAggregatedVaultData {
   merklBorrowIncentives: IncentiveData[],
   ratio: string,
   collRatio: string,
+  safetyRatio: string,
   minRatio: string,
   totalInterestUsd: string,
   leveragedType?: LeverageType,

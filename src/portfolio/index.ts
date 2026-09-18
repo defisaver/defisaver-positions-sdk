@@ -7,6 +7,7 @@ import {
   CrvUsdMarkets,
   LiquityV2Markets,
   LlamaLendMarkets,
+  MakerActiveIlks,
   MorphoBlueMarkets,
   MorphoMidnightMarkets,
   SparkMarkets,
@@ -27,6 +28,7 @@ import {
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   MorphoMidnightMarketInfo,
+  PortfolioMarketsData,
   PortfolioPositionsData,
   SparkMarketsData,
 } from '../types';
@@ -36,13 +38,13 @@ import { _getCurveUsdGlobalData, _getCurveUsdUserData } from '../curveUsd';
 import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
 import { _getAaveV3AccountData, _getAaveV3MarketData, getStakeAaveData } from '../aaveV3';
 import { ZERO_ADDRESS } from '../constants';
-import { _getMakerCdpData, _getUserCdps } from '../maker';
+import { _getMakerCdpData, _getMakerIlksData, _getUserCdps } from '../maker';
 import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
 import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
-import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
+import { _getAllFluidMarketDataPortfolio, _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getUmbrellaData } from '../umbrella';
 import { getMerklUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
@@ -585,6 +587,272 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     positions,
     stakingPositions,
     rewardsData,
+    markets,
+  };
+}
+
+
+export async function getShifterPortfolioData(provider: EthereumProvider, network: NetworkNumber, defaultProvider: EthereumProvider, addresses: EthAddress[], isSim = false): Promise<{
+  positions: PortfolioPositionsData;
+  markets: PortfolioMarketsData;
+}> {
+  const isMainnet = network === NetworkNumber.Eth;
+  const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
+
+  const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const morphoMidnightMarkets = Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
+  const sparkMarkets = Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const aaveV2Markets = [AaveVersions.AaveV2].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const compoundV2Markets = [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
+  const crvUsdMarkets = Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network));
+  const llamaLendMarkets = [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [];
+  const liquityV2Markets = [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)) : [];
+  const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
+
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 2_500_000 } } }];
+  const client = getViemProvider(provider, ...args);
+  const defaultClient = getViemProvider(defaultProvider, ...args);
+
+  const markets: PortfolioMarketsData = {
+    morphoMarketsData: {},
+    morphoMidnightMarketsData: {},
+    compoundV3MarketsData: {},
+    sparkMarketsData: {},
+    aaveV3MarketsData: {},
+    aaveV2MarketsData: {},
+    compoundV2MarketsData: {},
+    crvUsdMarketsData: {},
+    llamaLendMarketsData: {},
+    liquityV2MarketsData: {},
+    aaveV4SpokesData: {},
+    fluidMarketsData: {},
+    makerMarketsData: {},
+  };
+  const makerCdps: Record<string, CdpInfo[]> = {};
+
+  const positions: PortfolioPositionsData = {};
+
+  for (const address of addresses) {
+    positions[address.toLowerCase() as EthAddress] = {
+      aaveV3: {},
+      aaveV4: {},
+      morphoBlue: {},
+      morphoMidnight: {},
+      compoundV3: {},
+      spark: {},
+      maker: {},
+      aaveV2: {},
+      compoundV2: {},
+      liquity: {},
+      crvUsd: {},
+      llamaLend: {},
+      fluid: {
+        error: '',
+        data: {},
+      },
+    };
+  }
+
+  await Promise.allSettled([
+    // === MARKET DATA (needs to be fetched first) ===
+    ...morphoMarkets.map(async (market) => {
+      markets.morphoMarketsData[market.value] = await _getMorphoBluePortfolioMarketData(client, network, market);
+    }),
+    ...morphoMidnightMarkets.map(async (market) => {
+      markets.morphoMidnightMarketsData[market.value] = await _getMorphoMidnightMarketData(client, network, market);
+    }),
+    ...compoundV3Markets.map(async (market) => {
+      markets.compoundV3MarketsData[market.value] = await _getCompoundV3MarketsData(client, network, market, defaultClient);
+    }),
+    ...sparkMarkets.map(async (market) => {
+      markets.sparkMarketsData[market.value] = await _getSparkMarketsData(client, network, market);
+    }),
+    ...aaveV3Markets.map(async (market) => {
+      markets.aaveV3MarketsData[market.value] = await _getAaveV3MarketData(client, network, market);
+    }),
+    ...aaveV4Spokes.map(async (spoke) => {
+      markets.aaveV4SpokesData[spoke.value] = await _getAaveV4SpokeData(client, network, spoke);
+    }),
+    ...aaveV2Markets.map(async (market) => {
+      markets.aaveV2MarketsData[market.value] = await _getAaveV2MarketsData(client, network, market);
+    }),
+    ...compoundV2Markets.map(async (market) => {
+      markets.compoundV2MarketsData[market.value] = await _getCompoundV2MarketsData(client, network);
+    }),
+    ...crvUsdMarkets.map(async (market) => {
+      markets.crvUsdMarketsData[market.value] = await _getCurveUsdGlobalData(client, network, market);
+    }),
+    ...llamaLendMarkets.map(async (market) => {
+      markets.llamaLendMarketsData[market.value] = await _getLlamaLendGlobalData(client, network, market);
+    }),
+    ...liquityV2Markets.map(async (market) => {
+      markets.liquityV2MarketsData[market.value] = await _getLiquityV2MarketData(client, network, market);
+    }),
+    (async () => {
+      if (!isFluidSupported) return;
+      try {
+        markets.fluidMarketsData = await _getAllFluidMarketDataPortfolio(client, network);
+      } catch (error) {
+        console.error('Error fetching Fluid markets data:', error);
+      }
+    })(),
+    (async () => {
+      if (!isMainnet) return; // Maker CDPs are only available on mainnet
+      try {
+        markets.makerMarketsData = await _getMakerIlksData(client, network, MakerActiveIlks);
+      } catch (error) {
+        console.error('Error fetching Maker ilks data:', error);
+      }
+    })(),
+
+    // === INDEPENDENT USER DATA (doesn't depend on market data) ===
+    ...addresses.map(async (address) => {
+      if (!isMainnet) return; // Maker CDPs are only available on mainnet
+      const makerCdp = await _getUserCdps(client, network, address);
+      makerCdps[address.toLowerCase() as EthAddress] = makerCdp;
+    }),
+    ...addresses.map(async (address) => {
+      try {
+        if (!isFluidSupported) return; // Fluid is not available on Optimism
+        const userPositions = (await _getUserPositionsPortfolio(client, network, address));
+        for (const position of userPositions) {
+          if (position.userData && new Dec(position.userData.suppliedUsd).gt(0)) {
+            positions[address.toLowerCase() as EthAddress].fluid.data[position.userData.nftId] = position.userData;
+          }
+        }
+      } catch (error) {
+        console.error(`Error fetching Fluid positions for address ${address}:`, error);
+        positions[address.toLowerCase() as EthAddress].fluid = {
+          error: `Error fetching Fluid positions for address ${address}`,
+          data: {},
+        };
+      }
+    }),
+  ]);
+
+  await Promise.all([
+    ...aaveV3Markets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getAaveV3AccountData(client, network, address, { selectedMarket: market, ...markets.aaveV3MarketsData[market.value] });
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching AaveV3 account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: `Error fetching AaveV3 account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...aaveV4Spokes.map((spoke) => addresses.map(async (address) => {
+      try {
+        const accData = await _getAaveV4AccountData(client, network, markets.aaveV4SpokesData[spoke.value], address);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: `Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}`, data: null };
+      }
+    })).flat(),
+    ...morphoMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getMorphoBlueAccountData(client, network, address, market, markets.morphoMarketsData[market.value]);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getMorphoMidnightAccountData(client, network, address, market, markets.morphoMidnightMarketsData[market.value]);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...compoundV3Markets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getCompoundV3AccountData(client, network, address, ZERO_ADDRESS, { selectedMarket: market, assetsData: markets.compoundV3MarketsData[market.value].assetsData });
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV3[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching CompoundV3 account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].compoundV3[market.value] = { error: `Error fetching CompoundV3 account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...sparkMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: markets.sparkMarketsData[market.value].assetsData, eModeCategoriesData: markets.sparkMarketsData[market.value].eModeCategoriesData });
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
+      try {
+        // reuse ilk data fetched for the markets payload; ilks outside the active set are fetched on demand
+        const cdpData = await _getMakerCdpData(client, network, cdpInfo, markets.makerMarketsData[cdpInfo.ilkLabel]);
+        if (cdpData) {
+          positions[address.toLowerCase() as EthAddress].maker[cdpInfo.id] = { error: '', data: cdpData };
+        }
+      } catch (error) {
+        console.error(`Error fetching Maker CDP data for address ${address} with ID ${cdpInfo.id}:`, error);
+        positions[address.toLowerCase() as EthAddress].maker[cdpInfo.id] = { error: `Error fetching Maker CDP data for address ${address} with ID ${cdpInfo.id}`, data: null };
+      }
+    })).flat(),
+    ...aaveV2Markets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getAaveV2AccountData(client, network, address, markets.aaveV2MarketsData[market.value].assetsData, market);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV2[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching AaveV2 account data for address ${address}:`, error);
+        positions[address.toLowerCase() as EthAddress].aaveV2[market.value] = { error: `Error fetching AaveV2 account data for address ${address}`, data: null };
+      }
+    })).flat(),
+    ...compoundV2Markets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getCompoundV2AccountData(client, network, address, markets.compoundV2MarketsData[market.value].assetsData);
+        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = { error: '', data: accData };
+      } catch (error) {
+        console.error(`Error fetching CompoundV2 account data for address ${address}:`, error);
+        positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = { error: `Error fetching CompoundV2 account data for address ${address}`, data: null };
+      }
+    })).flat(),
+    ...addresses.map(async (address) => {
+      try {
+        if (!isMainnet) return; // Liquity trove info is only available on mainnet
+        const troveInfo = await _getLiquityTroveInfo(client, network, address);
+        if (new Dec(troveInfo.collateral).gt(0)) positions[address.toLowerCase() as EthAddress].liquity = { error: '', data: troveInfo };
+      } catch (error) {
+        console.error(`Error fetching Liquity trove info for address ${address}:`, error);
+        positions[address.toLowerCase() as EthAddress].liquity = { error: `Error fetching Liquity trove info for address ${address}`, data: null };
+      }
+    }),
+    ...crvUsdMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getCurveUsdUserData(client, network, address, market, markets.crvUsdMarketsData[market.value].activeBand);
+        if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
+          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: { ...accData, borrowRate: markets.crvUsdMarketsData[market.value].borrowRate } };
+        }
+      } catch (error) {
+        console.error(`Error fetching Curve USD account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: `Error fetching Curve USD account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+    ...llamaLendMarkets.map((market) => addresses.map(async (address) => {
+      try {
+        const accData = await _getLlamaLendUserData(client, network, address, market, markets.llamaLendMarketsData[market.value]);
+        if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
+          positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: '', data: { ...accData, borrowRate: markets.llamaLendMarketsData[market.value].borrowRate } };
+        }
+      } catch (error) {
+        console.error(`Error fetching LlamaLend account data for address ${address} on market ${market.value}:`, error);
+        positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: `Error fetching LlamaLend account data for address ${address} on market ${market.value}`, data: null };
+      }
+    })).flat(),
+  ]);
+
+  return {
+    positions,
     markets,
   };
 }

@@ -52,6 +52,8 @@ export const getMorphoBlueAggregatedPositionData = ({ usedAssets, assetsData, ma
   payload.ltv = new Dec(usedAssets[loanToken]?.borrowed || 0).div(oracle).div(usedAssets[collateralToken]?.supplied || 1).toString(); // default to 1 because can't div 0
   payload.ratio = new Dec(usedAssets[collateralToken]?.supplied || 0).mul(oracle).div(usedAssets[loanToken]?.borrowed || 1).mul(100)
     .toString();
+  // Borrow limit over debt, so 100 sits on the market's LLTV however low it is (`ratio` is the raw collateral ratio).
+  payload.safetyRatio = +payload.borrowedUsd > 0 ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
 
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
   payload.leveragedType = leveragedType;

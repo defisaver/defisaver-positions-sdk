@@ -1,15 +1,17 @@
 import Dec from 'decimal.js';
 import {
-  assetAmountInEth, bytesToString, getAssetInfo, ilkToAsset,
+  assetAmountInEth, bytesToString, getAssetInfo, ilkToAsset, stringToBytes,
 } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
 import {
-  Blockish, EthAddress, EthereumProvider, NetworkNumber, PositionBalances,
+  Blockish, EthAddress, EthereumProvider, HexString, NetworkNumber, PositionBalances,
 } from '../types/common';
 import {
   getConfigContractAddress, McdDogContractViem, McdGetCdpsContractViem, McdJugContractViem, McdSpotterContractViem, McdVatContractViem, McdViewContractViem,
 } from '../contracts';
-import { CdpData, CdpInfo, CdpType } from '../types';
+import {
+  CdpData, CdpInfo, CdpType, IlkInfo,
+} from '../types';
 import { wethToEth } from '../services/utils';
 import { parseCollateralInfo } from '../helpers/makerHelpers';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
@@ -48,7 +50,7 @@ export const _getMakerAccountBalances = async (provider: PublicClient, network: 
   const [
     par,
     [_, mat],
-    [artGlobal, rate, spot, line],
+    [artGlobal, rate, spot, line, dust],
     [duty],
     futureRate,
     chop,
@@ -69,6 +71,7 @@ export const _getMakerAccountBalances = async (provider: PublicClient, network: 
     rate.toString(),
     spot.toString(),
     line.toString(),
+    dust.toString(),
     duty.toString(),
     futureRate.toString(),
     chop.toString(),
@@ -129,44 +132,71 @@ export const getUserCdps = async (
   userAddress: EthAddress,
 ): Promise<CdpInfo[]> => _getUserCdps(getViemProvider(provider, network), network, userAddress);
 
-export const _getMakerCdpData = async (provider: Client, network: NetworkNumber, cdp: CdpInfo): Promise<CdpData> => {
+export const _getMakerIlksData = async (provider: Client, network: NetworkNumber, ilkLabels: string[]): Promise<Record<string, IlkInfo>> => {
   const vatContract = McdVatContractViem(provider, network);
   const spotterContract = McdSpotterContractViem(provider, network);
   const dogContract = McdDogContractViem(provider, network);
   const jugContract = McdJugContractViem(provider, network);
 
+  const par = await spotterContract.read.par();
+
+  const ilksInfo = await Promise.all(ilkLabels.map(async (ilkLabel) => {
+    const ilk = stringToBytes(ilkLabel) as HexString;
+    const [
+      [_, mat],
+      [artGlobal, rate, spot, line, dust],
+      [duty],
+      futureRate,
+      chop,
+    ] = await Promise.all([
+      spotterContract.read.ilks([ilk]),
+      vatContract.read.ilks([ilk]),
+      jugContract.read.ilks([ilk]),
+      jugContract.read.drip([ilk]),
+      dogContract.read.chop([ilk]),
+    ]);
+
+    return parseCollateralInfo(
+      ilk,
+      par.toString(),
+      mat.toString(),
+      artGlobal.toString(),
+      rate.toString(),
+      spot.toString(),
+      line.toString(),
+      dust.toString(),
+      duty.toString(),
+      futureRate.toString(),
+      chop.toString(),
+    );
+  }));
+
+  return Object.fromEntries(ilksInfo.map((ilkInfo) => [ilkInfo.ilkLabel, ilkInfo]));
+};
+
+export const getMakerIlksData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  ilkLabels: string[],
+): Promise<Record<string, IlkInfo>> => _getMakerIlksData(getViemProvider(provider, network, { batch: { multicall: true } }), network, ilkLabels);
+
+/**
+ * @param ilkInfo optional precomputed ilk data (from `_getMakerIlksData`); when provided the per-ilk reads are skipped
+ */
+export const _getMakerCdpData = async (provider: Client, network: NetworkNumber, cdp: CdpInfo, ilkInfo?: IlkInfo): Promise<CdpData> => {
+  const vatContract = McdVatContractViem(provider, network);
+
   const [
     [ink, art],
     coll,
-    par,
-    [_, mat],
-    [artGlobal, rate, spot, line],
-    [duty],
-    futureRate,
-    chop,
+    fetchedIlkInfo,
   ] = await Promise.all([
     vatContract.read.urns([cdp.ilk, cdp.urn]),
     vatContract.read.gem([cdp.ilk, cdp.urn]),
-    spotterContract.read.par(),
-    spotterContract.read.ilks([cdp.ilk]),
-    vatContract.read.ilks([cdp.ilk]),
-    jugContract.read.ilks([cdp.ilk]),
-    jugContract.read.drip([cdp.ilk]),
-    dogContract.read.chop([cdp.ilk]),
+    ilkInfo || _getMakerIlksData(provider, network, [cdp.ilkLabel]).then((ilks) => ilks[cdp.ilkLabel]),
   ]);
 
-  const collInfo = parseCollateralInfo(
-    cdp.ilk,
-    par.toString(),
-    mat.toString(),
-    artGlobal.toString(),
-    rate.toString(),
-    spot.toString(),
-    line.toString(),
-    duty.toString(),
-    futureRate.toString(),
-    chop.toString(),
-  );
+  const collInfo = fetchedIlkInfo;
 
   const collateral = assetAmountInEth(ink.toString(), `MCD-${cdp.asset}`);
 
@@ -180,6 +210,8 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
   let ratio = new Dec(ink).times(collInfo.assetPrice).div(debt).times(100)
     .toString();
   if (new Dec(debt).eq(0)) ratio = '0';
+  // Collateral ratio rebased so 100 sits on the ilk's liquidation ratio (normalised safety ratio).
+  const safetyRatio = +collInfo.liqPercent > 0 ? new Dec(ratio).div(collInfo.liqPercent).mul(100).toString() : '0';
 
   const debtTooLow = new Dec(debt).gt(0) && new Dec(assetAmountInEth(debt, 'DAI')).lt(collInfo.minDebt);
 
@@ -201,6 +233,7 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     debtAssetMarketPrice: '1',
     liquidationPrice,
     ratio,
+    safetyRatio,
     liqRatio: collInfo.liqRatio.toString(),
     liqPercent: parseFloat(collInfo.liqPercent.toString()),
     assetPrice: collInfo.assetPrice,

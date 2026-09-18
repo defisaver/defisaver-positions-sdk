@@ -89,6 +89,11 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
   ]);
 
   const recoveryMode = troveInfo[6];
+  const minCollateralRatio = recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO;
+  const collateral = assetAmountInEth(troveInfo[1].toString());
+  const debtInAsset = assetAmountInEth(troveInfo[2].toString());
+  const collRatio = +debtInAsset ? new Dec(collateral).mul(assetAmountInEth(assetPrice.toString())).div(debtInAsset).mul(100)
+    .toString() : '0';
 
   const payload = {
     troveStatus: LIQUITY_TROVE_STATUS_ENUM[+(troveInfo[0].toString())],
@@ -102,7 +107,9 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
     totalETH: totalETH.toString(),
     totalLUSD: totalLUSD.toString(),
     debtInFront: debtInFront.toString(),
-    minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
+    minCollateralRatio,
+    // Collateral ratio rebased so 100 sits on the trove's minimum collateral ratio (normalised safety ratio).
+    safetyRatio: +minCollateralRatio > 0 ? new Dec(collRatio).div(minCollateralRatio).mul(100).toString() : '0',
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
     exposure: getExposure(assetAmountInEth(troveInfo[2].toString()), new Dec(assetAmountInEth(troveInfo[1].toString())).mul(assetPrice).toString()),
