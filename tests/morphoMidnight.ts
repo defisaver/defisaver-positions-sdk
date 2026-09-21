@@ -581,6 +581,7 @@ describe('Morpho Midnight (Ethereum)', function midnightEthSuite() {
         `${market.value} surfaced the wrong collateral set`,
       );
 
+      // Tenor vaults may fail if they are not yet deployed, need to rework tests to support that kind of behavior
       for (const collSymbol of marketData.collaterals) {
         assert.isTrue(
           new Dec(marketData.assetsData[collSymbol].price).gt(0),
