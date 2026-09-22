@@ -59,7 +59,7 @@ export const fetchMorphoVaultsLiquidity = async (network: NetworkNumber, vaults:
 const getBatchedViemProvider = (provider: EthereumProvider, network: NetworkNumber) => getViemProvider(provider, network, {
   batch: {
     multicall: {
-      batchSize: 2500000,
+      batchSize: 250_000,
     },
   },
 });
