@@ -99,6 +99,8 @@ export interface SparkAggregatedPositionData {
   leftToBorrowUsd: string,
   ratio: string,
   collRatio: string,
+  borrowLimitWithLtvZeroFallbackUsd: string,
+  safetyRatioWithLtvZeroFallback: string,
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
@@ -119,6 +121,8 @@ export interface SparkPositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
   collRatio: string,
+  // Safety ratio as evaluated by automation bots (LTV-0 collateral credited at LLTV - 5%).
+  safetyRatioWithLtvZeroFallback?: string,
   suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,

@@ -66,6 +66,49 @@ export const sparkGetEmodeMutableProps = ({
   return ({ liquidationRatio, collateralFactor });
 };
 
+/**
+ * @description Offset subtracted from the liquidation threshold (LLTV) when crediting LTV-0 collateral
+ * in the safety-ratio fallback. Matches SparkView.getSafetyRatioWithLtvZeroFallback ('LLTV - 5%').
+ * Values are fractions (e.g. 0.8), so 5% === 0.05.
+ */
+const LTV_ZERO_FALLBACK_LLTV_OFFSET = '0.05';
+
+/**
+ * @description Per-asset effective LTV and liquidation threshold (LLTV) for the user, eMode-aware.
+ * Mirrors SparkRatioHelper._getUserAccountDataWithLtvZeroFallback: unlike Aave v3 (eMode ltv-zero
+ * bitmap), Spark's LTV-0 state lives on the RESERVE config (asset offboarding zeroes the reserve ltv),
+ * so a zeroed reserve keeps `ltv` 0 even inside the active eMode category, while its `lltv` stays the
+ * eMode liquidation threshold there (liquidations only consider LLTV). The returned `ltv` is identical
+ * to sparkGetEmodeMutableProps().collateralFactor whenever the reserve ltv is non-zero, so a ratio
+ * built on this matches the regular safety ratio whenever no collateral is LTV-0.
+ */
+export const sparkGetUserReserveLtvAndLltv = (
+  {
+    eModeCategory,
+    eModeCategoriesData,
+    assetsData,
+  }: SparkHelperCommon,
+  _asset: string,
+): { ltv: string, lltv: string } => {
+  const asset = getNativeAssetFromWrapped(_asset);
+  const assetData = assetsData[asset];
+  const eModeCategoryData = eModeCategoriesData?.[eModeCategory];
+
+  if (
+    eModeCategory === 0
+    || !eModeCategoryData
+    || !eModeCategoryData.collateralAssets.includes(asset)
+    || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
+  ) {
+    return { ltv: assetData.collateralFactor, lltv: assetData.liquidationRatio };
+  }
+
+  // In the active eMode category the fallback trigger is still the reserve-level ltv (the contract
+  // checks the reserve config's ltv), so an offboarded asset must not pick up the category-wide eMode ltv.
+  const ltv = new Dec(assetData.collateralFactor || 0).eq(0) ? '0' : eModeCategoryData.collateralFactor;
+  return { ltv, lltv: eModeCategoryData.liquidationRatio };
+};
+
 export const sparkGetAggregatedPositionData = ({
   usedAssets,
   eModeCategory,
@@ -96,6 +139,21 @@ export const sparkGetAggregatedPositionData = ({
   payload.leftToBorrowUsd = leftToBorrowUsd.lte('0') ? '0' : leftToBorrowUsd.toString();
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  // Safety ratio as evaluated by the automation bots: LTV-0 collateral is credited at (LLTV - 5%)
+  // instead of 0 (SparkView.getSafetyRatioWithLtvZeroFallback). Equals `ratio` when no collateral
+  // is LTV-0. Computed off-chain here so it is available for after-value simulations too.
+  payload.borrowLimitWithLtvZeroFallbackUsd = getAssetsTotal(
+    usedAssets,
+    ({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral,
+    ({ symbol, suppliedUsd }: { symbol: string, suppliedUsd: string }) => {
+      const { ltv, lltv } = sparkGetUserReserveLtvAndLltv(data, symbol);
+      const effectiveLtv = new Dec(ltv).eq(0)
+        ? Dec.max(0, new Dec(lltv).sub(LTV_ZERO_FALLBACK_LLTV_OFFSET))
+        : new Dec(ltv);
+      return new Dec(suppliedUsd).mul(effectiveLtv);
+    },
+  );
+  payload.safetyRatioWithLtvZeroFallback = +payload.suppliedUsd ? new Dec(payload.borrowLimitWithLtvZeroFallbackUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   const { netApy, incentiveUsd, totalInterestUsd } = calculateNetApy({ usedAssets, assetsData });
   payload.netApy = netApy;
   payload.incentiveUsd = incentiveUsd;
