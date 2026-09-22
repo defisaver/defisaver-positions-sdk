@@ -479,6 +479,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
       try {
+        // Markets are created lazily on the first position, so an uncreated one can hold no position.
+        if (!morphoMidnightMarketsData[market.value]?.isCreated) return;
         const accData = await _getMorphoMidnightAccountData(client, network, address, market, morphoMidnightMarketsData[market.value]);
         if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
       } catch (error) {
