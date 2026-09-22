@@ -1,7 +1,13 @@
 {
   "compilerOptions": {
-    "module": "node16",
-    "moduleResolution": "node16",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "moduleDetection": "force",
+    "baseUrl": ".",
+    "paths": {
+      "ox": ["./node_modules/ox/_types/index.d.ts"],
+      "ox/*": ["./node_modules/ox/_types/core/*", "./node_modules/ox/_types/*"]
+    },
     "outDir": "./cjs/",
     "target": "ES2015",
     "allowJs": true,
