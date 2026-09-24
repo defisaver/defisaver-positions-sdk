@@ -602,7 +602,6 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
-  const morphoMidnightMarkets = Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network));
   const compoundV3Markets = Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2);
   const sparkMarkets = Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network));
   const aaveV3Markets = [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network));
@@ -619,7 +618,7 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
 
   const markets: PortfolioMarketsData = {
     morphoMarketsData: {},
-    morphoMidnightMarketsData: {},
+    morphoMidnightMarketsData: {}, // Morpho Midnight is not fetched for the shifter; key kept so the payload shape is stable
     compoundV3MarketsData: {},
     sparkMarketsData: {},
     aaveV3MarketsData: {},
@@ -641,7 +640,7 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
       aaveV3: {},
       aaveV4: {},
       morphoBlue: {},
-      morphoMidnight: {},
+      morphoMidnight: {}, // not fetched for the shifter (see markets above)
       compoundV3: {},
       spark: {},
       maker: {},
@@ -661,9 +660,6 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
     // === MARKET DATA (needs to be fetched first) ===
     ...morphoMarkets.map(async (market) => {
       markets.morphoMarketsData[market.value] = await _getMorphoBluePortfolioMarketData(client, network, market);
-    }),
-    ...morphoMidnightMarkets.map(async (market) => {
-      markets.morphoMidnightMarketsData[market.value] = await _getMorphoMidnightMarketData(client, network, market);
     }),
     ...compoundV3Markets.map(async (market) => {
       markets.compoundV3MarketsData[market.value] = await _getCompoundV3MarketsData(client, network, market, defaultClient);
@@ -760,15 +756,6 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
       } catch (error) {
         console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
-      try {
-        const accData = await _getMorphoMidnightAccountData(client, network, address, market, markets.morphoMidnightMarketsData[market.value]);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
     ...compoundV3Markets.map((market) => addresses.map(async (address) => {
