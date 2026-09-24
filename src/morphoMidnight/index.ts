@@ -10,7 +10,7 @@ import {
 import {
   MorphoMidnightAssetsData, MorphoMidnightBorrowInfoStatus, MorphoMidnightMarketData, MorphoMidnightMarketInfo, MorphoMidnightPositionData,
 } from '../types';
-import { USD_QUOTE } from '../constants';
+import { USD_QUOTE, ZERO_BYTES32 } from '../constants';
 import { calculateNetApy } from '../staking';
 import { isMainnetNetwork, wethToEth } from '../services/utils';
 import { getMorphoMidnightAggregatedPositionData, getMorphoMidnightUserBorrowInfo } from '../helpers/morphoMidnightHelpers';
@@ -102,6 +102,9 @@ export async function _getMorphoMidnightMarketData(provider: Client, network: Ne
 
   return {
     id: marketInfo.id,
+    // Markets are created lazily on the first position, and `getMarketInfo` answers an uncreated id with
+    // a zeroed struct rather than a revert — only the echoed id says whether the market exists yet.
+    isCreated: marketInfo.id.toLowerCase() !== ZERO_BYTES32,
     loanToken: loanSym,
     collaterals: collateralSymbols,
     maturity: selectedMarket.maturity,

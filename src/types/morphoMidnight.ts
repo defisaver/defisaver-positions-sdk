@@ -147,6 +147,7 @@ export type MorphoMidnightAssetsData = { [key: string]: MorphoMidnightAssetData 
 
 export interface MorphoMidnightMarketInfo {
   id: string,
+  isCreated: boolean, // markets are created lazily on first position; until then the view returns a zeroed struct (id = 0x0, no prices)
   loanToken: string,
   collaterals: string[], // collateral symbols, index-aligned with the market's collateral set
   maturity: number, // unix timestamp (seconds)

@@ -28,7 +28,9 @@ const DOC_BORROWER = '0x2e3Cc8Cd22812eaa229CbE85f3de7c9a39A8f4f7';
 
 const isPositive = (value: bigint): boolean => new Dec(value.toString()).gt(0);
 
-// Tenor markets get created when first position is created in them
+// Tenor markets get created when the first position is created in them. `toMarket` still reverts with
+// this core selector for an uncreated id; `getMarketInfo` instead answers with a zeroed struct, which the
+// SDK surfaces as `isCreated: false` — market-data tests check the flag, only the `toMarket` reads catch.
 const UNCREATED_MARKET_SELECTOR = '0x96e13529';
 
 const isUncreatedMarket = (err: unknown): boolean => (err instanceof Error) && err.message.includes(UNCREATED_MARKET_SELECTOR);
@@ -105,9 +107,7 @@ describe('Morpho Midnight', function midnightSuite() {
     return null;
   };
 
-  const fetchMarketData = async (selectedMarket: MorphoMidnightMarketData): Promise<MorphoMidnightMarketInfo> => {
-    const marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, selectedMarket);
-
+  const assertMarketData = (marketData: MorphoMidnightMarketInfo): void => {
     assert.containsAllKeys(marketData, ['assetsData', 'maturity', 'isMatured', 'totalDebt', 'withdrawable', 'tickSpacing']);
     assert.isAbove(marketData.maturity, 0);
     assert.isNumber(marketData.tickSpacing);
@@ -125,18 +125,25 @@ describe('Morpho Midnight', function midnightSuite() {
     for (const collSymbol of marketData.collaterals) {
       assert.isTrue(new Dec(marketData.assetsData[collSymbol].price).gt(0), `collateral ${collSymbol} price should be > 0`);
     }
+  };
+
+  // For tests pinned to a specific market, which existing on-chain is part of what they assert.
+  const fetchMarketData = async (selectedMarket: MorphoMidnightMarketData): Promise<MorphoMidnightMarketInfo> => {
+    const marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, selectedMarket);
+    assert.isTrue(marketData.isCreated, `${selectedMarket.value} is not created on-chain`);
+    assertMarketData(marketData);
     return marketData;
   };
 
   it('fetches market data for every curated market', async () => {
     const uncreated: string[] = [];
     for (const market of markets()) {
-      try {
-        await fetchMarketData(market);
-      } catch (err) {
-        if (!isUncreatedMarket(err)) throw err;
+      const marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, market);
+      if (!marketData.isCreated) {
         uncreated.push(market.value);
+        continue;
       }
+      assertMarketData(marketData);
     }
     reportUncreated(uncreated, markets().length);
   });
@@ -565,11 +572,8 @@ describe('Morpho Midnight (Ethereum)', function midnightEthSuite() {
     const uncreated: string[] = [];
 
     for (const market of ethMarkets()) {
-      let marketData;
-      try {
-        marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, market);
-      } catch (err) {
-        if (!isUncreatedMarket(err)) throw err;
+      const marketData = await sdk.morphoMidnight.getMorphoMidnightMarketData(provider, network, market);
+      if (!marketData.isCreated) {
         uncreated.push(market.value);
         continue;
       }

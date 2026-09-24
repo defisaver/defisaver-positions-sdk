@@ -76,7 +76,12 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const aaveV4Spokes = Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network));
 
 
-  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 2_500_000 } } }];
+  // batchSize is viem's cap on a batch's raw subcall calldata (bytes); the JSON-RPC body ends up
+  // ~4x larger (hex + aggregate3 ABI + JSON overhead) and RPC providers reject bodies over
+  // ~2.5MB with HTTP 413, so keep this small enough that no single body gets near that.
+  // 250k gives the largest body of around 1.26MB - if we bump, we can save maybe 2-3 rpc calls but scaling takes a hit
+  // (e.g. adding new markets may result in body size going over alchemy body size limit)
+  const args: [NetworkNumber, any?] = [network, { batch: { multicall: { batchSize: isSim ? 2_000 : 250_000 } } }];
   const client = getViemProvider(provider, ...args);
   const defaultClient = getViemProvider(defaultProvider, ...args);
 
@@ -476,6 +481,8 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     })).flat(),
     ...morphoMidnightMarkets.map((market) => addresses.map(async (address) => {
       try {
+        // Markets are created lazily on the first position, so an uncreated one can hold no position.
+        if (!morphoMidnightMarketsData[market.value]?.isCreated) return;
         const accData = await _getMorphoMidnightAccountData(client, network, address, market, morphoMidnightMarketsData[market.value]);
         if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
       } catch (error) {
