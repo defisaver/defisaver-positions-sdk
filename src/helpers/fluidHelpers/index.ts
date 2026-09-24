@@ -143,6 +143,7 @@ borrowShares?: string,
   payload.ratio = +payload.suppliedUsd ? new Dec(payload.borrowLimitUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.collRatio = +payload.suppliedUsd ? new Dec(payload.suppliedUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
   payload.minRatio = marketData.minRatio;
+  payload.safetyRatio = payload.ratio;
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);
 
   payload.leveragedType = leveragedType;

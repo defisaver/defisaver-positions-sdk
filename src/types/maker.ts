@@ -47,6 +47,8 @@ export interface CdpData {
   debtAssetMarketPrice: string,
   liquidationPrice: string,
   ratio: string,
+  // Collateral ratio rebased so 100 sits on `liqPercent` (normalised safety ratio).
+  safetyRatio: string,
   liqRatio: string,
   liqPercent: number,
   assetPrice: string,
