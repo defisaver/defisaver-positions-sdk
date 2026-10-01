@@ -169,6 +169,9 @@ export const aaveAnyGetAggregatedPositionData = ({
     },
   );
   payload.safetyRatioWithLtvZeroFallback = +payload.suppliedUsd ? new Dec(payload.borrowLimitWithLtvZeroFallbackUsd).div(payload.borrowedUsd).mul(100).toString() : '0';
+  // Normalised safety ratio (100 = liquidation on every protocol): the automation ratio above, falling back
+  // to the regular ratio when the fallback carries its '0' placeholder.
+  payload.safetyRatio = +payload.safetyRatioWithLtvZeroFallback ? payload.safetyRatioWithLtvZeroFallback : payload.ratio;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   const { leveragedType, leveragedAsset } = isLeveragedPos(usedAssets);

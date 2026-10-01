@@ -26,6 +26,8 @@ export interface LiquityTroveInfo {
   totalETH: string,
   totalLUSD: string,
   minCollateralRatio: number,
+  // Collateral ratio rebased so 100 sits on `minCollateralRatio` (normalised safety ratio).
+  safetyRatio: string,
   priceForRecovery: string,
   debtInFront: string,
   exposure: string,

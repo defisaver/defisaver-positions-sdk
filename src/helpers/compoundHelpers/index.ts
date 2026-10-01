@@ -139,6 +139,7 @@ export const getCompoundV2AggregatedData = ({
   payload.collRatio = payload.borrowedUsd && payload.borrowedUsd !== '0'
     ? new Dec(payload.suppliedCollateralUsd).div(payload.borrowedUsd).mul(100).toString()
     : '0';
+  payload.safetyRatio = payload.ratio;
 
   // Calculate borrow limits per asset
   Object.values(usedAssets).forEach((item) => {
@@ -185,6 +186,7 @@ export const getCompoundV3AggregatedData = ({
   payload.incentiveUsd = incentiveUsd;
   payload.totalInterestUsd = totalInterestUsd;
   payload.minRatio = '100';
+  payload.safetyRatio = payload.ratio;
   payload.liqRatio = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).toString();
   payload.liqPercent = new Dec(payload.borrowLimitUsd).div(payload.liquidationLimitUsd).mul(100).toString();
   payload.minDebt = assetsData[selectedMarket.baseAsset].minDebt;
