@@ -10,3 +10,7 @@ export const ZERO_BYTES32 = '0x0000000000000000000000000000000000000000000000000
 export const WAD = 1e18;
 export const USD_QUOTE = '0x0000000000000000000000000000000000000348';
 export const borrowOperations = ['borrow', 'payback'];
+
+// Proxies Morpho's GraphQL API through the DFS backend, which attaches the private API key
+// for better rate limits (DEV-13673)
+export const MORPHO_API_URL = 'https://fe.defisaver.com/api/morpho/graphql';
