@@ -43,15 +43,15 @@ export const getSavingsData = async (
 
   await Promise.all([
     ...(network === NetworkNumber.Eth ? [
-      ...morphoVaultsList.map(async (vaultKey) => {
+      (async () => {
         try {
-          const vault = morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey);
-          const data = await morphoVaults.getMorphoVaultData(provider, network, vault, accounts);
-          savingsData[vaultKey] = data;
+          const vaults = morphoVaultsList.map((vaultKey) => morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey));
+          const data = await morphoVaults.getMorphoVaultsData(provider, network, vaults, accounts);
+          Object.assign(savingsData, data);
         } catch (err) {
-          console.error(`[getSavingsData] Error fetching morpho vault ${vaultKey}:`, err);
+          console.error('[getSavingsData] Error fetching morpho vaults:', err);
         }
-      }),
+      })(),
       ...yearnVaultsList.map(async (vaultKey) => {
         try {
           const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);

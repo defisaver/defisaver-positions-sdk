@@ -15,7 +15,7 @@ jobs:
   test:
     if: github.event.pull_request.draft == false
     name: Run tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v6
@@ -43,7 +43,7 @@ jobs:
           RPCPLASMA: ${{ secrets.RPCPLASMA }}
 
   on-failure:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: ${{ always() && (needs.test.result == 'failure' || needs.test.result == 'timed_out') }}
     needs:
       - test
