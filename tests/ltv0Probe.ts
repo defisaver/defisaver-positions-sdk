@@ -15,7 +15,7 @@ const VIEW_ABI = parseAbi([
 
 const ZERO = '0x0000000000000000000000000000000000000000';
 const MAKER_REGISTRY = '0x4678f0a6958e4D2Bc4F1BAF7Bc52E8F3564f3fE4';
-const DFS_REGISTRY = '0x29474FdaC7142f9aB7773B8e38264FA15E3805ed'; // DFS proxy registry (mainnet)
+const DFS_REGISTRY = '0x0cCB1F91beb8590949880D2a61C26C11d6280319'; // DFS proxy registry (mainnet)
 const MAKER_ABI = parseAbi(['function proxies(address) view returns (address)']);
 const DFS_ABI = parseAbi(['function getAllProxies(address) view returns (address, address[])']);
 
