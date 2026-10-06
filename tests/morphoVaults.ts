@@ -7,8 +7,10 @@ const { assert } = require('chai');
 
 describe('Morpho Vaults', () => {
   let provider: EthereumProvider;
+  let providerArb: EthereumProvider;
   before(async () => {
     provider = getProvider('RPC');
+    providerArb = getProvider('RPCARB');
   });
 
   const fetchVaultData = async (network: NetworkNumber, _provider: EthereumProvider) => {
@@ -22,5 +24,18 @@ describe('Morpho Vaults', () => {
     const network = NetworkNumber.Eth;
 
     const vaultData = await fetchVaultData(network, provider);
+  });
+
+  it('can fetch vault V2 data for Gauntlet USDG Premium on Arbitrum', async function () {
+    this.timeout(10000);
+    const vaultData = await sdk.savings.morphoVaults.getMorphoVaultData(
+      providerArb,
+      NetworkNumber.Arb,
+      sdk.savings.morphoVaults.morphoVaultsOptions.getMorphoVault(sdk.MorphoVaultType.MorphoVaultGauntletUSDGPremium),
+      ['0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF'],
+    );
+    console.log(vaultData);
+    assert.isAbove(Number(vaultData.poolSize), 0);
+    assert.isAbove(Number(vaultData.liquidity), 0);
   });
 });

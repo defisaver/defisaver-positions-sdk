@@ -1,4 +1,4 @@
-import { EthAddress } from '../common';
+import { EthAddress, NetworkNumber } from '../common';
 
 export enum MorphoVaultType {
   MorphoVaultFlagshipEth = 'morpho_vault_flagship_eth',
@@ -21,6 +21,13 @@ export enum MorphoVaultType {
   MorphoVaultSmokehouseUSDT = 'morpho_vault_smokehouse_usdt',
   MorphoVaultSmokehouseUSDC = 'morpho_vault_smokehouse_usdc',
   MorphoVaultSmokehouseDAI = 'morpho_vault_smokehouse_dai',
+  // Vault V2
+  MorphoVaultGauntletUSDGPremium = 'morpho_vault_gauntlet_usdg_premium',
+}
+
+export enum MorphoVaultVersion {
+  V1 = 1,
+  V2 = 2,
 }
 
 export interface MorphoVault {
@@ -28,6 +35,8 @@ export interface MorphoVault {
   name: string;
   address: EthAddress;
   asset: string;
+  network: NetworkNumber;
+  version: MorphoVaultVersion;
   deploymentBlock: number;
   isLegacy: boolean;
 }
