@@ -23,6 +23,7 @@ export enum MorphoVaultType {
   MorphoVaultSmokehouseDAI = 'morpho_vault_smokehouse_dai',
   // Vault V2
   MorphoVaultGauntletUSDGPremium = 'morpho_vault_gauntlet_usdg_premium',
+  MorphoVaultSteakhouseUSDGPro = 'morpho_vault_steakhouse_usdg_pro',
 }
 
 export enum MorphoVaultVersion {

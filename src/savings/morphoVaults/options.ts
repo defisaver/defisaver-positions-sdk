@@ -217,6 +217,17 @@ export const MORPHO_VAULT_GAUNTLET_USDG_PREMIUM: MorphoVault = {
   isLegacy: false,
 };
 
+export const MORPHO_VAULT_STEAKHOUSE_USDG_PRO: MorphoVault = {
+  type: MorphoVaultType.MorphoVaultSteakhouseUSDGPro,
+  name: 'Steakhouse USDG Pro',
+  address: '0xbeeFf72B77e7584a450E887125F25E8D8819016a',
+  asset: 'USDG',
+  network: NetworkNumber.Arb,
+  version: MorphoVaultVersion.V2,
+  deploymentBlock: 512247107,
+  isLegacy: false,
+};
+
 export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
   [MorphoVaultType.MorphoVaultFlagshipEth]: MORPHO_VAULT_FLAGSHIP_ETH,
   [MorphoVaultType.MorphoVaultGauntletUSDCCore]: MORPHO_VAULT_GAUNTLET_USDC_CORE,
@@ -243,6 +254,7 @@ export const MORPHO_VAULTS: Record<MorphoVaultType, MorphoVault> = {
 
   // Vault V2
   [MorphoVaultType.MorphoVaultGauntletUSDGPremium]: MORPHO_VAULT_GAUNTLET_USDG_PREMIUM,
+  [MorphoVaultType.MorphoVaultSteakhouseUSDGPro]: MORPHO_VAULT_STEAKHOUSE_USDG_PRO,
 };
 
 export const getMorphoVault = (type: MorphoVaultType): MorphoVault => MORPHO_VAULTS[type];

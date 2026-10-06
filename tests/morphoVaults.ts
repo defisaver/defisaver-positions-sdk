@@ -39,4 +39,17 @@ describe('Morpho Vaults', () => {
     // liquidity is legitimately 0 when the vault is fully allocated
     assert.isAtLeast(Number(vaultData.liquidity), 0);
   });
+
+  it('can fetch vault V2 data for Steakhouse USDG Pro on Arbitrum', async function () {
+    this.timeout(10000);
+    const vaultData = await sdk.savings.morphoVaults.getMorphoVaultData(
+      providerArb,
+      NetworkNumber.Arb,
+      sdk.savings.morphoVaults.morphoVaultsOptions.getMorphoVault(sdk.MorphoVaultType.MorphoVaultSteakhouseUSDGPro),
+      ['0x6162aA1E81c665143Df3d1f98bfED38Dd11A42eF'],
+    );
+    console.log(vaultData);
+    assert.isAbove(Number(vaultData.poolSize), 0);
+    assert.isAtLeast(Number(vaultData.liquidity), 0);
+  });
 });
