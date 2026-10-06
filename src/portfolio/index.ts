@@ -27,6 +27,7 @@ import {
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   MorphoMidnightMarketInfo,
+  PortfolioMarketsData,
   PortfolioPositionsData,
   SparkMarketsData,
 } from '../types';
@@ -55,7 +56,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   positions: PortfolioPositionsData;
   stakingPositions: any;
   rewardsData: any;
-  markets: any;
+  markets: PortfolioMarketsData;
 }> {
   const isMainnet = network === NetworkNumber.Eth;
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
@@ -96,7 +97,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const liquityV2MarketsData: Record<string, LiquityV2MarketData> = {};
   const aaveV4SpokesData: Record<string, AaveV4SpokeData> = {};
 
-  const markets = {
+  const markets: PortfolioMarketsData = {
     morphoMarketsData,
     morphoMidnightMarketsData,
     compoundV3MarketsData,
