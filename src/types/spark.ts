@@ -57,6 +57,22 @@ export interface SparkAssetData extends MMAssetData {
   eModeCategory: number,
   liquidationBonus: string,
   liquidationRatio: string,
+  // Set by _getSparkMarketsData. Optional, so objects built by hand still type-check.
+  debtCeilingForIsolationMode?: string,
+  isSiloed?: boolean,
+  isolationModeTotalDebt?: string,
+  isolationModeBorrowingEnabled?: boolean,
+  assetId?: number,
+  borrowRateStable?: string,
+  supplyCap?: string,
+  isInactive?: boolean,
+  isFrozen?: boolean,
+  isPaused?: boolean,
+  canBeWithdrawn?: boolean,
+  canBePayBacked?: boolean,
+  disabledStableBorrowing?: boolean,
+  isFlashLoanEnabled?: boolean,
+  aTokenAddress?: EthAddress,
 }
 
 export interface SparkAssetsData {
@@ -115,7 +131,15 @@ export interface SparkAggregatedPositionData {
   exposure: string,
 }
 
-export interface SparkPositionData extends MMPositionData {
+/**
+ * Fields sparkGetAggregatedPositionData adds to every Spark position at runtime, on top of those declared below.
+ * Optional, so code that builds a position by hand keeps compiling.
+ */
+export type SparkPositionAggregatedFields = Partial<Omit<SparkAggregatedPositionData,
+| keyof MMPositionData | 'ratio' | 'collRatio' | 'suppliedUsd' | 'borrowedUsd' | 'borrowLimitUsd'
+| 'suppliedCollateralUsd' | 'incentiveUsd' | 'totalInterestUsd'>>;
+
+export interface SparkPositionData extends MMPositionData, SparkPositionAggregatedFields {
   ratio: string,
   minRatio: string,
   collRatio: string,

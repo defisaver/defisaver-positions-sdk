@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   IncentiveData,
   LeverageType,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
@@ -96,6 +97,9 @@ export interface AaveV3AssetData extends AaveAssetData {
   liquidationBonus: string,
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
+  // Set by _getAaveV3MarketData. Optional, so objects built by hand still type-check.
+  aTokenAddress?: EthAddress,
+  vTokenAddress?: EthAddress,
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
@@ -137,7 +141,15 @@ export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
 
 export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
 
-export interface AavePositionData extends MMPositionData {
+/**
+ * Fields aaveAnyGetAggregatedPositionData adds to every Aave V2/V3 position at runtime, on top of those declared
+ * below. Optional, so code that builds a position by hand keeps compiling.
+ */
+export type AavePositionAggregatedFields = Partial<Omit<AaveV3AggregatedPositionData,
+| keyof MMPositionData | 'ratio' | 'collRatio' | 'safetyRatioWithLtvZeroFallback' | 'suppliedUsd' | 'borrowedUsd'
+| 'borrowLimitUsd' | 'suppliedCollateralUsd' | 'incentiveUsd' | 'totalInterestUsd'>>;
+
+export interface AavePositionData extends MMPositionData, AavePositionAggregatedFields {
   ratio: string,
   minRatio: string,
   collRatio: string,
@@ -156,6 +168,11 @@ export interface AavePositionData extends MMPositionData {
 
 export interface AaveV2PositionData extends AavePositionData {
   usedAssets: AaveV2UsedAssets,
+  // Always their empty values: _getAaveV2AccountData starts from Aave V3's EMPTY_AAVE_DATA, which carries them.
+  eModeCategory?: number,
+  isInIsolationMode?: boolean,
+  isInSiloedMode?: boolean,
+  eModeCategories?: { [key: number]: EModeCategoryDataMapping },
 }
 
 export interface AaveV3PositionData extends AavePositionData {

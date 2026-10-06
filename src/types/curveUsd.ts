@@ -66,6 +66,9 @@ export interface CrvUSDGlobalMarketData {
   leftToBorrow: string,
   bands: BandData[],
   loanDiscount: string;
+  // crvUSDView's globalData field that _getCurveUsdGlobalData spreads in unconverted. Optional, so objects built by
+  // hand still type-check.
+  A?: bigint,
 }
 
 export interface CrvUSDAggregatedPositionData {
@@ -101,7 +104,12 @@ export interface CrvUSDUsedAssets {
   [key: string]: CrvUSDUsedAsset,
 }
 
-export interface CrvUSDUserData {
+// Set by getCrvUsdAggregatedData, which _getCurveUsdUserData spreads in. Optional, so objects built by hand still
+// type-check.
+export type CrvUSDPositionAggregatedFields = Partial<Pick<CrvUSDAggregatedPositionData,
+| 'borrowLimitUsd' | 'minAllowedRatio' | 'collFactor' | 'leveragedType' | 'leveragedAsset' | 'liquidationPrice'>>;
+
+export interface CrvUSDUserData extends CrvUSDPositionAggregatedFields {
   debtAmount: string,
   health: string,
   healthPercent: string,
@@ -123,4 +131,12 @@ export interface CrvUSDUserData {
   collateralPrice: string,
   collRatio: string,
   exposure: string,
+  // Fields of crvUSDView's userData that _getCurveUsdUserData spreads in unconverted. Optional, so objects built by
+  // hand still type-check.
+  marketCollateralAmount?: bigint,
+  curveUsdCollateralAmount?: bigint,
+  N?: bigint,
+  bandRange?: readonly [bigint, bigint],
+  usersBands?: readonly [readonly bigint[], readonly bigint[]],
+  isInSoftLiquidation?: boolean,
 }

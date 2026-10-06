@@ -70,6 +70,8 @@ export interface CompoundAssetData extends MMAssetData {
 }
 
 export interface CompoundV2AssetData extends CompoundAssetData {
+  // Set by _getCompoundV2MarketsData. Optional, so objects built by hand still type-check.
+  exchangeRate?: string,
 }
 export interface CompoundV3AssetData extends CompoundAssetData {
   borrowCollateralFactor: string,
@@ -81,6 +83,20 @@ export interface CompoundV3AssetData extends CompoundAssetData {
   supplyCap: string,
   priceInBaseAsset: string,
   canBeWithdrawn: boolean,
+  // The rest are set by formatMarketData and formatBaseData, which also spread in the view contract's raw asset
+  // data. Optional, so objects built by hand still type-check.
+  tokenAddr?: EthAddress,
+  // The base asset's only.
+  isBase?: boolean,
+  baseBorrowMin?: string,
+  baseTrackingBorrowRewardsSpeed?: string,
+  baseTrackingSupplyRewardsSpeed?: string,
+  borrowIndex?: string,
+  supplyIndex?: string,
+  trackingBorrowIndex?: string,
+  trackingSupplyIndex?: string,
+  rewardSupplySpeed?: string,
+  rewardBorrowSpeed?: string,
 }
 
 export interface CompoundAssetsData<T> {
@@ -141,10 +157,30 @@ export interface CompoundPositionData extends MMPositionData {
   automationResubscribeRequired?: boolean,
 }
 
-export interface CompoundV2PositionData extends CompoundPositionData {
+/**
+ * Fields getCompoundV2AggregatedData adds to every Compound V2 position at runtime — a subset of
+ * CompoundAggregatedPositionData. Optional, so code that builds a position by hand keeps compiling.
+ */
+export type CompoundV2PositionAggregatedFields = Partial<Pick<CompoundAggregatedPositionData,
+| 'suppliedCollateralUsd' | 'liquidationLimitUsd' | 'leftToBorrowUsd' | 'collRatio' | 'leveragedType'
+| 'leveragedAsset' | 'liquidationPrice'>>;
+
+/**
+ * Fields getCompoundV3AggregatedData adds to every Compound V3 position at runtime, on top of those declared in
+ * CompoundPositionData. Optional, so code that builds a position by hand keeps compiling.
+ */
+export type CompoundV3PositionAggregatedFields = Partial<Omit<CompoundAggregatedPositionData,
+| keyof MMPositionData | 'ratio' | 'minRatio' | 'suppliedUsd' | 'borrowedUsd' | 'borrowLimitUsd' | 'incentiveUsd'
+| 'totalInterestUsd'>>;
+
+export interface CompoundV2PositionData extends CompoundPositionData, CompoundV2PositionAggregatedFields {
   usedAssets: CompoundV2UsedAssets,
+  // Always false: _getCompoundV2AccountData starts from EMPTY_COMPOUND_DATA, which carries it.
+  borrowStableSupplyUnstable?: boolean,
 }
 
-export interface CompoundV3PositionData extends CompoundPositionData {
+export interface CompoundV3PositionData extends CompoundPositionData, CompoundV3PositionAggregatedFields {
   usedAssets: CompoundV3UsedAssets,
+  // Whether the user's smart wallet is allowed to manage the account on Comet (Comet.isAllowed).
+  isAllowed?: boolean,
 }

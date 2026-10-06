@@ -506,7 +506,9 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
-    ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
+    // flatMap, not map: each CDP's fetch has to be one of the awaited promises, or getPortfolioData can return
+    // before a vault's data lands and the vault is missing from the result.
+    ...addresses.flatMap((address) => (makerCdps[address.toLowerCase() as EthAddress] ?? []).map(async (cdpInfo) => {
       try {
         const cdpData = await _getMakerCdpData(client, network, cdpInfo);
         if (cdpData) {
@@ -516,7 +518,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         console.error(`Error fetching Maker CDP data for address ${address} with ID ${cdpInfo.id}:`, error);
         positions[address.toLowerCase() as EthAddress].maker[cdpInfo.id] = { error: `Error fetching Maker CDP data for address ${address} with ID ${cdpInfo.id}`, data: null };
       }
-    })).flat(),
+    })),
     ...aaveV2Markets.map((market) => addresses.map(async (address) => {
       try {
         const accData = await _getAaveV2AccountData(client, network, address, aaveV2MarketsData[market.value].assetsData, market);

@@ -236,6 +236,9 @@ export interface MorphoBluePositionData {
   supplyShares: string,
   borrowShares: string,
   exposure: string,
+  // Set by getMorphoBlueAggregatedPositionData. Optional, so objects built by hand still type-check.
+  minCollRatio?: string,
+  collLiquidationRatio?: string,
 }
 
 export interface MorphoBlueEarnData {

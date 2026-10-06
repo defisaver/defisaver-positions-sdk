@@ -141,7 +141,13 @@ export interface LlamaLendUsedAssets {
   [key: string]: LlamaLendUsedAsset,
 }
 
-export interface LlamaLendUserData {
+// Set by getLlamaLendAggregatedData, which _getLlamaLendUserData spreads in. Optional, so objects built by hand still
+// type-check.
+export type LlamaLendPositionAggregatedFields = Partial<Pick<LlamaLendAggregatedPositionData,
+| 'borrowLimitUsd' | 'minAllowedRatio' | 'collFactor' | 'leveragedType' | 'leveragedAsset' | 'liquidationPrice'
+| 'netApy' | 'incentiveUsd' | 'totalInterestUsd'>>;
+
+export interface LlamaLendUserData extends LlamaLendPositionAggregatedFields {
   debtAmount: string,
   health: string,
   healthPercent: string,
@@ -160,4 +166,16 @@ export interface LlamaLendUserData {
   loanExists: boolean,
   borrowRate?: string,
   exposure: string,
+  // Fields of LlamaLendView's userData that _getLlamaLendUserData spreads in unconverted. Optional, so objects built
+  // by hand still type-check.
+  collateralPrice?: bigint,
+  marketCollateralAmount?: bigint,
+  debtTokenCollateralAmount?: bigint,
+  N?: bigint,
+  bandRange?: readonly [bigint, bigint],
+  usersBands?: readonly [readonly bigint[], readonly bigint[]],
+  collRatio?: bigint,
+  isInSoftLiquidation?: boolean,
+  debtTokenSuppliedShares?: bigint,
+  debtTokenSuppliedAssets?: bigint,
 }
