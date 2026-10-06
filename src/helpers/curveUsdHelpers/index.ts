@@ -5,11 +5,18 @@ import {
   calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
 } from '../../moneymarket';
 import { mapRange } from '../../services/utils';
+import { calculateNetApyFromRates } from '../../staking';
 
 export const getCrvUsdAggregatedData = ({
-  loanExists, usedAssets, network, selectedMarket, numOfBands, ...rest
+  loanExists, usedAssets, network, selectedMarket, numOfBands, borrowRate = '0', collStakingApy = '0', ...rest
 }:{
-  loanExists: boolean, usedAssets: CrvUSDUsedAssets, network: NetworkNumber, selectedMarket: CrvUSDMarketData, numOfBands: number | string
+  loanExists: boolean,
+  usedAssets: CrvUSDUsedAssets,
+  network: NetworkNumber,
+  selectedMarket: CrvUSDMarketData,
+  numOfBands: number | string,
+  borrowRate?: string, // market borrow APY in %, see `CrvUSDGlobalMarketData.borrowRate`
+  collStakingApy?: string, // native yield APY in % of the collateral asset, if it is a staked asset
 }): CrvUSDAggregatedPositionData => {
   const payload = {} as CrvUSDAggregatedPositionData;
   payload.supplied = getAssetsTotal(usedAssets, ({ isSupplied }: { isSupplied: boolean }) => isSupplied, ({ supplied }: { supplied: string }) => supplied); // this is wrong if we are in soft-liquidations
@@ -43,6 +50,18 @@ export const getCrvUsdAggregatedData = ({
   }
 
   payload.exposure = getExposure(payload.borrowedUsd, payload.suppliedUsd);
+
+  // crvUSD debt accrues the market borrow rate. Collateral (including crvUSD held during soft liquidation) earns
+  // nothing from the protocol itself; only the native yield of staked collateral is counted, as an incentive.
+  const { netApy, totalInterestUsd, incentiveUsd } = calculateNetApyFromRates({
+    suppliedUsd: payload.suppliedUsd,
+    borrowedUsd: payload.borrowedUsd,
+    borrowRate,
+    incentives: [{ apy: collStakingApy, amountUsd: usedAssets?.[selectedMarket.collAsset]?.suppliedUsd || '0' }],
+  });
+  payload.netApy = netApy;
+  payload.totalInterestUsd = totalInterestUsd;
+  payload.incentiveUsd = incentiveUsd;
 
   return payload;
 };

@@ -31,4 +31,8 @@ export interface LiquityTroveInfo {
   priceForRecovery: string,
   debtInFront: string,
   exposure: string,
+  // Always '0' for Liquity v1: LUSD debt is interest free (one-off borrowing fee only) and ETH collateral earns no yield.
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
 }

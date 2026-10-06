@@ -64,4 +64,8 @@ export interface CdpData {
   liquidationFee: string,
   lastUpdated: number,
   exposure: string,
+  // Yearly net return (%) on the vault's equity: stability fee on DAI debt vs native yield of staked collateral.
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
 }

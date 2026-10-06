@@ -16,6 +16,7 @@ import { wethToEth } from '../services/utils';
 import { parseCollateralInfo } from '../helpers/makerHelpers';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getExposure } from '../moneymarket';
+import { calculateNetApyFromRates, getStakingApy, STAKING_ASSETS } from '../staking';
 
 export const _getMakerAccountBalances = async (provider: PublicClient, network: NetworkNumber, block: Blockish, addressMapping: boolean, cdpId: string, _managerAddress?: EthAddress): Promise<PositionBalances> => {
   let balances: PositionBalances = {
@@ -190,10 +191,12 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     [ink, art],
     coll,
     fetchedIlkInfo,
+    collStakingApy,
   ] = await Promise.all([
     vatContract.read.urns([cdp.ilk, cdp.urn]),
     vatContract.read.gem([cdp.ilk, cdp.urn]),
     ilkInfo || _getMakerIlksData(provider, network, [cdp.ilkLabel]).then((ilks) => ilks[cdp.ilkLabel]),
+    STAKING_ASSETS.includes(cdp.asset) ? getStakingApy(cdp.asset) : Promise.resolve('0'),
   ]);
 
   const collInfo = fetchedIlkInfo;
@@ -214,6 +217,15 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
   const safetyRatio = +collInfo.liqPercent > 0 ? new Dec(ratio).div(collInfo.liqPercent).mul(100).toString() : '0';
 
   const debtTooLow = new Dec(debt).gt(0) && new Dec(assetAmountInEth(debt, 'DAI')).lt(collInfo.minDebt);
+
+  // DAI debt accrues the ilk's stability fee. Collateral earns nothing inside the vault, except for the
+  // native yield of staked collateral (e.g. wstETH), which is tracked as an incentive.
+  const { netApy, totalInterestUsd, incentiveUsd } = calculateNetApyFromRates({
+    suppliedUsd: collateralUsd,
+    borrowedUsd: assetAmountInEth(debt, 'DAI'),
+    borrowRate: collInfo.stabilityFee.toString(),
+    incentives: [{ apy: collStakingApy, amountUsd: collateralUsd }],
+  });
 
   return {
     owner: cdp.owner,
@@ -249,6 +261,9 @@ export const _getMakerCdpData = async (provider: Client, network: NetworkNumber,
     liquidationFee: collInfo.liquidationFee,
     lastUpdated: Date.now(),
     exposure: getExposure(assetAmountInEth(debt, 'DAI'), collateralUsd),
+    netApy,
+    totalInterestUsd,
+    incentiveUsd,
   };
 };
 

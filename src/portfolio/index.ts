@@ -549,9 +549,9 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
     }),
     ...crvUsdMarkets.map((market) => addresses.map(async (address) => {
       try {
-        const accData = await _getCurveUsdUserData(client, network, address, market, crvUsdMarketsData[market.value].activeBand);
+        const accData = await _getCurveUsdUserData(client, network, address, market, crvUsdMarketsData[market.value].activeBand, crvUsdMarketsData[market.value].borrowRate);
         if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: { ...accData, borrowRate: crvUsdMarketsData[market.value].borrowRate } };
+          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: accData };
         }
       } catch (error) {
         console.error(`Error fetching Curve USD account data for address ${address} on market ${market.value}:`, error);
@@ -818,9 +818,9 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
     }),
     ...crvUsdMarkets.map((market) => addresses.map(async (address) => {
       try {
-        const accData = await _getCurveUsdUserData(client, network, address, market, markets.crvUsdMarketsData[market.value].activeBand);
+        const accData = await _getCurveUsdUserData(client, network, address, market, markets.crvUsdMarketsData[market.value].activeBand, markets.crvUsdMarketsData[market.value].borrowRate);
         if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: { ...accData, borrowRate: markets.crvUsdMarketsData[market.value].borrowRate } };
+          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: accData };
         }
       } catch (error) {
         console.error(`Error fetching Curve USD account data for address ${address} on market ${market.value}:`, error);

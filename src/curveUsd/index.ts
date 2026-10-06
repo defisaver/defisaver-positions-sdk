@@ -14,6 +14,13 @@ import { getCrvUsdAggregatedData } from '../helpers/curveUsdHelpers';
 import { CrvUsdMarkets } from '../markets';
 import { wethToEth } from '../services/utils';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
+import { getStakingApy, STAKING_ASSETS } from '../staking';
+
+/** Converts a per-second AMM rate (wei, 18 decimals) into a yearly compounded borrow APY in %. */
+const ammRateToBorrowApy = (rateWei: string) => {
+  const exponent = new Dec(assetAmountInEth(rateWei)).mul(365).mul(86400);
+  return new Dec(new Dec(2.718281828459).pow(exponent).minus(1)).mul(100).toString();
+};
 
 const getAndFormatBands = async (provider: Client, network: NetworkNumber, selectedMarket: CrvUSDMarketData, _minBand: string, _maxBand: string) => {
   const contract = CrvUSDViewContractViem(provider, network);
@@ -69,15 +76,8 @@ export const _getCurveUsdGlobalData = async (provider: Client, network: NetworkN
   const totalDebt = assetAmountInEth(data.totalDebt.toString(), debtAsset);
   const ammPrice = assetAmountInEth(data.ammPrice.toString(), debtAsset);
 
-  const rate = assetAmountInEth(data.ammRate.toString());
-  const futureRate = assetAmountInEth(data.monetaryPolicyRate.toString());
-
-  const exponentRate = new Dec(rate).mul(365).mul(86400);
-  const exponentFutureRate = new Dec(futureRate).mul(365).mul(86400);
-  const borrowRate = new Dec(new Dec(2.718281828459).pow(exponentRate).minus(1)).mul(100)
-    .toString();
-  const futureBorrowRate = new Dec(new Dec(2.718281828459).pow(exponentFutureRate).minus(1)).mul(100)
-    .toString();
+  const borrowRate = ammRateToBorrowApy(data.ammRate.toString());
+  const futureBorrowRate = ammRateToBorrowApy(data.monetaryPolicyRate.toString());
 
   const bandsData = await getAndFormatBands(provider, network, selectedMarket, data.minBand.toString(), data.maxBand.toString());
 
@@ -164,12 +164,21 @@ export const getCrvUsdAccountBalances = async (
   controllerAddress: EthAddress,
 ): Promise<PositionBalances> => _getCrvUsdAccountBalances(getViemProvider(provider, network), network, block, addressMapping, address, controllerAddress);
 
-export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string): Promise<CrvUSDUserData> => {
+/**
+ * @param borrowRate market borrow APY in % (`CrvUSDGlobalMarketData.borrowRate`); when omitted it is read from the view contract
+ */
+export const _getCurveUsdUserData = async (provider: Client, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData, activeBand: string, borrowRate?: string): Promise<CrvUSDUserData> => {
   const contract = CrvUSDViewContractViem(provider, network);
-
-  const data = await contract.read.userData([selectedMarket.controllerAddress, address]);
   const collAsset = selectedMarket.collAsset;
   const debtAsset = selectedMarket.baseAsset;
+
+  const [data, collStakingApy, marketBorrowRate] = await Promise.all([
+    contract.read.userData([selectedMarket.controllerAddress, address]),
+    STAKING_ASSETS.includes(collAsset) ? getStakingApy(collAsset) : Promise.resolve('0'),
+    borrowRate !== undefined
+      ? Promise.resolve(borrowRate)
+      : contract.read.globalData([selectedMarket.controllerAddress]).then((globalData) => ammRateToBorrowApy(globalData.ammRate.toString())),
+  ]);
 
   const health = assetAmountInEth(data.health.toString());
   const healthPercent = new Dec(health).mul(100).toString();
@@ -202,7 +211,7 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
       isBorrowed: new Dec(debtBorrowed).gt('0'),
       symbol: 'crvUSD',
       price: '1',
-      interestRate: '0',
+      interestRate: marketBorrowRate,
     },
   } : {};
 
@@ -232,8 +241,15 @@ export const _getCurveUsdUserData = async (provider: Client, network: NetworkNum
     numOfBands: data.N.toString(),
     usedAssets,
     status,
+    borrowRate: marketBorrowRate,
     ...getCrvUsdAggregatedData({
-      loanExists: data.loanExists, usedAssets, network: NetworkNumber.Eth, selectedMarket, numOfBands: data.N.toString(),
+      loanExists: data.loanExists,
+      usedAssets,
+      network: NetworkNumber.Eth,
+      selectedMarket,
+      numOfBands: data.N.toString(),
+      borrowRate: marketBorrowRate,
+      collStakingApy,
     }),
     userBands,
   };
@@ -245,10 +261,11 @@ export const getCurveUsdUserData = async (
   address: EthAddress,
   selectedMarket: CrvUSDMarketData,
   activeBand: string,
-): Promise<CrvUSDUserData> => _getCurveUsdUserData(getViemProvider(provider, network), network, address, selectedMarket, activeBand);
+  borrowRate?: string,
+): Promise<CrvUSDUserData> => _getCurveUsdUserData(getViemProvider(provider, network), network, address, selectedMarket, activeBand, borrowRate);
 
 export const getCurveUsdFullPositionData = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress, selectedMarket: CrvUSDMarketData): Promise<CrvUSDUserData> => {
   const marketData = await getCurveUsdGlobalData(provider, network, selectedMarket);
-  const positionData = await getCurveUsdUserData(provider, network, address, selectedMarket, marketData.activeBand);
+  const positionData = await getCurveUsdUserData(provider, network, address, selectedMarket, marketData.activeBand, marketData.borrowRate);
   return positionData;
 };

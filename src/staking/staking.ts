@@ -137,6 +137,34 @@ export const calculateInterestEarned = (principal: string, interest: string, typ
   return (+principal * (((1 + (+interest / 100) / BLOCKS_IN_A_YEAR)) ** (BLOCKS_IN_A_YEAR * interval))) - +principal; // eslint-disable-line
 };
 
+/**
+ * Net APY for positions that have a single known borrow rate (and optionally a single supply rate)
+ * instead of per-asset `assetsData` to feed into `calculateNetApy` (Maker, crvUSD, Liquity v1).
+ * All rates are yearly percentages that are already compounded. `incentives` are extra yields
+ * (e.g. the native staking yield of the collateral) applied to their own USD base and summed into `incentiveUsd`.
+ */
+export const calculateNetApyFromRates = ({
+  suppliedUsd, borrowedUsd, supplyRate = '0', borrowRate = '0', incentives = [],
+}: {
+  suppliedUsd: string,
+  borrowedUsd: string,
+  supplyRate?: string,
+  borrowRate?: string,
+  incentives?: { apy: string, amountUsd: string }[],
+}) => {
+  const supplyInterest = new Dec(calculateInterestEarned(suppliedUsd, supplyRate, 'year', true));
+  const borrowInterest = new Dec(calculateInterestEarned(borrowedUsd, borrowRate, 'year', true));
+  const incentiveUsd = incentives
+    .reduce((acc, { apy, amountUsd }) => acc.add(calculateInterestEarned(amountUsd, apy, 'year', true)), new Dec(0))
+    .toString();
+
+  const totalInterestUsd = supplyInterest.sub(borrowInterest).add(incentiveUsd).toString();
+  const balance = new Dec(suppliedUsd).sub(borrowedUsd);
+  const netApy = balance.isZero() ? '0' : new Dec(totalInterestUsd).div(balance).times(100).toString();
+
+  return { netApy, totalInterestUsd, incentiveUsd };
+};
+
 export const calculateNetApy = ({
   usedAssets, assetsData, optionalData,
 }: { usedAssets: MMUsedAssets, assetsData: MMAssetsData, optionalData?: any }) => {
