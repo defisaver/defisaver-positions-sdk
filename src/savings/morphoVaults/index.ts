@@ -8,12 +8,11 @@ import {
 } from '../../types';
 import { getViemProvider } from '../../services/viem';
 import { getMorphoVaultContractViem } from '../../contracts';
+import { MORPHO_API_URL } from '../../constants';
 
 export {
   morphoVaultsOptions,
 };
-
-const MORPHO_BLUE_API = 'https://api.morpho.org/graphql';
 
 // Morpho API caps list page size at 100 items
 const MORPHO_API_PAGE_SIZE = 100;
@@ -41,7 +40,7 @@ export const fetchMorphoVaultsLiquidity = async (network: NetworkNumber, vaults:
 
   const liquidityByAddress: Record<string, string> = {};
   await Promise.all(chunks.map(async (chunk) => {
-    const data = await graphqlRequest(MORPHO_BLUE_API, vaultsLiquidityQuery, {
+    const data = await graphqlRequest(MORPHO_API_URL, vaultsLiquidityQuery, {
       addresses: chunk.map((vault) => vault.address),
       chainIds: [network],
     // the BigInt scalar serializes as a JSON number when it fits in Number.MAX_SAFE_INTEGER, a string otherwise

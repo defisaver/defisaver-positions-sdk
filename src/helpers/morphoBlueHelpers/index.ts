@@ -12,7 +12,9 @@ import {
   MorphoBluePublicAllocatorItem,
   MorphoBlueRealloactionMarketData,
 } from '../../types';
-import { borrowOperations, SECONDS_PER_YEAR, WAD } from '../../constants';
+import {
+  borrowOperations, MORPHO_API_URL, SECONDS_PER_YEAR, WAD,
+} from '../../constants';
 import { MorphoBlueViewContractViem } from '../../contracts';
 import { compareAddresses, LONGER_TIMEOUT, wethToEth } from '../../services/utils';
 import { getViemProvider } from '../../services/viem';
@@ -149,7 +151,6 @@ export const getApyAfterValuesEstimation = async (selectedMarket: MorphoBlueMark
   return { borrowRate, supplyRate };
 };
 
-const API_URL = 'https://api.morpho.org/graphql';
 // Morpho Blue ACRM (Adaptive Curve IRM) always targets 90% utilization — protocol constant
 const ACRM_TARGET_UTILIZATION = '900000000000000000';
 
@@ -228,7 +229,7 @@ const REWARDS_QUERY = `
 */
 export const getReallocatableLiquidity = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ reallocatableLiquidity: string, targetBorrowUtilization: string }> => {
   try {
-    const response = await fetch(API_URL, {
+    const response = await fetch(MORPHO_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -293,7 +294,7 @@ export const getLiquidityToAllocate = (amountToBorrow: string, totalBorrow: stri
 export const getReallocation = async (market: MorphoBlueMarketData, assetsData: MorphoBlueAssetsData, amountToBorrow: string, network: NetworkNumber = NetworkNumber.Eth): Promise<{ vaults: string[], withdrawals: (string | string[])[][][] }> => {
   try {
     const { marketId, loanToken } = market;
-    const response = await fetch(API_URL, {
+    const response = await fetch(MORPHO_API_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -384,7 +385,7 @@ export const getReallocation = async (market: MorphoBlueMarketData, assetsData: 
 };
 
 export const getRewardsForMarket = async (marketId: string, network: NetworkNumber = NetworkNumber.Eth) => {
-  const response = await fetch(API_URL, {
+  const response = await fetch(MORPHO_API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
