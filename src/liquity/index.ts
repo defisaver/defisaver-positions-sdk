@@ -13,7 +13,7 @@ import {
   LiquityTroveManagerContractViem,
   LiquityViewContractViem,
 } from '../contracts';
-import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
+import { LIQUITY_TROVE_STATUS_ENUM, LiquityStakingData, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getEthAmountForDecimals } from '../services/utils';
@@ -113,7 +113,7 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
 
 export const getLiquityTroveInfo = async (provider: EthereumProvider, network: NetworkNumber, address: EthAddress): Promise<LiquityTroveInfo> => _getLiquityTroveInfo(getViemProvider(provider, network, { batch: { multicall: true } }), network, address);
 
-export const getLiquityStakingData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+export const getLiquityStakingData = async (provider: Client, network: NetworkNumber, address: EthAddress): Promise<LiquityStakingData> => {
   const lqtyStakingView = LiquityLQTYStakingViem(provider, network);
   const stabilityPoolView = LiquityStabilityPoolViem(provider, network);
   const [

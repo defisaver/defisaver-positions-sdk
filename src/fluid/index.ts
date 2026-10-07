@@ -10,6 +10,7 @@ import {
   FluidAggregatedVaultData,
   FluidAssetData,
   FluidAssetsData,
+  FluidEarnPositionData,
   FluidFTokenDataStructOutput,
   FluidMarketData,
   FluidMarketInfo,
@@ -1597,7 +1598,7 @@ export const getFluidTokenData = async (
   token: string,
 ) => _getFluidTokenData(getViemProvider(provider, network), network, token);
 
-const parseFDepositTokenData = (fTokenData: FluidFTokenDataStructOutput, userPosition: FluidUserEarnPositionStructOutput, apiData: any, fTokenAddress?: string) => {
+const parseFDepositTokenData = (fTokenData: FluidFTokenDataStructOutput, userPosition: FluidUserEarnPositionStructOutput, apiData: any, fTokenAddress?: string): FluidEarnPositionData => {
   const decimals = fTokenData.decimals.toString();
   const depositRate = new Dec(getEthAmountForDecimals(fTokenData.convertToShares.toString(), decimals)).toString();
   const withdrawRate = new Dec(getEthAmountForDecimals(fTokenData.convertToAssets.toString(), decimals)).toString();
@@ -1645,7 +1646,7 @@ export const getFluidDepositData = async (
   address: EthAddress,
 ) => _getFluidDepositData(getViemProvider(provider, network), network, token, address);
 
-export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, network: NetworkNumber, user: EthAddress) => {
+export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, network: NetworkNumber, user: EthAddress): Promise<FluidEarnPositionData[]> => {
   const view = FluidViewContractViem(provider, network);
   const [
     [userPositions, fTokensData],
@@ -1664,7 +1665,7 @@ export const _getAllUserEarnPositionsWithFTokens = async (provider: Client, netw
     rewardsData = await rewardsApiResponse.json();
   }
 
-  const parsedRes = fTokensData.reduce<ReturnType<typeof parseFDepositTokenData>[]>((acc, fTokenData, i) => {
+  const parsedRes = fTokensData.reduce<FluidEarnPositionData[]>((acc, fTokenData, i) => {
     const userPosition = userPositions[i];
     const deposited = userPosition?.underlyingAssets;
 

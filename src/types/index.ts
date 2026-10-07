@@ -15,3 +15,4 @@ export * from './merkl';
 export * from './savings';
 export * from './common';
 export * from './aaveV4';
+export * from './claiming';

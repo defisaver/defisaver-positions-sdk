@@ -487,3 +487,17 @@ export interface FluidFTokenDataStructOutput {
   rewardsRate: bigint;
   withdrawable: bigint;
 }
+
+/** One Fluid lending (fToken) deposit of an address, from getAllUserEarnPositionsWithFTokens and getFluidDepositData. */
+export interface FluidEarnPositionData {
+  fTokenAddress: string | undefined,
+  fTokenSymbol: string,
+  decimals: string,
+  totalDeposited: string,
+  withdrawable: string,
+  apy: string,
+  depositRate: string,
+  withdrawRate: string,
+  deposited: string,
+  depositedShares: string,
+}

@@ -132,3 +132,28 @@ export interface LiquityV2TroveData {
   lastInterestRateAdjTime: string,
   exposure: string,
 }
+/** The stability pool deposit of an address in one market, from getLiquityV2Staking. */
+export interface LiquityV2StakingData {
+  totalBOLDDeposited: string,
+  stakedBOLDBalance: string,
+  stabilityRewardColl: string,
+  stabilityRewardYield: string,
+  showStakingBalances: boolean,
+  debtTokenBalance: string,
+  stabilityPoolApy: string,
+}
+
+/** sBOLD, yBOLD and stYBOLD of an address, from getLiquitySAndYBold. */
+export interface LiquityV2SBoldYBoldData {
+  spApy: string,
+  yBoldApy: string,
+  totalBoldDepositedSBold: string,
+  boldRateSBold: string,
+  maxWithdrawSBold: string,
+  totalBoldDepositedYBold: string,
+  boldRateYBold: string,
+  maxWithdrawYBold: string,
+  sBoldBalance: string,
+  yBoldBalance: string,
+  stYBoldBalance: string,
+}

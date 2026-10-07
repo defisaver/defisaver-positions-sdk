@@ -1,13 +1,14 @@
 import { Client } from 'viem';
 import { AaveUmbrellaViewViem, AaveV3ViewContractViem } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
+import { UmbrellaStakingData } from '../types/aave';
 import { compareAddresses, convertHybridArraysToObjects, getEthAmountForDecimals } from '../services/utils';
 import { findMatching, tokenEntries } from './umbrellaUtils';
 
 const umbrella = '0xD400fc38ED4732893174325693a63C30ee3881a8';
 const aaveOracle = '0x54586bE62E3c3580375aE3723C145253060Ca0C2';
 
-export const getUmbrellaData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+export const getUmbrellaData = async (provider: Client, network: NetworkNumber, address: EthAddress): Promise<UmbrellaStakingData> => {
   const umbrellaView = AaveUmbrellaViewViem(provider, network);
   const aaveV3View = AaveV3ViewContractViem(provider, network);
   const [tokensAggregatedData, additionalUmbrellaStakingData, userAggregatedData] = await Promise.all([

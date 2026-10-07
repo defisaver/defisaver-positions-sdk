@@ -3,7 +3,7 @@ import { assetAmountInEth } from '@defisaver/tokens';
 import { Client } from 'viem';
 import { UUPSViem } from '../contracts';
 import { EthAddress, HexString, NetworkNumber } from '../types/common';
-import { ClaimType } from '../types/claiming';
+import { ClaimType, KingRewardsClaimableToken } from '../types/claiming';
 
 export const fetchKingRewards = async (walletAddress: EthAddress) => {
   try {
@@ -19,7 +19,7 @@ export const fetchKingRewards = async (walletAddress: EthAddress) => {
   }
 };
 
-export const getKingRewards = async (provider: Client, network: NetworkNumber, walletAddresses: EthAddress[]) => {
+export const getKingRewards = async (provider: Client, network: NetworkNumber, walletAddresses: EthAddress[]): Promise<Record<string, KingRewardsClaimableToken[]>> => {
   // Fetch all API data in parallel (these are external API calls, can't be batched with multicall)
   const apiDataPromises = walletAddresses.map(address => fetchKingRewards(address));
   const apiDataArray = await Promise.all(apiDataPromises);
@@ -31,7 +31,7 @@ export const getKingRewards = async (provider: Client, network: NetworkNumber, w
   const cumulativeResults = await Promise.all(cumulativePromises);
 
   // Process results
-  const results: Record<string, any[]> = {};
+  const results: Record<string, KingRewardsClaimableToken[]> = {};
 
   for (let i = 0; i < walletAddresses.length; i++) {
     const walletAddress = walletAddresses[i];

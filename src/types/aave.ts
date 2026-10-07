@@ -219,3 +219,89 @@ export interface AaveHelperCommon {
   selectedMarket: Partial<AaveMarketInfo>,
   network?: NetworkNumber,
 }
+
+export interface SghoUserData {
+  shares: string;
+  balance: string;
+  maxDeposit: string;
+  maxWithdraw: string;
+  underlyingBalance: string;
+}
+
+export interface SghoData {
+  totalAssets: string;
+  totalSupply: string;
+  supplyCap: string;
+  /** Target savings rate as an APY percent (e.g. "4.25" for 4.25%). */
+  targetRate: string;
+  paused: boolean;
+  user: SghoUserData;
+}
+
+/** stkAAVE, stkGHO and sGHO of an address, from getStakeAaveData. */
+export interface StakeAaveData {
+  activatedCooldown: string,
+  activatedCooldownAmount: string,
+  stkAaveRewardsBalance: string,
+  aaveRewardsBalance: string,
+  stkAaveBalance: string,
+  stkGhoBalance: string,
+  ghoMeritApy: string,
+  stkAaveApy: string,
+  sgho: SghoData,
+}
+
+export interface UmbrellaTokenInfo {
+  token: EthAddress,
+  /** USD, converted from the oracle's 8 decimals. */
+  price: string,
+  name: string,
+  symbol: string,
+  decimals: number,
+}
+
+export interface UmbrellaRewardTokenData {
+  rewardTokenData: UmbrellaTokenInfo,
+  maxEmissionPerSecond: bigint,
+  distributionEnd: bigint,
+}
+
+export interface UmbrellaStakingAccountData {
+  stakeUserBalance: string,
+  rewardsTokenUserData: { reward: EthAddress, currentReward: string }[],
+  userCooldownAmount: string,
+  // Passed through unconverted: the view's bigint, or '0' when the view returns none.
+  userEndOfCooldown: bigint | string,
+  userWithdrawalWindow: bigint | string,
+}
+
+/**
+ * One Umbrella stake token of an address, from getUmbrellaData: the view contracts' structs merged, with the amounts
+ * the app reads converted to decimal strings. The bigint fields are the views' raw values, as the SDK passes them.
+ */
+export interface UmbrellaStakingTokenData {
+  stakeTokenData: UmbrellaTokenInfo,
+  totalAssets: string,
+  targetLiquidity: string,
+  isStakeConfigured: boolean,
+  rewardsTokenData: UmbrellaRewardTokenData[],
+  stakeToken: EthAddress,
+  stakeUserBalance: bigint,
+  rewardsTokenUserData: { reward: EthAddress, currentReward: bigint }[],
+  stkToken: EthAddress,
+  totalShares: string,
+  stkUnderlyingToken: EthAddress,
+  aToken: EthAddress,
+  cooldownPeriod: bigint,
+  unstakeWindow: bigint,
+  stkTokenToWaTokenRate: string,
+  waTokenToATokenRate: string,
+  rewardsEmissionRates: string[],
+  userCooldownAmount: bigint,
+  userEndOfCooldown: bigint,
+  userWithdrawalWindow: bigint,
+  account: UmbrellaStakingAccountData,
+}
+
+/** Keyed by Umbrella stake (UmbrellaGHO, UmbrellaUSDC, UmbrellaUSDT, UmbrellaETH). */
+export type UmbrellaStakingData = Record<string, UmbrellaStakingTokenData>;

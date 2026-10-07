@@ -12,7 +12,7 @@ import {
 } from '../types/common';
 import {
   LIQUITY_V2_TROVE_STATUS_ENUM,
-  LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2TroveData, LiquityV2UsedAssets,
+  LiquityV2AssetsData, LiquityV2MarketData, LiquityV2MarketInfo, LiquityV2SBoldYBoldData, LiquityV2StakingData, LiquityV2TroveData, LiquityV2UsedAssets,
   LiquityV2Versions,
 } from '../types';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
@@ -579,7 +579,7 @@ const calculateSPApy = (
   return apy;
 };
 
-export const getLiquityV2Staking = async (provider: Client, network: NetworkNumber, market: LiquityV2Versions, user: EthAddress) => {
+export const getLiquityV2Staking = async (provider: Client, network: NetworkNumber, market: LiquityV2Versions, user: EthAddress): Promise<LiquityV2StakingData> => {
   const stabilityPoolView = createViemContractFromConfigFunc('LiquityV2StabilityPool', stabilityPoolAddrForMarket[market])(provider, network);
   const activePoolView = createViemContractFromConfigFunc('LiquityV2ActivePool', activePoolAddrForMarket[market])(provider, network);
 
@@ -638,7 +638,7 @@ export const getLiquityV2Staking = async (provider: Client, network: NetworkNumb
   };
 };
 
-export const getLiquitySAndYBold = async (provider: Client, network: NetworkNumber, markets: any, user: EthAddress) => {
+export const getLiquitySAndYBold = async (provider: Client, network: NetworkNumber, markets: any, user: EthAddress): Promise<LiquityV2SBoldYBoldData> => {
   const sBold = LiquityV2sBoldVaultViem(provider, network);
   const yBold = createViemContractFromConfigFunc('Erc4626', '0x9F4330700a36B29952869fac9b33f45EEdd8A3d8')(provider, network);
   const stYBold = createViemContractFromConfigFunc('Erc4626', '0x23346B04a7f55b8760E5860AA5A77383D63491cD')(provider, network);
