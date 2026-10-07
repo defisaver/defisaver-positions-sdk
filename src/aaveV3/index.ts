@@ -61,7 +61,10 @@ export const aaveV3EmodeCategoriesMapping = (extractedState: any, usedAssets: Aa
       ...extractedState, usedAssets, eModeCategory: e.id,
     });
     const willStayOverCollateralized = new Dec(afterEnteringCategory.ratio === 'NaN' ? '0' : afterEnteringCategory.ratio).eq(0) || new Dec(afterEnteringCategory.ratio).gt(afterEnteringCategory.liqPercent);
-    const enteringTerms = [borrowingOnlyFromCategory, willStayOverCollateralized];
+    const collateralOnlyFromCategory = e.id === 0 || !e.isolated
+      ? true
+      : !usedAssetsValues.filter(u => u.isSupplied && u.collateral && !e.collateralAssets.includes(u.symbol)).length;
+    const enteringTerms = [borrowingOnlyFromCategory, willStayOverCollateralized, collateralOnlyFromCategory];
     categoriesMapping[e.id] = {
       enteringTerms,
       canEnterCategory: !enteringTerms.includes(false),
@@ -118,6 +121,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
         borrowableBitmap: eModesInfo[i].borrowableBitmap.toString(),
         collateralBitmap: eModesInfo[i].collateralBitmap.toString(),
         ltvzeroBitmap: eModesInfo[i].ltvzeroBitmap.toString(),
+        isolated: eModesInfo[i].isolated ?? false,
         borrowAssets: [],
         collateralAssets: [],
         ltvZeroAssets: [],
@@ -345,6 +349,7 @@ export async function _getAaveV3MarketData(provider: Client, network: NetworkNum
     collateralAssets: assetsData.map((a) => a.symbol),
     borrowAssets: assetsData.map((a) => a.symbol),
     ltvZeroAssets: [],
+    isolated: false,
   };
 
   return { assetsData: payload, eModeCategoriesData };
