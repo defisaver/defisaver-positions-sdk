@@ -4,52 +4,62 @@ import { request as graphqlRequest } from 'graphql-request';
 import { assetAmountInEth } from '@defisaver/tokens';
 import * as morphoVaultsOptions from './options';
 import {
-  EthAddress, EthereumProvider, NetworkNumber, MorphoVault, MorphoVaultType, SavingsVaultData,
+  EthAddress, EthereumProvider, NetworkNumber, MorphoVault, MorphoVaultType, MorphoVaultVersion, SavingsVaultData,
 } from '../../types';
 import { getViemProvider } from '../../services/viem';
-import { getMorphoVaultContractViem } from '../../contracts';
+import { getErc4626ContractViem, getMorphoVaultContractViem } from '../../contracts';
+import { MORPHO_API_URL } from '../../constants';
 
 export {
   morphoVaultsOptions,
 };
 
-const MORPHO_BLUE_API = 'https://api.morpho.org/graphql';
-
 // Morpho API caps list page size at 100 items
 const MORPHO_API_PAGE_SIZE = 100;
 
-const vaultsLiquidityQuery = `
+const buildLiquidityQuery = (listField: 'vaults' | 'vaultV2s') => `
   query VaultsLiquidity($addresses: [String!], $chainIds: [Int!]) {
-    vaults(first: ${MORPHO_API_PAGE_SIZE}, where: { address_in: $addresses, chainId_in: $chainIds }) {
+    ${listField}(first: ${MORPHO_API_PAGE_SIZE}, where: { address_in: $addresses, chainId_in: $chainIds }) {
       items {
         address
-        liquidity {
-          underlying
-        }
+        liquidity${listField === 'vaults' ? ' {\n          underlying\n        }' : ''}
       }
     }
 }`;
 
+const liquidityQueries = {
+  [MorphoVaultVersion.V1]: { field: 'vaults', query: buildLiquidityQuery('vaults') },
+  [MorphoVaultVersion.V2]: { field: 'vaultV2s', query: buildLiquidityQuery('vaultV2s') },
+} as const;
+
+type LiquidityItem = { address: string, liquidity: { underlying: string | number | null } | string | number | null };
+
 /**
- * Fetches liquidity for all given vaults in a single API request (chunked if over the page cap),
+ * Fetches liquidity for all given vaults, one API request per vault version (chunked if over the page cap),
  * returned as a map keyed by lowercased vault address. A vault missing from the API response is
  * absent from the map.
  */
 export const fetchMorphoVaultsLiquidity = async (network: NetworkNumber, vaults: MorphoVault[]): Promise<Record<string, string>> => {
-  const chunks: MorphoVault[][] = [];
-  for (let i = 0; i < vaults.length; i += MORPHO_API_PAGE_SIZE) chunks.push(vaults.slice(i, i + MORPHO_API_PAGE_SIZE));
+  const requests: { version: MorphoVaultVersion, chunk: MorphoVault[] }[] = [];
+  [MorphoVaultVersion.V1, MorphoVaultVersion.V2].forEach((version) => {
+    const versionVaults = vaults.filter((vault) => vault.version === version);
+    for (let i = 0; i < versionVaults.length; i += MORPHO_API_PAGE_SIZE) requests.push({ version, chunk: versionVaults.slice(i, i + MORPHO_API_PAGE_SIZE) });
+  });
 
   const liquidityByAddress: Record<string, string> = {};
-  await Promise.all(chunks.map(async (chunk) => {
-    const data = await graphqlRequest(MORPHO_BLUE_API, vaultsLiquidityQuery, {
+  await Promise.all(requests.map(async ({ version, chunk }) => {
+    const { field, query } = liquidityQueries[version];
+    const data = await graphqlRequest(MORPHO_API_URL, query, {
       addresses: chunk.map((vault) => vault.address),
       chainIds: [network],
     // the BigInt scalar serializes as a JSON number when it fits in Number.MAX_SAFE_INTEGER, a string otherwise
-    }) as { vaults: { items: { address: string, liquidity: { underlying: string | number | null } | null }[] | null } };
+    }) as Record<string, { items: LiquidityItem[] | null }>;
 
-    (data.vaults.items || []).forEach((item) => {
-      if (item?.liquidity?.underlying !== undefined && item.liquidity?.underlying !== null) {
-        liquidityByAddress[item.address.toLowerCase()] = String(item.liquidity.underlying);
+    (data[field].items || []).forEach((item) => {
+      // V1 exposes liquidity as { underlying }, V2 as a plain BigInt scalar
+      const underlying = item?.liquidity !== null && typeof item?.liquidity === 'object' ? item.liquidity.underlying : item?.liquidity;
+      if (underlying !== undefined && underlying !== null) {
+        liquidityByAddress[item.address.toLowerCase()] = String(underlying);
       }
     });
   }));
@@ -64,7 +74,22 @@ const getBatchedViemProvider = (provider: EthereumProvider, network: NetworkNumb
   },
 });
 
-const getMorphoVaultChainData = async (provider: Client, morphoVault: MorphoVault, accounts: EthAddress[]) => {
+// Vault V2 is ERC-4626 but has no decimals offset, so shares are converted with convertToAssets
+const getMorphoVaultV2ChainData = async (provider: Client, morphoVault: MorphoVault, accounts: EthAddress[]) => {
+  const vaultContract = getErc4626ContractViem(provider, morphoVault.address);
+
+  const [totalAssets, suppliedAssets] = await Promise.all([
+    vaultContract.read.totalAssets(),
+    Promise.all(accounts.map(async (account) => {
+      const share = await vaultContract.read.balanceOf([account]);
+      return share === BigInt(0) ? BigInt(0) : vaultContract.read.convertToAssets([share]);
+    })),
+  ]);
+
+  return { totalAssets, suppliedAssets };
+};
+
+const getMorphoVaultV1ChainData = async (provider: Client, morphoVault: MorphoVault, accounts: EthAddress[]) => {
   const morphoVaultContract = getMorphoVaultContractViem(provider, morphoVault.address);
 
   const shares: Record<EthAddress, bigint> = {};
@@ -85,20 +110,46 @@ const getMorphoVaultChainData = async (provider: Client, morphoVault: MorphoVaul
   };
 };
 
+type MorphoVaultChainData = {
+  v1?: Awaited<ReturnType<typeof getMorphoVaultV1ChainData>>,
+  v2?: Awaited<ReturnType<typeof getMorphoVaultV2ChainData>>,
+};
+
+const getMorphoVaultChainData = async (provider: Client, morphoVault: MorphoVault, accounts: EthAddress[]): Promise<MorphoVaultChainData> => (
+  morphoVault.version === MorphoVaultVersion.V2
+    ? { v2: await getMorphoVaultV2ChainData(provider, morphoVault, accounts) }
+    : { v1: await getMorphoVaultV1ChainData(provider, morphoVault, accounts) }
+);
+
 const formatMorphoVaultData = (
   morphoVault: MorphoVault,
-  chainData: Awaited<ReturnType<typeof getMorphoVaultChainData>>,
+  chainData: MorphoVaultChainData,
   liquidityUnderlying: string,
   accounts: EthAddress[],
 ): SavingsVaultData => {
+  const liquidity = assetAmountInEth(liquidityUnderlying, morphoVault.asset);
+  const supplied: Record<EthAddress, string> = {};
+
+  if (chainData.v2) {
+    const { totalAssets, suppliedAssets } = chainData.v2;
+    accounts.forEach((account, i) => {
+      supplied[account.toLowerCase() as EthAddress] = assetAmountInEth(suppliedAssets[i].toString(), morphoVault.asset);
+    });
+    return {
+      poolSize: assetAmountInEth(totalAssets.toString(), morphoVault.asset),
+      supplied,
+      liquidity,
+      asset: morphoVault.asset,
+      optionType: morphoVault.type,
+    };
+  }
+
   const {
     totalAssets, totalSupply, decimals, decimalsOffset, shares,
-  } = chainData;
+  } = chainData.v1!;
 
   const poolSize = assetAmountInEth(totalAssets.toString(), morphoVault.asset);
-  const liquidity = assetAmountInEth(liquidityUnderlying, morphoVault.asset);
 
-  const supplied: Record<EthAddress, string> = {};
   accounts.forEach((account) => {
     const share = shares[account] || BigInt(0);
     supplied[account.toLowerCase() as EthAddress] = new Dec(new Dec(share.toString()).mul(new Dec(totalAssets.toString()).add(1)).div(new Dec(totalSupply.toString()).add(10 ** decimalsOffset)).div(10 ** 18)
