@@ -40,12 +40,25 @@ export interface PortfolioProtocolError {
   data: null,
 }
 
-/** What getPortfolioData reads besides positions and markets. Both default to true. */
+/** What getPortfolioData reads besides positions and markets. */
 export interface PortfolioDataOptions {
-  /** stakingPositions; with false it comes back as {} and no staking source is read. */
+  /** stakingPositions; default true. With false it comes back as {} and no staking source is read. */
   staking?: boolean,
-  /** rewardsData; with false it comes back as {} and no rewards source is read. */
+  /** rewardsData; default true. With false it comes back as {} and no rewards source is read. */
   rewards?: boolean,
+  /**
+   * Liquity V2 troves in positions[address].liquityV2; default false, as the DeFi Saver app reads them on its own.
+   * Mainnet only: elsewhere liquityV2 is {}.
+   */
+  liquityV2?: boolean,
+}
+
+/** One Liquity V2 market's troves of an address, by trove id — with an error when the ids or any trove failed to load. */
+export interface PortfolioLiquityV2Troves {
+  error: string,
+  data: {
+    [troveId: string]: LiquityV2TroveData;
+  },
 }
 
 export interface PortfolioPositionsDataForAddress {
@@ -88,6 +101,10 @@ export interface PortfolioPositionsDataForAddress {
   };
   aaveV4: {
     [key in AaveV4SpokesType]?: PortfolioProtocolData<AaveV4AccountData>;
+  };
+  /** Only with the liquityV2 option. Every trove the address holds, by market. */
+  liquityV2?: {
+    [key in LiquityV2Versions]?: PortfolioLiquityV2Troves;
   };
 }
 

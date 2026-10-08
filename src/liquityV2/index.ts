@@ -162,31 +162,35 @@ const nftContractCreationBlockMapping = {
   [LiquityV2Versions.LiquityV2REthLegacy]: 21686257,
 };
 
-const getTransferredTroves = async (provider: PublicClient, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, market: LiquityV2Versions, account: EthAddress): Promise<{ troveId: string }[]> => {
+interface TroveTransfer {
+  from?: EthAddress,
+  to?: EthAddress,
+  tokenId: string,
+  blockNumber: number,
+}
+
+/** Every Transfer of a market's trove NFT since the contract was created (or, on a fork, in the last 1000 blocks). */
+const getTroveTransfers = async (provider: PublicClient, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, market: LiquityV2Versions): Promise<TroveTransfer[]> => {
   const nftContract = createViemContractFromConfigFunc('LiquityV2TroveNFT', troveNFTAddress)(provider, network);
   const nftContractCreationBlock = nftContractCreationBlockMapping[market];
   const currentBlock = +(await provider.getBlockNumber()).toString();
   const _events = await nftContract.getEvents.Transfer({}, { fromBlock: limitBlocksForEventFetching ? BigInt(currentBlock - 1000) : BigInt(nftContractCreationBlock) });
-  const events = _events.map((event) => ({
+  return _events.map((event) => ({
     from: event.args.from, to: event.args.to, tokenId: event.args.tokenId!.toString(), blockNumber: +(event.blockNumber.toString()),
   }));
-  const userTransferredTroves = events.filter((event) => compareAddresses(event.to, account));
-
-  // check if the last know transfer address is the user
-  userTransferredTroves.forEach((event, index) => {
-    const otherTransfers = events.filter((e) => event.blockNumber < e.blockNumber && e.tokenId === event.tokenId);
-    // @ts-ignore
-    userTransferredTroves[index].invalid = !!otherTransfers.length;
-  });
-  // @ts-ignore
-  return userTransferredTroves.filter((event) => !event.invalid).map((event) => ({ troveId: event.tokenId }));
 };
 
-export const _getLiquityV2UserTroveIds = async (provider: PublicClient, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
-  const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
-    getUserTroves(provider, network, selectedMarket.isLegacy, account, selectedMarket.marketAddress),
-    getTransferredTroves(provider, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.value, account),
-  ]);
+/** The troves transferred to an account that it still holds: no later transfer of the same trove. */
+const getAccountTransferredTroves = (events: TroveTransfer[], account: EthAddress): { troveId: string }[] => events
+  .filter((event) => compareAddresses(event.to, account))
+  .filter((event) => !events.some((e) => event.blockNumber < e.blockNumber && e.tokenId === event.tokenId))
+  .map((event) => ({ troveId: event.tokenId }));
+
+const getTransferredTroves = async (provider: PublicClient, network: NetworkNumber, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, market: LiquityV2Versions, account: EthAddress): Promise<{ troveId: string }[]> => (
+  getAccountTransferredTroves(await getTroveTransfers(provider, network, troveNFTAddress, limitBlocksForEventFetching, market), account));
+
+/** The troves an account opened and still owns, then the ones transferred to it, each once. */
+const mergeTroveIds = (userTroves: { troveId: string }[], userTransferredTroves: { troveId: string }[]): { troveId: string }[] => {
   const troves = [...userTroves.map(({ troveId }) => ({ troveId })), ...userTransferredTroves];
   const filteredTroves = troves.filter((value, index, self) => index === self.findIndex((t) => (
     t.troveId === value.troveId
@@ -195,8 +199,30 @@ export const _getLiquityV2UserTroveIds = async (provider: PublicClient, network:
   const troveIds = filteredTroves.map((trove) => trove.troveId);
   const troveIdsSet = new Set(troveIds);
   const troveIdsArray = Array.from(troveIdsSet);
-  const trovesNoDuplicates = troveIdsArray.map((troveId) => troves.find((trove) => trove.troveId === troveId)) as { troveId: string }[];
-  return { troves: trovesNoDuplicates, nextFreeTroveIndex };
+  return troveIdsArray.map((troveId) => troves.find((trove) => trove.troveId === troveId)) as { troveId: string }[];
+};
+
+/**
+ * The trove ids of several accounts in one market: the market's NFT transfers are read once for all of them, rather
+ * than once per account as _getLiquityV2UserTroveIds does.
+ */
+export const _getLiquityV2UsersTroveIds = async (provider: PublicClient, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, accounts: EthAddress[]): Promise<Record<EthAddress, string[]>> => {
+  const [userTroves, events] = await Promise.all([
+    Promise.all(accounts.map((account) => getUserTroves(provider, network, selectedMarket.isLegacy, account, selectedMarket.marketAddress))),
+    getTroveTransfers(provider, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.value),
+  ]);
+  return Object.fromEntries(accounts.map((account, i) => [
+    account,
+    mergeTroveIds(userTroves[i].troves, getAccountTransferredTroves(events, account)).map(({ troveId }) => troveId),
+  ]));
+};
+
+export const _getLiquityV2UserTroveIds = async (provider: PublicClient, network: NetworkNumber, selectedMarket: LiquityV2MarketInfo, troveNFTAddress: EthAddress, limitBlocksForEventFetching: boolean, account: EthAddress): Promise<{ troves: { troveId: string }[], nextFreeTroveIndex: string }> => {
+  const [{ troves: userTroves, nextFreeTroveIndex }, userTransferredTroves] = await Promise.all([
+    getUserTroves(provider, network, selectedMarket.isLegacy, account, selectedMarket.marketAddress),
+    getTransferredTroves(provider, network, troveNFTAddress, limitBlocksForEventFetching, selectedMarket.value, account),
+  ]);
+  return { troves: mergeTroveIds(userTroves, userTransferredTroves), nextFreeTroveIndex };
 };
 
 export const getLiquityV2UserTroveIds = async (

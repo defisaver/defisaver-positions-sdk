@@ -24,10 +24,12 @@ import {
   CompoundVersions,
   CrvUSDGlobalMarketData,
   LiquityV2MarketData,
+  LiquityV2Versions,
   LlamaLendGlobalMarketData,
   MorphoBlueMarketInfo,
   MorphoMidnightMarketInfo,
   PortfolioDataOptions,
+  PortfolioLiquityV2Troves,
   PortfolioMarketsData,
   PortfolioPositionsData,
   PortfolioRewardsData,
@@ -45,7 +47,9 @@ import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
 import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
-import { _getLiquityV2MarketData, getLiquitySAndYBold, getLiquityV2Staking } from '../liquityV2';
+import {
+  _getLiquityV2MarketData, _getLiquityV2TroveData, _getLiquityV2UsersTroveIds, getLiquitySAndYBold, getLiquityV2Staking,
+} from '../liquityV2';
 import { _getAllUserEarnPositionsWithFTokens, _getUserPositionsPortfolio } from '../fluid';
 import { getUmbrellaData } from '../umbrella';
 import { getMerklUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../claiming/aaveV3';
@@ -64,9 +68,11 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
   const isMainnet = network === NetworkNumber.Eth;
   const includeStaking = options.staking !== false;
   const includeRewards = options.rewards !== false;
-  // The addresses staking and rewards are read for: none when left out, so their fetches below make no calls.
+  const includeLiquityV2 = options.liquityV2 === true;
+  // The addresses staking, rewards and Liquity V2 troves are read for: none when left out, so their fetches below make no calls.
   const stakingAddresses = includeStaking ? addresses : [];
   const rewardsAddresses = includeRewards ? addresses : [];
+  const liquityV2Addresses = includeLiquityV2 ? addresses : [];
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
 
   const morphoMarkets = Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network));
@@ -142,6 +148,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         error: '',
         data: {},
       },
+      ...(includeLiquityV2 ? { liquityV2: {} } : {}),
     };
   }
 
@@ -599,6 +606,47 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         console.error(`Error fetching SBold/YBold data for address ${address}:`, error);
         stakingPositions[address.toLowerCase() as EthAddress].liquityV2SBoldYBold = { error: `Error fetching sBold/yBold data for address ${address}`, data: null };
       }
+    }),
+    // Liquity V2 troves: one market's trove ids for every address at once, then each trove's data. A failure is the
+    // market's error; the troves that did load stay in its data.
+    ...(liquityV2Addresses.length ? liquityV2Markets : []).map(async (market) => {
+      const setEntry = (address: EthAddress, entry: PortfolioLiquityV2Troves) => {
+        positions[address.toLowerCase() as EthAddress].liquityV2![market.value] = entry;
+      };
+      const failAll = (error: string) => liquityV2Addresses.forEach((address) => setEntry(address, { error, data: {} }));
+
+      const marketData = liquityV2MarketsData[market.value];
+      if (!marketData) {
+        failAll(`Error fetching Liquity V2 market data for market ${market.value}`);
+        return;
+      }
+      let troveIds: Record<EthAddress, string[]>;
+      try {
+        troveIds = await _getLiquityV2UsersTroveIds(client, network, market, marketData.marketData.troveNFTAddress, isSim, liquityV2Addresses);
+      } catch (error) {
+        console.error(`Error fetching Liquity V2 trove ids on market ${market.value}:`, error);
+        failAll(`Error fetching Liquity V2 troves on market ${market.value}`);
+        return;
+      }
+      await Promise.all(liquityV2Addresses.map(async (address) => {
+        const entry: PortfolioLiquityV2Troves = { error: '', data: {} };
+        const failed: string[] = [];
+        await Promise.all((troveIds[address] ?? []).map(async (troveId) => {
+          try {
+            entry.data[troveId] = await _getLiquityV2TroveData(client, network, {
+              selectedMarket: market,
+              assetsData: marketData.assetsData,
+              troveId,
+              allMarketsData: liquityV2MarketsData as Record<LiquityV2Versions, LiquityV2MarketData>,
+            });
+          } catch (error) {
+            console.error(`Error fetching Liquity V2 trove ${troveId} for address ${address} on market ${market.value}:`, error);
+            failed.push(troveId);
+          }
+        }));
+        if (failed.length) entry.error = `Error fetching Liquity V2 troves ${failed.join(', ')} for address ${address} on market ${market.value}`;
+        setEntry(address, entry);
+      }));
     }),
   ]);
 
