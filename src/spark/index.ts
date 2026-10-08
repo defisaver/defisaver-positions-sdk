@@ -108,6 +108,7 @@ export const _getSparkMarketsData = async (provider: Client, network: NetworkNum
         collateralAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].collateralAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
         borrowAssets: eModeCategoriesData[emodeCategoryId] ? [...eModeCategoriesData[emodeCategoryId].borrowAssets, selectedMarket.assets[i]] : [selectedMarket.assets[i]],
         ltvZeroAssets: [],
+        isolated: false,
       };
 
       return ({

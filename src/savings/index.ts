@@ -32,7 +32,8 @@ export const getSavingsData = async (
   network: NetworkNumber,
   accounts: EthAddress[],
 ) => {
-  const morphoVaultsList = Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[];
+  const morphoVaultsList = (Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[])
+    .filter((key) => morphoVaults.morphoVaultsOptions.getMorphoVault(key).network === network);
   const yearnVaultsList = Object.keys(yearnVaults.yearnVaultsOptions.YEARN_VAULTS) as YearnVaultType[];
   const sparkSavingsVaultsList = Object.keys(sparkSavingsVaults.sparkSavingsVaultsOptions.SPARK_SAVINGS_VAULTS) as SparkSavingsVaultType[];
   const yearnV3VaultsList = Object.keys(yearnV3Vaults.yearnV3VaultsOptions.YEARN_V3_VAULTS) as YearnV3VaultType[];
@@ -42,7 +43,7 @@ export const getSavingsData = async (
   const savingsData: SavingsData = {};
 
   await Promise.all([
-    ...(network === NetworkNumber.Eth ? [
+    ...(morphoVaultsList.length ? [
       (async () => {
         try {
           const vaults = morphoVaultsList.map((vaultKey) => morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey));
@@ -52,6 +53,8 @@ export const getSavingsData = async (
           console.error('[getSavingsData] Error fetching morpho vaults:', err);
         }
       })(),
+    ] : []),
+    ...(network === NetworkNumber.Eth ? [
       ...yearnVaultsList.map(async (vaultKey) => {
         try {
           const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);

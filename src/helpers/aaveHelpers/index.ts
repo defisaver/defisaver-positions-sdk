@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { assetAmountInWei, getAssetInfo, getAssetInfoByAddress } from '@defisaver/tokens';
 import { Client } from 'viem';
 import {
-  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAsset, AaveV3UsedAssets, AaveVersions,
+  AaveAssetData, AaveHelperCommon, AaveMarketInfo, AaveV3AggregatedPositionData, AaveV3AssetsData, AaveV3UsedAsset, AaveV3UsedAssets, AaveVersions, EModeCategoriesData,
 } from '../../types';
 import { getNativeAssetFromWrapped, getWrappedNativeAssetFromUnwrapped } from '../../services/utils';
 import {
@@ -24,6 +24,13 @@ export const isAaveV3 = ({ selectedMarket }: { selectedMarket: Partial<AaveMarke
 export const aaveV3IsInIsolationMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, collateral }) => collateral && assetsData[symbol].isIsolated);
 export const aaveV3IsInSiloedMode = ({ usedAssets, assetsData }: { usedAssets: AaveV3UsedAssets, assetsData: AaveV3AssetsData }) => Object.values(usedAssets).some(({ symbol, debt }) => debt && assetsData[symbol].isSiloed);
 
+export const aaveV3IsEmodeIsolated = ({ eModeCategory, eModeCategoriesData }: { eModeCategory: number, eModeCategoriesData?: EModeCategoriesData }) => eModeCategory !== 0 && !!eModeCategoriesData?.[eModeCategory]?.isolated;
+
+export const aaveV3CanBeCollateralInEmode = ({ eModeCategory, eModeCategoriesData }: { eModeCategory: number, eModeCategoriesData?: EModeCategoriesData }, _asset: string) => {
+  if (!aaveV3IsEmodeIsolated({ eModeCategory, eModeCategoriesData })) return true;
+  return eModeCategoriesData![eModeCategory].collateralAssets.includes(getNativeAssetFromWrapped(_asset));
+};
+
 export const aaveAnyGetCollSuppliedAssets = ({ usedAssets }: { usedAssets: AaveV3UsedAssets }) => Object.values(usedAssets)
   .filter(({ isSupplied, collateral }: { isSupplied: boolean, collateral: boolean }) => isSupplied && collateral);
 
@@ -37,14 +44,18 @@ export const aaveAnyGetSuppliableAssets = ({
   const collAccountAssets = aaveAnyGetCollSuppliedAssets(data);
   const marketAssets = Object.values(assetsData) as AaveAssetData[];
 
-  if (collAccountAssets.length === 0 || !isAaveV3(data)) return marketAssets.filter(({ canBeSupplied }) => canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: true }));
+  if (!isAaveV3(data)) return marketAssets.filter(({ canBeSupplied }) => canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: true }));
+
+  const canBeCollateralInEmode = (symbol: string) => aaveV3CanBeCollateralInEmode(data, symbol);
+
+  if (collAccountAssets.length === 0) return marketAssets.filter(({ canBeSupplied }) => canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: canBeCollateralInEmode(symbol) }));
 
   if (aaveV3IsInIsolationMode(data)) {
     const collAsset = collAccountAssets[0].symbol;
-    return marketAssets.filter(d => d.canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: symbol === collAsset }));
+    return marketAssets.filter(d => d.canBeSupplied).map(({ symbol }) => ({ symbol, canBeCollateral: symbol === collAsset && canBeCollateralInEmode(symbol) }));
   }
 
-  return marketAssets.filter(d => d.canBeSupplied).map(({ symbol, isIsolated }) => ({ symbol, canBeCollateral: !isIsolated }));
+  return marketAssets.filter(d => d.canBeSupplied).map(({ symbol, isIsolated }) => ({ symbol, canBeCollateral: !isIsolated && canBeCollateralInEmode(symbol) }));
 };
 
 export const aaveAnyGetSuppliableAsCollAssets = ({
@@ -62,8 +73,8 @@ export const aaveAnyGetEmodeMutableProps = (
   const asset = getNativeAssetFromWrapped(_asset);
 
   const assetData = assetsData[asset];
-  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string, ltvZeroAssets: string[] } = eModeCategoriesData?.[eModeCategory] || {
-    collateralAssets: [], ltvZeroAssets: [], collateralFactor: '0', liquidationRatio: '0',
+  const eModeCategoryData: { collateralAssets: string[], collateralFactor: string, liquidationRatio: string, ltvZeroAssets: string[], isolated?: boolean } = eModeCategoriesData?.[eModeCategory] || {
+    collateralAssets: [], ltvZeroAssets: [], collateralFactor: '0', liquidationRatio: '0', isolated: false,
   };
 
   if (
@@ -72,6 +83,9 @@ export const aaveAnyGetEmodeMutableProps = (
     || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
   ) {
     const { liquidationRatio, collateralFactor } = assetData;
+    if (eModeCategory !== 0 && eModeCategoryData.isolated && !eModeCategoryData.collateralAssets.includes(asset)) {
+      return ({ liquidationRatio, collateralFactor: '0' });
+    }
     return ({ liquidationRatio, collateralFactor });
   }
   if (eModeCategoryData.ltvZeroAssets.includes(asset)) return ({ liquidationRatio: '0', collateralFactor: '0' });
@@ -118,7 +132,10 @@ export const aaveAnyGetUserReserveLtvAndLltv = (
     || !eModeCategoryData.collateralAssets.includes(asset)
     || new Dec(eModeCategoryData.collateralFactor || 0).eq(0)
   ) {
-    return { ltv: assetData.collateralFactor, lltv: assetData.liquidationRatio };
+    const ltv = eModeCategory !== 0 && eModeCategoryData?.isolated && !eModeCategoryData.collateralAssets.includes(asset)
+      ? '0'
+      : assetData.collateralFactor;
+    return { ltv, lltv: assetData.liquidationRatio };
   }
 
   const ltv = eModeCategoryData.ltvZeroAssets.includes(asset) ? '0' : eModeCategoryData.collateralFactor;
