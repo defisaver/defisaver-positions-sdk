@@ -10,6 +10,7 @@ export const parseCollateralInfo = (
   _rate: string,
   _spot: string,
   _line: string,
+  _dust: string,
   _duty: string,
   _futureRate: string,
   _chop: string,
@@ -20,7 +21,7 @@ export const parseCollateralInfo = (
   const rate = new Dec(_rate).toString();
   const spot = new Dec(_spot).div(1e27).toString();
   const line = new Dec(_line).div(1e45).toString();
-  const dust = new Dec(_rate).div(1e45).toString();
+  const dust = new Dec(_dust).div(1e45).toString(); // Vat.ilks.dust, rad (1e45) -> DAI
   const duty = new Dec(_duty).toString();
   const futureRate = new Dec(_futureRate).toString();
   const chop = new Dec(_chop).div(1e18).toString();

@@ -23,19 +23,22 @@ describe('CurveUsd', () => {
   };
 
   const fetchAccountData = async (network: NetworkNumber, _provider: EthereumProvider, marketData: sdk.CrvUSDGlobalMarketData, selectedMarket: sdk.CrvUSDMarketData) => {
-    const accountData = await sdk.curveUsd.getCurveUsdUserData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand);
+    const accountData = await sdk.curveUsd.getCurveUsdUserData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket, marketData.activeBand, marketData.borrowRate);
     // console.log(accountData);
     assert.containsAllKeys(accountData, [
-      'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
+      'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', 'netApy', 'totalInterestUsd', 'incentiveUsd', 'borrowRate', // ...
     ]);
+    assert.equal(accountData.borrowRate, marketData.borrowRate);
+    assert.isNotNaN(+accountData.netApy);
   };
 
   const fetchFullPositionData = async (network: NetworkNumber, _provider: EthereumProvider, selectedMarket: sdk.CrvUSDMarketData) => {
     const positionData = await sdk.curveUsd.getCurveUsdFullPositionData(_provider, network, '0x9cCf93089cb14F94BAeB8822F8CeFfd91Bd71649', selectedMarket);
     // console.log(positionData);
     assert.containsAllKeys(positionData, [
-      'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', // ...
+      'usedAssets', 'debtAmount', 'health', 'ratio', 'healthPercent', 'priceHigh', 'priceLow', 'netApy', 'totalInterestUsd', 'incentiveUsd', 'borrowRate', // ...
     ]);
+    assert.isNotNaN(+positionData.netApy);
   };
 
   const fetchAccountBalances = async (network: NetworkNumber, _provider: EthereumProvider, blockNumber: Blockish, controllerAddress: EthAddress) => {

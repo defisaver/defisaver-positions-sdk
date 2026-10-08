@@ -62,7 +62,11 @@ describe('Maker', () => {
         'globalDebtCurrent',
         'liquidationFee',
         'lastUpdated',
+        'netApy',
+        'totalInterestUsd',
+        'incentiveUsd',
       ]);
+      assert.isNotNaN(+cdpData.netApy);
     }
   });
 

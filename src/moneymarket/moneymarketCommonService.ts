@@ -92,3 +92,18 @@ export const getExposure = (borrowedUsd: string, suppliedUsd: string) => {
   const balanceUsd = new Dec(suppliedUsd).sub(borrowedUsd).toString();
   return new Dec(suppliedUsd).div(balanceUsd).toDecimalPlaces(2).toString();
 };
+
+/**
+ * A collateral ratio rebased so that 100 means "sitting exactly on the liquidation ratio": the scale the
+ * shared `safetyRatio` field assumes. Protocols that liquidate on a raw collateral ratio (Maker at the ilk's
+ * liquidation ratio, Liquity at 110%, crvUSD/LlamaLend at the band-derived minimum) pass through here.
+ *
+ * Yields '0' when the liquidation ratio isn't available (or is 0), the "no signal" value consumers already recognise.
+ * Mirrors `getSafetyRatioFromCollateralRatio` on the client.
+ */
+export const getSafetyRatioFromCollateralRatio = (
+  collateralRatio: string | number | undefined,
+  liquidationRatio: string | number | undefined,
+): string => (+(liquidationRatio ?? 0) > 0
+  ? new Dec(collateralRatio || 0).div(liquidationRatio!).mul(100).toString()
+  : '0');

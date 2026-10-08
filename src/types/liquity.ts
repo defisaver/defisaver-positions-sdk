@@ -26,7 +26,13 @@ export interface LiquityTroveInfo {
   totalETH: string,
   totalLUSD: string,
   minCollateralRatio: number,
+  // Collateral ratio rebased so 100 sits on `minCollateralRatio` (normalised safety ratio).
+  safetyRatio: string,
   priceForRecovery: string,
   debtInFront: string,
   exposure: string,
+  // Always '0' for Liquity v1: LUSD debt is interest free (one-off borrowing fee only) and ETH collateral earns no yield.
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
 }

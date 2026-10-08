@@ -17,7 +17,8 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getEthAmountForDecimals } from '../services/utils';
-import { getExposure } from '../moneymarket';
+import { getExposure, getSafetyRatioFromCollateralRatio } from '../moneymarket';
+import { calculateNetApyFromRates } from '../staking';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
 export const LIQUITY_RECOVERY_MODE_RATIO = 150; // CCR
@@ -89,6 +90,15 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
   ]);
 
   const recoveryMode = troveInfo[6];
+  const minCollateralRatio = recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO;
+  const collateral = assetAmountInEth(troveInfo[1].toString());
+  const debtInAsset = assetAmountInEth(troveInfo[2].toString());
+  const collateralUsd = new Dec(collateral).mul(assetAmountInEth(assetPrice.toString())).toString();
+  const collRatio = +debtInAsset ? new Dec(collateralUsd).div(debtInAsset).mul(100).toString() : '0';
+
+  // LUSD debt is interest free (only a one-off borrowing fee on issuance) and ETH collateral earns no yield,
+  // so a trove's net APY is always 0. It is exposed for parity with the other protocols.
+  const { netApy, totalInterestUsd, incentiveUsd } = calculateNetApyFromRates({ suppliedUsd: collateralUsd, borrowedUsd: debtInAsset });
 
   const payload = {
     troveStatus: LIQUITY_TROVE_STATUS_ENUM[+(troveInfo[0].toString())],
@@ -102,10 +112,14 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
     totalETH: totalETH.toString(),
     totalLUSD: totalLUSD.toString(),
     debtInFront: debtInFront.toString(),
-    minCollateralRatio: recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO,
+    minCollateralRatio,
+    safetyRatio: getSafetyRatioFromCollateralRatio(collRatio, minCollateralRatio),
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
-    exposure: getExposure(assetAmountInEth(troveInfo[2].toString()), new Dec(assetAmountInEth(troveInfo[1].toString())).mul(assetPrice).toString()),
+    exposure: getExposure(debtInAsset, collateralUsd),
+    netApy,
+    totalInterestUsd,
+    incentiveUsd,
   };
 
   return payload;

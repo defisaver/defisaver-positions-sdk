@@ -4,7 +4,7 @@ import {
 } from '../../types';
 import { MMAssetsData, MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
-  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, getSafetyRatioFromCollateralRatio, isLeveragedPos,
 } from '../../moneymarket';
 import { mapRange } from '../../services/utils';
 import { calculateNetApy } from '../../staking';
@@ -38,6 +38,7 @@ export const getLlamaLendAggregatedData = ({
 
   // this is all approximation
   payload.minAllowedRatio = mapRange(numOfBands, 4, 50, 115, 140); // collateral ratio
+  payload.safetyRatio = loanExists ? getSafetyRatioFromCollateralRatio(payload.ratio, payload.minAllowedRatio) : '0';
   payload.collFactor = new Dec(1).div(payload.minAllowedRatio).mul(100).toString(); // collateral factor = 1 / collateral ratio
   // only take in consideration collAsset
   payload.borrowLimitUsd = usedAssets?.[collAsset]?.isSupplied
