@@ -508,7 +508,7 @@ export async function getPortfolioData(provider: EthereumProvider, network: Netw
         positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
-    ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
+    ...addresses.map((address) => (makerCdps[address.toLowerCase() as EthAddress] || []).map(async (cdpInfo) => {
       try {
         const cdpData = await _getMakerCdpData(client, network, cdpInfo);
         if (cdpData) {
@@ -776,7 +776,7 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
         positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
       }
     })).flat(),
-    ...addresses.map(async (address) => makerCdps[address.toLowerCase() as EthAddress]?.map(async (cdpInfo) => {
+    ...addresses.map((address) => (makerCdps[address.toLowerCase() as EthAddress] || []).map(async (cdpInfo) => {
       try {
         // reuse ilk data fetched for the markets payload; ilks outside the active set are fetched on demand
         const cdpData = await _getMakerCdpData(client, network, cdpInfo, markets.makerMarketsData[cdpInfo.ilkLabel]);

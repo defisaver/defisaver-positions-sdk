@@ -17,7 +17,7 @@ import { LIQUITY_TROVE_STATUS_ENUM, LiquityTroveInfo } from '../types';
 import { ZERO_ADDRESS } from '../constants';
 import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import { getEthAmountForDecimals } from '../services/utils';
-import { getExposure } from '../moneymarket';
+import { getExposure, getSafetyRatioFromCollateralRatio } from '../moneymarket';
 import { calculateNetApyFromRates } from '../staking';
 
 export const LIQUITY_NORMAL_MODE_RATIO = 110; // MCR
@@ -113,8 +113,7 @@ export const _getLiquityTroveInfo = async (provider: Client, network: NetworkNum
     totalLUSD: totalLUSD.toString(),
     debtInFront: debtInFront.toString(),
     minCollateralRatio,
-    // Collateral ratio rebased so 100 sits on the trove's minimum collateral ratio (normalised safety ratio).
-    safetyRatio: +minCollateralRatio > 0 ? new Dec(collRatio).div(minCollateralRatio).mul(100).toString() : '0',
+    safetyRatio: getSafetyRatioFromCollateralRatio(collRatio, minCollateralRatio),
     priceForRecovery: new Dec(recoveryMode ? LIQUITY_RECOVERY_MODE_RATIO : LIQUITY_NORMAL_MODE_RATIO).mul(totalLUSD).div(totalETH).div(100)
       .toString(),
     exposure: getExposure(debtInAsset, collateralUsd),

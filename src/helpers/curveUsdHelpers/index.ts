@@ -2,7 +2,7 @@ import Dec from 'decimal.js';
 import { CrvUSDAggregatedPositionData, CrvUSDMarketData, CrvUSDUsedAssets } from '../../types';
 import { MMUsedAssets, NetworkNumber } from '../../types/common';
 import {
-  calcLeverageLiqPrice, getAssetsTotal, getExposure, isLeveragedPos,
+  calcLeverageLiqPrice, getAssetsTotal, getExposure, getSafetyRatioFromCollateralRatio, isLeveragedPos,
 } from '../../moneymarket';
 import { mapRange } from '../../services/utils';
 import { calculateNetApyFromRates } from '../../staking';
@@ -33,8 +33,7 @@ export const getCrvUsdAggregatedData = ({
 
   // this is all approximation
   payload.minAllowedRatio = mapRange(numOfBands, 4, 50, 115, 140); // collateral ratio
-  // Collateral ratio rebased so 100 sits on the band-derived minimum (normalised safety ratio, same scale as the other protocols).
-  payload.safetyRatio = loanExists && payload.minAllowedRatio ? new Dec(payload.ratio).div(payload.minAllowedRatio).mul(100).toString() : '0';
+  payload.safetyRatio = loanExists ? getSafetyRatioFromCollateralRatio(payload.ratio, payload.minAllowedRatio) : '0';
   payload.collFactor = new Dec(1).div(payload.minAllowedRatio).mul(100).toString(); // collateral factor = 1 / collateral ratio
   // only take in consideration collAsset
   payload.borrowLimitUsd = usedAssets?.[selectedMarket.collAsset]?.isSupplied
