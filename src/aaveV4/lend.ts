@@ -7,26 +7,9 @@ import {
   EthereumProvider,
   NetworkNumber,
 } from '../types/common';
+import { AaveV4TokenizationSpokeDataParsed } from '../types/aaveV4';
 
-export interface AaveV4TokenizationSpokeData {
-  underlyingAsset: EthAddress;
-  assetId: string;
-  decimals: number;
-  spoke: EthAddress;
-  spokeActive: boolean;
-  spokeHalted: boolean;
-  spokeDepositCap: string;
-  spokeTotalAssets: string;
-  spokeTotalShares: string;
-  hub: EthAddress;
-  hubLiquidity: string;
-  hubDrawnRate: string;
-  convertToShares: string;
-  convertToAssets: string;
-  user: EthAddress;
-  userSuppliedAssets: string;
-  userSuppliedShares: string;
-}
+export type { AaveV4TokenizationSpokeData, AaveV4TokenizationSpokeDataParsed } from '../types/aaveV4';
 
 export const AAVE_V4_TOKENIZED_SPOKES: Record<string, EthAddress> = {
   EURC_CORE: '0x6D9e2Cdd61CaF69af99b275704B6e272C41c6718',
@@ -102,34 +85,6 @@ export const aaveV4GetTokenizedVaultAddress = (
   return AAVE_V4_TOKENIZED_SPOKES[key];
 };
 
-/** Parsed tokenization spoke data with human-readable supplied amounts for display */
-export interface AaveV4TokenizationSpokeDataParsed {
-  vaultAddress: EthAddress;
-  key: string | null;
-  symbol: string;
-  hubKey: string;
-  // ---- Spoke ----
-  spokeActive: boolean;
-  spokeHalted: boolean;
-  /** Deposit cap in asset units (wei string) */
-  spokeDepositCap: string;
-  /** Total assets currently in spoke in asset units (wei string) */
-  spokeTotalAssets: string;
-  // ---- Hub ----
-  /** Available hub liquidity in asset units (wei string) */
-  hubLiquidity: string;
-  /** The conversion rate from assets to shares expressed in asset units. */
-  convertToShares: string;
-  // ---- User ----
-  userSuppliedAssetsEth: string;
-  userSuppliedSharesEth: string;
-  userSuppliedAssets: string;
-  userSuppliedShares: string;
-  underlyingAsset: EthAddress;
-  spoke: EthAddress;
-  decimals: number;
-}
-
 const AAVE_V4_TOKENIZED_SPOKE_ADDRESS_TO_KEY: Record<string, string> = Object.entries(
   AAVE_V4_TOKENIZED_SPOKES,
 ).reduce((acc, [k, v]) => {
@@ -188,5 +143,4 @@ export async function getAaveV4TokenizationSpokesData(
     };
   }).filter(item => item != null);
 }
-
 

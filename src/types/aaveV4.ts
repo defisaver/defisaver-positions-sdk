@@ -206,3 +206,52 @@ export interface AaveV4AccountData extends AaveV4AggregatedPositionData {
   healthFactor: string,
   riskPremiumBps: number,
 }
+
+/** One Aave V4 tokenized spoke (Lend vault) as the view contract returns it for a user. */
+export interface AaveV4TokenizationSpokeData {
+  underlyingAsset: EthAddress;
+  assetId: string;
+  decimals: number;
+  spoke: EthAddress;
+  spokeActive: boolean;
+  spokeHalted: boolean;
+  spokeDepositCap: string;
+  spokeTotalAssets: string;
+  spokeTotalShares: string;
+  hub: EthAddress;
+  hubLiquidity: string;
+  hubDrawnRate: string;
+  convertToShares: string;
+  convertToAssets: string;
+  user: EthAddress;
+  userSuppliedAssets: string;
+  userSuppliedShares: string;
+}
+
+/** Parsed tokenization spoke data with human-readable supplied amounts for display */
+export interface AaveV4TokenizationSpokeDataParsed {
+  vaultAddress: EthAddress;
+  key: string | null;
+  symbol: string;
+  hubKey: string;
+  // ---- Spoke ----
+  spokeActive: boolean;
+  spokeHalted: boolean;
+  /** Deposit cap in asset units (wei string) */
+  spokeDepositCap: string;
+  /** Total assets currently in spoke in asset units (wei string) */
+  spokeTotalAssets: string;
+  // ---- Hub ----
+  /** Available hub liquidity in asset units (wei string) */
+  hubLiquidity: string;
+  /** The conversion rate from assets to shares expressed in asset units. */
+  convertToShares: string;
+  // ---- User ----
+  userSuppliedAssetsEth: string;
+  userSuppliedSharesEth: string;
+  userSuppliedAssets: string;
+  userSuppliedShares: string;
+  underlyingAsset: EthAddress;
+  spoke: EthAddress;
+  decimals: number;
+}

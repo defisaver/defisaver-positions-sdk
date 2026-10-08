@@ -23,4 +23,15 @@ export interface SavingsVaultData {
   optionType: string,
 }
 
-export type SavingsData = Partial<Record<MorphoVaultType | YearnVaultType | MakerDsrType | SkySavingsType | SparkSavingsVaultType | SummerVaultType | YearnV3VaultType, SavingsVaultData>>;
+/** The key of every savings vault getSavingsData reads. */
+export type SavingsVaultKey = MorphoVaultType | YearnVaultType | MakerDsrType | SkySavingsType | SparkSavingsVaultType | SummerVaultType | YearnV3VaultType;
+
+export type SavingsData = Partial<Record<SavingsVaultKey, SavingsVaultData>>;
+
+/** Why each vault that was read for a network came back without data. */
+export type SavingsErrors = Partial<Record<SavingsVaultKey, string>>;
+
+export interface SavingsDataWithErrors {
+  data: SavingsData,
+  errors: SavingsErrors,
+}
