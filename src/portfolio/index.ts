@@ -1,22 +1,9 @@
 import Dec from 'decimal.js';
 import { EthAddress, EthereumProvider, NetworkNumber } from '../types/common';
+import { LiquityV2Markets } from '../markets';
+import { getMorphoEarn } from '../morphoBlue';
 import {
-  AaveMarkets,
-  AaveV4Spokes,
-  CompoundMarkets,
-  CrvUsdMarkets,
-  LiquityV2Markets,
-  LlamaLendMarkets,
-  MorphoBlueMarkets,
-  MorphoMidnightMarkets,
-  SparkMarkets,
-} from '../markets';
-import { _getMorphoBlueAccountData, _getMorphoBluePortfolioMarketData, getMorphoEarn } from '../morphoBlue';
-import { _getMorphoMidnightAccountData, _getMorphoMidnightMarketData } from '../morphoMidnight';
-import {
-  AaveVersions,
   CdpInfo,
-  CompoundVersions,
   LiquityV2MarketData,
   LiquityV2Versions,
   PortfolioData,
@@ -26,19 +13,13 @@ import {
   PortfolioMarketsErrors,
   PortfolioMarketsResult,
   PortfolioPositionsData,
+  PortfolioPositionsDataForAddress,
   PortfolioRewardsData,
   PortfolioStakingPositionsData,
   PortfolioUserData,
 } from '../types';
-import { _getCompoundV3AccountData, _getCompoundV3MarketsData } from '../compoundV3';
-import { _getSparkAccountData, _getSparkMarketsData } from '../spark';
-import { _getCurveUsdGlobalData, _getCurveUsdUserData } from '../curveUsd';
-import { _getLlamaLendGlobalData, _getLlamaLendUserData } from '../llamaLend';
-import { _getAaveV3AccountData, _getAaveV3MarketData, getStakeAaveData } from '../aaveV3';
-import { ZERO_ADDRESS } from '../constants';
+import { getStakeAaveData } from '../aaveV3';
 import { _getMakerCdpData, _getUserCdps } from '../maker';
-import { _getAaveV2AccountData, _getAaveV2MarketsData } from '../aaveV2';
-import { _getCompoundV2AccountData, _getCompoundV2MarketsData } from '../compoundV2';
 import { getViemProvider } from '../services/viem';
 import { _getLiquityTroveInfo, getLiquityStakingData } from '../liquity';
 import {
@@ -50,25 +31,17 @@ import { getMerklUnclaimedRewards, getUnclaimedRewardsForAllMarkets } from '../c
 import { fetchSparkAirdropRewards, fetchSparkRewards } from '../claiming/spark';
 import { getKingRewards } from '../claiming/king';
 import { fetchEthenaAirdropRewards } from '../claiming/ethena';
-import { _getAaveV4AccountData, _getAaveV4SpokeData } from '../aaveV4';
 import { getUniswapRewards } from '../claiming/uniswap';
+import {
+  aaveV3Lending, LENDING_PROTOCOLS, LendingKey, morphoBlueLending, requireMarket, sparkLending,
+} from './lendingProtocols';
 
 type PortfolioClient = ReturnType<typeof getViemProvider>;
 
-/** The markets the portfolio reads on a network, by protocol. */
+/** The markets of the protocols read by their own code below; LENDING_PROTOCOLS has the others'. */
 const getPortfolioMarkets = (network: NetworkNumber) => ({
-  morphoMarkets: Object.values(MorphoBlueMarkets(network)).filter((market) => market.chainIds.includes(network)),
-  morphoMidnightMarkets: Object.values(MorphoMidnightMarkets(network)).filter((market) => market.chainIds.includes(network)),
-  compoundV3Markets: Object.values(CompoundMarkets(network)).filter((market) => market.chainIds.includes(network) && market.value !== CompoundVersions.CompoundV2),
-  sparkMarkets: Object.values(SparkMarkets(network)).filter((market) => market.chainIds.includes(network)),
-  aaveV3Markets: [AaveVersions.AaveV3, AaveVersions.AaveV3Lido, AaveVersions.AaveV3Etherfi].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network)),
-  aaveV2Markets: [AaveVersions.AaveV2].map((version) => AaveMarkets(network)[version]).filter((market) => market.chainIds.includes(network)),
-  compoundV2Markets: [CompoundVersions.CompoundV2].map((version) => CompoundMarkets(network)[version]).filter((market) => market.chainIds.includes(network)),
-  crvUsdMarkets: Object.values(CrvUsdMarkets(network)).filter((market) => market.chainIds.includes(network)),
-  llamaLendMarkets: [NetworkNumber.Eth, NetworkNumber.Arb].includes(network) ? Object.values(LlamaLendMarkets(network)).filter((market) => market.chainIds.includes(network)) : [],
   liquityV2Markets: [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)) : [],
   liquityV2MarketsStaking: [NetworkNumber.Eth].includes(network) ? Object.values(LiquityV2Markets(network)).filter(market => !market.isLegacy) : [],
-  aaveV4Spokes: Object.values(AaveV4Spokes(network)).filter((market) => market.chainIds.includes(network)),
 });
 
 const getPortfolioClients = (provider: EthereumProvider, defaultProvider: EthereumProvider, network: NetworkNumber, isSim: boolean) => {
@@ -84,21 +57,8 @@ const getPortfolioClients = (provider: EthereumProvider, defaultProvider: Ethere
   };
 };
 
-/**
- * A market's data, or a throw that the caller's catch turns into the position's error entry: read against a missing
- * market, a position would otherwise come back empty and read as "no position".
- */
-const requireMarket = <T>(marketsData: Record<string, T>, market: string): T => {
-  const marketData = marketsData[market];
-  if (!marketData) throw new Error(`Market data for ${market} is not available`);
-  return marketData;
-};
-
 const _getPortfolioMarketsData = async (client: PortfolioClient, defaultClient: PortfolioClient, network: NetworkNumber): Promise<PortfolioMarketsResult> => {
-  const {
-    morphoMarkets, morphoMidnightMarkets, compoundV3Markets, sparkMarkets, aaveV3Markets, aaveV2Markets, compoundV2Markets,
-    crvUsdMarkets, llamaLendMarkets, liquityV2Markets, aaveV4Spokes,
-  } = getPortfolioMarkets(network);
+  const { liquityV2Markets } = getPortfolioMarkets(network);
 
   const markets: PortfolioMarketsData = {
     morphoMarketsData: {},
@@ -113,32 +73,26 @@ const _getPortfolioMarketsData = async (client: PortfolioClient, defaultClient: 
     liquityV2MarketsData: {},
     aaveV4SpokesData: {},
   };
-  const errors: PortfolioMarketsErrors = {};
+  const liquityV2Failed: Record<string, string> = {};
 
-  // A market that fails is left out of markets and named in errors.
-  const read = async <K extends keyof PortfolioMarketsData>(key: K, market: string, fetch: () => Promise<PortfolioMarketsData[K][string]>) => {
-    try {
-      markets[key][market] = await fetch();
-    } catch (error) {
-      console.error(`Error fetching ${key} for market ${market}:`, error);
-      errors[key] = { ...errors[key], [market]: `Error fetching ${key} for market ${market}` };
-    }
-  };
-
-  await Promise.all([
-    ...morphoMarkets.map((market) => read('morphoMarketsData', market.value, () => _getMorphoBluePortfolioMarketData(client, network, market))),
-    ...morphoMidnightMarkets.map((market) => read('morphoMidnightMarketsData', market.value, () => _getMorphoMidnightMarketData(client, network, market))),
-    ...compoundV3Markets.map((market) => read('compoundV3MarketsData', market.value, () => _getCompoundV3MarketsData(client, network, market, defaultClient))),
-    ...sparkMarkets.map((market) => read('sparkMarketsData', market.value, () => _getSparkMarketsData(client, network, market))),
-    ...aaveV3Markets.map((market) => read('aaveV3MarketsData', market.value, () => _getAaveV3MarketData(client, network, market))),
-    ...aaveV4Spokes.map((spoke) => read('aaveV4SpokesData', spoke.value, () => _getAaveV4SpokeData(client, network, spoke))),
-    ...aaveV2Markets.map((market) => read('aaveV2MarketsData', market.value, () => _getAaveV2MarketsData(client, network, market))),
-    ...compoundV2Markets.map((market) => read('compoundV2MarketsData', market.value, () => _getCompoundV2MarketsData(client, network))),
-    ...crvUsdMarkets.map((market) => read('crvUsdMarketsData', market.value, () => _getCurveUsdGlobalData(client, network, market))),
-    ...llamaLendMarkets.map((market) => read('llamaLendMarketsData', market.value, () => _getLlamaLendGlobalData(client, network, market))),
-    ...liquityV2Markets.map((market) => read('liquityV2MarketsData', market.value, () => _getLiquityV2MarketData(client, network, market))),
+  const [lendingFailed] = await Promise.all([
+    Promise.all(LENDING_PROTOCOLS.map(async (protocol) => [protocol.marketsKey, await protocol.readMarkets({ client, defaultClient, network }, markets)] as const)),
+    // Liquity V2's markets: its troves are read by their own code below.
+    ...liquityV2Markets.map(async (market) => {
+      try {
+        markets.liquityV2MarketsData[market.value] = await _getLiquityV2MarketData(client, network, market);
+      } catch (error) {
+        console.error(`Error fetching liquityV2MarketsData for market ${market.value}:`, error);
+        liquityV2Failed[market.value] = `Error fetching liquityV2MarketsData for market ${market.value}`;
+      }
+    }),
   ]);
 
+  // A market that failed is left out of markets and named here, under its protocol's key.
+  const errors: PortfolioMarketsErrors = {};
+  for (const [key, failed] of [...lendingFailed, ['liquityV2MarketsData', liquityV2Failed] as const]) {
+    if (Object.keys(failed).length) errors[key] = failed;
+  }
   return { markets, errors };
 };
 
@@ -163,10 +117,7 @@ const _getPortfolioUserData = async (
   const liquityV2Addresses = includeLiquityV2 ? addresses : [];
   const isFluidSupported = [NetworkNumber.Eth, NetworkNumber.Arb, NetworkNumber.Base, NetworkNumber.Plasma].includes(network);
 
-  const {
-    morphoMarkets, morphoMidnightMarkets, compoundV3Markets, sparkMarkets, aaveV3Markets, aaveV2Markets, compoundV2Markets,
-    crvUsdMarkets, llamaLendMarkets, liquityV2Markets, liquityV2MarketsStaking, aaveV4Spokes,
-  } = getPortfolioMarkets(network);
+  const { liquityV2Markets, liquityV2MarketsStaking } = getPortfolioMarkets(network);
 
   const positions: PortfolioPositionsData = {};
   const stakingPositions: PortfolioStakingPositionsData = {};
@@ -175,18 +126,10 @@ const _getPortfolioUserData = async (
 
   for (const address of positionsAddresses) {
     positions[address.toLowerCase() as EthAddress] = {
-      aaveV3: {},
-      aaveV4: {},
-      morphoBlue: {},
-      morphoMidnight: {},
-      compoundV3: {},
-      spark: {},
+      // Every registry protocol, keyed by market as its reads fill it in.
+      ...Object.fromEntries(LENDING_PROTOCOLS.map((protocol) => [protocol.key, {}])) as Pick<PortfolioPositionsDataForAddress, LendingKey>,
       maker: {},
-      aaveV2: {},
-      compoundV2: {},
       liquity: {},
-      crvUsd: {},
-      llamaLend: {},
       fluid: {
         error: '',
         data: {},
@@ -283,7 +226,7 @@ const _getPortfolioUserData = async (
       }
     }),
 
-    // === STAKING DATA (independent of market data, but Morpho Earn below) ===
+    // === STAKING DATA (independent of market data; Morpho Earn is with the positions below) ===
     ...stakingAddresses.map(async (address) => {
       try {
         if (!isFluidSupported) return;
@@ -403,7 +346,7 @@ const _getPortfolioUserData = async (
         }
       }
     })(),
-    ...sparkMarkets.map((market) => rewardsAddresses.map(async address => {
+    ...sparkLending.markets(network).map((market) => rewardsAddresses.map(async address => {
       try {
         if (!isMainnet) {
           rewardsData[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: [] };
@@ -425,7 +368,7 @@ const _getPortfolioUserData = async (
         rewardsData[address.toLowerCase() as EthAddress].merkl = { error: `Error fetching Merkl rewards data for address ${address}`, data: null };
       }
     }),
-    ...aaveV3Markets.map(market => rewardsAddresses.map(async (address) => {
+    ...aaveV3Lending.markets(network).map(market => rewardsAddresses.map(async (address) => {
       try {
         const aaveData = await getUnclaimedRewardsForAllMarkets(client, network, address, market.providerAddress);
         rewardsData[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: aaveData };
@@ -488,143 +431,21 @@ const _getPortfolioUserData = async (
       }
     })(),
 
-    // === POSITIONS ON MARKETS (wait for their market's data) ===
-    ...aaveV3Markets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).aaveV3MarketsData, market.value);
-        const accData = await _getAaveV3AccountData(client, network, address, { selectedMarket: market, ...marketData });
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching AaveV3 account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: `Error fetching AaveV3 account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...aaveV4Spokes.map((spoke) => positionsAddresses.map(async (address) => {
-      try {
-        const spokeData = requireMarket((await marketsData).aaveV4SpokesData, spoke.value);
-        const accData = await _getAaveV4AccountData(client, network, spokeData, address);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].aaveV4[spoke.value] = { error: `Error fetching AaveV4 account data for address ${address} on spoke ${spoke.value}`, data: null };
-      }
-    })).flat(),
-    // Morpho Blue: the lending position and, as staking, the Earn deposit on the same market.
-    ...(includePositions || includeStaking ? morphoMarkets : []).map((market) => addresses.map(async (address) => {
+    // === POSITIONS ON MARKETS (each waits for its market's data) ===
+    ...LENDING_PROTOCOLS.flatMap((protocol) => protocol.readPositions({ client, network }, positionsAddresses, marketsData, positions)),
+    // Morpho Blue Earn: a supply without a borrow, kept as staking, read on the same markets as Morpho Blue's positions.
+    ...morphoBlueLending.markets(network).flatMap((market) => stakingAddresses.map(async (address) => {
       try {
         const marketData = requireMarket((await marketsData).morphoMarketsData, market.value);
-        const [accDataPromise, earnDataPromise] = await Promise.allSettled([
-          includePositions ? _getMorphoBlueAccountData(client, network, address, market, marketData) : null,
-          includeStaking ? getMorphoEarn(client, network, address, market, marketData) : null,
-        ]);
-        if (accDataPromise.status === 'rejected') {
-          console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, accDataPromise.reason);
-          positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
-        }
-        if (earnDataPromise.status === 'rejected') {
-          // An Earn failure belongs to the staking entry: the lending position is not the one that failed.
-          console.error(`Error fetching MorphoBlue earn data for address ${address} on market ${market.value}:`, earnDataPromise.reason);
-          stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue earn data for address ${address} on market ${market.value}`, data: null };
-        }
-        if (accDataPromise.status !== 'rejected') {
-          const accData = accDataPromise.value;
-          if (accData && new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: '', data: accData };
-        }
-        if (earnDataPromise.status !== 'rejected') {
-          const earnData = earnDataPromise.value;
-          if (earnData && new Dec(earnData.amount).gt(0)) {
-            stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = {
-              error: '',
-              data: earnData,
-            };
-          }
+        const earnData = await getMorphoEarn(client, network, address, market, marketData);
+        if (earnData && new Dec(earnData.amount).gt(0)) {
+          stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: '', data: earnData };
         }
       } catch (error) {
-        console.error(`Error fetching MorphoBlue account data for address ${address} on market ${market.value}:`, error);
-        if (includePositions) {
-          positions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue account data for address ${address} on market ${market.value}`, data: null };
-        }
-        if (includeStaking) {
-          stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue earn data for address ${address} on market ${market.value}`, data: null };
-        }
+        console.error(`Error fetching MorphoBlue earn data for address ${address} on market ${market.value}:`, error);
+        stakingPositions[address.toLowerCase() as EthAddress].morphoBlue[market.value] = { error: `Error fetching MorphoBlue earn data for address ${address} on market ${market.value}`, data: null };
       }
-    })).flat(),
-    ...morphoMidnightMarkets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).morphoMidnightMarketsData, market.value);
-        // Markets are created lazily on the first position, so an uncreated one can hold no position.
-        if (!marketData.isCreated) return;
-        const accData = await _getMorphoMidnightAccountData(client, network, address, market, marketData);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching MorphoMidnight account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].morphoMidnight[market.value] = { error: `Error fetching MorphoMidnight account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...compoundV3Markets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).compoundV3MarketsData, market.value);
-        const accData = await _getCompoundV3AccountData(client, network, address, ZERO_ADDRESS, { selectedMarket: market, assetsData: marketData.assetsData });
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV3[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching CompoundV3 account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].compoundV3[market.value] = { error: `Error fetching CompoundV3 account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...sparkMarkets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).sparkMarketsData, market.value);
-        const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: marketData.assetsData, eModeCategoriesData: marketData.eModeCategoriesData });
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...aaveV2Markets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).aaveV2MarketsData, market.value);
-        const accData = await _getAaveV2AccountData(client, network, address, marketData.assetsData, market);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV2[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching AaveV2 account data for address ${address}:`, error);
-        positions[address.toLowerCase() as EthAddress].aaveV2[market.value] = { error: `Error fetching AaveV2 account data for address ${address}`, data: null };
-      }
-    })).flat(),
-    ...compoundV2Markets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).compoundV2MarketsData, market.value);
-        const accData = await _getCompoundV2AccountData(client, network, address, marketData.assetsData);
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = { error: '', data: accData };
-      } catch (error) {
-        console.error(`Error fetching CompoundV2 account data for address ${address}:`, error);
-        positions[address.toLowerCase() as EthAddress].compoundV2[market.value] = { error: `Error fetching CompoundV2 account data for address ${address}`, data: null };
-      }
-    })).flat(),
-    ...crvUsdMarkets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).crvUsdMarketsData, market.value);
-        const accData = await _getCurveUsdUserData(client, network, address, market, marketData.activeBand);
-        if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: '', data: { ...accData, borrowRate: marketData.borrowRate } };
-        }
-      } catch (error) {
-        console.error(`Error fetching Curve USD account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].crvUsd[market.value] = { error: `Error fetching Curve USD account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
-    ...llamaLendMarkets.map((market) => positionsAddresses.map(async (address) => {
-      try {
-        const marketData = requireMarket((await marketsData).llamaLendMarketsData, market.value);
-        const accData = await _getLlamaLendUserData(client, network, address, market, marketData);
-        if (new Dec(accData.suppliedUsd).gt(0) || new Dec(accData.borrowedUsd).gt(0)) {
-          positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: '', data: { ...accData, borrowRate: marketData.borrowRate } };
-        }
-      } catch (error) {
-        console.error(`Error fetching LlamaLend account data for address ${address} on market ${market.value}:`, error);
-        positions[address.toLowerCase() as EthAddress].llamaLend[market.value] = { error: `Error fetching LlamaLend account data for address ${address} on market ${market.value}`, data: null };
-      }
-    })).flat(),
+    })),
     // Liquity V2 troves: one market's trove ids for every address at once, then each trove's data. A failure is the
     // market's error; the troves that did load stay in its data.
     ...(liquityV2Addresses.length ? liquityV2Markets : []).map(async (market) => {
