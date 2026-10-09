@@ -40,15 +40,17 @@ export interface PortfolioProtocolError {
   data: null,
 }
 
-/** What getPortfolioData reads besides positions and markets. */
+/** What getPortfolioData reads besides markets. */
 export interface PortfolioDataOptions {
+  /** positions (lending); default true. With false it comes back as {} and no lending position is read. */
+  positions?: boolean,
   /** stakingPositions; default true. With false it comes back as {} and no staking source is read. */
   staking?: boolean,
   /** rewardsData; default true. With false it comes back as {} and no rewards source is read. */
   rewards?: boolean,
   /**
    * Liquity V2 troves in positions[address].liquityV2; default false, as the DeFi Saver app reads them on its own.
-   * Mainnet only: elsewhere liquityV2 is {}.
+   * Mainnet only: elsewhere liquityV2 is {}. Needs positions.
    */
   liquityV2?: boolean,
 }
@@ -179,4 +181,41 @@ export interface PortfolioMarketsData {
   llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData>;
   liquityV2MarketsData: Record<string, LiquityV2MarketData>;
   aaveV4SpokesData: Record<string, AaveV4SpokeData>;
+}
+
+/** The markets that could not be read, by their key in PortfolioMarketsData, then by market or spoke: the error. */
+export type PortfolioMarketsErrors = {
+  [key in keyof PortfolioMarketsData]?: Record<string, string>;
+};
+
+/**
+ * What the portfolio fetch could not read and has no `{ error, data }` entry of its own to report it in. A key is
+ * present only when something under it failed; {} when everything was read.
+ */
+export interface PortfolioErrors {
+  /** Markets missing from `markets`; every position on such a market is an entry with an error. */
+  markets?: PortfolioMarketsErrors;
+  /** Addresses whose Maker vault list could not be read: their `maker` is {}, which would otherwise read as "no vaults". */
+  makerCdps?: Record<EthAddress, string>;
+}
+
+/** getPortfolioMarketsData's result. */
+export interface PortfolioMarketsResult {
+  /** Every market read; one that failed is missing and named in `errors`. */
+  markets: PortfolioMarketsData;
+  errors: PortfolioMarketsErrors;
+}
+
+/** getPortfolioUserData's result: what is read per address. */
+export interface PortfolioUserData {
+  positions: PortfolioPositionsData;
+  stakingPositions: PortfolioStakingPositionsData;
+  rewardsData: PortfolioRewardsData;
+  errors: Pick<PortfolioErrors, 'makerCdps'>;
+}
+
+/** getPortfolioData's result. */
+export interface PortfolioData extends Omit<PortfolioUserData, 'errors'> {
+  markets: PortfolioMarketsData;
+  errors: PortfolioErrors;
 }
