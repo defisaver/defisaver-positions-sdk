@@ -734,7 +734,8 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
     ...aaveV3Markets.map((market) => addresses.map(async (address) => {
       try {
         const accData = await _getAaveV3AccountData(client, network, address, { selectedMarket: market, ...markets.aaveV3MarketsData[market.value] });
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: accData };
+        // Always store the position (even with no supply) so the eMode category is available to the shifter
+        positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching AaveV3 account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].aaveV3[market.value] = { error: `Error fetching AaveV3 account data for address ${address} on market ${market.value}`, data: null };
@@ -770,7 +771,8 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
     ...sparkMarkets.map((market) => addresses.map(async (address) => {
       try {
         const accData = await _getSparkAccountData(client, network, address, { selectedMarket: market, assetsData: markets.sparkMarketsData[market.value].assetsData, eModeCategoriesData: markets.sparkMarketsData[market.value].eModeCategoriesData });
-        if (new Dec(accData.suppliedUsd).gt(0)) positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
+        // Always store the position (even with no supply) so the eMode category is available to the shifter
+        positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: '', data: accData };
       } catch (error) {
         console.error(`Error fetching Spark account data for address ${address} on market ${market.value}:`, error);
         positions[address.toLowerCase() as EthAddress].spark[market.value] = { error: `Error fetching Spark account data for address ${address} on market ${market.value}`, data: null };
