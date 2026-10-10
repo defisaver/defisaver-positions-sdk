@@ -6,6 +6,7 @@ import {
   AaveIncentivesControllerViem,
   AaveV3ViewContractViem,
   createViemContractFromConfigFunc,
+  getConfigContractAbi,
   StkAAVEViem,
 } from '../contracts';
 import { aaveAnyGetAggregatedPositionData, aaveV3IsInIsolationMode, aaveV3IsInSiloedMode } from '../helpers/aaveHelpers';
@@ -434,6 +435,290 @@ export const _getAaveV3AccountBalances = async (provider: Client, network: Netwo
 };
 
 export const getAaveV3AccountBalances = async (provider: EthereumProvider, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => _getAaveV3AccountBalances(getViemProvider(provider, network), network, block, addressMapping, address);
+
+/**
+ * Historical net-balance helpers that bypass the AaveV3View contract.
+ *
+ * The View contract (and therefore `getAaveV3AccountData` / `getAaveV3AccountBalances`) can only be
+ * queried from its deployment block onwards, so it cannot read balances for positions older than that.
+ * The aTokens/debt tokens, the ProtocolDataProvider and the Aave price oracle all exist from Aave v3
+ * launch, so reading `balanceOf` on those tokens + the oracle price directly reaches much further back
+ * and costs ~1 multicall per point. Used to build a position balance-history chart.
+ */
+
+// matches morphoVaults' batchSize; stays under the 500k portfolio discovery allows on simulation fork RPCs
+const HISTORICAL_MULTICALL_BATCH_SIZE = 250_000;
+
+// Minimal Aave price oracle ABI (getAssetPrice returns the asset price in the market base currency).
+const AAVE_ORACLE_ABI = [
+  {
+    inputs: [{ internalType: 'address', name: 'asset', type: 'address' }],
+    name: 'getAssetPrice',
+    outputs: [{ internalType: 'uint256', name: '', type: 'uint256' }],
+    stateMutability: 'view',
+    type: 'function',
+  },
+] as const;
+
+export interface AaveV3ReserveTokenAddresses {
+  [symbol: string]: {
+    symbol: string,
+    underlyingAddress: EthAddress,
+    aTokenAddress: EthAddress,
+    stableDebtTokenAddress: EthAddress,
+    variableDebtTokenAddress: EthAddress,
+  };
+}
+
+export interface AaveV3HistoricalBalance {
+  block: number,
+  suppliedUsd: string,
+  borrowedUsd: string,
+  netUsd: string,
+}
+
+/**
+ * Fetches the aToken / stable-debt / variable-debt token addresses for every asset in the market.
+ * These are effectively immutable per reserve, so fetch once and reuse across all history points.
+ */
+export const _getAaveV3ReserveTokenAddresses = async (provider: Client, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3ReserveTokenAddresses> => {
+  const symbols = market.assets;
+  const underlyingAddresses = symbols.map((a: string) => getAssetInfo(getWrappedNativeAssetFromUnwrapped(a), network).address as EthAddress);
+  // @ts-ignore market.protocolData is a valid config key at runtime
+  const dataProviderAbi = getConfigContractAbi(market.protocolData, network);
+
+  const contracts = underlyingAddresses.map((underlying) => ({
+    address: market.protocolDataAddress as EthAddress,
+    abi: dataProviderAbi,
+    functionName: 'getReserveTokensAddresses',
+    args: [underlying],
+  }));
+
+  // @ts-ignore
+  const results = await provider.multicall({ contracts, allowFailure: true, batchSize: HISTORICAL_MULTICALL_BATCH_SIZE });
+
+  const mapping: AaveV3ReserveTokenAddresses = {};
+  results.forEach((res: any, i: number) => {
+    if (res.status !== 'success' || !res.result) return;
+    // outputs order: [aTokenAddress, stableDebtTokenAddress, variableDebtTokenAddress]
+    const [aTokenAddress, stableDebtTokenAddress, variableDebtTokenAddress] = res.result as [EthAddress, EthAddress, EthAddress];
+    mapping[symbols[i]] = {
+      symbol: symbols[i],
+      underlyingAddress: underlyingAddresses[i],
+      aTokenAddress,
+      stableDebtTokenAddress,
+      variableDebtTokenAddress,
+    };
+  });
+
+  return mapping;
+};
+
+export const getAaveV3ReserveTokenAddresses = async (provider: EthereumProvider, network: NetworkNumber, market: AaveMarketInfo): Promise<AaveV3ReserveTokenAddresses> => _getAaveV3ReserveTokenAddresses(getViemProvider(provider, network, { batch: { multicall: true } }), network, market);
+
+/**
+ * Resolves the price oracle the market's addresses provider points at (at `block`, or latest).
+ * Aave can rotate the oracle over time, so a caller hoisting one address across many historical
+ * points must resolve it at both ends of its block range and only reuse it when the two agree —
+ * otherwise leave `oracleAddress` unset on _getAaveV3HistoricalBalance and it resolves per block.
+ */
+export const _getAaveV3OracleAddress = async (provider: Client, network: NetworkNumber, market: AaveMarketInfo, block: Blockish = 'latest'): Promise<EthAddress> => {
+  // @ts-ignore market.provider is a valid config key at runtime
+  const providerAbi = getConfigContractAbi(market.provider, network);
+  // @ts-ignore readContract exists on the public client returned by getViemProvider
+  const oracleAddress = await provider.readContract({
+    address: market.providerAddress as EthAddress,
+    abi: providerAbi as any,
+    functionName: 'getPriceOracle',
+    ...setViemBlockNumber(block),
+  });
+  if (!oracleAddress) throw new Error(`AaveV3 oracle unavailable at block ${block}`);
+  return oracleAddress as EthAddress;
+};
+
+export const getAaveV3OracleAddress = async (provider: EthereumProvider, network: NetworkNumber, market: AaveMarketInfo, block: Blockish = 'latest'): Promise<EthAddress> => _getAaveV3OracleAddress(getViemProvider(provider, network, { batch: { multicall: true } }), network, market, block);
+
+type AaveV3ReserveTokenEntry = AaveV3ReserveTokenAddresses[string];
+type AaveV3ActiveHistoricalAsset = AaveV3ReserveTokenEntry & { supplied: string, debt: string };
+// raw getAssetPrice multicall result per asset symbol
+type AaveV3PriceResultsBySymbol = Record<string, any>;
+
+// supply = aToken.balanceOf, debt = variableDebtToken.balanceOf + stableDebtToken.balanceOf — three reads per reserve
+const getHistoricalBalanceContracts = (entries: AaveV3ReserveTokenEntry[], address: EthAddress) => {
+  const erc20Abi = getConfigContractAbi('Erc20');
+  return entries.flatMap((e) => ([
+    {
+      address: e.aTokenAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address],
+    },
+    {
+      address: e.variableDebtTokenAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address],
+    },
+    {
+      address: e.stableDebtTokenAddress, abi: erc20Abi, functionName: 'balanceOf', args: [address],
+    },
+  ]));
+};
+
+const getAssetPriceContract = (oracle: EthAddress, underlyingAddress: EthAddress) => ({
+  address: oracle,
+  abi: AAVE_ORACLE_ABI,
+  functionName: 'getAssetPrice',
+  args: [underlyingAddress],
+});
+
+/**
+ * Pairs each reserve with its three balance reads and keeps the assets the wallet actually held.
+ * Throws when every read failed — a totally failed fetch must not masquerade as a real $0 balance,
+ * so the caller can distinguish "fetch failed" (gap) from "position was empty" (genuine 0).
+ */
+const toActiveHistoricalAssets = (entries: AaveV3ReserveTokenEntry[], balanceResults: any[], block: number): AaveV3ActiveHistoricalAsset[] => {
+  const anyBalanceRead = balanceResults.some((r) => r?.status === 'success');
+  if (!anyBalanceRead) throw new Error(`AaveV3 historical balance: all balance reads failed at block ${block}`);
+
+  return entries.map((e, i) => {
+    const supplyRes = balanceResults[i * 3];
+    const varDebtRes = balanceResults[(i * 3) + 1];
+    const stableDebtRes = balanceResults[(i * 3) + 2];
+    const supplied = supplyRes?.status === 'success' ? (supplyRes.result as bigint).toString() : '0';
+    const varDebt = varDebtRes?.status === 'success' ? (varDebtRes.result as bigint).toString() : '0';
+    const stableDebt = stableDebtRes?.status === 'success' ? (stableDebtRes.result as bigint).toString() : '0';
+    const debt = new Dec(varDebt).add(stableDebt).toString();
+    return { ...e, supplied, debt };
+  }).filter((a) => a.supplied !== '0' || a.debt !== '0');
+};
+
+/**
+ * Sums the active assets into the point's USD totals. Throws when every price read failed — the
+ * oracle couldn't serve this block (pruned state, or a hoisted oracle that wasn't deployed yet back
+ * then), and totalling it up anyway would return a fake near-$0 balance. A single asset's price
+ * failure still just skips that asset, matching the live data path.
+ */
+const sumHistoricalUsd = (activeAssets: AaveV3ActiveHistoricalAsset[], priceResBySymbol: AaveV3PriceResultsBySymbol, block: number): AaveV3HistoricalBalance => {
+  const anyPriceRead = activeAssets.some((a) => priceResBySymbol[a.symbol]?.status === 'success');
+  if (!anyPriceRead) throw new Error(`AaveV3 historical balance: all price reads failed at block ${block}`);
+
+  let suppliedUsd = new Dec(0);
+  let borrowedUsd = new Dec(0);
+  activeAssets.forEach((a) => {
+    const priceRes = priceResBySymbol[a.symbol];
+    if (priceRes?.status !== 'success') return;
+    const priceUsd = new Dec((priceRes.result as bigint).toString()).div(1e8); // Aave v3 base currency is USD with 8 decimals
+    if (a.supplied !== '0') suppliedUsd = suppliedUsd.add(new Dec(assetAmountInEth(a.supplied, a.symbol)).mul(priceUsd));
+    if (a.debt !== '0') borrowedUsd = borrowedUsd.add(new Dec(assetAmountInEth(a.debt, a.symbol)).mul(priceUsd));
+  });
+
+  return {
+    block,
+    suppliedUsd: suppliedUsd.toString(),
+    borrowedUsd: borrowedUsd.toString(),
+    netUsd: suppliedUsd.minus(borrowedUsd).toString(),
+  };
+};
+
+/**
+ * Fast path, ONE multicall: balances plus a price read for every reserve through the caller-hoisted
+ * oracle. Prices are read for all reserves because which assets are active isn't known until the
+ * balances come back — extra reads inside an already-paid multicall are nearly free.
+ */
+const fetchHistoricalPointWithOracle = async (provider: Client, entries: AaveV3ReserveTokenEntry[], address: EthAddress, block: number, oracleAddress: EthAddress) => {
+  const balanceContracts = getHistoricalBalanceContracts(entries, address);
+  const priceContracts = entries.map((e) => getAssetPriceContract(oracleAddress, e.underlyingAddress));
+
+  // @ts-ignore
+  const results = await provider.multicall({
+    contracts: [...balanceContracts, ...priceContracts], allowFailure: true, blockNumber: BigInt(block), batchSize: HISTORICAL_MULTICALL_BATCH_SIZE,
+  });
+
+  const activeAssets = toActiveHistoricalAssets(entries, results.slice(0, balanceContracts.length), block);
+  const priceResBySymbol: AaveV3PriceResultsBySymbol = {};
+  results.slice(balanceContracts.length).forEach((res: any, i: number) => {
+    priceResBySymbol[entries[i].symbol] = res;
+  });
+  return { activeAssets, priceResBySymbol };
+};
+
+/**
+ * Fallback path, TWO multicalls: balances plus getPriceOracle (resolving the oracle that was active
+ * AT the block — Aave can rotate it over time), then prices for just the active assets. The oracle
+ * read has no fallback: if it fails (bad archive node, rate limit, ...) the failure must surface
+ * rather than silently returning $0 — the caller renders a gap instead of a misleading zero.
+ */
+const fetchHistoricalPointResolvingOracle = async (provider: Client, network: NetworkNumber, market: AaveMarketInfo, entries: AaveV3ReserveTokenEntry[], address: EthAddress, block: number) => {
+  const balanceContracts = getHistoricalBalanceContracts(entries, address);
+  // @ts-ignore market.provider is a valid config key at runtime
+  const providerAbi = getConfigContractAbi(market.provider, network);
+  const oracleContract = {
+    address: market.providerAddress as EthAddress,
+    abi: providerAbi,
+    functionName: 'getPriceOracle',
+  };
+  const blockNumber = BigInt(block);
+
+  // @ts-ignore
+  const results = await provider.multicall({
+    contracts: [...balanceContracts, oracleContract], allowFailure: true, blockNumber, batchSize: HISTORICAL_MULTICALL_BATCH_SIZE,
+  });
+  const oracleRes = results[balanceContracts.length];
+  if (oracleRes?.status !== 'success' || !oracleRes.result) throw new Error(`AaveV3 historical balance: oracle unavailable at block ${block}`);
+
+  const activeAssets = toActiveHistoricalAssets(entries, results.slice(0, balanceContracts.length), block);
+  if (!activeAssets.length) return { activeAssets, priceResBySymbol: {} };
+
+  const priceContracts = activeAssets.map((a) => getAssetPriceContract(oracleRes.result as EthAddress, a.underlyingAddress));
+  // @ts-ignore
+  const priceResults = await provider.multicall({
+    contracts: priceContracts, allowFailure: true, blockNumber, batchSize: HISTORICAL_MULTICALL_BATCH_SIZE,
+  });
+  const priceResBySymbol: AaveV3PriceResultsBySymbol = {};
+  priceResults.forEach((res: any, i: number) => {
+    priceResBySymbol[activeAssets[i].symbol] = res;
+  });
+  return { activeAssets, priceResBySymbol };
+};
+
+/**
+ * Computes a user's Aave v3 net USD balance (supplied collateral - borrowed debt) at a historical block,
+ * without touching the AaveV3View contract. Pass `reserveTokens` (from getAaveV3ReserveTokenAddresses)
+ * to avoid refetching token addresses for every point, and `oracleAddress` (from getAaveV3OracleAddress,
+ * verified identical at both ends of the sampled range) to collapse the point into a single multicall —
+ * with it the balances and all prices ride one request; without it the oracle is resolved at the block
+ * inside the balance multicall and the active assets are priced in a second one.
+ */
+export const _getAaveV3HistoricalBalance = async (
+  provider: Client,
+  network: NetworkNumber,
+  market: AaveMarketInfo,
+  address: EthAddress,
+  block: number,
+  reserveTokens?: AaveV3ReserveTokenAddresses,
+  oracleAddress?: EthAddress,
+): Promise<AaveV3HistoricalBalance> => {
+  const empty: AaveV3HistoricalBalance = {
+    block, suppliedUsd: '0', borrowedUsd: '0', netUsd: '0',
+  };
+  if (!address) return empty;
+
+  const tokens = reserveTokens || await _getAaveV3ReserveTokenAddresses(provider, network, market);
+  const entries = Object.values(tokens);
+  if (!entries.length) return empty;
+
+  const { activeAssets, priceResBySymbol } = oracleAddress
+    ? await fetchHistoricalPointWithOracle(provider, entries, address, block, oracleAddress)
+    : await fetchHistoricalPointResolvingOracle(provider, network, market, entries, address, block);
+
+  if (!activeAssets.length) return empty;
+  return sumHistoricalUsd(activeAssets, priceResBySymbol, block);
+};
+
+export const getAaveV3HistoricalBalance = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  market: AaveMarketInfo,
+  address: EthAddress,
+  block: number,
+  reserveTokens?: AaveV3ReserveTokenAddresses,
+  oracleAddress?: EthAddress,
+): Promise<AaveV3HistoricalBalance> => _getAaveV3HistoricalBalance(getViemProvider(provider, network, { batch: { multicall: true } }), network, market, address, block, reserveTokens, oracleAddress);
 
 export const _getAaveV3AccountData = async (provider: Client, network: NetworkNumber, address: EthAddress, extractedState: any, blockNumber: 'latest' | number = 'latest'): Promise<AaveV3PositionData> => {
   const {
