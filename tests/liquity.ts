@@ -30,8 +30,9 @@ describe('Liquity', () => {
     // console.log(troveData);
     assert.containsAllKeys(troveData, [
       'troveStatus', 'collateral', 'debtInAsset', 'TCRatio', 'recoveryMode', 'claimableCollateral', 'borrowingRateWithDecay',
-      'assetPrice', 'totalETH', 'totalLUSD', 'minCollateralRatio', 'priceForRecovery',
+      'assetPrice', 'totalETH', 'totalLUSD', 'minCollateralRatio', 'priceForRecovery', 'exposure', 'netApy', 'totalInterestUsd', 'incentiveUsd',
     ]);
+    assert.equal(troveData.netApy, '0');
   });
 
   it('can fetch latest account balances for Ethereum', async function () {

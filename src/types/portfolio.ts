@@ -1,16 +1,20 @@
-import { AaveV2PositionData, AaveV3PositionData, AaveVersions } from './aave';
-import { AaveV4AccountData, AaveV4SpokesType } from './aaveV4';
+import {
+  AaveV2MarketData, AaveV2PositionData, AaveV3MarketData, AaveV3PositionData, AaveVersions,
+} from './aave';
+import { AaveV4AccountData, AaveV4SpokeData, AaveV4SpokesType } from './aaveV4';
 import { EthAddress } from './common';
-import { CompoundV2PositionData, CompoundV3PositionData, CompoundVersions } from './compound';
-import { CrvUSDUserData, CrvUSDVersions } from './curveUsd';
-import { FluidVaultData } from './fluid';
+import {
+  CompoundV2MarketsData, CompoundV2PositionData, CompoundV3MarketsData, CompoundV3PositionData, CompoundVersions,
+} from './compound';
+import { CrvUSDGlobalMarketData, CrvUSDUserData, CrvUSDVersions } from './curveUsd';
+import { FluidMarketData, FluidVaultData } from './fluid';
 import { LiquityTroveInfo } from './liquity';
-import { LiquityV2TroveData, LiquityV2Versions } from './liquityV2';
-import { LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
-import { CdpData } from './maker';
-import { MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
-import { MorphoMidnightPositionData, MorphoMidnightVersions } from './morphoMidnight';
-import { SparkPositionData, SparkVersions } from './spark';
+import { LiquityV2MarketData, LiquityV2TroveData, LiquityV2Versions } from './liquityV2';
+import { LlamaLendGlobalMarketData, LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
+import { CdpData, IlkInfo } from './maker';
+import { MorphoBlueMarketInfo, MorphoBluePositionData, MorphoBlueVersions } from './morphoBlue';
+import { MorphoMidnightMarketInfo, MorphoMidnightPositionData, MorphoMidnightVersions } from './morphoMidnight';
+import { SparkMarketsData, SparkPositionData, SparkVersions } from './spark';
 
 export interface PortfolioProtocolData<T> {
   error: string,
@@ -62,4 +66,19 @@ export interface PortfolioPositionsDataForAddress {
 
 export interface PortfolioPositionsData {
   [key: EthAddress]: PortfolioPositionsDataForAddress;
+}
+export interface PortfolioMarketsData {
+  morphoMarketsData: Record<string, MorphoBlueMarketInfo>;
+  morphoMidnightMarketsData: Record<string, MorphoMidnightMarketInfo>;
+  compoundV3MarketsData: Record<string, CompoundV3MarketsData>;
+  sparkMarketsData: Record<string, SparkMarketsData>;
+  aaveV3MarketsData: Record<string, AaveV3MarketData>;
+  aaveV2MarketsData: Record<string, AaveV2MarketData>;
+  compoundV2MarketsData: Record<string, CompoundV2MarketsData>;
+  crvUsdMarketsData: Record<string, CrvUSDGlobalMarketData>;
+  llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData>;
+  liquityV2MarketsData: Record<string, LiquityV2MarketData>;
+  aaveV4SpokesData: Record<string, AaveV4SpokeData>;
+  fluidMarketsData: Record<string, FluidMarketData>;
+  makerMarketsData: Record<string, IlkInfo>;
 }

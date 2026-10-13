@@ -80,6 +80,10 @@ export interface CrvUSDAggregatedPositionData {
   collFactor: string,
   leveragedType: LeverageType,
   exposure: string,
+  // Yearly net return (%) on the position's equity: market borrow rate on crvUSD debt vs native yield of staked collateral.
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
   leveragedAsset?: string,
   liquidationPrice?: string,
 }
@@ -123,4 +127,7 @@ export interface CrvUSDUserData {
   collateralPrice: string,
   collRatio: string,
   exposure: string,
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
 }

@@ -206,6 +206,7 @@ export interface MorphoBlueAggregatedPositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
+  safetyRatio: string, // borrowLimitUsd / borrowedUsd as a percentage (100 = liquidation)
   leveragedType: LeverageType,
   leveragedAsset?: string,
   currentVolatilePairRatio?: string,
@@ -229,6 +230,7 @@ export interface MorphoBluePositionData {
   totalInterestUsd: string,
   ltv: string,
   ratio: string,
+  safetyRatio?: string,
   leveragedType: LeverageType,
   leveragedAsset?: string,
   currentVolatilePairRatio?: string,

@@ -31,3 +31,4 @@ export {
   getFluidMarketInfoByAddress,
 } from './fluid';
 export { AaveV4Spokes, findAaveV4SpokeByAddress } from './aaveV4';
+export { MakerActiveIlks } from './maker';
