@@ -18,7 +18,8 @@
     "version-bump": "git commit -am \"Version bump to $(npm version patch | cut -c 2-)\""
   },
   "keywords": [],
-  "author": "",
+  "author": "DeFi Saver",
+  "repository": "https://github.com/DecenterApps/defisaver-positions-sdk",
   "license": "ISC",
   "dependencies": {
     "@defisaver/tokens": "^1.7.45",
