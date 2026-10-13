@@ -19,7 +19,7 @@
   },
   "keywords": [],
   "author": "DeFi Saver",
-  "repository": "https://github.com/DecenterApps/defisaver-positions-sdk",
+  "repository": "https://github.com/defisaver/defisaver-positions-sdk",
   "license": "ISC",
   "dependencies": {
     "@defisaver/tokens": "^1.7.45",
