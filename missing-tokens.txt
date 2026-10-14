@@ -1,0 +1,22 @@
+"File: aave/marketAssets.ts; Variable: aaveV3AssetsDefaultMarketEth; Chain ID: 1
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3USDCCollAssetsOpt; Chain ID: 10
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3USDTCollAssetsOpt; Chain ID: 10
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3ETHCollAssetsOpt; Chain ID: 10
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3USDCCollAssetsArb; Chain ID: 42161
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3ETHCollAssetsArb; Chain ID: 42161
+ - Missing addresses: [object Object]
+
+File: compound/marketsAssets.ts; Variable: v3USDTCollAssetsArb; Chain ID: 42161
+ - Missing addresses: [object Object]
+
+"
