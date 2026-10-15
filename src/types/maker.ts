@@ -47,6 +47,8 @@ export interface CdpData {
   debtAssetMarketPrice: string,
   liquidationPrice: string,
   ratio: string,
+  // Collateral ratio rebased so 100 sits on `liqPercent` (normalised safety ratio).
+  safetyRatio: string,
   liqRatio: string,
   liqPercent: number,
   assetPrice: string,
@@ -62,4 +64,8 @@ export interface CdpData {
   liquidationFee: string,
   lastUpdated: number,
   exposure: string,
+  // Yearly net return (%) on the vault's equity: stability fee on DAI debt vs native yield of staked collateral.
+  netApy: string,
+  totalInterestUsd: string,
+  incentiveUsd: string,
 }

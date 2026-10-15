@@ -128,6 +128,7 @@ export interface CompoundAggregatedPositionData {
   leftToBorrowUsd: string,
   ratio: string,
   collRatio: string,
+  safetyRatio: string,
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,
@@ -148,6 +149,7 @@ export interface CompoundAggregatedPositionData {
 export interface CompoundPositionData extends MMPositionData {
   ratio: string,
   minRatio: string,
+  safetyRatio?: string,
   suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,

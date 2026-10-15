@@ -49,6 +49,7 @@ export interface EModeCategoryData {
   borrowAssets: string[],
   ltvzeroBitmap?: string,
   ltvZeroAssets: string[],
+  isolated: boolean,
 }
 export interface EModeCategoryDataMapping {
   enteringTerms: boolean[],
@@ -155,6 +156,8 @@ export interface AavePositionData extends MMPositionData, AavePositionAggregated
   collRatio: string,
   // Safety ratio as evaluated by automation bots (LTV-0 collateral credited at LLTV - 5%). Aave v3 only.
   safetyRatioWithLtvZeroFallback?: string,
+  // Normalised safety ratio (100 = liquidation on every protocol). Aave v3: the LTV-0 fallback ratio, Aave v2: `ratio`.
+  safetyRatio?: string,
   suppliedUsd: string,
   borrowedUsd: string,
   borrowLimitUsd: string,
@@ -194,6 +197,7 @@ export interface AaveV3AggregatedPositionData {
   collRatio: string,
   borrowLimitWithLtvZeroFallbackUsd: string,
   safetyRatioWithLtvZeroFallback: string,
+  safetyRatio: string,
   netApy: string,
   incentiveUsd: string,
   totalInterestUsd: string,

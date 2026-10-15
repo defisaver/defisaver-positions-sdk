@@ -70,4 +70,64 @@ describe('Portfolio', () => {
 
     const portfolioData = await fetchPortfolioData(network, providerPlasma);
   });
+
+  const fetchShifterPortfolioData = async (network: NetworkNumber, _provider: EthereumProvider) => {
+    const portfolioData = await sdk.portfolio.getShifterPortfolioData(_provider, network, provider, ['0xE86F331FB370c5Bbff0f7C81B29D64fA58e0c9c9', '0x21dc459fba0b1ea037cd221d35b928be1c26141a']);
+    assert.hasAllKeys(portfolioData, ['positions', 'markets']);
+    assert.containsAllKeys(portfolioData.markets, ['fluidMarketsData', 'makerMarketsData']);
+    return portfolioData;
+  };
+
+  it('can fetch shifter portfolio data for Ethereum', async function () {
+    this.timeout(30000);
+    const network = NetworkNumber.Eth;
+
+    const portfolioData = await fetchShifterPortfolioData(network, provider);
+
+    assert.isNotEmpty(portfolioData.markets.fluidMarketsData);
+    assert.containsAllKeys(portfolioData.markets.makerMarketsData, ['ETH-A', 'ETH-B', 'ETH-C', 'WSTETH-A', 'WSTETH-B', 'WBTC-A', 'WBTC-B', 'WBTC-C']);
+    const ethA = portfolioData.markets.makerMarketsData['ETH-A'];
+    assert.hasAllKeys(ethA, [
+      'ilkLabel', 'currentRate', 'futureRate', 'minDebt', 'globalDebtCeiling', 'globalDebtCurrent',
+      'assetPrice', 'liqRatio', 'liqPercent', 'stabilityFee', 'liquidationFee', 'creatableDebt',
+    ]);
+    assert.equal(ethA.ilkLabel, 'ETH-A');
+    assert.isAbove(+ethA.assetPrice, 0);
+    assert.isAbove(+ethA.liqRatio, 1);
+    assert.isAbove(+ethA.minDebt, 0);
+    // console.log('Shifter Portfolio Data:', portfolioData);
+  });
+
+  it('can fetch shifter portfolio data for Arbitrum', async function () {
+    this.timeout(15000);
+    const network = NetworkNumber.Arb;
+
+    const portfolioData = await fetchShifterPortfolioData(network, providerArb);
+    assert.isNotEmpty(portfolioData.markets.fluidMarketsData);
+    assert.isEmpty(portfolioData.markets.makerMarketsData);
+  });
+
+  it('can fetch shifter portfolio data for Optimism', async function () {
+    this.timeout(15000);
+    const network = NetworkNumber.Opt;
+
+    const portfolioData = await fetchShifterPortfolioData(network, providerOpt);
+    assert.isEmpty(portfolioData.markets.fluidMarketsData);
+    assert.isEmpty(portfolioData.markets.makerMarketsData);
+  });
+
+  it('can fetch shifter portfolio data for Base', async function () {
+    this.timeout(15000);
+    const network = NetworkNumber.Base;
+
+    const portfolioData = await fetchShifterPortfolioData(network, providerBase);
+    assert.isNotEmpty(portfolioData.markets.fluidMarketsData);
+  });
+
+  it('can fetch shifter portfolio data for Plasma', async function () {
+    this.timeout(15000);
+    const network = NetworkNumber.Plasma;
+
+    await fetchShifterPortfolioData(network, providerPlasma);
+  });
 });

@@ -236,10 +236,8 @@ export const crvUsdLending = lendingProtocol('crvUsd', {
   label: 'Curve USD',
   markets: (network): CrvUSDMarketData[] => onNetwork(network, Object.values(CrvUsdMarkets(network))),
   readMarket: ({ client, network }, market) => _getCurveUsdGlobalData(client, network, market),
-  readPosition: async ({ client, network }, address, market, marketData) => ({
-    ...await _getCurveUsdUserData(client, network, address, market, marketData.activeBand),
-    borrowRate: marketData.borrowRate,
-  }),
+  // The market's borrow rate is passed in, so the read does not fetch it again.
+  readPosition: ({ client, network }, address, market, marketData) => _getCurveUsdUserData(client, network, address, market, marketData.activeBand, marketData.borrowRate),
   holds: suppliesOrBorrowsAnything,
 });
 

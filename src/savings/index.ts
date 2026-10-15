@@ -40,7 +40,8 @@ export const getSavingsDataWithErrors = async (
   accounts: EthAddress[],
 ): Promise<SavingsDataWithErrors> => {
   const isMainnet = network === NetworkNumber.Eth;
-  const morphoVaultsList = Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[];
+  const morphoVaultsList = (Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[])
+    .filter((key) => morphoVaults.morphoVaultsOptions.getMorphoVault(key).network === network);
   const yearnVaultsList = Object.keys(yearnVaults.yearnVaultsOptions.YEARN_VAULTS) as YearnVaultType[];
   const sparkSavingsVaultsList = Object.keys(sparkSavingsVaults.sparkSavingsVaultsOptions.SPARK_SAVINGS_VAULTS) as SparkSavingsVaultType[];
   const yearnV3VaultsList = Object.keys(yearnV3Vaults.yearnV3VaultsOptions.YEARN_V3_VAULTS) as YearnV3VaultType[];
@@ -49,9 +50,9 @@ export const getSavingsDataWithErrors = async (
 
   // Every vault read on this network, so one left without data or an error can still be reported.
   const vaultKeys: SavingsVaultKey[] = [
+    ...morphoVaultsList,
     ...(isMainnet ? [
-      ...morphoVaultsList, ...yearnVaultsList, ...sparkSavingsVaultsList, ...yearnV3VaultsList,
-      MakerDsrType.MakerDsrVault, SkySavingsType.SkySavings,
+      ...yearnVaultsList, ...sparkSavingsVaultsList, ...yearnV3VaultsList, MakerDsrType.MakerDsrVault, SkySavingsType.SkySavings,
     ] : []),
     ...summerVaultsList,
   ];
@@ -60,7 +61,7 @@ export const getSavingsDataWithErrors = async (
   const errors: SavingsErrors = {};
 
   await Promise.all([
-    ...(isMainnet ? [
+    ...(morphoVaultsList.length ? [
       (async () => {
         try {
           const vaults = morphoVaultsList.map((vaultKey) => morphoVaults.morphoVaultsOptions.getMorphoVault(vaultKey));
@@ -71,6 +72,8 @@ export const getSavingsDataWithErrors = async (
           morphoVaultsList.forEach((vaultKey) => { errors[vaultKey] = `Error fetching morpho vault ${vaultKey}`; });
         }
       })(),
+    ] : []),
+    ...(isMainnet ? [
       ...yearnVaultsList.map(async (vaultKey) => {
         try {
           const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);

@@ -16,13 +16,13 @@ import {
   CompoundV2MarketsData, CompoundV2PositionData, CompoundV3MarketsData, CompoundV3PositionData, CompoundVersions,
 } from './compound';
 import { CrvUSDGlobalMarketData, CrvUSDUserData, CrvUSDVersions } from './curveUsd';
-import { FluidEarnPositionData, FluidVaultData } from './fluid';
+import { FluidEarnPositionData, FluidMarketData, FluidVaultData } from './fluid';
 import { LiquityStakingData, LiquityTroveInfo } from './liquity';
 import {
   LiquityV2MarketData, LiquityV2SBoldYBoldData, LiquityV2StakingData, LiquityV2TroveData, LiquityV2Versions,
 } from './liquityV2';
 import { LlamaLendGlobalMarketData, LlamaLendUserData, LlamaLendVersionsType } from './llamaLend';
-import { CdpData } from './maker';
+import { CdpData, IlkInfo } from './maker';
 import {
   MorphoBlueEarnData, MorphoBlueMarketInfo, MorphoBluePositionData, MorphoBlueVersions,
 } from './morphoBlue';
@@ -181,6 +181,15 @@ export interface PortfolioMarketsData {
   llamaLendMarketsData: Record<string, LlamaLendGlobalMarketData>;
   liquityV2MarketsData: Record<string, LiquityV2MarketData>;
   aaveV4SpokesData: Record<string, AaveV4SpokeData>;
+}
+
+/**
+ * The `markets` getShifterPortfolioData returns: the portfolio's markets, plus Fluid's and Maker's, which the shifter
+ * offers as destinations. Kept apart from PortfolioMarketsData, which getPortfolioData does not fill these into.
+ */
+export interface ShifterPortfolioMarketsData extends PortfolioMarketsData {
+  fluidMarketsData: Record<string, FluidMarketData>;
+  makerMarketsData: Record<string, IlkInfo>;
 }
 
 /** The markets that could not be read, by their key in PortfolioMarketsData, then by market or spoke: the error. */
