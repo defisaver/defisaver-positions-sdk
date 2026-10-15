@@ -1,25 +1,10 @@
 import Dec from 'decimal.js';
 import { EthAddress, NetworkNumber } from '../types/common';
+import { SghoData } from '../types/aave';
 import { DEFAULT_TIMEOUT } from '../services/utils';
 import { ZERO_ADDRESS } from '../constants';
 
-export interface SghoUserData {
-  shares: string;
-  balance: string;
-  maxDeposit: string;
-  maxWithdraw: string;
-  underlyingBalance: string;
-}
-
-export interface SghoData {
-  totalAssets: string;
-  totalSupply: string;
-  supplyCap: string;
-  /** Target savings rate as an APY percent (e.g. "4.25" for 4.25%). */
-  targetRate: string;
-  paused: boolean;
-  user: SghoUserData;
-}
+export type { SghoData, SghoUserData } from '../types/aave';
 
 const EMPTY_SGHO_DATA: SghoData = {
   totalAssets: '0',

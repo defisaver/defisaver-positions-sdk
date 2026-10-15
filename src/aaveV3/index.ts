@@ -31,6 +31,7 @@ import {
   EModeCategoriesData,
   EModeCategoryData,
   EModeCategoryDataMapping,
+  StakeAaveData,
 } from '../types';
 import {
   Blockish,
@@ -898,7 +899,7 @@ export const fetchYearlyMeritApyForStakingGho = async () => {
   }
 };
 
-export const getStakeAaveData = async (provider: Client, network: NetworkNumber, address: EthAddress) => {
+export const getStakeAaveData = async (provider: Client, network: NetworkNumber, address: EthAddress): Promise<StakeAaveData> => {
   const stkGhoAddress = getAssetInfo('stkGHO').address as HexString;
   const stkAaveAddress = getAssetInfo('stkAAVE').address as HexString;
 

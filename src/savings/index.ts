@@ -2,6 +2,9 @@ import {
   MakerDsrType,
   MorphoVaultType,
   SavingsData,
+  SavingsDataWithErrors,
+  SavingsErrors,
+  SavingsVaultKey,
   SkySavingsType,
   SparkSavingsVaultType,
   SummerVaultType,
@@ -27,11 +30,16 @@ export {
   yearnV3Vaults,
 };
 
-export const getSavingsData = async (
+/**
+ * Every savings vault of a network for the given accounts, and, for each vault that came back without data, why — so
+ * a vault that failed is never mistaken for one the accounts have nothing in.
+ */
+export const getSavingsDataWithErrors = async (
   provider: EthereumProvider,
   network: NetworkNumber,
   accounts: EthAddress[],
-) => {
+): Promise<SavingsDataWithErrors> => {
+  const isMainnet = network === NetworkNumber.Eth;
   const morphoVaultsList = (Object.keys(morphoVaults.morphoVaultsOptions.MORPHO_VAULTS) as MorphoVaultType[])
     .filter((key) => morphoVaults.morphoVaultsOptions.getMorphoVault(key).network === network);
   const yearnVaultsList = Object.keys(yearnVaults.yearnVaultsOptions.YEARN_VAULTS) as YearnVaultType[];
@@ -40,7 +48,17 @@ export const getSavingsData = async (
   const summerVaultsList = (Object.keys(summerVaults.summerVaultsOptions.SUMMER_VAULTS) as SummerVaultType[])
     .filter((key) => summerVaults.summerVaultsOptions.getSummerVault(key).network === network);
 
+  // Every vault read on this network, so one left without data or an error can still be reported.
+  const vaultKeys: SavingsVaultKey[] = [
+    ...morphoVaultsList,
+    ...(isMainnet ? [
+      ...yearnVaultsList, ...sparkSavingsVaultsList, ...yearnV3VaultsList, MakerDsrType.MakerDsrVault, SkySavingsType.SkySavings,
+    ] : []),
+    ...summerVaultsList,
+  ];
+
   const savingsData: SavingsData = {};
+  const errors: SavingsErrors = {};
 
   await Promise.all([
     ...(morphoVaultsList.length ? [
@@ -51,10 +69,11 @@ export const getSavingsData = async (
           Object.assign(savingsData, data);
         } catch (err) {
           console.error('[getSavingsData] Error fetching morpho vaults:', err);
+          morphoVaultsList.forEach((vaultKey) => { errors[vaultKey] = `Error fetching morpho vault ${vaultKey}`; });
         }
       })(),
     ] : []),
-    ...(network === NetworkNumber.Eth ? [
+    ...(isMainnet ? [
       ...yearnVaultsList.map(async (vaultKey) => {
         try {
           const vault = yearnVaults.yearnVaultsOptions.getYearnVault(vaultKey);
@@ -62,6 +81,7 @@ export const getSavingsData = async (
           savingsData[vaultKey] = data;
         } catch (err) {
           console.error(`[getSavingsData] Error fetching yearn vault ${vaultKey}:`, err);
+          errors[vaultKey] = `Error fetching yearn vault ${vaultKey}`;
         }
       }),
       ...sparkSavingsVaultsList.map(async (vaultKey) => {
@@ -71,6 +91,7 @@ export const getSavingsData = async (
           savingsData[vaultKey] = data;
         } catch (err) {
           console.error(`[getSavingsData] Error fetching spark savings vault ${vaultKey}:`, err);
+          errors[vaultKey] = `Error fetching spark savings vault ${vaultKey}`;
         }
       }),
       ...yearnV3VaultsList.map(async (vaultKey) => {
@@ -80,6 +101,7 @@ export const getSavingsData = async (
           savingsData[vaultKey] = data;
         } catch (err) {
           console.error(`[getSavingsData] Error fetching yearn v3 vault ${vaultKey}:`, err);
+          errors[vaultKey] = `Error fetching yearn v3 vault ${vaultKey}`;
         }
       }),
       (async () => {
@@ -88,6 +110,7 @@ export const getSavingsData = async (
           savingsData[MakerDsrType.MakerDsrVault] = data;
         } catch (err) {
           console.error('[getSavingsData] Error fetching maker DSR data:', err);
+          errors[MakerDsrType.MakerDsrVault] = 'Error fetching maker DSR data';
         }
       })(),
       (async () => {
@@ -96,6 +119,7 @@ export const getSavingsData = async (
           savingsData[SkySavingsType.SkySavings] = data;
         } catch (err) {
           console.error('[getSavingsData] Error fetching Sky savings data:', err);
+          errors[SkySavingsType.SkySavings] = 'Error fetching Sky savings data';
         }
       })(),
     ] : []),
@@ -106,9 +130,22 @@ export const getSavingsData = async (
         savingsData[vaultKey] = data;
       } catch (err) {
         console.error(`[getSavingsData] Error fetching summer vault ${vaultKey}:`, err);
+        errors[vaultKey] = `Error fetching summer vault ${vaultKey}`;
       }
     }),
   ]);
 
-  return savingsData;
+  // getMorphoVaultsData leaves out, without throwing, a vault whose on-chain reads failed or that the Morpho API did not return.
+  vaultKeys.forEach((vaultKey) => {
+    if (!savingsData[vaultKey] && !errors[vaultKey]) errors[vaultKey] = `No data returned for savings vault ${vaultKey}`;
+  });
+
+  return { data: savingsData, errors };
 };
+
+/** Every savings vault of a network for the given accounts. A vault that failed is left out: use getSavingsDataWithErrors to tell why. */
+export const getSavingsData = async (
+  provider: EthereumProvider,
+  network: NetworkNumber,
+  accounts: EthAddress[],
+): Promise<SavingsData> => (await getSavingsDataWithErrors(provider, network, accounts)).data;

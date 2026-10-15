@@ -36,3 +36,15 @@ export interface LiquityTroveInfo {
   totalInterestUsd: string,
   incentiveUsd: string,
 }
+/** LQTY staking and the LUSD stability pool deposit of an address, from getLiquityStakingData. */
+export interface LiquityStakingData {
+  totalLUSDDeposited: string,
+  totalLQTYStaked: string,
+  stakedLQTY: string,
+  stakedLUSDBalance: string,
+  rewardETH: string,
+  rewardLUSD: string,
+  stabilityRewardETH: string,
+  stabilityRewardLQTY: string,
+  showStakingBalances: boolean,
+}

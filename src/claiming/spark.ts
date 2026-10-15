@@ -7,7 +7,9 @@ import {
   SparkRewardsControllerViem,
 } from '../contracts';
 import { EthAddress, NetworkNumber } from '../types/common';
-import { ClaimType, SparkAirdropType, SparkRewardsClaimableToken } from '../types/claiming';
+import {
+  ClaimType, SparkAirdropClaimableToken, SparkAirdropType, SparkRewardsClaimableToken,
+} from '../types/claiming';
 import { compareAddresses, getEthAmountForDecimals } from '../services/utils';
 
 const IGNITION_REWARDS = '0xCBA0C0a2a0B6Bb11233ec4EA85C5bFfea33e724d';
@@ -50,7 +52,7 @@ export const fetchSparkAirdropRewards = async (
   provider: Client,
   network: NetworkNumber,
   walletAddresses: EthAddress[],
-) => {
+): Promise<Record<string, SparkAirdropClaimableToken[]>> => {
   // Fetch all API data in parallel (these are external API calls, can't be batched with multicall)
   const apiDataPromises = walletAddresses.map(address => fetchSpkAirdropRewards(address));
   const apiDataArray = await Promise.all(apiDataPromises);
@@ -92,7 +94,7 @@ export const fetchSparkAirdropRewards = async (
   const cumulativeClaimedAmounts = await getCumulativeClaimedSpkAirdrop(provider, network, contractCallsData);
 
   // Process results
-  const results: Record<string, any[]> = {};
+  const results: Record<string, SparkAirdropClaimableToken[]> = {};
   let contractCallIndex = 0;
 
   for (const { walletAddress, data } of allClaimData) {
@@ -101,7 +103,7 @@ export const fetchSparkAirdropRewards = async (
       continue;
     }
 
-    const processedRewards = [];
+    const processedRewards: SparkAirdropClaimableToken[] = [];
     for (let i = 0; i < data.length; i++) {
       const rewardInfo = data[i];
       const assetInfo = getAssetInfoByAddress(rewardInfo.token_address);

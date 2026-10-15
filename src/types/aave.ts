@@ -1,4 +1,5 @@
 import {
+  EthAddress,
   IncentiveData,
   LeverageType,
   MMAssetData, MMPositionData, MMUsedAsset, NetworkNumber,
@@ -97,6 +98,9 @@ export interface AaveV3AssetData extends AaveAssetData {
   liquidationBonus: string,
   supplyIncentives: IncentiveData[];
   borrowIncentives: IncentiveData[];
+  // Set by _getAaveV3MarketData. Optional, so objects built by hand still type-check.
+  aTokenAddress?: EthAddress,
+  vTokenAddress?: EthAddress,
 }
 
 export type EModeCategoriesData = Record<number, EModeCategoryData>;
@@ -138,7 +142,15 @@ export type AaveV2UsedAssets = AaveUsedAssets<AaveV2UsedAsset>;
 
 export type AaveV3UsedAssets = AaveUsedAssets<AaveV3UsedAsset>;
 
-export interface AavePositionData extends MMPositionData {
+/**
+ * Fields aaveAnyGetAggregatedPositionData adds to every Aave V2/V3 position at runtime, on top of those declared
+ * below. Optional, so code that builds a position by hand keeps compiling.
+ */
+export type AavePositionAggregatedFields = Partial<Omit<AaveV3AggregatedPositionData,
+| keyof MMPositionData | 'ratio' | 'collRatio' | 'safetyRatioWithLtvZeroFallback' | 'suppliedUsd' | 'borrowedUsd'
+| 'borrowLimitUsd' | 'suppliedCollateralUsd' | 'incentiveUsd' | 'totalInterestUsd'>>;
+
+export interface AavePositionData extends MMPositionData, AavePositionAggregatedFields {
   ratio: string,
   minRatio: string,
   collRatio: string,
@@ -159,6 +171,11 @@ export interface AavePositionData extends MMPositionData {
 
 export interface AaveV2PositionData extends AavePositionData {
   usedAssets: AaveV2UsedAssets,
+  // Always their empty values: _getAaveV2AccountData starts from Aave V3's EMPTY_AAVE_DATA, which carries them.
+  eModeCategory?: number,
+  isInIsolationMode?: boolean,
+  isInSiloedMode?: boolean,
+  eModeCategories?: { [key: number]: EModeCategoryDataMapping },
 }
 
 export interface AaveV3PositionData extends AavePositionData {
@@ -206,3 +223,89 @@ export interface AaveHelperCommon {
   selectedMarket: Partial<AaveMarketInfo>,
   network?: NetworkNumber,
 }
+
+export interface SghoUserData {
+  shares: string;
+  balance: string;
+  maxDeposit: string;
+  maxWithdraw: string;
+  underlyingBalance: string;
+}
+
+export interface SghoData {
+  totalAssets: string;
+  totalSupply: string;
+  supplyCap: string;
+  /** Target savings rate as an APY percent (e.g. "4.25" for 4.25%). */
+  targetRate: string;
+  paused: boolean;
+  user: SghoUserData;
+}
+
+/** stkAAVE, stkGHO and sGHO of an address, from getStakeAaveData. */
+export interface StakeAaveData {
+  activatedCooldown: string,
+  activatedCooldownAmount: string,
+  stkAaveRewardsBalance: string,
+  aaveRewardsBalance: string,
+  stkAaveBalance: string,
+  stkGhoBalance: string,
+  ghoMeritApy: string,
+  stkAaveApy: string,
+  sgho: SghoData,
+}
+
+export interface UmbrellaTokenInfo {
+  token: EthAddress,
+  /** USD, converted from the oracle's 8 decimals. */
+  price: string,
+  name: string,
+  symbol: string,
+  decimals: number,
+}
+
+export interface UmbrellaRewardTokenData {
+  rewardTokenData: UmbrellaTokenInfo,
+  maxEmissionPerSecond: bigint,
+  distributionEnd: bigint,
+}
+
+export interface UmbrellaStakingAccountData {
+  stakeUserBalance: string,
+  rewardsTokenUserData: { reward: EthAddress, currentReward: string }[],
+  userCooldownAmount: string,
+  // Passed through unconverted: the view's bigint, or '0' when the view returns none.
+  userEndOfCooldown: bigint | string,
+  userWithdrawalWindow: bigint | string,
+}
+
+/**
+ * One Umbrella stake token of an address, from getUmbrellaData: the view contracts' structs merged, with the amounts
+ * the app reads converted to decimal strings. The bigint fields are the views' raw values, as the SDK passes them.
+ */
+export interface UmbrellaStakingTokenData {
+  stakeTokenData: UmbrellaTokenInfo,
+  totalAssets: string,
+  targetLiquidity: string,
+  isStakeConfigured: boolean,
+  rewardsTokenData: UmbrellaRewardTokenData[],
+  stakeToken: EthAddress,
+  stakeUserBalance: bigint,
+  rewardsTokenUserData: { reward: EthAddress, currentReward: bigint }[],
+  stkToken: EthAddress,
+  totalShares: string,
+  stkUnderlyingToken: EthAddress,
+  aToken: EthAddress,
+  cooldownPeriod: bigint,
+  unstakeWindow: bigint,
+  stkTokenToWaTokenRate: string,
+  waTokenToATokenRate: string,
+  rewardsEmissionRates: string[],
+  userCooldownAmount: bigint,
+  userEndOfCooldown: bigint,
+  userWithdrawalWindow: bigint,
+  account: UmbrellaStakingAccountData,
+}
+
+/** Keyed by Umbrella stake (UmbrellaGHO, UmbrellaUSDC, UmbrellaUSDT, UmbrellaETH). */
+export type UmbrellaStakingData = Record<string, UmbrellaStakingTokenData>;

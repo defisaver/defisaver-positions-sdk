@@ -1,7 +1,9 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
 import { EthAddress, NetworkNumber } from '../types';
-import { ClaimableToken, ClaimType, MerklRewardsClaimableToken } from '../types/claiming';
+import {
+  AaveRewardsClaimableToken, ClaimableToken, ClaimType, MerklRewardsClaimableToken,
+} from '../types/claiming';
 import {
   AaveIncentiveDataProviderV3ContractViem,
   AaveRewardsControllerViem,
@@ -37,7 +39,7 @@ export async function getUnclaimedRewardsForAllMarkets(
   network: NetworkNumber,
   walletAddress: EthAddress,
   marketAddress: EthAddress,
-): Promise<ClaimableToken[]> {
+): Promise<AaveRewardsClaimableToken[]> {
   const contract = AaveIncentiveDataProviderV3ContractViem(provider, network);
   const tokensData = await contract.read.getUserReservesIncentivesData([marketAddress, walletAddress]);
   const allTokensDataArrays = tokensData.reduce((acc: any[], val) => {

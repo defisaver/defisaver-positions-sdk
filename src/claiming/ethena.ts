@@ -2,7 +2,7 @@ import { getAssetInfo } from '@defisaver/tokens';
 import Dec from 'decimal.js';
 import { getAddress } from 'viem';
 import { EthAddress } from '../types/common';
-import { ClaimType } from '../types/claiming';
+import { ClaimType, EthenaAirdropClaimableToken } from '../types/claiming';
 import { getEthAmountForDecimals } from '../services/utils';
 
 export const fetchEthenaAirdropReward = async (address: EthAddress) => {
@@ -23,11 +23,11 @@ export const fetchEthenaAirdropReward = async (address: EthAddress) => {
   }
 };
 
-export const fetchEthenaAirdropRewards = async (walletAddresses: EthAddress[]): Promise<Record<string, any[]>> => {
+export const fetchEthenaAirdropRewards = async (walletAddresses: EthAddress[]): Promise<Record<string, EthenaAirdropClaimableToken[]>> => {
   const apiDataPromises = walletAddresses.map(address => fetchEthenaAirdropReward(address));
   const apiDataArray = await Promise.all(apiDataPromises);
 
-  const results: Record<string, any[]> = {};
+  const results: Record<string, EthenaAirdropClaimableToken[]> = {};
   for (let i = 0; i < walletAddresses.length; i++) {
     const walletAddress = walletAddresses[i];
     const data = apiDataArray[i];
@@ -36,7 +36,7 @@ export const fetchEthenaAirdropRewards = async (walletAddresses: EthAddress[]): 
       continue;
     }
 
-    const processedRewards = [];
+    const processedRewards: EthenaAirdropClaimableToken[] = [];
     const assetInfo = getAssetInfo('sENA');
 
     const amount = getEthAmountForDecimals(data.events[0].awardAmount, assetInfo.decimals);
@@ -47,7 +47,7 @@ export const fetchEthenaAirdropRewards = async (walletAddresses: EthAddress[]): 
         underlyingSymbol: assetInfo.symbol,
         amount,
         claimType: ClaimType.ETHENA_AIRDROP,
-        tokenAddress: assetInfo.address,
+        tokenAddress: assetInfo.address as EthAddress,
         walletAddress,
         label: 'Ethena Airdrop',
       });
