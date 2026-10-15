@@ -363,7 +363,7 @@ const getTradingApy = async (poolAddress: EthAddress) => {
   return new Dec(data.tradingApy).div(100).toString();
 };
 
-const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null, includeYield = true) => {
   const collAssetContract = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset = getAssetInfo(getNativeAssetFromWrapped(collAssetContract.symbol), network);
   const debtAssetContract = getAssetInfoByAddress(data.borrowToken0, network);
@@ -396,7 +396,7 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     borrowIncentives: [],
   };
 
-  if (STAKING_ASSETS.includes(collAsset.symbol)) {
+  if (includeYield && STAKING_ASSETS.includes(collAsset.symbol)) {
     collAssetData.supplyIncentives.push({
       apy: await getStakingApy(collAsset.symbol),
       token: collAssetData.symbol,
@@ -418,7 +418,7 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAssetData.symbol)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAssetData.symbol)) {
     debtAssetData.borrowIncentives.push({
       apy: new Dec(await getStakingApy(debtAsset.symbol)).mul(-1).toString(),
       token: debtAssetData.symbol,
@@ -483,7 +483,7 @@ const parseT1MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null, includeYield = true) => {
   const collAsset0Contract = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset0 = getAssetInfo(getNativeAssetFromWrapped(collAsset0Contract.symbol), network);
   const collAsset1Contract = getAssetInfoByAddress(data.supplyToken1, network);
@@ -538,7 +538,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(collFirstAssetData.symbol!)) {
     collFirstAssetData.supplyIncentives!.push({
       apy: await getStakingApy(collAsset0.symbol),
       token: collAsset0.symbol,
@@ -561,7 +561,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(collSecondAssetData.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(collSecondAssetData.symbol!)) {
     collSecondAssetData.supplyIncentives!.push({
       apy: await getStakingApy(collAsset1.symbol),
       token: collAsset1.symbol,
@@ -572,7 +572,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collFirstAssetData.price!, collSecondAssetData.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collFirstAssetData.supplyIncentives![0]?.apy || '0', collSecondAssetData.supplyIncentives![0]?.apy || '0', collFirstAssetData.price!, collSecondAssetData.price!);
-  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
+  const tradingSupplyRate = includeYield ? await getTradingApy(data.dexSupplyData.dexPool as EthAddress) : '0';
 
   const borrowRate = new Dec(data.borrowRateVault).div(100).toString();
   const debtAssetData: Partial<FluidAssetData> = {
@@ -585,7 +585,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAssetData.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAssetData.symbol!)) {
     debtAssetData.borrowIncentives!.push({
       apy: new Dec(await getStakingApy(debtAsset.symbol)).mul(-1).toString(),
       token: debtAsset.symbol,
@@ -676,7 +676,7 @@ const parseT2MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null, includeYield = true) => {
   const collAssetContract = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset = getAssetInfo(getNativeAssetFromWrapped(collAssetContract.symbol), network);
   const debtAsset0Contract = getAssetInfoByAddress(data.borrowToken0, network);
@@ -728,7 +728,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(collAssetData.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(collAssetData.symbol!)) {
     collAssetData.supplyIncentives!.push({
       apy: await getStakingApy(collAsset.symbol),
       token: collAsset.symbol,
@@ -753,7 +753,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
     debtAsset0Data.borrowIncentives!.push({
       apy: new Dec(await getStakingApy(debtAsset0.symbol)).mul(-1).toString(),
       token: debtAsset0.symbol,
@@ -776,7 +776,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
     debtAsset1Data.borrowIncentives!.push({
       apy: new Dec(await getStakingApy(debtAsset1.symbol)).mul(-1).toString(),
       token: debtAsset1.symbol,
@@ -786,7 +786,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   }
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, new Dec(debtAsset0Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), new Dec(debtAsset1Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), debtAsset0Data.price!, debtAsset1Data.price!);
-  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
+  const tradingBorrowRate = includeYield ? await getTradingApy(data.dexBorrowData.dexPool as EthAddress) : '0';
 
   const assetsData: FluidAssetsData = ([
     [collAsset.symbol, collAssetData],
@@ -866,7 +866,7 @@ const parseT3MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null, includeYield = true) => {
   const collAsset0Contract = getAssetInfoByAddress(data.supplyToken0, network);
   const collAsset0 = getAssetInfo(getNativeAssetFromWrapped(collAsset0Contract.symbol), network);
   const collAsset1Contract = getAssetInfoByAddress(data.supplyToken1, network);
@@ -948,7 +948,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(collAsset0Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(collAsset0Data.symbol!)) {
     collAsset0Data.supplyIncentives!.push({
       apy: await getStakingApy(collAsset0.symbol),
       token: collAsset0.symbol,
@@ -971,7 +971,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(collAsset1Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(collAsset1Data.symbol!)) {
     collAsset1Data.supplyIncentives!.push({
       apy: await getStakingApy(collAsset1.symbol),
       token: collAsset1.symbol,
@@ -994,7 +994,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAsset0Data.symbol!)) {
     debtAsset0Data.borrowIncentives!.push({
       apy: new Dec(await getStakingApy(debtAsset0.symbol)).mul(-1).toString(),
       token: debtAsset0.symbol,
@@ -1017,7 +1017,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
     supplyIncentives: [],
     borrowIncentives: [],
   };
-  if (STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
+  if (includeYield && STAKING_ASSETS.includes(debtAsset1Data.symbol!)) {
     debtAsset1Data.borrowIncentives!.push({
       apy: new Dec(await getStakingApy(debtAsset1.symbol)).mul(-1).toString(),
       token: debtAsset1.symbol,
@@ -1029,11 +1029,11 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
 
   const marketBorrowRate = getMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, borrowRate0, borrowRate1, debtAsset0Data.price!, debtAsset1Data.price!);
   const incentiveBorrowRate = getAdditionalMarketRateForDex(token1PerBorrowShare, token0PerBorrowShare, new Dec(debtAsset0Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), new Dec(debtAsset1Data.borrowIncentives![0]?.apy || '0').mul(-1).toString(), debtAsset0Data.price!, debtAsset1Data.price!);
-  const tradingBorrowRate = await getTradingApy(data.dexBorrowData.dexPool as EthAddress);
+  const tradingBorrowRate = includeYield ? await getTradingApy(data.dexBorrowData.dexPool as EthAddress) : '0';
 
   const marketSupplyRate = getMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, supplyRate0, supplyRate1, collAsset0Data.price!, collAsset1Data.price!);
   const incentiveSupplyRate = getAdditionalMarketRateForDex(token1PerSupplyShare, token0PerSupplyShare, collAsset0Data.supplyIncentives![0]?.apy || '0', collAsset1Data.supplyIncentives![0]?.apy || '0', collAsset0Data.price!, collAsset1Data.price!);
-  const tradingSupplyRate = await getTradingApy(data.dexSupplyData.dexPool as EthAddress);
+  const tradingSupplyRate = includeYield ? await getTradingApy(data.dexSupplyData.dexPool as EthAddress) : '0';
 
   const assetsData: FluidAssetsData = ([
     [collAsset0.symbol, collAsset0Data],
@@ -1123,7 +1123,7 @@ const parseT4MarketData = async (provider: PublicClient, data: FluidVaultDataStr
   } as FluidMarketData;
 };
 
-const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null) => {
+const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStructOutputStruct, network: NetworkNumber, tokenPrices: Record<string, string> | null = null, includeYield = true) => {
   const marketInfo = getFluidMarketInfoById(+(data.vaultId.toString()), network);
   if (!marketInfo) {
     console.error(`Fluid market with address ${data.vault} not supported.`);
@@ -1132,13 +1132,13 @@ const parseMarketData = async (provider: PublicClient, data: FluidVaultDataStruc
   const vaultType = parseVaultType(+(data.vaultType.toString()));
   switch (vaultType) {
     case FluidVaultType.T1:
-      return parseT1MarketData(provider, data, network, tokenPrices);
+      return parseT1MarketData(provider, data, network, tokenPrices, includeYield);
     case FluidVaultType.T2:
-      return parseT2MarketData(provider, data, network, tokenPrices);
+      return parseT2MarketData(provider, data, network, tokenPrices, includeYield);
     case FluidVaultType.T3:
-      return parseT3MarketData(provider, data, network, tokenPrices);
+      return parseT3MarketData(provider, data, network, tokenPrices, includeYield);
     case FluidVaultType.T4:
-      return parseT4MarketData(provider, data, network, tokenPrices);
+      return parseT4MarketData(provider, data, network, tokenPrices, includeYield);
     default:
       throw new Error(`Unknown vault type: ${vaultType}`);
   }
@@ -1777,12 +1777,13 @@ const handleTokenWithoutChainlinkPrice = (token: string, prices: Record<string, 
   return '0';
 };
 
-const getTokensPricesForPortfolio = async (tokens: string[], provider: PublicClient, network: NetworkNumber) => {
+const getTokensPricesForPortfolio = async (tokens: string[], provider: PublicClient, network: NetworkNumber, priceCache?: Map<string, ReturnType<typeof getTokenPricePortfolio>>) => {
   const tokensWithChainlinkPrices = tokens.filter((token) => !tokensWithoutChainlinkPrices.includes(token));
   const pricesFromChainlink: Record<string, string> = {};
   await Promise.all(tokensWithChainlinkPrices.map(async (token) => {
     try {
-      const price = await getTokenPricePortfolio(token, provider, network);
+      if (priceCache && !priceCache.has(token)) priceCache.set(token, getTokenPricePortfolio(token, provider, network));
+      const price = await (priceCache?.get(token) || getTokenPricePortfolio(token, provider, network));
       if (typeof price === 'string') pricesFromChainlink[token] = price;
       else if (typeof price === 'bigint') pricesFromChainlink[token] = new Dec(price).div(1e8).toString();
       else pricesFromChainlink[token] = new Dec(price[1]!.toString() as string).div(1e8).toString();
@@ -1870,3 +1871,16 @@ export const getAllFluidMarketDataPortfolio = async (
   provider: EthereumProvider,
   network: NetworkNumber,
 ): Promise<Record<string, FluidMarketData>> => _getAllFluidMarketDataPortfolio(getViemProvider(provider, network, { batch: { multicall: true } }), network);
+
+/** Internal summary path: reuse Fluid accounting without Merkl, staking or trading APY reads. */
+export const _parseFluidPositionSummary = async (
+  provider: PublicClient, network: NetworkNumber,
+  position: FluidUserPositionStructOutputStruct, vault: FluidVaultDataStructOutputStruct,
+  prices: Record<string, string>,
+) => {
+  const market = await parseMarketData(provider, vault, network, prices, false);
+  if (!market) throw new Error('Unsupported Fluid vault');
+  return parseUserData(position, market);
+};
+
+export const _getFluidSummaryPrices = getTokensPricesForPortfolio;
