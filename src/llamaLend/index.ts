@@ -168,7 +168,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, debtSupplied:
   return LlamaLendStatus.Nonexistant;
 };
 
-export const _getLlamaLendAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
+export const _getLlamaLendAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress, includeDeposited = false): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -192,6 +192,11 @@ export const _getLlamaLendAccountBalances = async (provider: Client, network: Ne
     },
   };
 
+  if (includeDeposited) {
+    balances.deposited = {
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.debtTokenCollateralAmount.toString(),
+    };
+  }
   return balances;
 };
 

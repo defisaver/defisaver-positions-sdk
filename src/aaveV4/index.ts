@@ -1,7 +1,7 @@
 import { Client } from 'viem';
 import Dec from 'decimal.js';
 import { assetAmountInEth, assetAmountInWei, getAssetInfoByAddress } from '@defisaver/tokens';
-import { getViemProvider } from '../services/viem';
+import { getViemProvider, setViemBlockNumber } from '../services/viem';
 import {
   AaveV4AccountData,
   AaveV4HubAssetOnChainData,
@@ -274,6 +274,11 @@ export async function _getAaveV4AccountData(provider: Client, network: NetworkNu
     riskPremiumBps,
   };
 }
+
+/** Shared raw read; no spoke metadata or market enrichment. */
+export const _getAaveV4LoanBalances = (provider: Client, network: NetworkNumber, block: Blockish, address: EthAddress, spoke: EthAddress) => (
+  AaveV4ViewContractViem(provider, network, block).read.getLoanData([spoke, address], setViemBlockNumber(block))
+);
 
 /**
  * Lightweight existence check for Loan Shifter / UI discovery.

@@ -1,7 +1,9 @@
+import { EthAddress, NetworkNumber } from './common';
+
 export type LendingSummaryPosition = {
   id: string;
   protocol: string;
-  /** Decimal USD values; null means unavailable, never a verified zero. */
+  /** Estimated decimal USD values; null means unavailable, never a verified zero. */
   suppliedUsd: string | null;
   debtUsd: string | null;
 };
@@ -16,7 +18,16 @@ export type WalletLendingSummary = {
   errors: string[];
 };
 
+/** Resolve distinct token addresses to USD prices keyed by lowercase address.
+ * Native tokens use their wrapped address. Missing/invalid prices remain unavailable.
+ * Prices are current market estimates; balances may come from a historical/fork snapshot.
+ */
+export type LendingSummaryPriceResolver = (
+  network: NetworkNumber, tokens: EthAddress[], signal?: AbortSignal,
+) => Promise<Record<string, string>>;
+
 export type LendingSummaryOptions = {
+  resolvePrices: LendingSummaryPriceResolver;
   signal?: AbortSignal;
   /** Defaults to a snapshot of the provider's latest block. */
   blockNumber?: bigint;

@@ -1,12 +1,13 @@
 import Dec from 'decimal.js';
 import { assetAmountInEth, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
+import { getAaveLikeBalances } from '../helpers/aaveBalances';
 import {
   Blockish, EthAddress, EthereumProvider, IncentiveKind, NetworkNumber, PositionBalances,
 } from '../types/common';
 import { calculateNetApy, getStakingApy } from '../staking';
-import { ethToWeth, wethToEth, wethToEthByAddress } from '../services/utils';
-import { AaveLoanInfoV2ContractViem, createViemContractFromConfigFunc } from '../contracts';
+import { ethToWeth, wethToEth } from '../services/utils';
+import { AaveLoanInfoV2ContractViem } from '../contracts';
 import { aprToApy, calculateBorrowingAssetLimit } from '../moneymarket';
 import {
   AaveMarketInfo, AaveV2AssetData, AaveV2AssetsData, AaveV2PositionData, AaveV2UsedAsset, AaveV2UsedAssets,
@@ -89,52 +90,11 @@ export const _getAaveV2MarketsData = async (provider: Client, network: NetworkNu
 export const getAaveV2MarketsData = async (provider: EthereumProvider, network: NetworkNumber, selectedMarket: AaveMarketInfo) => _getAaveV2MarketsData(getViemProvider(provider, network), network, selectedMarket);
 
 export const _getAaveV2AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
-  let balances: PositionBalances = {
-    collateral: {},
-    debt: {},
-  };
-
-  if (!address) {
-    return balances;
-  }
-
-  const market = AAVE_V2;
-
-  const loanInfoContract = AaveLoanInfoV2ContractViem(provider, network, block);
-
-  const marketAddress = market.providerAddress;
-  // @ts-ignore
-  const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
-
-  // @ts-ignore
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
-  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
-  const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
-
-  const loanInfo = await loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses as EthAddress[]], setViemBlockNumber(block));
-
-  loanInfo.forEach((_tokenInfo: any, i: number) => {
-    const asset = wethToEth(symbols[i]);
-    const assetAddr = wethToEthByAddress(_addresses[i], network).toLowerCase();
-    const tokenInfo = { ..._tokenInfo };
-
-    // known bug: stETH leaves 1 wei on every transfer
-    if (asset === 'stETH' && tokenInfo.balance.toString() === '1') {
-      tokenInfo.balance = '0';
-    }
-
-    balances = {
-      collateral: {
-        ...balances.collateral,
-        [addressMapping ? assetAddr : asset]: tokenInfo.balance.toString(),
-      },
-      debt: {
-        ...balances.debt,
-        [addressMapping ? assetAddr : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
-      },
-    };
-  });
-
+  const balances = await getAaveLikeBalances(provider, network, block, addressMapping, address, AAVE_V2, 'AaveLoanInfoV2');
+  if (!address) return balances;
+  // Preserve the legacy getter's stETH transfer-dust convention.
+  const key = addressMapping ? getAssetInfo('stETH', network).address.toLowerCase() : 'stETH';
+  if (balances.collateral?.[key] === '1') balances.collateral[key] = '0';
   return balances;
 };
 

@@ -222,7 +222,7 @@ export async function getMorphoMidnightAccountData(provider: EthereumProvider, n
   return _getMorphoMidnightAccountData(getViemProvider(provider, network), network, account, selectedMarket, marketInfo);
 }
 
-export const _getMorphoMidnightAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoMidnightMarketData): Promise<PositionBalances> => {
+export const _getMorphoMidnightAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, selectedMarket: MorphoMidnightMarketData, includeCredit = false): Promise<PositionBalances> => {
   const balances: PositionBalances = { collateral: {}, debt: {} };
   if (!address) return balances;
 
@@ -244,6 +244,11 @@ export const _getMorphoMidnightAccountBalances = async (provider: Client, networ
   });
   balances.collateral = collateral;
 
+  if (includeCredit) {
+    balances.deposited = {
+      [addressMapping ? loanTokenInfo.address.toLowerCase() : wethToEth(loanTokenInfo.symbol)]: assetAmountInEth(positionInfo.credit.toString(), wethToEth(loanTokenInfo.symbol)),
+    };
+  }
   return balances;
 };
 
