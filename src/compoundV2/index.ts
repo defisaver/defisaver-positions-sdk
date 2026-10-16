@@ -116,7 +116,7 @@ const getAllMarketAddresses = async (provider: Client, network: NetworkNumber, b
 };
 
 
-export const _getCompoundV2AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
+export const _getCompoundV2AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, tokens?: EthAddress[]): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -126,7 +126,7 @@ export const _getCompoundV2AccountBalances = async (provider: Client, network: N
     return balances;
   }
 
-  const assets = await getAllMarketAddresses(provider, network, block);
+  const assets = tokens || await getAllMarketAddresses(provider, network, block);
   const assetInfo = assets.map(a => getAssetInfoByAddress(a, network));
   const loanInfoContract = CompoundLoanInfoContractViem(provider, network, block);
   const loanInfo = await loanInfoContract.read.getTokenBalances([address, assets], setViemBlockNumber(block));

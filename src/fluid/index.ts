@@ -3,6 +3,7 @@ import {
   assetAmountInEth, AssetData, getAssetInfo, getAssetInfoByAddress,
 } from '@defisaver/tokens';
 import { Client, PublicClient } from 'viem';
+import { fluidTokenAmount } from '../helpers/fluidBalances';
 import {
   EthAddress, EthereumProvider, IncentiveKind, NetworkNumber,
 } from '../types/common';
@@ -1178,8 +1179,8 @@ const parseT1UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   const debtAsset = getAssetInfo(marketData.debtAsset0);
 
   // for T2 and T4 - this is the number of shares
-  const supplied = getEthAmountForDecimals(userPositionData.supply.toString(), collAsset.decimals);
-  const borrowed = getEthAmountForDecimals(userPositionData.borrow.toString(), debtAsset.decimals);
+  const supplied = fluidTokenAmount(userPositionData.supply, collAsset.decimals);
+  const borrowed = fluidTokenAmount(userPositionData.borrow, debtAsset.decimals);
 
   const collUsedAsset: FluidUsedAsset = {
     ...EMPTY_USED_ASSET,
@@ -1234,10 +1235,10 @@ const parseT2UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   const debtAsset = getAssetInfo(marketData.debtAsset0);
 
   const supplyShares = getEthAmountForDecimals(userPositionData.supply.toString(), 18); // this is supplied in coll shares
-  const borrowed = getEthAmountForDecimals(userPositionData.borrow.toString(), debtAsset.decimals); // this is actual token borrow
+  const borrowed = fluidTokenAmount(userPositionData.borrow, debtAsset.decimals); // this is actual token borrow
 
-  const supplied0 = new Dec(supplyShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
-  const supplied1 = new Dec(supplyShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
+  const supplied0 = fluidTokenAmount(userPositionData.supply, collAsset0.decimals, assetsData[collAsset0.symbol].tokenPerSupplyShare!);
+  const supplied1 = fluidTokenAmount(userPositionData.supply, collAsset1.decimals, assetsData[collAsset1.symbol].tokenPerSupplyShare!);
 
   const collUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: collAsset0.symbol,
@@ -1302,11 +1303,11 @@ const parseT3UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   const debtAsset0 = getAssetInfo(marketData.debtAsset0);
   const debtAsset1 = getAssetInfo(marketData.debtAsset1);
 
-  const supplied = getEthAmountForDecimals(userPositionData.supply.toString(), collAsset.decimals); // this is actual token supply
+  const supplied = fluidTokenAmount(userPositionData.supply, collAsset.decimals); // this is actual token supply
   const borrowShares = getEthAmountForDecimals(userPositionData.borrow.toString(), 18); // this is actual token borrow
 
-  const borrowed0 = new Dec(borrowShares).mul(assetsData[debtAsset0.symbol].tokenPerBorrowShare!).toString();
-  const borrowed1 = new Dec(borrowShares).mul(assetsData[debtAsset1.symbol].tokenPerBorrowShare!).toString();
+  const borrowed0 = fluidTokenAmount(userPositionData.borrow, debtAsset0.decimals, assetsData[debtAsset0.symbol].tokenPerBorrowShare!);
+  const borrowed1 = fluidTokenAmount(userPositionData.borrow, debtAsset1.decimals, assetsData[debtAsset1.symbol].tokenPerBorrowShare!);
 
   const collUsedAsset: Partial<FluidUsedAsset> = {
     symbol: collAsset.symbol,
@@ -1374,11 +1375,11 @@ const parseT4UserData = (userPositionData: FluidUserPositionStructOutputStruct, 
   const supplyShares = getEthAmountForDecimals(userPositionData.supply.toString(), 18); // this is actual token supply
   const borrowShares = getEthAmountForDecimals(userPositionData.borrow.toString(), 18); // this is actual token borrow
 
-  const supplied0 = new Dec(supplyShares).mul(assetsData[collAsset0.symbol].tokenPerSupplyShare!).toString();
-  const supplied1 = new Dec(supplyShares).mul(assetsData[collAsset1.symbol].tokenPerSupplyShare!).toString();
+  const supplied0 = fluidTokenAmount(userPositionData.supply, collAsset0.decimals, assetsData[collAsset0.symbol].tokenPerSupplyShare!);
+  const supplied1 = fluidTokenAmount(userPositionData.supply, collAsset1.decimals, assetsData[collAsset1.symbol].tokenPerSupplyShare!);
 
-  const borrowed0 = new Dec(borrowShares).mul(assetsData[debtAsset0.symbol].tokenPerBorrowShare!).toString();
-  const borrowed1 = new Dec(borrowShares).mul(assetsData[debtAsset1.symbol].tokenPerBorrowShare!).toString();
+  const borrowed0 = fluidTokenAmount(userPositionData.borrow, debtAsset0.decimals, assetsData[debtAsset0.symbol].tokenPerBorrowShare!);
+  const borrowed1 = fluidTokenAmount(userPositionData.borrow, debtAsset1.decimals, assetsData[debtAsset1.symbol].tokenPerBorrowShare!);
 
   const collUsedAsset0: Partial<FluidUsedAsset> = {
     symbol: collAsset0.symbol,

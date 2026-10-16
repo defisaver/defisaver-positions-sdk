@@ -1,6 +1,7 @@
 import { assetAmountInEth, assetAmountInWei, getAssetInfo } from '@defisaver/tokens';
 import { Client } from 'viem';
 import Dec from 'decimal.js';
+import { getAaveLikeBalances } from '../helpers/aaveBalances';
 import {
   AaveIncentiveDataProviderV3ContractViem,
   AaveIncentivesControllerViem,
@@ -17,7 +18,6 @@ import {
   isEnabledOnBitmap,
   isLayer2Network,
   wethToEth,
-  wethToEthByAddress,
 } from '../services/utils';
 import { getStakingApy, STAKING_ASSETS } from '../staking';
 import {
@@ -384,53 +384,7 @@ export const EMPTY_AAVE_DATA = {
 };
 
 export const _getAaveV3AccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress): Promise<PositionBalances> => {
-  let balances: PositionBalances = {
-    collateral: {},
-    debt: {},
-  };
-
-  if (!address) {
-    return balances;
-  }
-
-  const loanInfoContract = AaveV3ViewContractViem(provider, network, block);
-
-  const market = AAVE_V3(network);
-  const marketAddress = market.providerAddress;
-  // @ts-ignore
-  const protocolDataProviderContract = createViemContractFromConfigFunc(market.protocolData, market.protocolDataAddress)(provider, network);
-
-  // @ts-ignore
-  const reserveTokens = await protocolDataProviderContract.read.getAllReservesTokens(setViemBlockNumber(block)) as { symbol: string, tokenAddress: EthAddress }[];
-  const symbols = reserveTokens.map(({ symbol }: { symbol: string }) => symbol);
-  const _addresses = reserveTokens.map(({ tokenAddress }: { tokenAddress: EthAddress }) => tokenAddress);
-
-  // split addresses in half to avoid gas limit by multicall
-  const middleAddressIndex = Math.floor(_addresses.length / 2);
-
-  const [tokenBalances1, tokenBalances2] = await Promise.all([
-    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(0, middleAddressIndex)], setViemBlockNumber(block)),
-    loanInfoContract.read.getTokenBalances([marketAddress, address, _addresses.slice(middleAddressIndex, _addresses.length)], setViemBlockNumber(block)),
-  ]);
-
-  const loanInfo = [...tokenBalances1, ...tokenBalances2];
-
-  loanInfo.forEach((tokenInfo: any, i: number) => {
-    const asset = wethToEth(symbols[i]);
-    const assetAddr = wethToEthByAddress(_addresses[i], network).toLowerCase();
-
-    balances = {
-      collateral: {
-        ...balances.collateral,
-        [addressMapping ? assetAddr : asset]: tokenInfo.balance.toString(),
-      },
-      debt: {
-        ...balances.debt,
-        [addressMapping ? assetAddr : asset]: new Dec(tokenInfo.borrowsStable.toString()).add(tokenInfo.borrowsVariable.toString()).toString(),
-      },
-    };
-  });
-
+  const balances = await getAaveLikeBalances(provider, network, block, addressMapping, address, AAVE_V3(network), 'AaveV3View');
   return balances;
 };
 

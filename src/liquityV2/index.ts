@@ -152,7 +152,7 @@ const getUserTroves = async (
   return getUserTroves(provider, network, isLegacy, account, marketAddress, newStartIndex, newStartIndex + 100, existingTroves);
 };
 
-const nftContractCreationBlockMapping = {
+export const nftContractCreationBlockMapping = {
   [LiquityV2Versions.LiquityV2Eth]: 22516079,
   [LiquityV2Versions.LiquityV2WstEth]: 22516099,
   [LiquityV2Versions.LiquityV2REth]: 22516118,

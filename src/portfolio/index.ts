@@ -849,3 +849,5 @@ export async function getShifterPortfolioData(provider: EthereumProvider, networ
 }
 
 export * from './discovery';
+
+export { getWalletLendingSummaries } from './lendingSummaries';

@@ -128,7 +128,7 @@ const getStatusForUser = (bandRange: string[], activeBand: string, crvUSDSupplie
   return CrvUSDStatus.Nonexistant;
 };
 
-export const _getCrvUsdAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress): Promise<PositionBalances> => {
+export const _getCrvUsdAccountBalances = async (provider: Client, network: NetworkNumber, block: Blockish, addressMapping: boolean, address: EthAddress, controllerAddress: EthAddress, includeDeposited = false): Promise<PositionBalances> => {
   let balances: PositionBalances = {
     collateral: {},
     debt: {},
@@ -152,6 +152,11 @@ export const _getCrvUsdAccountBalances = async (provider: Client, network: Netwo
     },
   };
 
+  if (includeDeposited) {
+    balances.deposited = {
+      [addressMapping ? getAssetInfo(wethToEth(selectedMarket.baseAsset), network).address.toLowerCase() : wethToEth(selectedMarket.baseAsset)]: data.curveUsdCollateralAmount.toString(),
+    };
+  }
   return balances;
 };
 
